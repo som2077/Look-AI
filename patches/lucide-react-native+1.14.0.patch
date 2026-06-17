@@ -1,0 +1,25 @@
+diff --git a/node_modules/lucide-react-native/dist/esm/icons/infinity.mjs b/node_modules/lucide-react-native/dist/esm/icons/infinity.mjs
+index 2bd3cc4..75b65c7 100644
+--- a/node_modules/lucide-react-native/dist/esm/icons/infinity.mjs
++++ b/node_modules/lucide-react-native/dist/esm/icons/infinity.mjs
+@@ -3,13 +3,17 @@
+  *
+  * This source code is licensed under the ISC license.
+  * See the LICENSE file in the root directory of this source tree.
++ *
++ * PATCHED: renamed `const Infinity` → `const LucideInfinity` to avoid
++ * Hermes parser error: "Can't create duplicate variable that shadows a global property"
+  */
+ 
+ import createLucideIcon from '../createLucideIcon.mjs';
+ 
+-const Infinity = createLucideIcon("Infinity", [
++const LucideInfinity = createLucideIcon("Infinity", [
+   ["path", { d: "M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8", key: "18ogeb" }]
+ ]);
+ 
+-export { Infinity as default };
+-//# sourceMappingURL=infinity.mjs.map
++export { LucideInfinity as Infinity };
++export { LucideInfinity as default };
++
