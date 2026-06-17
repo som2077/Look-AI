@@ -3,7 +3,7 @@
 
   # 👗 LookAI — Your Personal AI Stylist
 
-  **Discover your style, digitize your wardrobe, and get AI-powered daily outfit recommendations.**
+  **LookAI is an intelligent fashion companion built with React Native and Expo. It digitizes your wardrobe, analyzes your body type, and provides hyper-personalized, daily outfit recommendations based on real-time weather and your unique style.**
   
   [![Expo](https://img.shields.io/badge/Expo-1C1E24?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
   [![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
@@ -71,8 +71,6 @@ LookAI utilizes an enterprise-grade **Route Group** architecture. This ensures h
 ```text
 app/
 ├── UNNECESSARY/            # Deprecated prototypes / Unused demo files
-│   ├── posts.tsx
-│   └── swipe-demo.tsx
 ├── (auth)/                 # Unauthenticated Routes
 │   ├── sign-in.tsx         # OAuth & Email providers
 │   └── email.tsx           # OTP Validation screen
@@ -80,22 +78,10 @@ app/
     ├── _layout.tsx         # Global Auth Guard wrapper
     ├── calendar.tsx        # Calendar: Outfit wear logs & scheduling
     ├── (ai-features)/      # AI & Recommendation engine UI
-    │   ├── look-ai.tsx
-    │   ├── outfit.tsx
-    │   └── outfit-log-detail.tsx
     ├── (analytics)/        # Gamification & tracking metrics
-    │   ├── score.tsx
-    │   └── streak.tsx
     ├── (social)/           # Social interaction & fashion feeds
-    │   ├── _layout.tsx
-    │   ├── group-detail.tsx
-    │   └── trend-feed.tsx
     ├── (subscription)/     # In-app purchase paywalls
-    │   ├── subscription.tsx
-    │   └── manage-subscription.tsx
     ├── (wardrobe)/         # Wardrobe discovery
-    │   ├── saved.tsx
-    │   └── wardrobe-highlights.tsx
     ├── (tabs)/             # Swipeable Bottom Tab navigation
     │   ├── _layout.tsx     
     │   ├── index.tsx       # Home: Highlights, trend feeds, stats
@@ -140,11 +126,7 @@ To achieve a highly premium feel, the FAB (Floating Action Button) triggers a tr
 ## 🗂️ Category System
 
 LookAI boasts an extensive schema supporting **41 distinct clothing categories** designed for global fashion. 
-The database and UI filter chips handle:
-
-`all` · `top` · `bottoms` · `footwear` · `outerwear` · `dress` · `ethnic` · `accessory` · `activewear` · `sportswear` · `formal` · `casual` · `partywear` · `sleepwear` · `swimwear` · `winterwear` · `summerwear` · `loungewear` · `bags` · `jewelry` · `watches` · `sunglasses` · `belts` · `hats` · `co_ords` · `jumpsuits` · `blazers` · `hoodies` · `jackets` · `sweaters` · `jeans` · `trousers` · `shorts` · `skirts` · `traditional` · `festive` · `wedding` · `new_arrivals` · `trending` · `favorites` · `recommended`
-
-Filter chips are rendered using a paginated horizontal `FlatList` displaying 8 items per swipe with animated dot indicators.
+The database and UI filter chips handle categories like: `top`, `bottoms`, `footwear`, `outerwear`, `dress`, `ethnic`, `accessory`, `activewear`, `sportswear`, `formal`, `casual`, `partywear`, and many more.
 
 ---
 
@@ -158,8 +140,8 @@ Filter chips are rendered using a paginated horizontal `FlatList` displaying 8 i
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/your-username/LookAI.git
-cd LookAI
+git clone https://github.com/som2077/Look-AI.git
+cd Look-AI
 npm install
 ```
 
@@ -181,5 +163,3 @@ npx expo start --clear
 <div align="center">
   <p>Built with ❤️ for modern fashion.</p>
 </div>
-#   L o o k - A I  
- 
