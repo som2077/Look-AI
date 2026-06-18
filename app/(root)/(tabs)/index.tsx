@@ -1,28 +1,28 @@
+import { useWardrobeSummary } from "@/backend/hooks/useWardrobeSummary";
+import { useUser } from "@clerk/clerk-expo";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useUser } from "@clerk/clerk-expo";
-import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
-import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
-import { HomeHeader } from "../../../components/ui/HomeHeader";
-import { WeeklyCalendarStrip } from "../../../components/ui/WeeklyCalendarStrip";
-import type { RingProgressSegment } from "../../../components/ui/WardrobeRingSummaryCard";
-import { WardrobeRingSummaryCard } from "../../../components/ui/WardrobeRingSummaryCard";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
-import { useWardrobeSummary } from "@/backend/hooks/useWardrobeSummary";
+import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
+import { HomeHeader } from "../../../components/ui/HomeHeader";
 import { OutfitAnalyzingCard } from "../../../components/ui/OutfitAnalyzingCard";
 import {
-  RecentlyUploadedHeading,
-  NotifyBanner,
   EmptyStyleBanner,
+  NotifyBanner,
+  RecentlyUploadedHeading,
 } from "../../../components/ui/RecentlyUploadedCard";
-import { TrendFeed } from "../../../components/ui/TrendFeed";
-import { WardrobeHighlights } from "../../../components/ui/WardrobeHighlights";
-import { WeatherOutfitCard } from "../../../components/ui/WeatherOutfitCard";
+import type { RingProgressSegment } from "../../../components/ui/WardrobeRingSummaryCard";
+import { WardrobeRingSummaryCard } from "../../../components/ui/WardrobeRingSummaryCard";
+import { WeeklyCalendarStrip } from "../../../components/ui/WeeklyCalendarStrip";
+import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
+// import { TrendFeed } from "../../../components/ui/TrendFeed";
+import { CURRENT_STREAK_DAYS } from "@/constants/streak";
 import { LookAIBanner } from "../../../components/ui/LookAIBanner";
 import { WardrobeFilterTabs } from "../../../components/ui/WardrobeFilterTabs";
+import { WardrobeHighlights } from "../../../components/ui/WardrobeHighlights";
 import { WardrobeMessageBar } from "../../../components/ui/WardrobeMessageBar";
-import { CURRENT_STREAK_DAYS } from "@/constants/streak";
+import { WeatherOutfitCard } from "../../../components/ui/WeatherOutfitCard";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -204,7 +204,7 @@ export default function HomeScreen() {
               <EmptyStyleBanner />
               <OutfitAnalyzingCard />
               <WardrobeHighlights />
-              <TrendFeed />
+              {/* <TrendFeed /> */}
             </View>
           </Animated.ScrollView>
         </SafeAreaView>

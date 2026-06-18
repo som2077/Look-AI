@@ -14,7 +14,9 @@
     "jsEngine": "hermes",
     "android": {
       "permissions": [
-        "READ_MEDIA_IMAGES"
+        "READ_MEDIA_IMAGES",
+        "READ_CALENDAR",
+        "WRITE_CALENDAR"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -72,7 +74,13 @@
       ],
       "expo-audio",
       "@react-native-community/datetimepicker",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Allow Look AI to access your calendar to suggest contextual outfits."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

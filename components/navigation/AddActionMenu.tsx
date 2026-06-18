@@ -1,22 +1,20 @@
-import { View, Text, Pressable, Modal, Image } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BlurView } from "expo-blur";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-  runOnJS,
-} from "react-native-reanimated";
 import {
   IconCamera,
-  IconMesh,
   IconSparkles,
-  IconTrendingUp,
   IconX,
   type IconProps,
 } from "@tabler/icons-react-native";
+import { BlurView } from "expo-blur";
+import React, { useCallback, useEffect, useState } from "react";
+import { Image, Modal, Pressable, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface ActionCard {
   id: string;
@@ -25,40 +23,27 @@ interface ActionCard {
   icon: React.ComponentType<IconProps>;
   route: string;
   color: string;
+  chipText?: string;
 }
 
 const ACTION_CARDS: ActionCard[] = [
   {
     id: "log-outfit",
-    title: "Log outfit",
-    subtitle: "Capture today's look",
+    title: "Camera / Scan",
+    subtitle: "Log outfit, Add cloths",
     icon: IconCamera,
     route: "/(root)/log-outfit/camera",
     color: "#5ECFC2",
-  },
-  {
-    id: "add-cloths",
-    title: "Add cloths",
-    subtitle: "New items to wardrobe",
-    icon: IconMesh,
-    route: "/(root)/add-clothes",
-    color: "#FF6B6B",
+    chipText: "3 scans left",
   },
   {
     id: "ai-outfit",
-    title: "AI outfit",
+    title: "AI Outfit",
     subtitle: "Generate my mood",
     icon: IconSparkles,
     route: "/(root)/outfit",
     color: "#A78BFA",
-  },
-  {
-    id: "style-score",
-    title: "Style score",
-    subtitle: "Face + outfit match",
-    icon: IconTrendingUp,
-    route: "/(root)/score",
-    color: "#FBBF24",
+    chipText: "Unlimited",
   },
 ];
 
@@ -141,30 +126,37 @@ export function AddActionMenu({
                   onPress={() => handleCardPress(card.route)}
                   className="w-[48%] h-[240px] rounded-[35px] bg-[#ffffff] mb-4 overflow-hidden"
                 >
-                  <View className="flex-1 p-6 items-center">
-                    <View className="w-full h-40 rounded-full items-center justify-center overflow-hidden">
+                  <View className="flex-1 pt-3 pb-6 px-3 items-center">
+                    {card.chipText && (
+                      <View className="bg-[#F1EFFF] px-3 py-[6px] rounded-full mb-3">
+                        <Text className="text-[#594EE6] text-[11px] font-bold tracking-wide">
+                          {card.chipText}
+                        </Text>
+                      </View>
+                    )}
+                    <View className="flex-1 w-full rounded-full items-center justify-center overflow-hidden">
                       {card.id === "log-outfit" ? (
                         <Image
                           source={require("../../assets/action-menu/one.png")}
-                          className="w-full h-full"
+                          className="w-[120%] h-[120%]"
                           resizeMode="contain"
                         />
                       ) : card.id === "add-cloths" ? (
                         <Image
                           source={require("../../assets/action-menu/two.png")}
-                          className="w-full h-full"
+                          className="w-[120%] h-[120%]"
                           resizeMode="contain"
                         />
                       ) : card.id === "ai-outfit" ? (
                         <Image
                           source={require("../../assets/action-menu/three.png")}
-                          className="w-full h-full"
+                          className="w-[120%] h-[120%]"
                           resizeMode="cover"
                         />
                       ) : card.id === "style-score" ? (
                         <Image
                           source={require("../../assets/action-menu/four.png")}
-                          className="w-full h-full"
+                          className="w-[120%] h-[120%]"
                           resizeMode="center"
                         />
                       ) : (

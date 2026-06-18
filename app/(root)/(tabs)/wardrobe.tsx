@@ -1,7 +1,26 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useWardrobeSummary } from "@/backend/hooks/useWardrobeSummary";
+import { useUserWardrobeStore } from "@/backend/store/user-wardrobe-store";
+import { MOCK_WARDROBE_ITEMS } from "@/constants/mock-wardrobe-items";
+import { useUser } from "@clerk/clerk-expo";
+import {
+  IconCamera,
+  IconChevronRight,
+  IconHanger,
+  IconHeart,
+  IconLayoutGrid,
+  IconPhoto,
+  IconPlus,
+  IconScissors,
+  IconShirt,
+  IconShoe,
+  IconSparkles,
+} from "@tabler/icons-react-native";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Dimensions,
-  FlatList,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -9,9 +28,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
-import { StatusBar } from "expo-status-bar";
 import Svg, {
   Circle,
   Defs,
@@ -20,28 +36,9 @@ import Svg, {
   Path,
   Stop,
 } from "react-native-svg";
-import {
-  IconPlus,
-  IconHanger,
-  IconShirt,
-  IconShoe,
-  IconScissors,
-  IconLayoutGrid,
-  IconChevronRight,
-  IconSparkles,
-  IconList,
-  IconHeart,
-  IconCamera,
-  IconPhoto,
-  IconX,
-  IconInfoCircle,
-} from "@tabler/icons-react-native";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
-import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
-import { useWardrobeSummary } from "@/backend/hooks/useWardrobeSummary";
-import { MOCK_WARDROBE_ITEMS } from "@/constants/mock-wardrobe-items";
-import { useUserWardrobeStore } from "@/backend/store/user-wardrobe-store";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
+import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -102,6 +99,7 @@ interface ClothingItem {
   occasion: string;
   wears: number;
   isNew: boolean;
+  image?: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -109,54 +107,23 @@ interface ClothingItem {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_GAP = 8;
 const GRID_PADDING = 14;
-const CARD_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP) / 2;
+const CARD_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
 
 const MASONRY_HEIGHTS = [
-  230, 175, 260, 195, 210, 180, 250, 165, 240, 185, 220, 200,
+  120, 160, 140, 150, 130, 170, 110, 180, 145, 125, 155, 135,
 ];
 
 const CATEGORIES: CategoryChip[] = [
   { id: "all", label: "All" },
   { id: "top", label: "Tops" },
-  { id: "bottoms", label: "Bottom" },
+  { id: "bottoms", label: "Bottoms" },
+  { id: "outerwear", label: "Outerwear" },
+  { id: "dress", label: "Dresses" },
   { id: "footwear", label: "Shoes" },
-  { id: "outerwear", label: "Outer" },
-  { id: "dress", label: "Dress" },
-  { id: "ethnic", label: "Ethnic" },
-  { id: "accessory", label: "Accessory" },
-  { id: "activewear", label: "activewear" },
-  { id: "sportswear", label: "sportswear" },
-  { id: "formal", label: "formal" },
-  { id: "casual", label: "casual" },
-  { id: "partywear", label: "partywear" },
-  { id: "sleepwear", label: "sleepwear" },
-  { id: "swimwear", label: "swimwear" },
-  { id: "winterwear", label: "winterwear" },
-  { id: "summerwear", label: "summerwear" },
-  { id: "loungewear", label: "loungewear" },
-  { id: "bags", label: "bags" },
-  { id: "jewelry", label: "jewelry" },
-  { id: "watches", label: "watches" },
-  { id: "sunglasses", label: "sunglasses" },
-  { id: "belts", label: "belts" },
-  { id: "hats", label: "hats" },
-  { id: "co_ords", label: "co_ords" },
-  { id: "jumpsuits", label: "jumpsuits" },
-  { id: "blazers", label: "blazers" },
-  { id: "hoodies", label: "hoodies" },
-  { id: "jackets", label: "jackets" },
-  { id: "sweaters", label: "sweaters" },
-  { id: "jeans", label: "jeans" },
-  { id: "trousers", label: "trousers" },
-  { id: "shorts", label: "shorts" },
-  { id: "skirts", label: "skirts" },
-  { id: "traditional", label: "traditional" },
-  { id: "festive", label: "festive" },
-  { id: "wedding", label: "wedding" },
-  { id: "new_arrivals", label: "new_arrivals" },
-  { id: "trending", label: "trending" },
-  { id: "favorites", label: "favorites" },
-  { id: "recommended", label: "recommended" },
+  { id: "accessory", label: "Accessories" },
+  { id: "activewear", label: "Activewear" },
+  { id: "traditional", label: "Traditional" },
+  { id: "bags", label: "Bags" },
 ];
 
 const CATEGORY_ICONS: Partial<Record<CategoryId, React.ComponentType<any>>> = {
@@ -302,60 +269,70 @@ const CategoryFilter = React.memo(function CategoryFilter({
   active: CategoryId;
   onSelect: (id: CategoryId) => void;
 }) {
-  const rows: CategoryChip[][] = [[], [], []];
-  CATEGORIES.forEach((cat, index) => {
-    rows[index % 3].push(cat);
-  });
-
-  const renderChip = (cat: CategoryChip) => {
-    const isActive = cat.id === active;
-    return (
-      <Pressable
-        key={cat.id}
-        onPress={() => onSelect(cat.id)}
-        style={{
-          backgroundColor: isActive ? "#1D1A27" : "#FFFFFF",
-          borderColor: "#F8F7FC",
-          borderWidth: 0.5,
-          borderRadius: 25,
-          paddingHorizontal: 20,
-          paddingVertical: 10,
-          marginTop: 5,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: isActive ? "600" : "500",
-            color: isActive ? "#FFFFFF" : "#1D1A27",
-          }}
-        >
-          {cat.label}
-        </Text>
-      </Pressable>
-    );
-  };
-
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{
-        flexDirection: "column",
-        // gap: 6,
-        paddingHorizontal: 10,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        paddingHorizontal: 20,
       }}
       style={{ marginBottom: 16 }}
     >
-      <View style={{ flexDirection: "row", gap: 5 }}>
-        {rows[0].map(renderChip)}
-      </View>
-      <View style={{ flexDirection: "row", gap: 5 }}>
-        {rows[1].map(renderChip)}
-      </View>
-      <View style={{ flexDirection: "row", gap: 5 }}>
-        {rows[2].map(renderChip)}
-      </View>
+      {CATEGORIES.map((cat) => {
+        const isActive = cat.id === active;
+        return (
+          <Pressable
+            key={cat.id}
+            onPress={() => onSelect(cat.id)}
+            style={{
+              backgroundColor: isActive ? "#1D1A27" : "#FFFFFF",
+              borderRadius: 20,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              minWidth: 60,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: isActive ? "600" : "500",
+                color: isActive ? "#FFFFFF" : "#000000",
+              }}
+            >
+              {cat.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+
+      {/* Edit Categories Chip */}
+      <Pressable
+        style={{
+          backgroundColor: "#E2E2E2",
+          borderRadius: 20,
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 18,
+            lineHeight: 18,
+            fontWeight: "500",
+            color: "#000000",
+            marginTop: -1,
+          }}
+        >
+          +
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 });
@@ -404,9 +381,9 @@ const StatsCard = React.memo(function StatsCard({
   const cy = r1 + 10; // = 80
   const arcH = 160;
 
-  // Opens at bottom — 70° gap, 290° span
-  const START_DEG = 235; // lower-left
-  const TOTAL_DEG = -290; // CW in Cartesian
+  // Full rings starting from top
+  const START_DEG = 90; // Top (12 o'clock)
+  const TOTAL_DEG = -359.99; // Almost 360 for SVG arc
 
   const f1 = Math.max(
     0.0001,
@@ -442,468 +419,345 @@ const StatsCard = React.memo(function StatsCard({
 
   return (
     <View style={{ marginHorizontal: 20, marginBottom: 6 }}>
-      {/* Time Filter Tabs */}
+      {/* ── Main Stats Card (Integrated Filters + Stats + Rings) ── */}
       <View
         style={{
-          flexDirection: "row",
-          backgroundColor: "#F8F7FC",
-          // borderColor: "#E9EBF8",
-          // borderWidth: 0.5,
-          borderRadius: 13,
-
-          padding: 1,
-          // marginTop: ,
-          marginBottom: 5,
-          shadowColor: "#000000",
+          flexDirection: "column",
+          paddingVertical: 24,
+          paddingHorizontal: 20,
+          backgroundColor: "#FFFFFF",
+          borderRadius: 24,
+          shadowColor: "#000",
           shadowOpacity: 0.05,
-          shadowRadius: 3,
-          shadowOffset: { width: 0, height: 1.5 },
-          elevation: 1,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 4,
           borderWidth: 0.5,
-          borderColor: "#EBEBEB",
+          borderColor: "rgba(0,0,0,0.03)",
         }}
       >
-        {TIME_FILTERS.map((filter) => (
-          <Pressable
-            key={filter}
-            onPress={() => setActiveFilter(filter)}
+        {/* ── Stats and Rings Row ── */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 24,
+          }}
+        >
+          {/* ── Left Column: Stats ── */}
+          <View
             style={{
-              flex: 1,
-              paddingVertical: 10,
-              borderRadius: 12,
-              backgroundColor:
-                activeFilter === filter ? "#FFFFFF" : "transparent",
-              borderColor: activeFilter === filter ? "#EBEBEB" : "transparent",
-              alignItems: "center",
-              borderWidth: 0.5,
-
-              shadowColor: activeFilter === filter ? "#000" : "transparent",
-              shadowOpacity: activeFilter === filter ? 0.05 : 0,
-              shadowRadius: activeFilter === filter ? 10 : 0,
-              shadowOffset: {
-                width: 0,
-                height: activeFilter === filter ? 2 : 0,
-              },
-              elevation: activeFilter === filter ? 1 : 0,
+              flex: 1.1,
+              justifyContent: "space-between",
             }}
           >
-            <Text
-              style={{
-                // fontSize: 14,
-                fontSize: 14,
-                fontFamily: "TikTokSans16pt-Medium",
-                // color: "#1C1C1E",
-                fontWeight: activeFilter === filter ? "700" : "400",
-                color: "#1D1A27",
-              }}
-            >
-              {filter}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      {/* ── Two Cards Row ── */}
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 5,
-          backgroundColor: "#FFFFFF",
-          borderWidth: 1,
-          borderColor: "#EBEBEB",
-          // shadowColor: "#FFFFFF",
-          borderRadius: 24,
-          // shadowOpacity: 0.05,
-          // shadowRadius: 10,
-          // shadowOffset: { width: 0, height: 3 },
-          // elevation: 2,
-          shadowColor: "#000",
-          shadowOpacity: 0.02,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 1,
-        }}
-      >
-        {/* ── Right Card: Stats Column ── */}
-        <View
-          style={{
-            flex: 24,
-            // backgroundColor: "#FFFFFF90",
-            // borderRadius: 24,
-            // paddingVertical: 10,
-            // width: "20%",
-            // paddingHorizontal: -15,
-            justifyContent: "space-between",
-            // alignItems: "center",
-            // justifyContent: "center",
-            // marginLeft: 10,
-            // borderWidth: 1,
-          }}
-        >
-          {/* Worn */}
-          <View style={{ marginLeft: 25, marginTop: 20 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                marginBottom: 2,
-              }}
-            >
-              <View
-                style={{
-                  width: 15,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#FF1200",
-                }}
-              />
-              <Text style={{ fontSize: 13, color: "#666", fontWeight: "600" }}>
-                Worn items
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-              <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>
-                {displayWorn}
-              </Text>
+            {/* Worn */}
+            <View style={{ marginBottom: 16 }}>
               <Text
                 style={{
-                  fontSize: 11,
-                  color: "#666",
-                  fontWeight: "500",
-                  marginLeft: 2,
+                  fontFamily: "TikTokSans16pt-Medium",
+                  fontSize: 13,
+                  color: "#8E8E93",
+                  marginBottom: 2,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
                 }}
               >
-                /{displayTotal} items
+                Worn
               </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Bold",
+                    fontSize: 32,
+                    color: "#FA4D22",
+                    lineHeight: 36,
+                  }}
+                >
+                  {displayWorn}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Medium",
+                    fontSize: 15,
+                    color: "#FA4D22",
+                    marginLeft: 4,
+                  }}
+                >
+                  / {displayTotal} items
+                </Text>
+              </View>
             </View>
-          </View>
 
-          {/* Usage */}
-          <View style={{ marginLeft: 25, paddingVertical: 5 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                marginBottom: 2,
-              }}
-            >
-              <View
+            {/* Usage */}
+            <View style={{ marginBottom: 16 }}>
+              <Text
                 style={{
-                  width: 15,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#FFB020",
+                  fontFamily: "TikTokSans16pt-Medium",
+                  fontSize: 13,
+                  color: "#8E8E93",
+                  marginBottom: 2,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
                 }}
-              />
-              <Text style={{ fontSize: 13, color: "#666", fontWeight: "600" }}>
+              >
                 Usage
               </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Bold",
+                    fontSize: 32,
+                    color: "#33E181",
+                    lineHeight: 36,
+                  }}
+                >
+                  {displayUsage}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Medium",
+                    fontSize: 15,
+                    color: "#33E181",
+                    marginLeft: 4,
+                  }}
+                >
+                  %
+                </Text>
+              </View>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-              <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>
-                {displayUsage}
-              </Text>
+
+            {/* Unworn */}
+            <View>
               <Text
                 style={{
-                  fontSize: 11,
-                  color: "#666",
-                  fontWeight: "500",
-                  marginLeft: 2,
+                  fontFamily: "TikTokSans16pt-Medium",
+                  fontSize: 13,
+                  color: "#8E8E93",
+                  marginBottom: 2,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
                 }}
               >
-                %
+                Unworn
               </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Bold",
+                    fontSize: 32,
+                    color: "#9263FE",
+                    lineHeight: 36,
+                  }}
+                >
+                  {displayUnworn}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Medium",
+                    fontSize: 15,
+                    color: "#9263FE",
+                    marginLeft: 4,
+                  }}
+                >
+                  / {displayTotal} items
+                </Text>
+              </View>
             </View>
           </View>
 
-          {/* Unworn */}
-          <View style={{ marginLeft: 25, marginBottom: 15 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                marginBottom: 2,
-              }}
-            >
-              <View
-                style={{
-                  width: 15,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#1E88E5",
-                }}
+          {/* ── Right Column: Rings ── */}
+          <View
+            style={{
+              flex: 1,
+              alignItems: "flex-end",
+              justifyContent: "center",
+            }}
+          >
+            <Svg width={arcW} height={arcH}>
+              <Defs>
+                <LinearGradient
+                  id="wrdOuter"
+                  x1={0}
+                  y1={0}
+                  x2={arcW}
+                  y2={0}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0%" stopColor="#FA4D22" stopOpacity={1} />
+                  <Stop offset="100%" stopColor="#FF7A59" stopOpacity={1} />
+                </LinearGradient>
+                <LinearGradient
+                  id="wrdMiddle"
+                  x1={0}
+                  y1={0}
+                  x2={arcW}
+                  y2={0}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0%" stopColor="#33E181" stopOpacity={1} />
+                  <Stop offset="100%" stopColor="#6AFB9B" stopOpacity={1} />
+                </LinearGradient>
+                <LinearGradient
+                  id="wrdInner"
+                  x1={0}
+                  y1={0}
+                  x2={arcW}
+                  y2={0}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0%" stopColor="#9263FE" stopOpacity={1} />
+                  <Stop offset="100%" stopColor="#B693FF" stopOpacity={1} />
+                </LinearGradient>
+              </Defs>
+
+              {/* Background Tracks */}
+              <Circle
+                cx={cx}
+                cy={cy}
+                r={r1}
+                fill="none"
+                stroke="rgba(250, 77, 34, 0.15)"
+                strokeWidth={thickness}
               />
-              <Text style={{ fontSize: 13, color: "#666", fontWeight: "600" }}>
-                Unworn items
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-              <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>
-                {displayUnworn}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: "#666",
-                  fontWeight: "500",
-                  marginLeft: 2,
-                }}
+              <Circle
+                cx={cx}
+                cy={cy}
+                r={r2}
+                fill="none"
+                stroke="rgba(51, 225, 129, 0.15)"
+                strokeWidth={thickness}
+              />
+              <Circle
+                cx={cx}
+                cy={cy}
+                r={r3}
+                fill="none"
+                stroke="rgba(146, 99, 254, 0.15)"
+                strokeWidth={thickness}
+              />
+
+              {/* Outer ring — Red to Orange */}
+              <Path
+                d={makeArc(r1, f1)}
+                fill="none"
+                stroke="url(#wrdOuter)"
+                strokeWidth={thickness}
+                strokeLinecap="round"
+              />
+
+              {/* Middle ring — Green */}
+              <Path
+                d={makeArc(r2, f2)}
+                fill="none"
+                stroke="url(#wrdMiddle)"
+                strokeWidth={thickness}
+                strokeLinecap="round"
+              />
+
+              {/* Inner ring — Blue to Purple */}
+              <Path
+                d={makeArc(r3, f3)}
+                fill="none"
+                stroke="url(#wrdInner)"
+                strokeWidth={thickness}
+                strokeLinecap="round"
+              />
+
+              {/* ── Outer icon (arrow >) ── */}
+              <G
+                transform={`translate(${flamePos.x.toFixed(1)}, ${flamePos.y.toFixed(1)})`}
               >
-                /{displayTotal} items
-              </Text>
-            </View>
-          </View>
-        </View>
-        {/* ── Left Card: Rings ── */}
-        <View
-          style={{
-            flex: 30,
-            // backgroundColor: "#FFFFFF90",
-            // borderRadius: 24,
-            // paddingVertical: 0,
-            alignItems: "center",
-            // width: "-10%",
-            justifyContent: "center",
-            // borderWidth: 1,
-            // marginRight: -10,
-            // borderColor: "#EBEBEB",
-            // shadowColor: "#FFFFFF",
-            // shadowOpacity: 0.05,
-            // shadowRadius: 10,
-            // shadowOffset: { width: 0, height: 3 },
-            // elevation: 2,
-          }}
-        >
-          <Svg width={arcW} height={arcH}>
-            <Defs>
-              <LinearGradient
-                id="wrdOuter"
-                x1={0}
-                y1={0}
-                x2={arcW}
-                y2={0}
-                gradientUnits="userSpaceOnUse"
-              >
-                <Stop offset="0%" stopColor="#2C242F10" stopOpacity={1} />
-                <Stop offset="50%" stopColor="#2C242F10" stopOpacity={1} />
-                <Stop offset="100%" stopColor="#2C242F10" stopOpacity={1} />
-              </LinearGradient>
-              <LinearGradient
-                id="wrdMiddle"
-                x1={0}
-                y1={0}
-                x2={arcW}
-                y2={0}
-                gradientUnits="userSpaceOnUse"
-              >
-                <Stop offset="0%" stopColor="#2C242F" stopOpacity={1} />
-                <Stop offset="50%" stopColor="#2C242F" stopOpacity={1} />
-                <Stop offset="100%" stopColor="#2C242F" stopOpacity={1} />
-              </LinearGradient>
-              <LinearGradient
-                id="wrdInner"
-                x1={0}
-                y1={cy - r3}
-                x2={0}
-                y2={cy + r3}
-                gradientUnits="userSpaceOnUse"
-              >
-                <Stop offset="0%" stopColor="#2C242F" stopOpacity={1} />
-                <Stop offset="100%" stopColor="#2C242F" stopOpacity={1} />
-              </LinearGradient>
-            </Defs>
-
-            {/* Background Tracks */}
-            <Path
-              d={makeArc(r1)}
-              fill="none"
-              stroke="#F8F7FC"
-              // color="#EBEB"
-              // borderWidth={0.5}
-              strokeWidth={thickness}
-              strokeLinecap="round"
-            />
-            <Path
-              d={makeArc(r2)}
-              fill="none"
-              stroke="#F8F7FC"
-              strokeWidth={thickness}
-              strokeLinecap="round"
-            />
-            <Path
-              d={makeArc(r3)}
-              fill="none"
-              stroke="#F8F7FC"
-              strokeWidth={thickness}
-              strokeLinecap="round"
-            />
-
-            {/* Outer ring — Red to Orange */}
-            <Path
-              d={makeArc(r1, f1)}
-              fill="none"
-              stroke="url(#wrdOuter)"
-              strokeWidth={thickness}
-              strokeLinecap="round"
-            />
-
-            {/* Middle ring — Yellow to Orange */}
-            <Path
-              d={makeArc(r2, f2)}
-              fill="none"
-              stroke="url(#wrdMiddle)"
-              strokeWidth={thickness}
-              strokeLinecap="round"
-            />
-
-            {/* Inner ring — Blue */}
-            <Path
-              d={makeArc(r3, f3)}
-              fill="none"
-              stroke="url(#wrdInner)"
-              strokeWidth={thickness}
-              strokeLinecap="round"
-            />
-
-            {/* ── Flame icon ── */}
-            <G
-              transform={`translate(${flamePos.x.toFixed(1)}, ${flamePos.y.toFixed(1)})`}
-            >
-              <Circle cx={0} cy={0} r={thickness / 2} fill="#FF1200" />
-              <G transform="scale(0.6)">
+                <Circle cx={0} cy={0} r={thickness / 2} fill="#D93A1F" />
                 <Path
-                  d="M 0,-8 C 4,-5 5,0 3,5 C 2,7 -2,7 -3,5 C -5,0 -4,-5 0,-8 Z"
-                  fill="white"
-                  opacity={0.95}
-                />
-                <Path
-                  d="M 0,-2 C 2,0 2,4 0,5.5 C -2,4 -2,0 0,-2 Z"
-                  fill="#FF5200"
-                  opacity={0.7}
-                />
-              </G>
-            </G>
-
-            {/* ── Runner icon ── */}
-            <G
-              transform={`translate(${runnerPos.x.toFixed(1)}, ${runnerPos.y.toFixed(1)})`}
-            >
-              <Circle cx={0} cy={0} r={thickness / 2} fill="#FF9500" />
-              <G transform="scale(0.6)">
-                <Circle cx={2} cy={-7} r={3} fill="white" />
-                <Path
-                  d="M 1,-4 L 2,2"
+                  d="M -1.5,-3.5 L 1.5,0 L -1.5,3.5"
                   stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 1.5,-3 L 6,-1"
-                  stroke="white"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 1.5,-3 L -3,0"
-                  stroke="white"
-                  strokeWidth={1.8}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 2,2 L 6,7"
-                  stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 2,2 L -1,5 L 0,8"
-                  stroke="white"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-              </G>
-            </G>
-
-            {/* ── Person (stand) icon ── */}
-            <G
-              transform={`translate(${personPos.x.toFixed(1)}, ${personPos.y.toFixed(1)})`}
-            >
-              <Circle cx={0} cy={0} r={thickness / 2} fill="#1E88E5" />
-              <G transform="scale(0.6)">
-                <Circle cx={0} cy={-7} r={3} fill="white" />
-                <Path
-                  d="M 0,-4 L 0,2"
-                  stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M -5,-7 L 0,-3 L 5,-7"
-                  stroke="white"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   fill="none"
                 />
+              </G>
+
+              {/* ── Middle icon (arrow >>) ── */}
+              <G
+                transform={`translate(${runnerPos.x.toFixed(1)}, ${runnerPos.y.toFixed(1)})`}
+              >
+                <Circle cx={0} cy={0} r={thickness / 2} fill="#1A9E53" />
                 <Path
-                  d="M 0,2 L -3,8"
+                  d="M -2.5,-3 L 0,0 L -2.5,3 M 0.5,-3 L 3,0 L 0.5,3"
                   stroke="white"
-                  strokeWidth={2.2}
+                  strokeWidth={1.5}
                   strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 0,2 L 3,8"
-                  stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   fill="none"
                 />
               </G>
-            </G>
-          </Svg>
+
+              {/* ── Inner icon (arrow ^) ── */}
+              <G
+                transform={`translate(${personPos.x.toFixed(1)}, ${personPos.y.toFixed(1)})`}
+              >
+                <Circle cx={0} cy={0} r={thickness / 2} fill="#6642BE" />
+                <Path
+                  d="M -3,1.5 L 0,-1.5 L 3,1.5"
+                  stroke="white"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </G>
+            </Svg>
+          </View>
+        </View>
+
+        {/* Time Filter Tabs */}
+        <View
+          style={{
+            flexDirection: "row",
+            backgroundColor: "#F8F7FC",
+            borderRadius: 13,
+            padding: 3,
+            marginTop: 4, // Spacing above tabs
+          }}
+        >
+          {TIME_FILTERS.map((filter) => (
+            <Pressable
+              key={filter}
+              onPress={() => setActiveFilter(filter)}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                borderRadius: 10,
+                backgroundColor:
+                  activeFilter === filter ? "#FFFFFF" : "transparent",
+                alignItems: "center",
+                shadowColor: activeFilter === filter ? "#000" : "transparent",
+                shadowOpacity: activeFilter === filter ? 0.05 : 0,
+                shadowRadius: activeFilter === filter ? 8 : 0,
+                shadowOffset: {
+                  width: 0,
+                  height: activeFilter === filter ? 2 : 0,
+                },
+                elevation: activeFilter === filter ? 1 : 0,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontFamily: "TikTokSans16pt-Medium",
+                  fontWeight: activeFilter === filter ? "700" : "500",
+                  color: activeFilter === filter ? "#1D1A27" : "#8E8E93",
+                }}
+              >
+                {filter}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       </View>
     </View>
-  );
-});
-
-// ─── View mode toggle ─────────────────────────────────────────────────────────
-
-const ViewToggle = React.memo(function ViewToggle({
-  viewMode,
-  onToggle,
-}: {
-  viewMode: "grouped" | "grid";
-  onToggle: (mode: "grouped" | "grid") => void;
-}) { 
-  const isGrouped = viewMode === "grouped";
-  return (
-    <Pressable
-      onPress={() => onToggle(isGrouped ? "grid" : "grouped")}
-      style={{
-        width: 48,
-        height: 48,
-        backgroundColor: "#FFFFFF",
-        borderRadius: 29,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {isGrouped ? (
-        <IconList size={24} color="#1D1A27" strokeWidth={2.5} />
-      ) : (
-        <IconLayoutGrid size={24} color="#1D1A27" strokeWidth={1.5} />
-      )}
-    </Pressable>
   );
 });
 
@@ -924,85 +778,22 @@ const MasonryCard = React.memo(function MasonryCard({
       style={{
         width: "100%",
         height,
-        borderRadius: 20,
+        borderRadius: 12,
         overflow: "hidden",
         marginBottom: GRID_GAP,
         backgroundColor: bg,
-        // marginTop:100,
-        // alignItems: "center",
-        // justifyContent:"center "
       }}
     >
-      <View style={{ flex: 1, backgroundColor: bg }} />
+      {item.image ? (
+        <Image
+          source={{ uri: item.image }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={{ flex: 1, backgroundColor: bg }} />
+      )}
     </Pressable>
-  );
-});
-
-// ─── Carousel card for grouped view ──────────────────────────────────────────
-
-const CarouselCard = React.memo(function CarouselCard({
-  item,
-}: {
-  item: ClothingItem;
-}) {
-  const router = useRouter();
-  const bg = CATEGORY_BG[item.category] || "#F4F4F6";
-  return (
-    <Pressable
-      onPress={() => router.push(`/(root)/cloth-details/${item.id}` as never)}
-      style={{
-        width: 180,
-        height: 220,
-        marginRight: 12,
-        backgroundColor: bg,
-        borderRadius: 24,
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      <View style={{ flex: 1, backgroundColor: bg }} />
-    </Pressable>
-  );
-});
-
-// ─── Group section header ─────────────────────────────────────────────────────
-
-const GroupHeader = React.memo(function GroupHeader({
-  category,
-  count,
-}: {
-  category: CategoryChip;
-  count: number;
-}) {
-  const color = CATEGORY_COLORS[category.id];
-  const bg = CATEGORY_BG[category.id];
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 20,
-        marginTop: 8,
-        marginBottom: 14,
-      }}
-    >
-      <Text style={{ fontSize: 16, fontWeight: "700", color: "#1D1A27" }}>
-        {category.label}
-      </Text>
-      <View
-        style={{
-          backgroundColor: bg,
-          borderRadius: 12,
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-        }}
-      >
-        <Text style={{ fontSize: 12, fontWeight: "700", color }}>
-          {count} {count === 1 ? "item" : "items"}
-        </Text>
-      </View>
-    </View>
   );
 });
 
@@ -1158,11 +949,17 @@ export default function WardrobeScreen() {
         occasion: item.occasion ?? "Casual",
         wears: 0,
         isNew: true,
+        image:
+          (item as any).image ??
+          `https://picsum.photos/seed/${item.id}/300/400`,
       }),
     );
-    return [...saved, ...MOCK_ITEMS];
+    const mocked = MOCK_ITEMS.map((item) => ({
+      ...item,
+      image: `https://picsum.photos/seed/${item.id}/300/400`,
+    }));
+    return [...saved, ...mocked];
   }, [userItems]);
-
   const ADD_MENU_OPTIONS = [
     {
       id: "add_clothing",
@@ -1214,7 +1011,6 @@ export default function WardrobeScreen() {
   ];
 
   const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
-  const [viewMode, setViewMode] = useState<"grouped" | "grid">("grouped");
 
   const filteredItems = useMemo(() => {
     if (activeCategory === "all") return allItems;
@@ -1255,53 +1051,26 @@ export default function WardrobeScreen() {
     setActiveCategory(id);
   }, []);
 
-  const renderGroupedRow = useCallback(
-    ({ item: category }: { item: CategoryChip }) => {
-      const categoryItems = allItems.filter(
-        (item) => item.category === category.id,
-      );
-      return (
-        <View style={{ marginBottom: 8 }}>
-          {activeCategory === "all" && (
-            <GroupHeader category={category} count={categoryItems.length} />
-          )}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-          >
-            {categoryItems.map((clothingItem) => (
-              <CarouselCard key={clothingItem.id} item={clothingItem} />
-            ))}
-          </ScrollView>
-        </View>
-      );
-    },
-    [activeCategory, allItems],
-  );
-
   const listHeader = (
     <View style={{ marginTop: 4 }}>
       <StatsCard total={total} worn={worn} unworn={unworn} usage={usage} />
-      <CategoryFilter active={activeCategory} onSelect={handleCategorySelect} />
-      {activeCategory === "all" && (
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingHorizontal: 20,
-            marginBottom: 16,
-          }}
-        >
-          <View>
-            <Text style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}>
-              All Categories
-            </Text>
-          </View>
-          <ViewToggle viewMode={viewMode} onToggle={setViewMode} />
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 20,
+          marginBottom: 12,
+          marginTop: 8,
+        }}
+      >
+        <View>
+          <Text style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}>
+            All Categories
+          </Text>
         </View>
-      )}
+      </View>
+      <CategoryFilter active={activeCategory} onSelect={handleCategorySelect} />
     </View>
   );
 
@@ -1318,6 +1087,7 @@ export default function WardrobeScreen() {
               justifyContent: "space-between",
               paddingHorizontal: 20,
               paddingBottom: 15,
+              // marginTop:5
             }}
           >
             <View>
@@ -1488,74 +1258,66 @@ export default function WardrobeScreen() {
           </Modal>
 
           {/* ── Content ── */}
-          {viewMode === "grid" || activeCategory !== "all" ? (
-            <ScrollView
-              key="grid-view"
-              showsVerticalScrollIndicator={false}
-              onScroll={onScroll}
-              scrollEventThrottle={16}
-              contentContainerStyle={{ paddingBottom: 140 }}
-            >
-              {listHeader}
-              {displayItems.length === 0 ? (
-                <EmptyState onAdd={handleAddClothes} />
-              ) : (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    paddingHorizontal: GRID_PADDING,
-                    gap: GRID_GAP,
-                  }}
-                >
-                  <View style={{ flex: 1 }}>
-                    {displayItems
-                      .filter((_, i) => i % 2 === 0)
-                      .map((item, i) => (
-                        <MasonryCard
-                          key={item.id}
-                          item={item}
-                          height={
-                            MASONRY_HEIGHTS[(i * 2) % MASONRY_HEIGHTS.length]
-                          }
-                        />
-                      ))}
-                  </View>
-                  <View style={{ flex: 1, marginTop: 32 }}>
-                    {displayItems
-                      .filter((_, i) => i % 2 === 1)
-                      .map((item, i) => (
-                        <MasonryCard
-                          key={item.id}
-                          item={item}
-                          height={
-                            MASONRY_HEIGHTS[
-                              (i * 2 + 1) % MASONRY_HEIGHTS.length
-                            ]
-                          }
-                        />
-                      ))}
-                  </View>
+          <ScrollView
+            key="grid-view"
+            showsVerticalScrollIndicator={false}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+            contentContainerStyle={{ paddingBottom: 140 }}
+          >
+            {listHeader}
+            {displayItems.length === 0 ? (
+              <EmptyState onAdd={handleAddClothes} />
+            ) : (
+              <View
+                style={{
+                  flexDirection: "row",
+                  paddingHorizontal: GRID_PADDING,
+                  gap: GRID_GAP,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  {displayItems
+                    .filter((_, i) => i % 3 === 0)
+                    .map((item, i) => (
+                      <MasonryCard
+                        key={item.id}
+                        item={item}
+                        height={
+                          MASONRY_HEIGHTS[(i * 3) % MASONRY_HEIGHTS.length]
+                        }
+                      />
+                    ))}
                 </View>
-              )}
-            </ScrollView>
-          ) : (
-            <FlatList
-              key="grouped-view"
-              data={groupableCategories}
-              keyExtractor={(cat) => cat.id}
-              renderItem={renderGroupedRow}
-              contentContainerStyle={{ paddingBottom: 140 }}
-              showsVerticalScrollIndicator={false}
-              onScroll={onScroll}
-              scrollEventThrottle={16}
-              ListHeaderComponent={listHeader}
-              ListEmptyComponent={<EmptyState onAdd={handleAddClothes} />}
-              removeClippedSubviews={true}
-              maxToRenderPerBatch={4}
-              windowSize={5}
-              initialNumToRender={3}
-            />
-          )}
+                <View style={{ flex: 1 }}>
+                  {displayItems
+                    .filter((_, i) => i % 3 === 1)
+                    .map((item, i) => (
+                      <MasonryCard
+                        key={item.id}
+                        item={item}
+                        height={
+                          MASONRY_HEIGHTS[(i * 3 + 1) % MASONRY_HEIGHTS.length]
+                        }
+                      />
+                    ))}
+                </View>
+                <View style={{ flex: 1 }}>
+                  {displayItems
+                    .filter((_, i) => i % 3 === 2)
+                    .map((item, i) => (
+                      <MasonryCard
+                        key={item.id}
+                        item={item}
+                        height={
+                          MASONRY_HEIGHTS[(i * 3 + 2) % MASONRY_HEIGHTS.length]
+                        }
+                      />
+                    ))}
+                </View>
+              </View>
+            )}
+          </ScrollView>
         </SafeAreaView>
       </AppGradientBackground>
     </SwipeTabWrapper>

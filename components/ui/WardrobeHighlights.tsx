@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { Text, View, TouchableOpacity, Dimensions } from "react-native";
-import Svg, {
-  Circle,
-  Path,
-  Defs,
-  LinearGradient,
-  Stop,
-  Line,
-} from "react-native-svg";
+import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { ChevronRight, Trophy } from "lucide-react-native";
-import { Image as ExpoImage } from "expo-image";
+import React, { useState } from "react";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import Svg, {
+  Circle,
+  Defs,
+  Line,
+  LinearGradient,
+  Path,
+  Stop,
+} from "react-native-svg";
 
 interface HighlightItem {
   id: number;
@@ -274,7 +274,7 @@ export const WardrobeHighlights = React.memo(function WardrobeHighlights() {
   const dClosed = `${dPath} L ${x3} ${yBaseline} L ${x0} ${yBaseline} Z`;
 
   return (
-    <View className="mt-8 mb-4">
+    <View className="mt-8 mb-40">
       {/* Header */}
       <View className="flex-row items-center justify-between mx-8 mb-3">
         <Text
@@ -578,6 +578,59 @@ export const WardrobeHighlights = React.memo(function WardrobeHighlights() {
                   : "30-day champ! Your wardrobe is truly thriving 🏆"}
           </Text>
         </View>
+      </View>
+      {/* ── Empty State Outfit Tracking Card ── */}
+      <View
+        style={{
+          marginHorizontal: 18,
+          // backgroundColor: "#FFFFFF",
+          // borderWidth: 1,
+          // borderColor: "#E5E7EB",
+          borderRadius: 24,
+          paddingHorizontal: 10,
+          paddingVertical: 10,
+          // marginTop: 12,
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 16.5,
+            fontFamily: "TikTokSans16pt-Bold",
+            color: "#1D1A27",
+            textAlign: "center",
+            marginBottom: 7,
+          }}
+        >
+          Ready to style your wardrobe.
+        </Text>
+        <Text
+          style={{
+            fontSize: 13,
+            color: "#4C4B5E",
+            fontFamily: "TikTokSans16pt-Medium",
+            // textAlign: "center",
+            lineHeight: 17,
+          }}
+        >
+          Upload your clothes and discover {"\n"} new outfit combinations.
+        </Text>
+
+        {/* Curved hand-drawn style arrow pointing downwards (half inside, half outside) */}
+        <ExpoImage
+          source={require("../../assets/ScribbleArrow.svg")}
+          style={{
+            position: "absolute",
+            bottom: -19, // Half of height 40 is outside the card border
+            right: 40,
+            width: 80,
+            height: 40,
+            // transform: [{ scaleX: -1 }],
+          }}
+          contentFit="contain"
+        />
       </View>
     </View>
   );

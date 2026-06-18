@@ -22,7 +22,11 @@ import {
   Share2,
   Download,
   Grid,
+  CloudRain,
+  ShoppingBag,
+  ChevronRight,
 } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
@@ -32,31 +36,42 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
-const FOR_YOU_BANNERS = [
+const STYLE_OF_THE_DAY = {
+  title: "Style of the Day",
+  weather: "Rainy, 22°C",
+  description: "Since it's raining today, here is a cozy look from your wardrobe.",
+  image: "https://images.unsplash.com/photo-1520975954732-57dd22299614?w=800&q=80",
+  items: [
+    { id: "1", type: "Jacket", name: "Black Denim Jacket" },
+    { id: "2", type: "Jeans", name: "Classic Blue Jeans" }
+  ]
+};
+
+const MISSING_PIECES = [
   {
-    id: "1",
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",
-    label: "Style Match 98%",
-    title: "Autumn Essentials",
-    subtitle: "12 items perfectly matched",
+    id: "m1",
+    title: "White Graphic Tee",
+    reason: "Matches 3 of your jeans",
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&q=80",
+    price: "₹1,299",
+    brand: "Urban Basics"
   },
   {
-    id: "2",
-    image:
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
-    label: "Trending Now",
-    title: "Urban Chic",
-    subtitle: "Loved by 2.4k users",
+    id: "m2",
+    title: "White Sneakers",
+    reason: "Perfect for your casual fits",
+    image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&q=80",
+    price: "₹3,499",
+    brand: "SneakerX"
   },
   {
-    id: "3",
-    image:
-      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=800&q=80",
-    label: "Summer Pick",
-    title: "Breezy Vibes",
-    subtitle: "Perfect for warm days",
-  },
+    id: "m3",
+    title: "Beige Chinos",
+    reason: "Versatile for smart casuals",
+    image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&q=80",
+    price: "₹1,899",
+    brand: "Zara"
+  }
 ];
 
 const COMMUNITY_POSTS = [
@@ -276,7 +291,7 @@ const CommunityPostCard = ({
   onMenuPress: () => void;
   onCardPress: () => void;
 }) => (
-  <View style={{ marginBottom: 16 }}>
+  <View style={{ marginBottom:5 }}>
     <Pressable
       onPress={onCardPress}
       style={{
@@ -297,21 +312,6 @@ const CommunityPostCard = ({
         resizeMode="cover"
       />
     </Pressable>
-    <View
-      style={{
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        marginTop: 3,
-        paddingRight: 4,
-      }}
-    >
-      <TouchableOpacity
-        onPress={onMenuPress}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <MoreHorizontal size={24} color="#1D1A27" />
-      </TouchableOpacity>
-    </View>
   </View>
 );
 
@@ -326,97 +326,57 @@ function ForYouTab() {
     (typeof COMMUNITY_POSTS)[0] | null
   >(null);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (bannerRef.current) {
-        const nextIndex = (activeBanner + 1) % FOR_YOU_BANNERS.length;
-        bannerRef.current.scrollToIndex({ index: nextIndex, animated: true });
-      }
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [activeBanner]);
-
-  const handleBannerScroll = useCallback((e: any) => {
-    const index = Math.round(
-      e.nativeEvent.contentOffset.x / (SCREEN_WIDTH - 5),
-    );
-    setActiveBanner(index);
-  }, []);
-
-  const renderBanner = useCallback(
-    ({ item, index }: { item: (typeof FOR_YOU_BANNERS)[0]; index: number }) => (
-      <Pressable
-        style={{
-          width: SCREEN_WIDTH - 10,
-          marginRight: index === FOR_YOU_BANNERS.length - 1 ? 0 : 5,
-          height: 270,
-          borderRadius: 25,
-          overflow: "hidden",
-          position: "relative",
-          // padding:
-        }}
-      >
-        <Image
-          source={{ uri: item.image }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-        <View
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.28)",
-            justifyContent: "flex-end",
-            padding: 18,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "rgba(255,255,255,0.2)",
-              alignSelf: "flex-start",
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 20,
-              marginBottom: 6,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.35)",
-            }}
-          >
-            <Text
-              style={{
-                color: "#fff",
-                fontSize: 11,
-                fontWeight: "700",
-                letterSpacing: 0.8,
-                textTransform: "uppercase",
-              }}
-            >
-              {item.label}
-            </Text>
-          </View>
-          <Text
-            style={{
-              color: "#fff",
-              fontSize: 22,
-              fontWeight: "800",
-              marginBottom: 2,
-            }}
-          >
-            {item.title}
+  const renderMissingPiece = ({ item }: { item: (typeof MISSING_PIECES)[0] }) => (
+    <View
+      style={{
+        width: 240,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 20,
+        marginRight: 12,
+        padding: 12,
+        flexDirection: "row",
+        shadowColor: "#000",
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: "#F0F0F0"
+      }}
+    >
+      <Image
+        source={{ uri: item.image }}
+        style={{ width: 80, height: 100, borderRadius: 12, backgroundColor: "#F5F5F7" }}
+      />
+      <View style={{ flex: 1, marginLeft: 12, justifyContent: "center" }}>
+        <Text style={{ fontSize: 10, fontWeight: "700", color: "#4C36F5", textTransform: "uppercase", marginBottom: 4 }}>
+          {item.brand}
+        </Text>
+        <Text style={{ fontSize: 14, fontWeight: "800", color: "#1D1A27", marginBottom: 2 }} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <Text style={{ fontSize: 11, color: "#6B7280", marginBottom: 8 }} numberOfLines={2}>
+          {item.reason}
+        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={{ fontSize: 14, fontWeight: "700", color: "#1D1A27" }}>
+            {item.price}
           </Text>
-          <Text
+          <TouchableOpacity
             style={{
-              color: "rgba(255,255,255,0.8)",
-              fontSize: 13,
-              fontWeight: "500",
+              backgroundColor: "#1D1A27",
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {item.subtitle}
-          </Text>
+            <ShoppingBag size={14} color="#FFF" />
+          </TouchableOpacity>
         </View>
-      </Pressable>
-    ),
-    [],
+      </View>
+    </View>
   );
 
   return (
@@ -426,48 +386,76 @@ function ForYouTab() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: "50%" }}
     >
-      {/* Banner Carousel */}
-      <View style={{ marginTop: 15, paddingHorizontal: 5 }}>
-        <FlatList
-          ref={bannerRef}
-          data={FOR_YOU_BANNERS}
-          keyExtractor={(item) => item.id}
-          renderItem={renderBanner}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={handleBannerScroll}
-          snapToInterval={SCREEN_WIDTH - 5}
-          decelerationRate="fast"
-          getItemLayout={(_, index) => ({
-            length: SCREEN_WIDTH - 5,
-            offset: (SCREEN_WIDTH - 5) * index,
-            index,
-          })}
-          initialNumToRender={1}
-        />
-
-        {/* Pagination dots */}
+      {/* ── Style of the Day ── */}
+      <View style={{ paddingHorizontal: 16, marginTop: 15 }}>
         <View
           style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            marginTop: 10,
-            gap: 6,
+            borderRadius: 28,
+            overflow: "hidden",
+            backgroundColor: "#FFFFFF",
+            shadowColor: "#000",
+            shadowOpacity: 0.08,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 5,
+            borderWidth: 1,
+            borderColor: "#F0F0F0"
           }}
         >
-          {FOR_YOU_BANNERS.map((_, i) => (
-            <View
-              key={i}
-              style={{
-                width: i === activeBanner ? 18 : 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: i === activeBanner ? "#1D1A27" : "#D1D1DC",
-              }}
+          <View style={{ height: 220, position: "relative" }}>
+            <Image
+              source={{ uri: STYLE_OF_THE_DAY.image }}
+              style={{ width: "100%", height: "100%" }}
             />
-          ))}
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.6)"]}
+              style={{ position: "absolute", inset: 0 }}
+            />
+            <View style={{ position: "absolute", top: 16, left: 16, backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderColor: "rgba(255,255,255,0.4)" }}>
+              <CloudRain size={14} color="#FFFFFF" />
+              <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>{STYLE_OF_THE_DAY.weather}</Text>
+            </View>
+            <View style={{ position: "absolute", bottom: 16, left: 16, right: 16 }}>
+              <Text style={{ color: "#FFF", fontSize: 24, fontWeight: "800", marginBottom: 4 }}>{STYLE_OF_THE_DAY.title}</Text>
+              <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: "500", lineHeight: 18 }}>{STYLE_OF_THE_DAY.description}</Text>
+            </View>
+          </View>
+          <View style={{ padding: 16 }}>
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
+              {STYLE_OF_THE_DAY.items.map((item, index) => (
+                <View key={item.id} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F5F5F7", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, gap: 8 }}>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: index === 0 ? "#4C36F5" : "#1D1A27" }} />
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: "#1D1A27" }}>{item.name}</Text>
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity style={{ backgroundColor: "#4C36F5", paddingVertical: 14, borderRadius: 16, alignItems: "center" }}>
+              <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "700" }}>Log This Outfit</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+      </View>
+
+      {/* ── Missing Piece / Shop the Look ── */}
+      <View style={{ marginTop: 32 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 16, marginBottom: 14 }}>
+          <View>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>Missing Pieces</Text>
+            <Text style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>Complete your wardrobe</Text>
+          </View>
+          <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#4C36F5" }}>See all</Text>
+            <ChevronRight size={16} color="#4C36F5" />
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          data={MISSING_PIECES}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMissingPiece}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
+        />
       </View>
 
       {/* Community Looks */}

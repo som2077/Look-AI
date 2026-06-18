@@ -922,59 +922,7 @@ export const TrendFeed = React.memo(function TrendFeed() {
         setActiveCategory={setActiveCategory}
       />
 
-      {/* ── Empty State Outfit Tracking Card ── */}
-      <View
-        style={{
-          marginHorizontal: 18,
-          // backgroundColor: "#FFFFFF",
-          // borderWidth: 1,
-          // borderColor: "#E5E7EB",
-          borderRadius: 24,
-          paddingHorizontal: 10,
-          paddingVertical: 10,
-          // marginTop: 12,
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 16.5,
-            fontFamily: "TikTokSans16pt-Bold",
-            color: "#1D1A27",
-            textAlign: "center",
-            marginBottom: 7,
-          }}
-        >
-          Ready to style your wardrobe.
-        </Text>
-        <Text
-          style={{
-            fontSize: 13,
-            color: "#4C4B5E",
-            fontFamily: "TikTokSans16pt-Medium",
-            // textAlign: "center",
-            lineHeight: 17,
-          }}
-        >
-          Upload your clothes and discover {"\n"} new outfit combinations.
-        </Text>
-
-        {/* Curved hand-drawn style arrow pointing downwards (half inside, half outside) */}
-        <ExpoImage
-          source={require("../../assets/ScribbleArrow.svg")}
-          style={{
-            position: "absolute",
-            bottom: -19, // Half of height 40 is outside the card border
-            right: 40,
-            width: 80,
-            height: 40,
-            // transform: [{ scaleX: -1 }],
-          }}
-          contentFit="contain"
-        />
-      </View>
+      
     </View>
   );
 });

@@ -1,4 +1,11 @@
-import React, { Component, ReactNode, useState, useCallback } from "react";
+import {
+  IconAlertTriangle,
+  IconRefresh,
+  IconServer,
+  IconWifiOff,
+} from "@tabler/icons-react-native";
+import { StatusBar } from "expo-status-bar";
+import React, { Component, ReactNode, useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -7,14 +14,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { StatusBar } from "expo-status-bar";
 import { create } from "zustand";
-import {
-  IconWifiOff,
-  IconServer,
-  IconAlertTriangle,
-  IconRefresh,
-} from "@tabler/icons-react-native";
 
 // ─── Zustand Error Store ──────────────────────────────────────────────────────
 
@@ -36,8 +36,15 @@ export const useErrorStore = create<ErrorState>((set) => ({
   crashMessage: "",
   setOffline: (offline) => set({ isOffline: offline }),
   setServerError: (serverError) => set({ isServerError: serverError }),
-  setCrash: (crash, message = "") => set({ hasCrash: crash, crashMessage: message }),
-  resetAll: () => set({ isOffline: false, isServerError: false, hasCrash: false, crashMessage: "" }),
+  setCrash: (crash, message = "") =>
+    set({ hasCrash: crash, crashMessage: message }),
+  resetAll: () =>
+    set({
+      isOffline: false,
+      isServerError: false,
+      hasCrash: false,
+      crashMessage: "",
+    }),
 }));
 
 // ─── ErrorStateView Overlays ───────────────────────────────────────────────────
@@ -78,7 +85,7 @@ export function ErrorStateView({ onRetry }: { onRetry: () => Promise<void> }) {
       }}
     >
       <StatusBar style="dark" />
-      
+
       <View
         style={{
           width: "100%",
@@ -115,10 +122,17 @@ export function ErrorStateView({ onRetry }: { onRetry: () => Promise<void> }) {
         </View>
 
         {/* Text descriptions */}
-        <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27", textAlign: "center" }}>
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: "800",
+            color: "#1D1A27",
+            textAlign: "center",
+          }}
+        >
           {isOffline ? "Connection Lost" : "Service Unavailable"}
         </Text>
-        
+
         <Text
           style={{
             fontSize: 12,
@@ -157,7 +171,9 @@ export function ErrorStateView({ onRetry }: { onRetry: () => Promise<void> }) {
           ) : (
             <>
               <IconRefresh size={16} color="#FFFFFF" />
-              <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFFFFF" }}>
+              <Text
+                style={{ fontSize: 13, fontWeight: "700", color: "#FFFFFF" }}
+              >
                 {isOffline ? "Retry Connection" : "Check Server Status"}
               </Text>
             </>
@@ -210,7 +226,7 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
           }}
         >
           <StatusBar style="dark" />
-          
+
           <View
             style={{
               width: "100%",
@@ -243,11 +259,26 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
             </View>
 
             {/* Error header details */}
-            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27", textAlign: "center" }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "800",
+                color: "#1D1A27",
+                textAlign: "center",
+              }}
+            >
               App Error Occurred
             </Text>
-            
-            <Text style={{ fontSize: 12, color: "#5A5A6A", textAlign: "center", marginTop: 8, fontWeight: "500" }}>
+
+            <Text
+              style={{
+                fontSize: 12,
+                color: "#5A5A6A",
+                textAlign: "center",
+                marginTop: 8,
+                fontWeight: "500",
+              }}
+            >
               A runtime layout error was intercepted in the styling engine.
             </Text>
 
@@ -290,7 +321,9 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
                 opacity: pressed ? 0.9 : 1,
               })}
             >
-              <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFFFFF" }}>
+              <Text
+                style={{ fontSize: 13, fontWeight: "700", color: "#FFFFFF" }}
+              >
                 Restart App View
               </Text>
             </Pressable>

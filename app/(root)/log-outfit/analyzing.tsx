@@ -1,10 +1,15 @@
-import React, { useEffect, useRef } from "react";
 import { useAnalysisCompleteNotification } from "@/src/services/notificationService";
-import { Text, View } from "react-native";
+import {
+  IconCheck,
+  IconLoader2,
+  IconSparkles,
+  IconUser,
+} from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useRef } from "react";
+import { Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -13,12 +18,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import {
-  IconCheck,
-  IconLoader2,
-  IconSparkles,
-  IconUser,
-} from "@tabler/icons-react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface DetectChip {
   label: string;

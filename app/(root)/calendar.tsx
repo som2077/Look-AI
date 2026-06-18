@@ -1,27 +1,26 @@
-import React, { useMemo, useState, useCallback } from "react";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Image as ExpoImage } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import * as Calendar from "expo-calendar";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Dimensions,
-  Modal,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { LinearGradient } from "expo-linear-gradient";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { Image as ExpoImage } from "expo-image";
 import { AppGradientBackground } from "../../components/ui/AppGradientBackground";
+
 import {
   IconArrowLeft,
-  IconCalendar,
   IconChevronDown,
-  IconPlus,
   IconDots,
+  IconPlus,
   IconShirt,
-  IconSparkles,
 } from "@tabler/icons-react-native";
 
 // ─── Constants & Types ────────────────────────────────────────────────────────
@@ -135,6 +134,34 @@ export default function CalendarScreen() {
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selected, setSelected] = useState<Date>(today);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [deviceEvents, setDeviceEvents] = useState<Calendar.Event[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+      if (status === "granted") {
+        fetchDeviceEvents();
+      }
+    })();
+  }, [viewYear, viewMonth]);
+
+  const fetchDeviceEvents = async () => {
+    try {
+      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+      const visibleCalendars = calendars.filter(c => c.allowsModifications || c.source.type !== 'local');
+      const calendarIds = visibleCalendars.map(c => c.id);
+
+      if (calendarIds.length > 0) {
+        const startDate = new Date(viewYear, viewMonth, 1);
+        const endDate = new Date(viewYear, viewMonth + 1, 0);
+        
+        const events = await Calendar.getEventsAsync(calendarIds, startDate, endDate);
+        setDeviceEvents(events);
+      }
+    } catch (e) {
+      console.log("Error fetching calendar events:", e);
+    }
+  };
 
   const days = useMemo(
     () => buildCalendarDays(viewYear, viewMonth),
@@ -161,8 +188,12 @@ export default function CalendarScreen() {
     return LOGGED_OUTFITS_DATA[selected.toDateString()];
   }, [selected]);
 
+  const selectedDayEvents = useMemo(() => {
+    return deviceEvents.filter(e => isSameDay(new Date(e.startDate), selected));
+  }, [selected, deviceEvents]);
+
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <AppGradientBackground>
         <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
           <StatusBar style="dark" />
@@ -348,6 +379,9 @@ export default function CalendarScreen() {
                     const isCurrentMonth = date.getMonth() === viewMonth;
                     const hasOutfit =
                       !!LOGGED_OUTFITS_DATA[date.toDateString()];
+                    
+                    const dayEvents = deviceEvents.filter(e => isSameDay(new Date(e.startDate), date));
+                    const hasDeviceEvent = dayEvents.length > 0;
 
                     if (!isCurrentMonth) {
                       return (
@@ -385,20 +419,30 @@ export default function CalendarScreen() {
                         >
                           {date.getDate()}
                         </Text>
-                        {hasOutfit && (
-                          <View
-                            style={{
-                              position: "absolute",
-                              bottom: 5,
-                              width: 4,
-                              height: 4,
-                              borderRadius: 2,
-                              backgroundColor: isSelected
-                                ? "#FFFFFF"
-                                : "#4C36F5",
-                            }}
-                          />
-                        )}
+                        <View style={{ flexDirection: "row", gap: 3, position: "absolute", bottom: 5 }}>
+                          {hasOutfit && (
+                            <View
+                              style={{
+                                width: 4,
+                                height: 4,
+                                borderRadius: 2,
+                                backgroundColor: isSelected
+                                  ? "#FFFFFF"
+                                  : "#4C36F5",
+                              }}
+                            />
+                          )}
+                          {hasDeviceEvent && (
+                            <View
+                              style={{
+                                width: 4,
+                                height: 4,
+                                borderRadius: 2,
+                                backgroundColor: isSelected ? "#E2E2EA" : "#D97706",
+                              }}
+                            />
+                          )}
+                        </View>
                       </TouchableOpacity>
                     );
                   })}
@@ -646,6 +690,23 @@ export default function CalendarScreen() {
                 </View>
               )}
             </View>
+
+            {/* Upcoming Events Section */}
+            {selectedDayEvents.length > 0 && (
+              <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+                <Text style={{ fontSize: 16, fontWeight: "700", color: "#1D1A27", marginBottom: 12 }}>
+                  Upcoming Events
+                </Text>
+                {selectedDayEvents.map(event => (
+                  <View key={event.id} style={{ backgroundColor: "#FFFFFF", padding: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: "#E2E2EA" }}>
+                    <Text style={{ fontSize: 15, fontWeight: "700", color: "#1D1A27" }}>{event.title}</Text>
+                    <Text style={{ fontSize: 12, color: "#5A5A6A", marginTop: 4, fontWeight: "500" }}>
+                      {new Date(event.startDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {new Date(event.endDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </ScrollView>
           {showDatePicker && (
             <DateTimePicker

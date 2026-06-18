@@ -6,7 +6,10 @@ import {
   ScrollView,
   Text,
   View,
+  Modal,
+  Image,
 } from "react-native";
+import { MOCK_WARDROBE_ITEMS } from "@/constants/mock-wardrobe-items";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -173,62 +176,59 @@ const ItemCard = React.memo(function ItemCard({
     <View
       style={{
         flex: 1,
-        backgroundColor: "#FFFFFF",
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: "#E2E2EA",
-        padding: 12,
+        backgroundColor: "#F8F8FA",
+        borderRadius: 24,
+        padding: 16,
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
-        height: isLarge ? 190 : 89,
-        shadowColor: "#000",
-        shadowOpacity: 0.01,
-        shadowRadius: 3,
-        shadowOffset: { width: 0, height: 1 },
-        elevation: 1,
+        height: isLarge ? 200 : 94,
       }}
     >
       {/* Color Indicator dot at top-left */}
       <View
         style={{
           position: "absolute",
-          top: 10,
-          left: 10,
-          width: 10,
-          height: 10,
-          borderRadius: 5,
+          top: 12,
+          left: 12,
+          width: 8,
+          height: 8,
+          borderRadius: 4,
           backgroundColor: colorDot,
-          borderWidth: 0.5,
-          borderColor: "#C5C5CF",
+          borderWidth: 1,
+          borderColor: "rgba(0,0,0,0.1)",
         }}
       />
 
-      {/* Icon inside grey circle/box */}
+      {/* Icon */}
       <View
         style={{
-          width: isLarge ? 56 : 38,
-          height: isLarge ? 56 : 38,
-          borderRadius: 12,
-          backgroundColor: "#F8F7FC",
+          width: isLarge ? 64 : 40,
+          height: isLarge ? 64 : 40,
+          borderRadius: isLarge ? 32 : 20,
+          backgroundColor: "#FFFFFF",
           alignItems: "center",
           justifyContent: "center",
-          borderWidth: 1,
-          borderColor: "#E2E2EA",
-          marginBottom: isLarge ? 14 : 6,
+          marginBottom: isLarge ? 16 : 8,
+          shadowColor: "#000",
+          shadowOpacity: 0.04,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 2,
         }}
       >
-        <Icon size={isLarge ? 26 : 18} color="#9B9BAF" strokeWidth={1.5} />
+        <Icon size={isLarge ? 28 : 20} color="#1D1A27" strokeWidth={1.5} />
       </View>
 
       <Text
         numberOfLines={2}
         style={{
-          fontSize: isLarge ? 12 : 10,
-          fontWeight: "600",
+          fontSize: isLarge ? 13 : 10,
+          fontWeight: "700",
           color: "#1D1A27",
           textAlign: "center",
-          paddingHorizontal: 2,
+          paddingHorizontal: 4,
+          letterSpacing: 0.5,
         }}
       >
         {name}
@@ -244,40 +244,21 @@ const ChecklistBadge = React.memo(function ChecklistBadge({
   text: string;
   type: "green" | "blue" | "yellow" | "pink" | "purple";
 }) {
-  const styles = useMemo(() => {
-    switch (type) {
-      case "green":
-        return { bg: "#E8F8F0", border: "#C6EFD9", text: "#0F824A" };
-      case "blue":
-        return { bg: "#EAF5FF", border: "#CBE4FF", text: "#1665D8" };
-      case "yellow":
-        return { bg: "#FEF6EC", border: "#FFE6C7", text: "#B25E02" };
-      case "pink":
-        return { bg: "#FFF0F6", border: "#FFD6E8", text: "#C11574" };
-      case "purple":
-        return { bg: "#F7F4FD", border: "#E5DAFB", text: "#6538C9" };
-    }
-  }, [type]);
-
   return (
     <View
       style={{
         flexDirection: "row",
         alignItems: "center",
-        gap: 3,
-        backgroundColor: styles.bg,
-        borderWidth: 1,
-        borderColor: styles.border,
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        marginBottom: 6,
+        gap: 4,
+        paddingRight: 10,
+        paddingVertical: 2,
+        marginBottom: 8,
       }}
     >
-      <Text style={{ fontSize: 11, fontWeight: "600", color: styles.text }}>
+      <IconCheck size={14} color="#1D1A27" strokeWidth={2.5} />
+      <Text style={{ fontSize: 11, fontWeight: "700", color: "#1D1A27", textTransform: "uppercase", letterSpacing: 0.5 }}>
         {text}
       </Text>
-      <IconCheck size={10} color={styles.text} strokeWidth={3} />
     </View>
   );
 });
@@ -358,10 +339,35 @@ export default function OutfitScreen() {
   const [wornIds, setWornIds] = useState<Record<string, boolean>>({});
 
   const currentOutfit = useMemo(() => {
-    return (
-      SUGGESTIONS_DATA.find((o) => o.id === selectedId) || SUGGESTIONS_DATA[0]
-    );
+    return SUGGESTIONS_DATA.find((o) => o.id === selectedId) || SUGGESTIONS_DATA[0];
   }, [selectedId]);
+
+  // Build & Rate States
+  const [activeTab, setActiveTab] = useState<"curated" | "build">("curated");
+  const [selectedTop, setSelectedTop] = useState<any>(null);
+  const [selectedBottom, setSelectedBottom] = useState<any>(null);
+  const [selectedFootwear, setSelectedFootwear] = useState<any>(null);
+  const [showPickerFor, setShowPickerFor] = useState<"top" | "bottoms" | "footwear" | null>(null);
+  const [buildLoading, setBuildLoading] = useState(false);
+  const [aiScore, setAiScore] = useState<number | null>(null);
+  const [aiFeedback, setAiFeedback] = useState<string | null>(null);
+
+  const handleRateFit = useCallback(() => {
+    setBuildLoading(true);
+    setAiScore(null);
+    setAiFeedback(null);
+    setTimeout(() => {
+      // Dummy logic for rating
+      const randomScore = Math.floor(Math.random() * (99 - 75 + 1)) + 75;
+      setAiScore(randomScore);
+      setAiFeedback(
+        randomScore > 90 
+          ? "Incredible combination! The colors balance perfectly and the silhouette is highly modern. A true head-turner."
+          : "Good attempt. The pieces are safe together, though adding a contrasting accessory might elevate the overall look."
+      );
+      setBuildLoading(false);
+    }, 2000);
+  }, []);
 
   // Loading Phrase cycle
   useEffect(() => {
@@ -406,7 +412,7 @@ export default function OutfitScreen() {
   const isWorn = !!wornIds[selectedId];
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8F7FC" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
         <StatusBar style="dark" />
         <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
           
@@ -424,10 +430,10 @@ export default function OutfitScreen() {
           ) : (
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 110 }}
+              contentContainerStyle={{ paddingBottom: 140 }}
             >
               {/* Header section */}
-              <View style={{ paddingHorizontal: 24, paddingTop: 16, marginBottom: 20 }}>
+              <View style={{ paddingHorizontal: 24, paddingTop: 16, marginBottom: 24 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <View>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
@@ -473,8 +479,20 @@ export default function OutfitScreen() {
                     </Pressable>
                   </View>
                 </View>
+
+                {/* Mode Switcher */}
+                <View style={{ flexDirection: "row", marginTop: 24, backgroundColor: "#F8F8FA", padding: 4, borderRadius: 12 }}>
+                  <Pressable onPress={() => setActiveTab("curated")} style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: activeTab === "curated" ? "#FFFFFF" : "transparent", alignItems: "center", shadowColor: activeTab === "curated" ? "#000" : "transparent", shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: activeTab === "curated" ? 2 : 0 }}>
+                    <Text style={{ fontSize: 13, fontWeight: activeTab === "curated" ? "700" : "500", color: activeTab === "curated" ? "#1D1A27" : "#9B9BAF" }}>Curated for You</Text>
+                  </Pressable>
+                  <Pressable onPress={() => setActiveTab("build")} style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: activeTab === "build" ? "#FFFFFF" : "transparent", alignItems: "center", shadowColor: activeTab === "build" ? "#000" : "transparent", shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: activeTab === "build" ? 2 : 0 }}>
+                    <Text style={{ fontSize: 13, fontWeight: activeTab === "build" ? "700" : "500", color: activeTab === "build" ? "#1D1A27" : "#9B9BAF" }}>Build & Rate</Text>
+                  </Pressable>
+                </View>
               </View>
 
+              {activeTab === "curated" ? (
+                <>
               {/* Tag filters list (Horizontal Scroll) */}
               <ScrollView
                 horizontal
@@ -516,14 +534,14 @@ export default function OutfitScreen() {
               </ScrollView>
 
               {/* Main Card */}
-              <View style={{ paddingHorizontal: 24, marginBottom: 24 }}>
+              <View style={{ paddingHorizontal: 20, marginBottom: 32 }}>
                 <View
                   style={{
                     backgroundColor: "#FFFFFF",
-                    borderRadius: 28,
+                    borderRadius: 32,
                     borderWidth: 1,
-                    borderColor: "#E2E2EA",
-                    padding: 20,
+                    borderColor: "#F0F0F5",
+                    padding: 24,
                     shadowColor: "#000",
                     shadowOpacity: 0.03,
                     shadowRadius: 10,
@@ -616,111 +634,30 @@ export default function OutfitScreen() {
                   {/* AI Why Section */}
                   <View
                     style={{
-                      backgroundColor: "#F4F3FF",
-                      borderRadius: 18,
-                      borderLeftWidth: 4,
-                      borderLeftColor: "#4C36F5",
-                      padding: 16,
-                      marginTop: 18,
+                      marginTop: 24,
+                      paddingTop: 20,
+                      borderTopWidth: 1,
+                      borderTopColor: "#F0F0F5",
                     }}
                   >
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      <Text style={{ fontSize: 13, fontWeight: "700", color: "#4C36F5" }}>
-                        Why this outfit?
-                      </Text>
-                    </View>
+                    <Text style={{ fontSize: 11, fontWeight: "800", color: "#1D1A27", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                      Curator's Note
+                    </Text>
                     <Text
                       style={{
-                        fontSize: 12,
-                        color: "#5A5A6A",
-                        lineHeight: 18,
-                        fontWeight: "500",
+                        fontSize: 14,
+                        color: "#4A4A5A",
+                        lineHeight: 22,
+                        fontWeight: "400",
                       }}
                     >
                       {currentOutfit.why}
                     </Text>
                   </View>
-
-                  {/* Actions row */}
-                  <View style={{ flexDirection: "row", gap: 10, marginTop: 18 }}>
-                    {/* Refresh Button */}
-                    <Pressable
-                      onPress={handleRefresh}
-                      style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 14,
-                        backgroundColor: "#F1F1F5",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <IconRefresh size={20} color="#1D1A27" />
-                    </Pressable>
-
-                    {/* Save Button */}
-                    <Pressable
-                      onPress={handleSaveToggle}
-                      style={{
-                        flex: 1,
-                        height: 50,
-                        borderRadius: 14,
-                        borderWidth: 1,
-                        borderColor: isSaved ? "#EF4444" : "#FEE2E2",
-                        backgroundColor: isSaved ? "#FFF5F5" : "#FFFFFF",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <IconHeart
-                        size={18}
-                        color="#EF4444"
-                        fill={isSaved ? "#EF4444" : "none"}
-                        strokeWidth={1.5}
-                      />
-                      <Text
-                        style={{
-                          fontSize: 13,
-                          fontWeight: "700",
-                          color: isSaved ? "#EF4444" : "#EF4444",
-                        }}
-                      >
-                        {isSaved ? "Saved" : "Save"}
-                      </Text>
-                    </Pressable>
-
-                    {/* Wear This Button */}
-                    <Pressable
-                      onPress={handleWearToggle}
-                      style={{
-                        flex: 1.5,
-                        height: 50,
-                        borderRadius: 14,
-                        backgroundColor: isWorn ? "#1D1A27" : "#4C36F5",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                      }}
-                    >
-                      {isWorn ? (
-                        <>
-                          <IconCheck size={18} color="#FFFFFF" strokeWidth={2.5} />
-                          <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFFFFF" }}>
-                            Wearing Today
-                          </Text>
-                        </>
-                      ) : (
-                        <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFFFFF" }}>
-                          Wear This
-                        </Text>
-                      )}
-                    </Pressable>
-                  </View>
                 </View>
               </View>
+
+
 
               {/* Suggestions header */}
               <View
@@ -815,9 +752,179 @@ export default function OutfitScreen() {
                   );
                 })}
               </ScrollView>
+              </>
+              ) : (
+                /* Build & Rate View */
+                <View style={{ paddingHorizontal: 24 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: "#1D1A27", marginBottom: 16 }}>Select your pieces</Text>
+                  {/* Slots */}
+                  {["top", "bottoms", "footwear"].map((cat) => {
+                    const sel = cat === "top" ? selectedTop : cat === "bottoms" ? selectedBottom : selectedFootwear;
+                    const label = cat === "top" ? "Top" : cat === "bottoms" ? "Bottom" : "Footwear";
+                    return (
+                      <Pressable key={cat} onPress={() => setShowPickerFor(cat as any)} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#F8F8FA", borderRadius: 16, padding: 16, marginBottom: 12 }}>
+                        {sel ? (
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                            {(sel as any).image ? <Image source={{ uri: (sel as any).image }} style={{ width: 40, height: 40, borderRadius: 8 }} /> : <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: sel.bgColor || "#EAE8FF" }} />}
+                            <View>
+                              <Text style={{ fontSize: 14, fontWeight: "600", color: "#1D1A27" }}>{sel.name}</Text>
+                              <Text style={{ fontSize: 12, color: "#9B9BAF" }}>{label}</Text>
+                            </View>
+                          </View>
+                        ) : (
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                            <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: "#EAE8FF", alignItems: "center", justifyContent: "center" }}>
+                              <IconSparkles size={16} color="#4C36F5" />
+                            </View>
+                            <Text style={{ fontSize: 14, fontWeight: "600", color: "#9B9BAF" }}>Select {label}</Text>
+                          </View>
+                        )}
+                        <Text style={{ fontSize: 12, fontWeight: "700", color: "#4C36F5" }}>{sel ? "Change" : "Add"}</Text>
+                      </Pressable>
+                    );
+                  })}
+                  
+                  {/* Rate My Fit Button */}
+                  {selectedTop && selectedBottom && selectedFootwear && (
+                    <Pressable onPress={handleRateFit} disabled={buildLoading} style={{ backgroundColor: "#1D1A27", borderRadius: 16, paddingVertical: 16, alignItems: "center", marginTop: 12 }}>
+                      {buildLoading ? <ActivityIndicator color="#FFF" /> : <Text style={{ fontSize: 15, fontWeight: "700", color: "#FFFFFF" }}>Rate My Fit</Text>}
+                    </Pressable>
+                  )}
+
+                  {/* AI Feedback */}
+                  {aiScore && (
+                    <View style={{ marginTop: 32, padding: 20, backgroundColor: "#F4F3FF", borderRadius: 20, borderWidth: 1, borderColor: "#EAE8FF" }}>
+                      <Text style={{ fontSize: 12, fontWeight: "800", color: "#4C36F5", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>AI Style Score</Text>
+                      <Text style={{ fontSize: 42, fontWeight: "800", color: "#1D1A27", marginBottom: 12 }}>{aiScore}/100</Text>
+                      <Text style={{ fontSize: 11, fontWeight: "800", color: "#1D1A27", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Curator's Note</Text>
+                      <Text style={{ fontSize: 14, color: "#4A4A5A", lineHeight: 22 }}>{aiFeedback}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </ScrollView>
           )}
-        </SafeAreaView>
-      </View>
+
+          {/* Floating Action Bar */}
+          {!loading && activeTab === "curated" && (
+            <View
+              style={{
+                position: "absolute",
+                bottom: 30,
+                left: 20,
+                right: 20,
+                backgroundColor: "#161618",
+                borderRadius: 999,
+                flexDirection: "row",
+                padding: 8,
+                paddingHorizontal: 10,
+                alignItems: "center",
+                shadowColor: "#000",
+                shadowOpacity: 0.25,
+                shadowRadius: 15,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 10,
+              }}
+            >
+              <Pressable
+                onPress={handleRefresh}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: "#2C2C2E",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 8,
+                }}
+              >
+                <IconRefresh size={20} color="#FFFFFF" />
+              </Pressable>
+
+              <Pressable
+                onPress={handleSaveToggle}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: isSaved ? "#EF4444" : "#2C2C2E",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 12,
+                }}
+              >
+                <IconHeart
+                  size={20}
+                  color="#FFFFFF"
+                  fill={isSaved ? "#FFFFFF" : "none"}
+                />
+              </Pressable>
+
+              <Pressable
+                onPress={handleWearToggle}
+                style={{
+                  flex: 1,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: isWorn ? "#5ECFC2" : "#FFFFFF",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                {isWorn ? (
+                  <>
+                    <IconCheck size={18} color="#161618" strokeWidth={2.5} />
+                    <Text style={{ fontSize: 15, fontWeight: "700", color: "#161618" }}>
+                      Worn Today
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: "#161618" }}>
+                    Wear This
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          )}
+      </SafeAreaView>
+
+      {/* Wardrobe Item Picker Modal */}
+      <Modal visible={!!showPickerFor} animationType="slide" transparent>
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }}>
+          <View style={{ backgroundColor: "#FFFFFF", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, height: "70%" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>Select {showPickerFor}</Text>
+              <Pressable onPress={() => setShowPickerFor(null)}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: "#9B9BAF" }}>Cancel</Text>
+              </Pressable>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {MOCK_WARDROBE_ITEMS.filter((item) => item.category === showPickerFor).map((item) => (
+                <Pressable
+                  key={item.id}
+                  onPress={() => {
+                    if (showPickerFor === "top") setSelectedTop(item);
+                    if (showPickerFor === "bottoms") setSelectedBottom(item);
+                    if (showPickerFor === "footwear") setSelectedFootwear(item);
+                    setShowPickerFor(null);
+                  }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F8F8FA" }}
+                >
+                  <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: item.bgColor || "#F0F0F5", alignItems: "center", justifyContent: "center" }}>
+                    {(item as any).image ? <Image source={{ uri: (item as any).image }} style={{ width: "100%", height: "100%", borderRadius: 12 }} /> : <IconSparkles size={20} color="#9B9BAF" />}
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#1D1A27" }}>{item.name}</Text>
+                    <Text style={{ fontSize: 12, color: "#9B9BAF", marginTop: 2 }}>{item.color}</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
