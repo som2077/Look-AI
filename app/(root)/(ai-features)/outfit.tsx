@@ -641,7 +641,7 @@ export default function OutfitScreen() {
                     }}
                   >
                     <Text style={{ fontSize: 11, fontWeight: "800", color: "#1D1A27", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
-                      Curator's Note
+                      Curator&apos;s Note
                     </Text>
                     <Text
                       style={{
@@ -796,7 +796,7 @@ export default function OutfitScreen() {
                     <View style={{ marginTop: 32, padding: 20, backgroundColor: "#F4F3FF", borderRadius: 20, borderWidth: 1, borderColor: "#EAE8FF" }}>
                       <Text style={{ fontSize: 12, fontWeight: "800", color: "#4C36F5", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>AI Style Score</Text>
                       <Text style={{ fontSize: 42, fontWeight: "800", color: "#1D1A27", marginBottom: 12 }}>{aiScore}/100</Text>
-                      <Text style={{ fontSize: 11, fontWeight: "800", color: "#1D1A27", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Curator's Note</Text>
+                      <Text style={{ fontSize: 11, fontWeight: "800", color: "#1D1A27", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Curator&apos;s Note</Text>
                       <Text style={{ fontSize: 14, color: "#4A4A5A", lineHeight: 22 }}>{aiFeedback}</Text>
                     </View>
                   )}

@@ -19,6 +19,7 @@
  *   SUPABASE_URL
  */
 
+// eslint-disable-next-line import/no-unresolved
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const PACKAGE_NAME = Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME") ?? "";

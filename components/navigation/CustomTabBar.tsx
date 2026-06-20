@@ -2,7 +2,7 @@ import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs
 import { Image as ExpoImage } from "expo-image";
 import { Pressable, View, Animated, Text } from "react-native";
 import { useRouter, type Href } from "expo-router";
-import React, { ReactNode, useCallback, useRef, useState } from "react";
+import React, { ReactNode, useCallback, useRef, useState , useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   IconSmartHome,
@@ -14,7 +14,7 @@ import {
 import { AddActionMenu } from "./AddActionMenu";
 import LottieView from "lottie-react-native";
 import { useUIStore } from "../../backend/store/ui-store";
-import { useEffect } from "react";
+
 
 type TabIconComponent = React.ComponentType<IconProps>;
 type TabConfig = Record<string, TabIconComponent>;

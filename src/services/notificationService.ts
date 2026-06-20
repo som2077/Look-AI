@@ -3,9 +3,9 @@ import * as Haptics from "expo-haptics";
 import { useCallback } from "react";
 
 // ── Sound ─────────────────────────────────────────────────────────
-/* eslint-disable @typescript-eslint/no-require-imports */
+ 
 const CHIME_ASSET = require("../../assets/sounds/analysis-complete.wav");
-/* eslint-enable @typescript-eslint/no-require-imports */
+ 
 
 /**
  * React hook that returns a function to play the analysis-complete

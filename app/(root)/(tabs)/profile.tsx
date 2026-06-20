@@ -2,7 +2,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import {
   IconBell,
   IconChevronRight,
-  IconDots,
+
   IconLink,
   IconLogout,
   IconMail,
@@ -22,6 +22,7 @@ import {
   ActivityIndicator,
   Alert,
   ImageBackground,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -306,6 +307,7 @@ const ClassicProfileUI = ({
       <ListItem
         icon={<IconUser size={18} color="#1D1D1D" />}
         title="Personal details"
+        onPress={() => router.push("/(root)/personal-details" as never)}
       />
       <ListItem
         icon={<IconSettings size={18} color="#1D1D1D" />}
@@ -333,10 +335,12 @@ const ClassicProfileUI = ({
       <ListItem
         icon={<IconSpeakerphone size={18} color="#1D1D1D" />}
         title="Request a feature"
+        onPress={() => Linking.openURL("https://tally.so/r/9qx7e1")}
       />
       <ListItem
         icon={<IconMail size={18} color="#1D1D1D" />}
         title="Support Email"
+        onPress={() => Linking.openURL("mailto:somgoutam0@gmail.com?subject=Look AI Support&body=Hi Look AI Team,")}
       />
       <ListItem
         icon={<IconNotes size={18} color="#1D1D1D" />}
@@ -487,7 +491,7 @@ const ExploreStyleProfileUI = ({
         </Text>
       </View>
 
-      {/* Link and Menu top right below banner */}
+      {/* Link top right below banner */}
       <View
         style={{
           position: "absolute",
@@ -498,7 +502,6 @@ const ExploreStyleProfileUI = ({
         }}
       >
         <IconLink color="#00000080" size={20} />
-        <IconDots color="#00000080" size={20} />
       </View>
 
       {/* Avatar */}
@@ -542,6 +545,16 @@ const ExploreStyleProfileUI = ({
       <Text
         style={{
           fontSize: 14,
+          color: "#9263FE",
+          fontWeight: "600",
+          marginTop: 2,
+        }}
+      >
+        @lina_cho
+      </Text>
+      <Text
+        style={{
+          fontSize: 14,
           color: "#6B7280",
           fontWeight: "500",
           marginTop: 4,
@@ -560,7 +573,7 @@ const ExploreStyleProfileUI = ({
           alignItems: "center",
         }}
       >
-        <View>
+        <Pressable onPress={() => router.push("/(root)/profile-network?tab=followers" as never)}>
           <Text
             style={{
               fontSize: 13,
@@ -574,9 +587,9 @@ const ExploreStyleProfileUI = ({
           <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
             678
           </Text>
-        </View>
+        </Pressable>
         <View style={{ width: 1, height: 30, backgroundColor: "#E5E7EB" }} />
-        <View>
+        <Pressable onPress={() => router.push("/(root)/profile-network?tab=following" as never)}>
           <Text
             style={{
               fontSize: 13,
@@ -590,9 +603,9 @@ const ExploreStyleProfileUI = ({
           <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
             312
           </Text>
-        </View>
+        </Pressable>
         <View style={{ width: 1, height: 30, backgroundColor: "#E5E7EB" }} />
-        <View>
+        <Pressable onPress={() => router.push("/(root)/profile-network?tab=posts" as never)}>
           <Text
             style={{
               fontSize: 13,
@@ -606,7 +619,7 @@ const ExploreStyleProfileUI = ({
           <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
             18
           </Text>
-        </View>
+        </Pressable>
       </View>
 
       {/* Divider */}
@@ -642,7 +655,7 @@ const ExploreStyleProfileUI = ({
           marginBottom: 20,
         }}
       >
-        I'm an independent designer based in Seoul. I partner with brands and
+        I&apos;m an independent designer based in Seoul. I partner with brands and
         startups through Studio Else to create bold, minimal interfaces and
         meaningful digital experiences.
       </Text>
@@ -742,6 +755,7 @@ const ExploreStyleProfileUI = ({
           <ListItem
             icon={<IconUser size={18} color="#1D1D1D" />}
             title="Personal details"
+            onPress={() => router.push("/(root)/personal-details" as never)}
           />
           <ListItem
             icon={<IconSettings size={18} color="#1D1D1D" />}
@@ -766,10 +780,12 @@ const ExploreStyleProfileUI = ({
           <ListItem
             icon={<IconSpeakerphone size={18} color="#1D1D1D" />}
             title="Request a feature"
+            onPress={() => Linking.openURL("https://tally.so/r/9qx7e1")}
           />
           <ListItem
             icon={<IconMail size={18} color="#1D1D1D" />}
             title="Support Email"
+            onPress={() => Linking.openURL("mailto:somgoutam0@gmail.com?subject=Look AI Support&body=Hi Look AI Team,")}
           />
           <ListItem
             icon={<IconNotes size={18} color="#1D1D1D" />}

@@ -169,7 +169,7 @@ export default function CameraInfoScreen() {
         {/* ── CTA ──────────────────────────────────────────────────────── */}
         <View style={s.cta}>
           <Pressable onPress={handleClose} style={s.ctaBtn}>
-            <Text style={s.ctaBtnText}>Got it, let's shoot</Text>
+            <Text style={s.ctaBtnText}>Got it, let&apos;s shoot</Text>
             <IconArrowRight size={16} color="#FFFFFF" strokeWidth={2.5} />
           </Pressable>
         </View>

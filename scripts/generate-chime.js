@@ -1,3 +1,4 @@
+/* global Buffer, __dirname */
 /**
  * Generates a pleasant two-tone notification chime as a WAV file.
  * Run: node scripts/generate-chime.js

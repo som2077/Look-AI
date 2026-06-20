@@ -28,14 +28,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, {
-  Circle,
-  Defs,
-  G,
-  LinearGradient,
-  Path,
-  Stop,
-} from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
 import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
@@ -341,7 +334,7 @@ const CategoryFilter = React.memo(function CategoryFilter({
 
 const TIME_FILTERS = ["Today", "3day", "5day", "This week"];
 
-// ─── StatsCard with gradient arc matching reference image ─────────────────────
+// ─── StatsCard with Dark Mode Semicircle UI ─────────────────────────────────────
 
 const StatsCard = React.memo(function StatsCard({
   total,
@@ -370,356 +363,256 @@ const StatsCard = React.memo(function StatsCard({
   const displayUnworn = Math.max(total - displayWorn, 0);
   const displayUsage = total > 0 ? Math.round((displayWorn / total) * 100) : 0;
 
-  // ── Arc geometry (matching reference image: 3 gradient concentric rings) ──
-  const arcW = 160;
-  const thickness = 15;
-  const arcGap = 2;
-  const r1 = 70; // outer ring centerline radius
-  const r2 = r1 - thickness - arcGap; // = 48  middle ring
-  const r3 = r2 - thickness - arcGap; // = 26  inner ring
-  const cx = arcW / 2; // = 80
-  const cy = r1 + 10; // = 80
-  const arcH = 160;
+  // ── Arc geometry ──
+  const arcW = 240;
+  const arcH = 120; // Height is half of width for semicircle
+  const cx = arcW / 2;
+  const cy = arcH;
+  const thickness = 14;
+  const gap = 4;
+  const r1 = 100; // Outer (Pink)
+  const r2 = r1 - thickness - gap; // Yellow
+  const r3 = r2 - thickness - gap; // Green
+  const r4 = r3 - thickness - gap; // Blue
 
-  // Full rings starting from top
-  const START_DEG = 90; // Top (12 o'clock)
-  const TOTAL_DEG = -359.99; // Almost 360 for SVG arc
+  const makeArc = (r: number, f: number = 1): string => {
+    const clampedF = Math.max(0.001, Math.min(f, 1));
+    const startX = cx - r;
+    const startY = cy;
+    const endAngle = Math.PI * (1 - clampedF);
+    const endX = cx + r * Math.cos(endAngle);
+    const endY = cy - r * Math.sin(endAngle);
+    return `M ${startX} ${startY} A ${r} ${r} 0 0 1 ${endX} ${endY}`;
+  };
 
-  const f1 = Math.max(
-    0.0001,
-    Math.min(displayWorn / (displayTotal || 1), 0.9999),
-  );
-  const f2 = Math.max(0.0001, Math.min(displayUsage / 100, 0.9999));
+  const f1 = Math.max(0.001, displayUsage / 100);
+  const f2 = Math.max(0.001, displayTotal > 0 ? displayWorn / displayTotal : 0);
   const f3 = Math.max(
-    0.0001,
-    Math.min(displayUnworn / (displayTotal || 1), 0.9999),
+    0.001,
+    displayTotal > 0 ? displayUnworn / displayTotal : 0,
   );
-
-  const makeArc = (r: number, f: number = 0.9999): string => {
-    const clampedF = Math.max(0.0001, Math.min(f, 0.9999));
-    const startRad = (START_DEG * Math.PI) / 180;
-    const endRad = ((START_DEG + clampedF * TOTAL_DEG) * Math.PI) / 180;
-    const x1 = cx + r * Math.cos(startRad);
-    const y1 = cy - r * Math.sin(startRad);
-    const x2 = cx + r * Math.cos(endRad);
-    const y2 = cy - r * Math.sin(endRad);
-    const largeArc = Math.abs(clampedF * TOTAL_DEG) > 180 ? 1 : 0;
-    return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
-  };
-
-  // Icon anchor point at a given angle and radius
-  const getPoint = (r: number, deg: number) => {
-    const rad = (deg * Math.PI) / 180;
-    return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
-  };
-
-  const flamePos = getPoint(r1, START_DEG);
-  const runnerPos = getPoint(r2, START_DEG);
-  const personPos = getPoint(r3, START_DEG);
+  const f4 = 1.0;
 
   return (
-    <View style={{ marginHorizontal: 20, marginBottom: 6 }}>
-      {/* ── Main Stats Card (Integrated Filters + Stats + Rings) ── */}
+    <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
+      {/* ── Main Dark Stats Card ── */}
       <View
         style={{
-          flexDirection: "column",
+          backgroundColor: "#111113",
+          borderRadius: 24,
           paddingVertical: 24,
           paddingHorizontal: 20,
-          backgroundColor: "#FFFFFF",
-          borderRadius: 24,
           shadowColor: "#000",
-          shadowOpacity: 0.05,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 6 },
-          elevation: 4,
-          borderWidth: 0.5,
-          borderColor: "rgba(0,0,0,0.03)",
+          shadowOpacity: 0.15,
+          shadowRadius: 15,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 6,
         }}
       >
-        {/* ── Stats and Rings Row ── */}
+        {/* Stats and Arc Container */}
         <View
           style={{
-            flexDirection: "row",
+            position: "relative",
             alignItems: "center",
-            marginBottom: 24,
+            height: 160,
+            width: "100%",
           }}
         >
-          {/* ── Left Column: Stats ── */}
+          {/* Top Left: Worn */}
           <View
             style={{
-              flex: 1.1,
-              justifyContent: "space-between",
+              position: "absolute",
+              left: 0,
+              top: 15,
+              alignItems: "center",
             }}
           >
-            {/* Worn */}
-            <View style={{ marginBottom: 16 }}>
-              <Text
-                style={{
-                  fontFamily: "TikTokSans16pt-Medium",
-                  fontSize: 13,
-                  color: "#8E8E93",
-                  marginBottom: 2,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                Worn
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-                <Text
-                  style={{
-                    fontFamily: "TikTokSans16pt-Bold",
-                    fontSize: 32,
-                    color: "#FA4D22",
-                    lineHeight: 36,
-                  }}
-                >
-                  {displayWorn}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "TikTokSans16pt-Medium",
-                    fontSize: 15,
-                    color: "#FA4D22",
-                    marginLeft: 4,
-                  }}
-                >
-                  / {displayTotal} items
-                </Text>
-              </View>
-            </View>
-
-            {/* Usage */}
-            <View style={{ marginBottom: 16 }}>
-              <Text
-                style={{
-                  fontFamily: "TikTokSans16pt-Medium",
-                  fontSize: 13,
-                  color: "#8E8E93",
-                  marginBottom: 2,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                Usage
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-                <Text
-                  style={{
-                    fontFamily: "TikTokSans16pt-Bold",
-                    fontSize: 32,
-                    color: "#33E181",
-                    lineHeight: 36,
-                  }}
-                >
-                  {displayUsage}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "TikTokSans16pt-Medium",
-                    fontSize: 15,
-                    color: "#33E181",
-                    marginLeft: 4,
-                  }}
-                >
-                  %
-                </Text>
-              </View>
-            </View>
-
-            {/* Unworn */}
-            <View>
-              <Text
-                style={{
-                  fontFamily: "TikTokSans16pt-Medium",
-                  fontSize: 13,
-                  color: "#8E8E93",
-                  marginBottom: 2,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                Unworn
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-                <Text
-                  style={{
-                    fontFamily: "TikTokSans16pt-Bold",
-                    fontSize: 32,
-                    color: "#9263FE",
-                    lineHeight: 36,
-                  }}
-                >
-                  {displayUnworn}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "TikTokSans16pt-Medium",
-                    fontSize: 15,
-                    color: "#9263FE",
-                    marginLeft: 4,
-                  }}
-                >
-                  / {displayTotal} items
-                </Text>
-              </View>
-            </View>
+            <Text style={{ color: "#FBBF24", fontSize: 18, fontWeight: "700" }}>
+              {displayWorn}
+            </Text>
+            <Text
+              style={{
+                color: "#FBBF24",
+                fontSize: 12,
+                fontWeight: "500",
+                marginTop: 2,
+              }}
+            >
+              Worn
+            </Text>
           </View>
 
-          {/* ── Right Column: Rings ── */}
+          {/* Top Right: Unworn */}
           <View
             style={{
-              flex: 1,
-              alignItems: "flex-end",
-              justifyContent: "center",
+              position: "absolute",
+              right: 0,
+              top: 15,
+              alignItems: "center",
             }}
           >
+            <Text style={{ color: "#34D399", fontSize: 18, fontWeight: "700" }}>
+              {displayUnworn}
+            </Text>
+            <Text
+              style={{
+                color: "#34D399",
+                fontSize: 12,
+                fontWeight: "500",
+                marginTop: 2,
+              }}
+            >
+              Unworn
+            </Text>
+          </View>
+
+          {/* Center Top: Usage */}
+          <View
+            style={{
+              position: "absolute",
+              top: -15,
+              alignSelf: "center",
+              alignItems: "center",
+              zIndex: 10,
+            }}
+          >
+            <Text style={{ color: "#F43F5E", fontSize: 22, fontWeight: "700" }}>
+              {displayUsage}%
+            </Text>
+            <Text
+              style={{
+                color: "#F43F5E",
+                fontSize: 12,
+                fontWeight: "500",
+                marginTop: 2,
+              }}
+            >
+              Usage
+            </Text>
+          </View>
+
+          {/* Bottom Left: Total */}
+          <View
+            style={{
+              position: "absolute",
+              left: 15,
+              bottom: -5,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#38BDF8", fontSize: 18, fontWeight: "700" }}>
+              {displayTotal}
+            </Text>
+            <Text
+              style={{
+                color: "#38BDF8",
+                fontSize: 12,
+                fontWeight: "500",
+                marginTop: 2,
+              }}
+            >
+              Total items
+            </Text>
+          </View>
+
+          {/* Bottom Right: Time Filter */}
+          <View
+            style={{
+              position: "absolute",
+              right: 15,
+              bottom: -5,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#F97316", fontSize: 18, fontWeight: "700" }}>
+              {activeFilter}
+            </Text>
+            <Text
+              style={{
+                color: "#F97316",
+                fontSize: 12,
+                fontWeight: "500",
+                marginTop: 2,
+              }}
+            >
+              Filter
+            </Text>
+          </View>
+
+          {/* ARC SVG */}
+          <View style={{ position: "absolute", bottom: 20 }}>
             <Svg width={arcW} height={arcH}>
-              <Defs>
-                <LinearGradient
-                  id="wrdOuter"
-                  x1={0}
-                  y1={0}
-                  x2={arcW}
-                  y2={0}
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <Stop offset="0%" stopColor="#FA4D22" stopOpacity={1} />
-                  <Stop offset="100%" stopColor="#FF7A59" stopOpacity={1} />
-                </LinearGradient>
-                <LinearGradient
-                  id="wrdMiddle"
-                  x1={0}
-                  y1={0}
-                  x2={arcW}
-                  y2={0}
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <Stop offset="0%" stopColor="#33E181" stopOpacity={1} />
-                  <Stop offset="100%" stopColor="#6AFB9B" stopOpacity={1} />
-                </LinearGradient>
-                <LinearGradient
-                  id="wrdInner"
-                  x1={0}
-                  y1={0}
-                  x2={arcW}
-                  y2={0}
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <Stop offset="0%" stopColor="#9263FE" stopOpacity={1} />
-                  <Stop offset="100%" stopColor="#B693FF" stopOpacity={1} />
-                </LinearGradient>
-              </Defs>
-
               {/* Background Tracks */}
-              <Circle
-                cx={cx}
-                cy={cy}
-                r={r1}
+              <Path
+                d={makeArc(r1)}
                 fill="none"
-                stroke="rgba(250, 77, 34, 0.15)"
+                stroke="#331A24"
                 strokeWidth={thickness}
+                strokeLinecap="round"
               />
-              <Circle
-                cx={cx}
-                cy={cy}
-                r={r2}
+              <Path
+                d={makeArc(r2)}
                 fill="none"
-                stroke="rgba(51, 225, 129, 0.15)"
+                stroke="#3A2D14"
                 strokeWidth={thickness}
+                strokeLinecap="round"
               />
-              <Circle
-                cx={cx}
-                cy={cy}
-                r={r3}
+              <Path
+                d={makeArc(r3)}
                 fill="none"
-                stroke="rgba(146, 99, 254, 0.15)"
+                stroke="#143122"
                 strokeWidth={thickness}
+                strokeLinecap="round"
+              />
+              <Path
+                d={makeArc(r4)}
+                fill="none"
+                stroke="#162A3B"
+                strokeWidth={thickness}
+                strokeLinecap="round"
               />
 
-              {/* Outer ring — Red to Orange */}
+              {/* Colored Arcs */}
               <Path
                 d={makeArc(r1, f1)}
                 fill="none"
-                stroke="url(#wrdOuter)"
+                stroke="#F43F5E"
                 strokeWidth={thickness}
                 strokeLinecap="round"
               />
-
-              {/* Middle ring — Green */}
               <Path
                 d={makeArc(r2, f2)}
                 fill="none"
-                stroke="url(#wrdMiddle)"
+                stroke="#FBBF24"
                 strokeWidth={thickness}
                 strokeLinecap="round"
               />
-
-              {/* Inner ring — Blue to Purple */}
               <Path
                 d={makeArc(r3, f3)}
                 fill="none"
-                stroke="url(#wrdInner)"
+                stroke="#34D399"
                 strokeWidth={thickness}
                 strokeLinecap="round"
               />
-
-              {/* ── Outer icon (arrow >) ── */}
-              <G
-                transform={`translate(${flamePos.x.toFixed(1)}, ${flamePos.y.toFixed(1)})`}
-              >
-                <Circle cx={0} cy={0} r={thickness / 2} fill="#D93A1F" />
-                <Path
-                  d="M -1.5,-3.5 L 1.5,0 L -1.5,3.5"
-                  stroke="white"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </G>
-
-              {/* ── Middle icon (arrow >>) ── */}
-              <G
-                transform={`translate(${runnerPos.x.toFixed(1)}, ${runnerPos.y.toFixed(1)})`}
-              >
-                <Circle cx={0} cy={0} r={thickness / 2} fill="#1A9E53" />
-                <Path
-                  d="M -2.5,-3 L 0,0 L -2.5,3 M 0.5,-3 L 3,0 L 0.5,3"
-                  stroke="white"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </G>
-
-              {/* ── Inner icon (arrow ^) ── */}
-              <G
-                transform={`translate(${personPos.x.toFixed(1)}, ${personPos.y.toFixed(1)})`}
-              >
-                <Circle cx={0} cy={0} r={thickness / 2} fill="#6642BE" />
-                <Path
-                  d="M -3,1.5 L 0,-1.5 L 3,1.5"
-                  stroke="white"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </G>
+              <Path
+                d={makeArc(r4, f4)}
+                fill="none"
+                stroke="#38BDF8"
+                strokeWidth={thickness}
+                strokeLinecap="round"
+              />
             </Svg>
           </View>
         </View>
 
-        {/* Time Filter Tabs */}
+        {/* Time Filter Tabs - Below everything */}
         <View
           style={{
             flexDirection: "row",
-            backgroundColor: "#F8F7FC",
-            borderRadius: 13,
-            padding: 3,
-            marginTop: 4, // Spacing above tabs
+            backgroundColor: "#27272A", // Darker tab bg
+            borderRadius: 12,
+            padding: 4,
+            marginTop: 20,
           }}
         >
           {TIME_FILTERS.map((filter) => (
@@ -731,24 +624,15 @@ const StatsCard = React.memo(function StatsCard({
                 paddingVertical: 10,
                 borderRadius: 10,
                 backgroundColor:
-                  activeFilter === filter ? "#FFFFFF" : "transparent",
+                  activeFilter === filter ? "#3F3F46" : "transparent",
                 alignItems: "center",
-                shadowColor: activeFilter === filter ? "#000" : "transparent",
-                shadowOpacity: activeFilter === filter ? 0.05 : 0,
-                shadowRadius: activeFilter === filter ? 8 : 0,
-                shadowOffset: {
-                  width: 0,
-                  height: activeFilter === filter ? 2 : 0,
-                },
-                elevation: activeFilter === filter ? 1 : 0,
               }}
             >
               <Text
                 style={{
-                  fontSize: 14,
-                  fontFamily: "TikTokSans16pt-Medium",
-                  fontWeight: activeFilter === filter ? "700" : "500",
-                  color: activeFilter === filter ? "#1D1A27" : "#8E8E93",
+                  fontSize: 13,
+                  fontWeight: activeFilter === filter ? "600" : "500",
+                  color: activeFilter === filter ? "#FFFFFF" : "#A1A1AA",
                 }}
               >
                 {filter}
