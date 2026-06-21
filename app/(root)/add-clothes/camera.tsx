@@ -11,6 +11,7 @@ import {
   IconPhoto,
   IconRotate,
 } from "@tabler/icons-react-native";
+import Svg, { Path } from "react-native-svg";
 
 export default function AddClothesCameraScreen() {
   const router = useRouter();
@@ -129,20 +130,45 @@ export default function AddClothesCameraScreen() {
           Lay the item flat or hang on a plain wall
         </Text>
 
-        {/* Framing guide */}
-        <View className="flex-1 items-center justify-center px-6">
-          <View
-            className="border-2 border-dashed border-white/55 rounded-2xl items-center justify-center"
-            style={{ width: 240, height: 280 }}
-          >
-            <IconMesh
-              size={64}
-              color="rgba(255,255,255,0.6)"
-              strokeWidth={1.5}
-            />
-            <Text className="text-white/70 text-xs mt-3">
-              Place item inside frame
-            </Text>
+        {/* Framing guide — corner brackets */}
+        <View className="flex-1 items-center justify-center">
+          <View style={{ width: 280, height: 340, position: "relative" }}>
+            {/* Top-Left */}
+            <View style={{ position: "absolute", top: -2, left: -2, width: 56, height: 56 }}>
+              <Svg width={56} height={56} viewBox="0 0 56 56" style={{ transform: [{ rotate: "0deg" }] }}>
+                <Path d="M 3 53 L 3 23 A 20 20 0 0 1 23 3 L 53 3" stroke="#ffffff" strokeWidth={6} strokeLinecap="round" fill="none" />
+              </Svg>
+            </View>
+
+            {/* Top-Right */}
+            <View style={{ position: "absolute", top: -2, right: -2, width: 56, height: 56 }}>
+              <Svg width={56} height={56} viewBox="0 0 56 56" style={{ transform: [{ rotate: "90deg" }] }}>
+                <Path d="M 3 53 L 3 23 A 20 20 0 0 1 23 3 L 53 3" stroke="#ffffff" strokeWidth={6} strokeLinecap="round" fill="none" />
+              </Svg>
+            </View>
+
+            {/* Bottom-Left */}
+            <View style={{ position: "absolute", bottom: -2, left: -2, width: 56, height: 56 }}>
+              <Svg width={56} height={56} viewBox="0 0 56 56" style={{ transform: [{ rotate: "-90deg" }] }}>
+                <Path d="M 3 53 L 3 23 A 20 20 0 0 1 23 3 L 53 3" stroke="#ffffff" strokeWidth={6} strokeLinecap="round" fill="none" />
+              </Svg>
+            </View>
+
+            {/* Bottom-Right */}
+            <View style={{ position: "absolute", bottom: -2, right: -2, width: 56, height: 56 }}>
+              <Svg width={56} height={56} viewBox="0 0 56 56" style={{ transform: [{ rotate: "180deg" }] }}>
+                <Path d="M 3 53 L 3 23 A 20 20 0 0 1 23 3 L 53 3" stroke="#ffffff" strokeWidth={6} strokeLinecap="round" fill="none" />
+              </Svg>
+            </View>
+
+            {/* Center hint */}
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <IconMesh size={48} color="rgba(255,255,255,0.30)" strokeWidth={1.5} />
+              <Text style={{ color: "rgba(255,255,255,0.50)", fontSize: 12, marginTop: 10 }}>
+                Place item inside frame
+              </Text>
+            </View>
+
           </View>
         </View>
 

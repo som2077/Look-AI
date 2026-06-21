@@ -1,35 +1,32 @@
+import { useOutfitAnalysisStore } from "@/backend/store/outfit-analysis-store";
+import {
+  IconArrowLeft,
+  IconBookmark,
+  IconBookmarkFilled,
+  IconDots,
+  IconHanger,
+  IconShare,
+  IconSparkles,
+} from "@tabler/icons-react-native";
+import { Image as ExpoImage } from "expo-image";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
+  Alert,
   Animated,
   Dimensions,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { Image as ExpoImage } from "expo-image";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import Svg, {
   Circle,
   Defs,
-  LinearGradient as SvgGrad,
   Stop,
+  LinearGradient as SvgGrad,
 } from "react-native-svg";
-import {
-  IconArrowLeft,
-  IconCalendar,
-  IconCloud,
-  IconFlame,
-  IconHanger,
-  IconSparkles,
-  IconStar,
-  IconTag,
-  IconTrash,
-} from "@tabler/icons-react-native";
-import { useOutfitAnalysisStore } from "@/backend/store/outfit-analysis-store";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
@@ -56,7 +53,7 @@ function ScoreRing({ score }: { score: number }) {
   }, [score]);
 
   const scoreColor =
-    score >= 90 ? "#22C55E" : score >= 75 ? "#F59E0B" : "#EF4444";
+    score >= 90 ? "#000000" : score >= 75 ? "#000000" : "#000000";
 
   return (
     <View style={styles.ringContainer}>
@@ -72,7 +69,7 @@ function ScoreRing({ score }: { score: number }) {
           cx={CENTER}
           cy={CENTER}
           r={R}
-          stroke="#F0F0F4"
+          stroke="#FFFFFF"
           strokeWidth={STROKE}
           fill="transparent"
         />
@@ -138,7 +135,7 @@ function AITipCard({ score }: { score: number }) {
     <View style={styles.tipCard}>
       <View style={styles.tipHeader}>
         <View style={styles.tipIconBg}>
-          <IconSparkles size={14} color="#8B5CF6" strokeWidth={2} />
+          <IconSparkles size={16} color="#8B5CF6" strokeWidth={2} />
         </View>
         <Text style={styles.tipTitle}>AI Style Tip</Text>
       </View>
@@ -154,27 +151,18 @@ export default function OutfitLogDetailScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ index: string }>();
   const outfitIndex = parseInt(params.index ?? "0", 10);
-  const { lastOutfits, removeOutfit } = useOutfitAnalysisStore();
+  const { lastOutfits, removeOutfit, toggleSaved } = useOutfitAnalysisStore();
   const outfit = lastOutfits[outfitIndex];
 
-  // Fade + slide entrance animation
+  // Fade entrance animation
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(40)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 350,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 80,
-        friction: 12,
-      }),
-    ]).start();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   if (!outfit) {
@@ -194,185 +182,154 @@ export default function OutfitLogDetailScreen() {
     router.back();
   };
 
+  const handleMoreOptions = () => {
+    Alert.alert("Outfit Options", "What would you like to do?", [
+      { text: "Share", onPress: () => {} },
+      { text: "Edit", onPress: () => {} },
+      { text: "Delete", style: "destructive", onPress: handleDelete },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
   const scoreColor =
-    outfit.score >= 90 ? "#22C55E" : outfit.score >= 75 ? "#F59E0B" : "#EF4444";
+    outfit.score >= 90 ? "#000000" : outfit.score >= 75 ? "#000000" : "#000000";
   const scoreLabel =
     outfit.score >= 90 ? "Excellent" : outfit.score >= 75 ? "Good" : "Fair";
 
   return (
-    <View style={styles.root}>
-      {/* ── Full-bleed image with gradient overlay ── */}
-      <View style={styles.hero}>
-        <ExpoImage
-          source={{ uri: outfit.imageUri }}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          cachePolicy="memory"
-        />
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.5)", "#000000"]}
-          locations={[0.3, 0.65, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-
-        {/* Back button */}
-        <Pressable
-          style={[styles.headerBack, { top: insets.top + 8 }]}
-          onPress={() => router.back()}
-        >
-          <IconArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      {/* ── Top Header Bar ── */}
+      <View style={styles.topHeader}>
+        <Pressable onPress={() => router.back()} style={styles.topHeaderBtn}>
+          <IconArrowLeft size={24} color="#1D1A27" strokeWidth={2} />
         </Pressable>
-
-        {/* Delete button */}
+        <Text style={styles.topHeaderTitle}>Outfit Details</Text>
         <Pressable
-          style={[styles.headerDelete, { top: insets.top + 8 }]}
-          onPress={handleDelete}
+          onPress={() => toggleSaved(outfitIndex)}
+          style={styles.topHeaderBtn}
         >
-          <IconTrash size={18} color="#FF4D4D" strokeWidth={2} />
+          {outfit.isSaved ? (
+            <IconBookmarkFilled size={24} color="#1D1A27" />
+          ) : (
+            <IconBookmark size={24} color="#1D1A27" strokeWidth={2} />
+          )}
         </Pressable>
-
-        {/* Hero bottom content */}
-        <View style={styles.heroBottom}>
-          <View style={styles.heroBadgeRow}>
-            {outfit.tags.map((tag) => (
-              <View key={tag} style={styles.heroBadge}>
-                <Text style={styles.heroBadgeText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-          <Text style={styles.heroTitle}>{outfit.name}</Text>
-          <Text style={styles.heroSubtitle}>{outfit.subtitle}</Text>
-          <Text style={styles.heroTime}>
-            {outfit.date} · {outfit.time}
-          </Text>
-        </View>
       </View>
 
-      {/* ── Bottom sheet content ── */}
-      <Animated.View
-        style={[
-          styles.sheet,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        ]}
+      <Animated.ScrollView
+        style={{ opacity: fadeAnim, flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+        bounces={false}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingBottom: insets.bottom + 32,
-            paddingTop: 24,
-          }}
-        >
-          {/* Score + quick stats row */}
-          <View style={styles.scoreRow}>
-            <ScoreRing score={outfit.score} />
-            <View style={styles.scoreRight}>
-              <Text style={[styles.scoreGrade, { color: scoreColor }]}>
-                {scoreLabel} ✦
+        {/* ── Image ── */}
+        <View style={styles.hero}>
+          <ExpoImage
+            source={{ uri: outfit.imageUri }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="memory"
+          />
+          <View style={styles.imageActionsRow}>
+            <Pressable style={styles.imageActionBtn}>
+              <IconShare size={20} color="#1D1A27" strokeWidth={2.5} />
+            </Pressable>
+            <Pressable
+              onPress={handleMoreOptions}
+              style={styles.imageActionBtn}
+            >
+              <IconDots size={20} color="#1D1A27" strokeWidth={2.5} />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ── Content Below Image ── */}
+        <View style={styles.contentContainer}>
+          {/* Title Section */}
+          <View style={styles.titleSection}>
+            <Text style={styles.heroTitle} numberOfLines={1}>
+              {outfit.name}
+            </Text>
+            <Text style={styles.heroSubtitle}>{outfit.subtitle}</Text>
+          </View>
+
+          {/* Score Card */}
+          <View style={styles.scoreCard}>
+            <View style={styles.scoreHeader}>
+              <Text style={styles.scoreTitle}>Outfit Score</Text>
+              <Text style={styles.scoreValue}>
+                {Math.round(outfit.score / 10)}/10
               </Text>
-              <Text style={styles.scoreDesc}>
-                AI analysed {outfit.itemCount} items in your outfit
-              </Text>
-              <View style={styles.scoreDots}>
-                {[...Array(5)].map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.scoreDot,
-                      {
-                        backgroundColor:
-                          i < Math.round(outfit.score / 20)
-                            ? scoreColor
-                            : "#E9EBF8",
-                      },
-                    ]}
-                  />
-                ))}
-              </View>
             </View>
+            <View style={styles.scoreBarBg}>
+              <View
+                style={[styles.scoreBarFill, { width: `${outfit.score}%` }]}
+              />
+            </View>
+            <Text style={styles.scoreText}>
+              Weather-friendly style starts here. Find outfits curated for
+              today&apos;s forecast. Tap to see outfit suggestions.
+            </Text>
           </View>
-
-          {/* Divider */}
-          <View style={styles.divider} />
-
-          {/* Stat chips grid */}
-          <Text style={styles.sectionTitle}>Outfit Details</Text>
-          <View style={styles.chipGrid}>
-            <StatChip
-              icon={<IconTag size={16} color="#6366F1" strokeWidth={2} />}
-              label="Occasion"
-              value={outfit.occasion}
-              bg="#EEF2FF"
-            />
-            <StatChip
-              icon={<IconCloud size={16} color="#0EA5E9" strokeWidth={2} />}
-              label="Weather"
-              value={outfit.weather}
-              bg="#F0F9FF"
-            />
-            <StatChip
-              icon={<IconHanger size={16} color="#EC4899" strokeWidth={2} />}
-              label="Items"
-              value={`${outfit.itemCount} pieces`}
-              bg="#FDF2F8"
-            />
-            <StatChip
-              icon={<IconCalendar size={16} color="#10B981" strokeWidth={2} />}
-              label="Logged"
-              value={outfit.date}
-              bg="#ECFDF5"
-            />
-          </View>
-
-          {/* Divider */}
-          <View style={styles.divider} />
 
           {/* Style score breakdown */}
-          <Text style={styles.sectionTitle}>Style Breakdown</Text>
-          {[
-            { label: "Colour Harmony", value: Math.min(100, outfit.score + 3) },
-            {
-              label: "Fit & Proportion",
-              value: Math.max(60, outfit.score - 8),
-            },
-            { label: "Occasion Match", value: Math.min(100, outfit.score + 1) },
-            { label: "Trend Relevance", value: Math.max(55, outfit.score - 5) },
-          ].map(({ label, value }) => (
-            <View key={label} style={styles.barRow}>
-              <Text style={styles.barLabel}>{label}</Text>
-              <View style={styles.barTrack}>
-                <View
-                  style={[
-                    styles.barFill,
-                    {
-                      width: `${value}%` as any,
-                      backgroundColor:
-                        value >= 88
-                          ? "#22C55E"
-                          : value >= 72
-                            ? "#F59E0B"
-                            : "#6366F1",
-                    },
-                  ]}
-                />
+          {/* Style score breakdown */}
+          <View style={styles.breakdownContainer}>
+            <View style={styles.breakdownHeader}>
+              <Text style={styles.breakdownTitle}>Style breakdown</Text>
+              <View style={styles.breakdownBadge}>
+                <Text style={styles.breakdownBadgeText}>
+                  {outfit.score} avg
+                </Text>
               </View>
-              <Text style={styles.barValue}>{value}</Text>
             </View>
-          ))}
-
-          {/* Divider */}
-          <View style={styles.divider} />
+            {[
+              {
+                label: "Colour harmony",
+                value: Math.min(100, outfit.score + 3),
+              },
+              {
+                label: "Fit & proportion",
+                value: Math.max(60, outfit.score - 8),
+              },
+              {
+                label: "Occasion match",
+                value: Math.min(100, outfit.score + 1),
+              },
+              {
+                label: "Trend relevance",
+                value: Math.max(55, outfit.score - 5),
+              },
+            ].map(({ label, value }) => {
+              const color =
+                value >= 88 ? "#84CC16" : value >= 72 ? "#F59E0B" : "#EF4444";
+              return (
+                <View key={label} style={styles.barItemContainer}>
+                  <View style={styles.barTextRow}>
+                    <Text style={styles.barLabel}>{label}</Text>
+                    <Text style={[styles.barValue, { color }]}>{value}</Text>
+                  </View>
+                  <View style={styles.barTrack}>
+                    <View
+                      style={[
+                        styles.barFill,
+                        { width: `${value}%` as any, backgroundColor: color },
+                      ]}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+          </View>
 
           {/* AI Tip */}
-          <Text style={styles.sectionTitle}>AI Suggestion</Text>
+          {/* AI Tip */}
+          <Text style={[styles.sectionTitle, { marginTop: 12 }]}>
+            AI Suggestion
+          </Text>
           <AITipCard score={outfit.score} />
-
-          {/* Wear again CTA */}
-          <Pressable style={styles.wearBtn}>
-            <IconFlame size={18} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.wearBtnText}>Log as Worn Today</Text>
-          </Pressable>
-        </ScrollView>
-      </Animated.View>
+        </View>
+      </Animated.ScrollView>
     </View>
   );
 }
@@ -382,255 +339,237 @@ export default function OutfitLogDetailScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#FFFFFF" },
 
-  // Hero
-  hero: { width: SW, height: SH * 0.48, position: "relative" },
-  headerBack: {
-    position: "absolute",
-    left: 16,
+  // Top Header
+  topHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  topHeaderTitle: {
+    fontSize: 18,
+    fontFamily: "TikTokSans16pt-Bold",
+    color: "#1D1A27",
+  },
+  topHeaderBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",
   },
-  headerDelete: {
+
+  // Hero Image
+  hero: {
+    width: SW - 32,
+    aspectRatio: 3 / 4,
+    marginHorizontal: 16,
+    borderRadius: 24,
+    overflow: "hidden",
+    backgroundColor: "#F0F0F4",
+    marginBottom: 24,
+  },
+  imageActionsRow: {
     position: "absolute",
+    top: 16,
     right: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,77,77,0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(255,77,77,0.3)",
+    flexDirection: "row",
+    gap: 8,
+  },
+  imageActionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.75)",
     alignItems: "center",
     justifyContent: "center",
   },
-  heroBottom: {
-    position: "absolute",
-    bottom: 24,
-    left: 20,
-    right: 20,
+
+  // Content Layout
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 0,
   },
-  heroBadgeRow: { flexDirection: "row", gap: 6, marginBottom: 10 },
-  heroBadge: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.35)",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  heroBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontFamily: "TikTokSans16pt-SemiBold",
-    letterSpacing: 0.3,
+
+  // Title Section
+  titleSection: {
+    marginBottom: 20,
   },
   heroTitle: {
-    color: "#FFFFFF",
-    fontSize: 28,
-    fontFamily: "TikTokSans16pt-Black",
+    color: "#1D1A27",
+    fontSize: 24,
+    fontFamily: "TikTokSans16pt-Medium",
     letterSpacing: -0.5,
-    lineHeight: 34,
     marginBottom: 4,
   },
   heroSubtitle: {
-    color: "rgba(255,255,255,0.75)",
+    color: "#7E7C8C",
     fontSize: 14,
-    fontFamily: "TikTokSans16pt-Medium",
-    marginBottom: 6,
-  },
-  heroTime: {
-    color: "rgba(255,255,255,0.5)",
-    fontSize: 12,
     fontFamily: "TikTokSans16pt-Regular",
   },
 
-  // Sheet
-  sheet: {
-    flex: 1,
+  // Score Card
+  scoreCard: {
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    marginTop: -28,
-    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
     shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: -6 },
-    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
-
-  // Score row
-  scoreRow: {
+  scoreHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 20,
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  ringContainer: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ringCenter: { alignItems: "center" },
-  ringScore: {
-    fontSize: 26,
-    fontFamily: "TikTokSans16pt-Black",
-    lineHeight: 30,
-  },
-  ringLabel: {
-    fontSize: 10,
-    fontFamily: "TikTokSans16pt-SemiBold",
-    color: "#9B9BAF",
-    letterSpacing: 0.5,
-  },
-  scoreRight: { flex: 1 },
-  scoreGrade: {
-    fontSize: 20,
-    fontFamily: "TikTokSans16pt-Bold",
-    marginBottom: 4,
-  },
-  scoreDesc: {
-    fontSize: 12,
-    fontFamily: "TikTokSans16pt-Medium",
-    color: "#7E7C8C",
-    lineHeight: 18,
-    marginBottom: 10,
-  },
-  scoreDots: { flexDirection: "row", gap: 5 },
-  scoreDot: { width: 10, height: 10, borderRadius: 5 },
-
-  // Divider
-  divider: {
-    height: 1,
-    backgroundColor: "#F0F0F6",
-    marginVertical: 20,
-  },
-
-  // Section title
-  sectionTitle: {
+  scoreTitle: {
     fontSize: 16,
     fontFamily: "TikTokSans16pt-Bold",
     color: "#1D1A27",
-    marginBottom: 14,
   },
-
-  // Chips
-  chipGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 16,
-    width: (SW - 50) / 2,
-  },
-  chipIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.7)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  chipLabel: {
-    fontSize: 10,
-    fontFamily: "TikTokSans16pt-Medium",
-    color: "#7E7C8C",
-  },
-  chipValue: {
-    fontSize: 13,
+  scoreValue: {
+    fontSize: 16,
     fontFamily: "TikTokSans16pt-Bold",
     color: "#1D1A27",
-    marginTop: 1,
   },
-
-  // Bar chart
-  barRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 12,
-  },
-  barLabel: {
-    width: 130,
-    fontSize: 12,
-    fontFamily: "TikTokSans16pt-Medium",
-    color: "#4C4B5E",
-  },
-  barTrack: {
-    flex: 1,
-    height: 7,
+  scoreBarBg: {
+    height: 8,
     backgroundColor: "#F0F0F6",
     borderRadius: 4,
+    marginBottom: 16,
     overflow: "hidden",
   },
-  barFill: { height: "100%", borderRadius: 4 },
-  barValue: {
-    width: 28,
-    fontSize: 12,
-    fontFamily: "TikTokSans16pt-Bold",
-    color: "#1D1A27",
-    textAlign: "right",
+  scoreBarFill: {
+    height: "100%",
+    backgroundColor: "#1D1A27",
+    borderRadius: 4,
   },
-
-  // AI tip
-  tipCard: {
-    backgroundColor: "#F5F3FF",
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#EDE9FE",
-  },
-  tipHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 10,
-  },
-  tipIconBg: {
-    width: 28,
-    height: 28,
-    borderRadius: 10,
-    backgroundColor: "#EDE9FE",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tipTitle: {
-    fontSize: 13,
-    fontFamily: "TikTokSans16pt-Bold",
-    color: "#5B21B6",
-  },
-  tipText: {
+  scoreText: {
     fontSize: 13,
     fontFamily: "TikTokSans16pt-Medium",
     color: "#4C4B5E",
     lineHeight: 20,
   },
 
-  // CTA
-  wearBtn: {
-    marginTop: 20,
-    backgroundColor: "#1D1A27",
-    borderRadius: 20,
-    paddingVertical: 16,
+  // Section title
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: "TikTokSans16pt-Bold",
+    color: "#1D1A27",
+    marginBottom: 16,
+  },
+
+  // Breakdown container
+  breakdownContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  breakdownHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  breakdownTitle: {
+    fontSize: 20,
+    fontFamily: "TikTokSans16pt-Bold",
+    color: "#000000",
+  },
+  breakdownBadge: {
+    backgroundColor: "rgba(132, 204, 22, 0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  breakdownBadgeText: {
+    color: "#84CC16",
+    fontSize: 12,
+    fontFamily: "TikTokSans16pt-Bold",
+  },
+
+  // Bar chart
+  barItemContainer: {
+    marginBottom: 16,
+  },
+  barTextRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  barLabel: {
+    fontSize: 14,
+    fontFamily: "TikTokSans16pt-Medium",
+    color: "#E5E5EA",
+  },
+  barValue: {
+    fontSize: 14,
+    fontFamily: "TikTokSans16pt-Bold",
+  },
+  barTrack: {
+    height: 6,
+    backgroundColor: "#1C1C1E",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  barFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+
+  // AI tip
+  tipCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.03)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  tipHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+    gap: 10,
+    marginBottom: 12,
   },
-  wearBtnText: {
-    color: "#FFFFFF",
+  tipIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: "#EDE9FE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tipTitle: {
     fontSize: 15,
     fontFamily: "TikTokSans16pt-Bold",
+    color: "#1D1A27",
+  },
+  tipText: {
+    fontSize: 14,
+    fontFamily: "TikTokSans16pt-Medium",
+    color: "#4C4B5E",
+    lineHeight: 22,
   },
 
   // Not found

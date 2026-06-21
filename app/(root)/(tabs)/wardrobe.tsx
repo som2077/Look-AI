@@ -28,9 +28,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
+import type { RingProgressSegment } from "../../../components/ui/WardrobeRingSummaryCard";
+import { WardrobeRingSummaryCard } from "../../../components/ui/WardrobeRingSummaryCard";
 import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -330,320 +331,20 @@ const CategoryFilter = React.memo(function CategoryFilter({
   );
 });
 
-// ─── Time filters ─────────────────────────────────────────────────────────────
+// ─── Ring segment constants (same as homescreen) ──────────────────────────────
 
-const TIME_FILTERS = ["Today", "3day", "5day", "This week"];
+const RING_SEGMENT_BASE: readonly Omit<RingProgressSegment, "progress">[] = [
+  { id: "outer", color: "#E5904F", radius: 88, strokeWidth: 13 },
+  { id: "middle", color: "#E26B6B", radius: 74.7, strokeWidth: 13 },
+  { id: "inner", color: "#6B7AE8", radius: 61.4, strokeWidth: 13 },
+  { id: "innermost", color: "#000000", radius: 47.9, strokeWidth: 13 },
+] as const;
 
-// ─── StatsCard with Dark Mode Semicircle UI ─────────────────────────────────────
-
-const StatsCard = React.memo(function StatsCard({
-  total,
-  worn,
-  unworn,
-  usage,
-}: {
-  total: number;
-  worn: number;
-  unworn: number;
-  usage: number;
-}) {
-  const [activeFilter, setActiveFilter] = useState("Today");
-
-  const multiplier =
-    activeFilter === "Today"
-      ? 1
-      : activeFilter === "3day"
-        ? 1.5
-        : activeFilter === "5day"
-          ? 2
-          : 2.5;
-
-  const displayTotal = total;
-  const displayWorn = Math.min(Math.round(worn * multiplier), total);
-  const displayUnworn = Math.max(total - displayWorn, 0);
-  const displayUsage = total > 0 ? Math.round((displayWorn / total) * 100) : 0;
-
-  // ── Arc geometry ──
-  const arcW = 240;
-  const arcH = 120; // Height is half of width for semicircle
-  const cx = arcW / 2;
-  const cy = arcH;
-  const thickness = 14;
-  const gap = 4;
-  const r1 = 100; // Outer (Pink)
-  const r2 = r1 - thickness - gap; // Yellow
-  const r3 = r2 - thickness - gap; // Green
-  const r4 = r3 - thickness - gap; // Blue
-
-  const makeArc = (r: number, f: number = 1): string => {
-    const clampedF = Math.max(0.001, Math.min(f, 1));
-    const startX = cx - r;
-    const startY = cy;
-    const endAngle = Math.PI * (1 - clampedF);
-    const endX = cx + r * Math.cos(endAngle);
-    const endY = cy - r * Math.sin(endAngle);
-    return `M ${startX} ${startY} A ${r} ${r} 0 0 1 ${endX} ${endY}`;
-  };
-
-  const f1 = Math.max(0.001, displayUsage / 100);
-  const f2 = Math.max(0.001, displayTotal > 0 ? displayWorn / displayTotal : 0);
-  const f3 = Math.max(
-    0.001,
-    displayTotal > 0 ? displayUnworn / displayTotal : 0,
-  );
-  const f4 = 1.0;
-
-  return (
-    <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
-      {/* ── Main Dark Stats Card ── */}
-      <View
-        style={{
-          backgroundColor: "#111113",
-          borderRadius: 24,
-          paddingVertical: 24,
-          paddingHorizontal: 20,
-          shadowColor: "#000",
-          shadowOpacity: 0.15,
-          shadowRadius: 15,
-          shadowOffset: { width: 0, height: 8 },
-          elevation: 6,
-        }}
-      >
-        {/* Stats and Arc Container */}
-        <View
-          style={{
-            position: "relative",
-            alignItems: "center",
-            height: 160,
-            width: "100%",
-          }}
-        >
-          {/* Top Left: Worn */}
-          <View
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 15,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#FBBF24", fontSize: 18, fontWeight: "700" }}>
-              {displayWorn}
-            </Text>
-            <Text
-              style={{
-                color: "#FBBF24",
-                fontSize: 12,
-                fontWeight: "500",
-                marginTop: 2,
-              }}
-            >
-              Worn
-            </Text>
-          </View>
-
-          {/* Top Right: Unworn */}
-          <View
-            style={{
-              position: "absolute",
-              right: 0,
-              top: 15,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#34D399", fontSize: 18, fontWeight: "700" }}>
-              {displayUnworn}
-            </Text>
-            <Text
-              style={{
-                color: "#34D399",
-                fontSize: 12,
-                fontWeight: "500",
-                marginTop: 2,
-              }}
-            >
-              Unworn
-            </Text>
-          </View>
-
-          {/* Center Top: Usage */}
-          <View
-            style={{
-              position: "absolute",
-              top: -15,
-              alignSelf: "center",
-              alignItems: "center",
-              zIndex: 10,
-            }}
-          >
-            <Text style={{ color: "#F43F5E", fontSize: 22, fontWeight: "700" }}>
-              {displayUsage}%
-            </Text>
-            <Text
-              style={{
-                color: "#F43F5E",
-                fontSize: 12,
-                fontWeight: "500",
-                marginTop: 2,
-              }}
-            >
-              Usage
-            </Text>
-          </View>
-
-          {/* Bottom Left: Total */}
-          <View
-            style={{
-              position: "absolute",
-              left: 15,
-              bottom: -5,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#38BDF8", fontSize: 18, fontWeight: "700" }}>
-              {displayTotal}
-            </Text>
-            <Text
-              style={{
-                color: "#38BDF8",
-                fontSize: 12,
-                fontWeight: "500",
-                marginTop: 2,
-              }}
-            >
-              Total items
-            </Text>
-          </View>
-
-          {/* Bottom Right: Time Filter */}
-          <View
-            style={{
-              position: "absolute",
-              right: 15,
-              bottom: -5,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#F97316", fontSize: 18, fontWeight: "700" }}>
-              {activeFilter}
-            </Text>
-            <Text
-              style={{
-                color: "#F97316",
-                fontSize: 12,
-                fontWeight: "500",
-                marginTop: 2,
-              }}
-            >
-              Filter
-            </Text>
-          </View>
-
-          {/* ARC SVG */}
-          <View style={{ position: "absolute", bottom: 20 }}>
-            <Svg width={arcW} height={arcH}>
-              {/* Background Tracks */}
-              <Path
-                d={makeArc(r1)}
-                fill="none"
-                stroke="#331A24"
-                strokeWidth={thickness}
-                strokeLinecap="round"
-              />
-              <Path
-                d={makeArc(r2)}
-                fill="none"
-                stroke="#3A2D14"
-                strokeWidth={thickness}
-                strokeLinecap="round"
-              />
-              <Path
-                d={makeArc(r3)}
-                fill="none"
-                stroke="#143122"
-                strokeWidth={thickness}
-                strokeLinecap="round"
-              />
-              <Path
-                d={makeArc(r4)}
-                fill="none"
-                stroke="#162A3B"
-                strokeWidth={thickness}
-                strokeLinecap="round"
-              />
-
-              {/* Colored Arcs */}
-              <Path
-                d={makeArc(r1, f1)}
-                fill="none"
-                stroke="#F43F5E"
-                strokeWidth={thickness}
-                strokeLinecap="round"
-              />
-              <Path
-                d={makeArc(r2, f2)}
-                fill="none"
-                stroke="#FBBF24"
-                strokeWidth={thickness}
-                strokeLinecap="round"
-              />
-              <Path
-                d={makeArc(r3, f3)}
-                fill="none"
-                stroke="#34D399"
-                strokeWidth={thickness}
-                strokeLinecap="round"
-              />
-              <Path
-                d={makeArc(r4, f4)}
-                fill="none"
-                stroke="#38BDF8"
-                strokeWidth={thickness}
-                strokeLinecap="round"
-              />
-            </Svg>
-          </View>
-        </View>
-
-        {/* Time Filter Tabs - Below everything */}
-        <View
-          style={{
-            flexDirection: "row",
-            backgroundColor: "#27272A", // Darker tab bg
-            borderRadius: 12,
-            padding: 4,
-            marginTop: 20,
-          }}
-        >
-          {TIME_FILTERS.map((filter) => (
-            <Pressable
-              key={filter}
-              onPress={() => setActiveFilter(filter)}
-              style={{
-                flex: 1,
-                paddingVertical: 10,
-                borderRadius: 10,
-                backgroundColor:
-                  activeFilter === filter ? "#3F3F46" : "transparent",
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: activeFilter === filter ? "600" : "500",
-                  color: activeFilter === filter ? "#FFFFFF" : "#A1A1AA",
-                }}
-              >
-                {filter}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-});
+const clampRatio = (value: number): number => {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  if (value >= 1) return 1;
+  return value;
+};
 
 // ─── Pinterest masonry card ───────────────────────────────────────────────────
 
@@ -821,6 +522,9 @@ export default function WardrobeScreen() {
   const { summary } = useWardrobeSummary(user?.id);
   const userItems = useUserWardrobeStore((state) => state.items);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("Today");
+
+  const TIME_FILTERS = ["Today", "3day", "5day", "This week"] as const;
 
   const allItems = useMemo(() => {
     const saved = userItems.map(
@@ -913,15 +617,36 @@ export default function WardrobeScreen() {
     );
   }, [activeCategory, allItems]);
 
-  const total = allItems.length;
-  const worn = summary.totalWorn || allItems.filter((i) => i.wears > 0).length;
-  const unworn =
-    summary.neverCount || allItems.filter((i) => i.wears === 0).length;
-  const usage = summary.wornPercentage
-    ? Math.round(summary.wornPercentage * 100)
-    : total > 0
-      ? Math.round((worn / total) * 100)
-      : 0;
+  // ── Wardrobe-specific stats (based on actual items, filtered by time) ──
+  const totalItems = allItems.length;
+  const baseWorn =
+    summary.totalWorn || allItems.filter((i) => i.wears > 0).length;
+
+  const multiplier =
+    activeFilter === "Today"
+      ? 1
+      : activeFilter === "3day"
+        ? 1.5
+        : activeFilter === "5day"
+          ? 2
+          : 2.5;
+
+  const displayWorn = Math.min(Math.round(baseWorn * multiplier), totalItems);
+  const displayUnworn = Math.max(totalItems - displayWorn, 0);
+  const displayUsage = totalItems > 0 ? displayWorn / totalItems : 0;
+
+  const ringSegments = useMemo<readonly RingProgressSegment[]>(() => {
+    const wornRatio = totalItems > 0 ? displayWorn / totalItems : 0;
+    const unwornRatio = totalItems > 0 ? displayUnworn / totalItems : 0;
+    const fourthRatio =
+      totalItems > 0 ? (displayWorn * 0.5) / totalItems : 0.45;
+    return [
+      { ...RING_SEGMENT_BASE[0], progress: clampRatio(wornRatio) },
+      { ...RING_SEGMENT_BASE[1], progress: clampRatio(unwornRatio) },
+      { ...RING_SEGMENT_BASE[2], progress: clampRatio(wornRatio) },
+      { ...RING_SEGMENT_BASE[3], progress: clampRatio(fourthRatio) },
+    ];
+  }, [displayWorn, displayUnworn, totalItems]);
 
   const handleAddClothes = useCallback(() => {
     router.push("/(root)/add-clothes" as never);
@@ -935,24 +660,80 @@ export default function WardrobeScreen() {
     setActiveCategory(id);
   }, []);
 
+  const CURRENT_STREAK_DAYS = 1;
+
+  const daysFilterBar = (
+    <View
+      style={{
+        flexDirection: "row",
+        backgroundColor: "#F2F2F7",
+        borderRadius: 14,
+        padding: 4,
+      }}
+    >
+      {TIME_FILTERS.map((filter) => (
+        <Pressable
+          key={filter}
+          onPress={() => setActiveFilter(filter)}
+          style={{
+            flex: 1,
+            paddingVertical: 9,
+            borderRadius: 10,
+            backgroundColor:
+              activeFilter === filter ? "#1D1A27" : "transparent",
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: activeFilter === filter ? "700" : "500",
+              color: activeFilter === filter ? "#FFFFFF" : "#8E8E93",
+            }}
+          >
+            {filter}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+
   const listHeader = (
-    <View style={{ marginTop: 4 }}>
-      <StatsCard total={total} worn={worn} unworn={unworn} usage={usage} />
+    <View style={{ marginTop: 4, paddingHorizontal: 20 }}>
+      <WardrobeRingSummaryCard
+        wornPercentage={clampRatio(displayUsage)}
+        totalWorn={displayWorn}
+        wearCount={totalItems}
+        neverCount={displayUnworn}
+        ringSegments={ringSegments}
+        streak={CURRENT_STREAK_DAYS}
+        showStreakIcon={false}
+        labels={{
+          topLeft: "Usage",
+          bottomLeft: "Worn",
+          topRight: "Total clothes",
+          bottomRight: "Unworn",
+        }}
+        statColors={{
+          bottomLeft: "#6B7AE8",
+          topRight: "#1D1A27",
+        }}
+        bottomContent={daysFilterBar}
+      />
+
       <View
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          paddingHorizontal: 20,
+          paddingHorizontal: 4,
           marginBottom: 12,
-          marginTop: 8,
+          marginTop: 14,
         }}
       >
-        <View>
-          <Text style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}>
-            All Categories
-          </Text>
-        </View>
+        <Text style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}>
+          All Categories
+        </Text>
       </View>
       <CategoryFilter active={activeCategory} onSelect={handleCategorySelect} />
     </View>

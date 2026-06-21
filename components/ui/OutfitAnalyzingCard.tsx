@@ -1,3 +1,4 @@
+import { Image as ExpoImage } from "expo-image";
 import React, {
   useCallback,
   useEffect,
@@ -6,14 +7,13 @@ import React, {
   useState,
 } from "react";
 import { Dimensions, FlatList, Pressable, Text, View } from "react-native";
-import { Image as ExpoImage } from "expo-image";
 import Svg, { Circle, G } from "react-native-svg";
 
-import { Audio } from "expo-av";
 import {
   LastOutfit,
   useOutfitAnalysisStore,
 } from "@/backend/store/outfit-analysis-store";
+import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
 
 const SVG_SIZE = 72;
@@ -61,7 +61,7 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
       style={{ width: CARD_WIDTH }}
       onPress={() => onViewDetails(outfitIndex)}
     >
-      <View className="flex-row rounded-[24px] border border-[#E9EBF8] bg-[#F5F4F980] overflow-hidden h-40">
+      <View className="flex-row rounded-[23px] border border-[#E9EBF8] bg-[#ffffff] overflow-hidden h-40">
         <View
           className="justify-center items-center"
           style={{ width: 120, height: 160, backgroundColor: "#FFFFFF" }}
@@ -111,11 +111,12 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
               {outfit.tags.slice(0, 2).map((tag) => (
                 <View
                   key={tag}
-                  className="rounded-[6px] px-3 py-[3px]"
+                  className="rounded-[6px] px-5 py-[5px]"
                   style={{
                     borderWidth: 1,
                     borderColor: "#E9EBF8",
                     backgroundColor: "#000000",
+                    borderRadius: 8,
                   }}
                 >
                   <Text
@@ -138,27 +139,26 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
               flexDirection: "row",
               gap: 6,
               marginHorizontal: 10,
-              marginBottom: 12,
+              marginBottom: 10,
+              marginTop: -4,
             }}
           >
             <Pressable
               onPress={() => onViewDetails(outfitIndex)}
               style={{
                 flex: 1,
-                backgroundColor: "#1D1A27",
-                borderRadius: 14,
                 paddingVertical: 10,
                 alignItems: "center",
               }}
             >
               <Text
                 style={{
-                  color: "#FFFFFF",
+                  color: "#000000",
                   fontSize: 13,
                   fontFamily: "TikTokSans16pt-Bold",
                 }}
               >
-                View Details
+                Analysis complete and ready to view.
               </Text>
             </Pressable>
           </View>
@@ -254,15 +254,137 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
   );
 });
 
-// ─── Main unified card ───────────────────────────────────────────────────────
+const MODE_LABELS: Record<string, string> = {
+  "scan-cloth": "Scan Cloths",
+  barcode: "Barcode",
+  "cloth-label": "Cloth Label",
+  "fit-check": "Fit Check",
+};
+
+const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
+  mode,
+  slides,
+  strokeDashoffset,
+  removeOutfit,
+  handleViewDetails,
+}: {
+  mode: string;
+  slides: CardSlide[];
+  strokeDashoffset: number;
+  removeOutfit: (index: number) => void;
+  handleViewDetails: (index: number) => void;
+}) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef<FlatList<CardSlide>>(null);
+
+  // Auto-scroll to analyzing slide (index 0) if one is active
+  useEffect(() => {
+    const hasAnalyzing = slides.some((s) => s.type === "analyzing");
+    if (hasAnalyzing && slides.length > 1) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index: 0, animated: true });
+      }, 200);
+    }
+  }, [slides.length, slides]);
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: { index: number | null }[] }) => {
+      if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+        setActiveIndex(viewableItems[0].index);
+      }
+    },
+  ).current;
+
+  const viewabilityConfig = useRef({
+    viewAreaCoveragePercentThreshold: 50,
+  }).current;
+
+  const keyExtractor = useCallback((item: CardSlide, i: number) => {
+    if (item.type === "analyzing") return `analyzing-${item.imageUri}`;
+    return `completed-${item.outfitIndex}`;
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: CardSlide }) => {
+      if (item.type === "analyzing") {
+        return (
+          <AnalyzingCardSlide
+            imageUri={item.imageUri}
+            progress={item.progress}
+            strokeDashoffset={strokeDashoffset}
+          />
+        );
+      }
+      return (
+        <CompletedCardSlide
+          outfit={item.outfit}
+          outfitIndex={item.outfitIndex}
+          onRemove={removeOutfit}
+          onViewDetails={handleViewDetails}
+        />
+      );
+    },
+    [strokeDashoffset, removeOutfit, handleViewDetails],
+  );
+
+  const safeIndex = Math.min(activeIndex, slides.length - 1);
+
+  return (
+    <View className="mb-6">
+      <Text
+        className="text-[#1D1A27] font-bold text-lg mb-1 ml-5 px-5"
+        style={{ fontFamily: "TikTokSans16pt-Bold" }}
+      >
+        {MODE_LABELS[mode] || "Scanned Items"}
+      </Text>
+
+      <FlatList
+        ref={flatListRef}
+        data={slides}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 10 }}
+        snapToInterval={CARD_WIDTH + 10}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        style={{ flexGrow: 0, marginHorizontal: CARD_H_MARGIN }}
+      />
+
+      {slides.length > 1 && (
+        <View className="flex-row justify-center items-center mt-2 gap-[5px]">
+          {slides.map((_, i) => (
+            <View
+              key={i}
+              style={{
+                width: i === safeIndex ? 8 : 6,
+                height: i === safeIndex ? 8 : 6,
+                borderRadius: 5,
+                backgroundColor: i === safeIndex ? "#1C1C1E" : "#C7C7C7",
+              }}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+});
 
 export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
   const router = useRouter();
-  const { isAnalyzing, isDone, imageUri, progress, lastOutfits, removeOutfit } =
-    useOutfitAnalysisStore();
+  const {
+    isAnalyzing,
+    isDone,
+    imageUri,
+    progress,
+    currentMode,
+    lastOutfits,
+    removeOutfit,
+  } = useOutfitAnalysisStore();
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList<CardSlide>>(null);
   const prevIsDoneRef = useRef(false);
 
   // Play chime when analysis finishes
@@ -290,48 +412,6 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
     [progress],
   );
 
-  // Build combined slide list: analyzing slide first, then completed outfits
-  const slides = useMemo<CardSlide[]>(() => {
-    const list: CardSlide[] = [];
-    if (isAnalyzing && imageUri) {
-      list.push({ type: "analyzing" as const, imageUri, progress });
-    }
-    lastOutfits.forEach((outfit, i) => {
-      list.push({ type: "completed" as const, outfit, outfitIndex: i });
-    });
-    return list;
-  }, [lastOutfits, isAnalyzing, imageUri, progress]);
-
-  // Clamp activeIndex when slides shrink
-  useEffect(() => {
-    if (slides.length > 0) {
-      setActiveIndex((prev) => Math.min(prev, slides.length - 1));
-    }
-  }, [slides.length]);
-
-  // Auto-scroll to analyzing slide (index 0) when analysis starts
-  useEffect(() => {
-    if (isAnalyzing && slides.length > 1) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({ index: 0, animated: true });
-      }, 200);
-    }
-  }, [isAnalyzing, slides.length]);
-
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: { index: number | null }[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-        setActiveIndex(viewableItems[0].index);
-      }
-    },
-  ).current;
-
-  const viewabilityConfig = useRef({
-    viewAreaCoveragePercentThreshold: 50,
-  }).current;
-
-  const keyExtractor = useCallback((_: CardSlide, i: number) => String(i), []);
-
   const handleViewDetails = useCallback(
     (index: number) => {
       router.push(`/(root)/outfit-log-detail?index=${index}` as never);
@@ -339,63 +419,40 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
     [router],
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: CardSlide }) => {
-      if (item.type === "analyzing") {
-        return (
-          <AnalyzingCardSlide
-            imageUri={item.imageUri}
-            progress={item.progress}
-            strokeDashoffset={strokeDashoffset}
-          />
-        );
-      }
-      return (
-        <CompletedCardSlide
-          outfit={item.outfit}
-          outfitIndex={item.outfitIndex}
-          onRemove={removeOutfit}
-          onViewDetails={handleViewDetails}
-        />
-      );
-    },
-    [strokeDashoffset, removeOutfit, handleViewDetails],
-  );
+  const groupedSlides = useMemo(() => {
+    const groups: Record<string, CardSlide[]> = {};
 
-  if (slides.length === 0) return null;
+    // Add completed outfits to their respective mode groups
+    lastOutfits.forEach((outfit, i) => {
+      const mode = outfit.mode || "scan-cloth";
+      if (!groups[mode]) groups[mode] = [];
+      groups[mode].push({ type: "completed" as const, outfit, outfitIndex: i });
+    });
 
-  const safeIndex = Math.min(activeIndex, slides.length - 1);
+    // Add analyzing outfit to its mode group at the TOP
+    if (isAnalyzing && imageUri) {
+      const mode = currentMode || "scan-cloth";
+      if (!groups[mode]) groups[mode] = [];
+      groups[mode].unshift({ type: "analyzing" as const, imageUri, progress });
+    }
+
+    return groups;
+  }, [lastOutfits, isAnalyzing, imageUri, progress, currentMode]);
+
+  if (Object.keys(groupedSlides).length === 0) return null;
 
   return (
     <View className="mt-3 mb-1">
-      <FlatList
-        ref={flatListRef}
-        data={slides}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        style={{ flexGrow: 0, marginHorizontal: CARD_H_MARGIN }}
-      />
-
-      {slides.length > 1 && (
-        <View className="flex-row justify-center items-center mt-2 gap-[5px]">
-          {slides.map((_, i) => (
-            <View
-              key={i}
-              style={{
-                width: i === safeIndex ? 8 : 6,
-                height: i === safeIndex ? 8 : 6,
-                borderRadius: 5,
-                backgroundColor: i === safeIndex ? "#1C1C1E" : "#C7C7C7",
-              }}
-            />
-          ))}
-        </View>
-      )}
+      {Object.entries(groupedSlides).map(([mode, slides]) => (
+        <ModeGroupCarousel
+          key={mode}
+          mode={mode}
+          slides={slides}
+          strokeDashoffset={strokeDashoffset}
+          removeOutfit={removeOutfit}
+          handleViewDetails={handleViewDetails}
+        />
+      ))}
     </View>
   );
 });

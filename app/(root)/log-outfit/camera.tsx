@@ -1,34 +1,46 @@
+import { useOutfitAnalysisStore } from "@/backend/store/outfit-analysis-store";
+import {
+  IconBarcode,
+  IconBolt,
+  IconPhoto,
+  IconScan,
+  IconShirt,
+  IconTag,
+  IconUser,
+  IconX,
+} from "@tabler/icons-react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
+import * as NavigationBar from "expo-navigation-bar"; // ✅
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import { useRouter } from "expo-router";
-import { CameraView, useCameraPermissions } from "expo-camera";
-import * as ImagePicker from "expo-image-picker";
-import * as NavigationBar from "expo-navigation-bar"; // ✅
-import { useOutfitAnalysisStore } from "@/backend/store/outfit-analysis-store";
-import {
-  IconBolt,
-  IconPhoto,
-  IconUser,
-  IconX,
-  IconScan,
-  IconBarcode,
-  IconTag,
-  IconShirt,
-} from "@tabler/icons-react-native";
 
-const BRACKET_SIZE = 36;
-const BRACKET_THICKNESS = 3;
-const BRACKET_COLOR = "rgba(255,255,255,0.90)";
-const CORNER_RADIUS = 10;
+import Svg, { Path } from "react-native-svg";
+
+const BRACKET_SIZE = 56;
+const BRACKET_THICKNESS = 6;
+const BRACKET_COLOR = "#FFFFFF";
 
 function CornerBracket({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
   const isTop = position.startsWith("t");
   const isLeft = position.endsWith("l");
+
+  let rotate = "0deg";
+  if (position === "tr") rotate = "90deg";
+  if (position === "br") rotate = "180deg";
+  if (position === "bl") rotate = "-90deg";
 
   return (
     <View
@@ -36,20 +48,25 @@ function CornerBracket({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
         position: "absolute",
         width: BRACKET_SIZE,
         height: BRACKET_SIZE,
-        ...(isTop ? { top: 0 } : { bottom: 0 }),
-        ...(isLeft ? { left: 0 } : { right: 0 }),
-        // Two-sided border with rounded outer corner
-        borderTopWidth: isTop ? BRACKET_THICKNESS : 0,
-        borderBottomWidth: !isTop ? BRACKET_THICKNESS : 0,
-        borderLeftWidth: isLeft ? BRACKET_THICKNESS : 0,
-        borderRightWidth: !isLeft ? BRACKET_THICKNESS : 0,
-        borderTopLeftRadius: position === "tl" ? CORNER_RADIUS : 0,
-        borderTopRightRadius: position === "tr" ? CORNER_RADIUS : 0,
-        borderBottomLeftRadius: position === "bl" ? CORNER_RADIUS : 0,
-        borderBottomRightRadius: position === "br" ? CORNER_RADIUS : 0,
-        borderColor: BRACKET_COLOR,
+        ...(isTop ? { top: -2 } : { bottom: -2 }),
+        ...(isLeft ? { left: -2 } : { right: -2 }),
       }}
-    />
+    >
+      <Svg
+        width={BRACKET_SIZE}
+        height={BRACKET_SIZE}
+        viewBox="0 0 56 56"
+        style={{ transform: [{ rotate }] }}
+      >
+        <Path
+          d="M 3 53 L 3 23 A 20 20 0 0 1 23 3 L 53 3"
+          stroke={BRACKET_COLOR}
+          strokeWidth={BRACKET_THICKNESS}
+          strokeLinecap="round"
+          fill="none"
+        />
+      </Svg>
+    </View>
   );
 }
 
@@ -83,10 +100,10 @@ export default function CameraScreen() {
 
   const goToAnalyzing = useCallback(
     (uri: string) => {
-      useOutfitAnalysisStore.getState().startAnalysis(uri);
+      useOutfitAnalysisStore.getState().startAnalysis(uri, activeMode);
       router.replace("/(root)/(tabs)" as never);
     },
-    [router],
+    [router, activeMode],
   );
 
   const handleShutter = useCallback(async () => {
@@ -217,10 +234,13 @@ export default function CameraScreen() {
 
         {/* Bottom Area (Modes + Controls) */}
         <View style={{ paddingBottom: insets.bottom + 20 }}>
-          
           {/* Scan Modes Row */}
-          <View className="flex-row justify-center px-4 mb-6">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          <View className="flex-row items-center justify-center px-12 mb-6">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 6, alignItems: "center" }}
+            >
               {SCAN_MODES.map((mode) => {
                 const isActive = activeMode === mode.id;
                 const IconComponent = mode.icon;
@@ -271,7 +291,9 @@ export default function CameraScreen() {
               <View className="h-12 w-12 items-center justify-center rounded-xl bg-black/40 mb-1 border border-white/20">
                 <IconPhoto size={22} color="#FFFFFF" strokeWidth={1.5} />
               </View>
-              <Text className="text-white/80 text-[10px] font-medium">From Gallery</Text>
+              <Text className="text-white/80 text-[10px] font-medium">
+                From Gallery
+              </Text>
             </Pressable>
 
             <Pressable
@@ -297,7 +319,6 @@ export default function CameraScreen() {
               />
             </Pressable>
           </View>
-
         </View>
       </SafeAreaView>
     </View>

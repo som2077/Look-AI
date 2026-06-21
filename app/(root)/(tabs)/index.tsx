@@ -31,10 +31,10 @@ const H_PADDING = 20;
 const HEADER_HEIGHT = 140;
 
 const RING_SEGMENT_BASE: readonly Omit<RingProgressSegment, "progress">[] = [
-  { id: "outer", color: "#E5904F", radius: 78, strokeWidth: 8 },
-  { id: "middle", color: "#E26B6B", radius: 68, strokeWidth: 8 },
-  { id: "inner", color: "#6B7AE8", radius: 58, strokeWidth: 8 },
-  { id: "innermost", color: "#000000", radius: 48, strokeWidth: 8 },
+  { id: "outer", color: "#E5904F", radius: 88, strokeWidth: 13 },
+  { id: "middle", color: "#E26B6B", radius: 74.7, strokeWidth: 13 },
+  { id: "inner", color: "#6B7AE8", radius: 61.4, strokeWidth: 13 },
+  { id: "innermost", color: "#F97316", radius: 47.9, strokeWidth: 13 },
 ] as const;
 
 const clampRatio = (value: number): number => {
@@ -55,16 +55,40 @@ export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const ringSegments = useMemo<readonly RingProgressSegment[]>(() => {
-    const totalTracked = summary.wearCount + summary.neverCount;
-    const wearShare = totalTracked > 0 ? summary.wearCount / totalTracked : 0;
-    const neverShare = totalTracked > 0 ? summary.neverCount / totalTracked : 0;
-    const fourthShare =
-      totalTracked > 0 ? (summary.wearCount * 0.5) / totalTracked : 0.45;
+    const total = summary.totalWorn; // total wardrobe items
+    const hasData = total > 0;
+
+    // ── Fallback progress when no wardrobe data yet ──
+    const FALLBACK = {
+      wornRatio: 0.2, // 20% — gentle placeholder for worn %
+      neverRatio: 0.45, // 45% — placeholder for never worn
+      wearFreqRatio: 0.1, // 10% — placeholder for avg wears
+    } as const;
+
+    // Ring 1 (orange) — Worn %: what % of wardrobe has been worn at least once
+    const wornRatio = hasData
+      ? clampRatio(summary.wornPercentage)
+      : FALLBACK.wornRatio;
+
+    // Ring 2 (pink) — Never worn ratio: neverCount / total
+    const neverRatio = hasData
+      ? clampRatio(summary.neverCount / total)
+      : FALLBACK.neverRatio;
+
+    // Ring 3 (blue) — Wear frequency: wearCount / total (avg wears per item)
+    const wearFreqRatio = hasData
+      ? clampRatio(summary.wearCount / total)
+      : FALLBACK.wearFreqRatio;
+
+    // Ring 4 (orange) — Streak: always uses real streak data
+    const STREAK_GOAL = 30;
+    const streakRatio = clampRatio(CURRENT_STREAK_DAYS / STREAK_GOAL);
+
     return [
-      { ...RING_SEGMENT_BASE[0], progress: clampRatio(summary.wornPercentage) },
-      { ...RING_SEGMENT_BASE[1], progress: clampRatio(neverShare) },
-      { ...RING_SEGMENT_BASE[2], progress: clampRatio(wearShare) },
-      { ...RING_SEGMENT_BASE[3], progress: clampRatio(fourthShare) },
+      { ...RING_SEGMENT_BASE[0], progress: wornRatio },
+      { ...RING_SEGMENT_BASE[1], progress: neverRatio },
+      { ...RING_SEGMENT_BASE[2], progress: wearFreqRatio },
+      { ...RING_SEGMENT_BASE[3], progress: streakRatio },
     ];
   }, [summary]);
 
@@ -90,11 +114,21 @@ export default function HomeScreen() {
           <>
             <WardrobeRingSummaryCard
               wornPercentage={clampRatio(summary.wornPercentage)}
-              totalWorn={summary.totalWorn}
+              totalWorn={CURRENT_STREAK_DAYS}
               wearCount={summary.wearCount}
-              neverCount={summary.neverCount}
+              neverCount={summary.totalWorn}
               ringSegments={ringSegments}
               streak={CURRENT_STREAK_DAYS}
+              labels={{
+                topLeft: "Worn %",
+                bottomLeft: "Streak",
+                topRight: "Avg Wears",
+                bottomRight: "Total Items",
+              }}
+              statColors={{
+                bottomLeft: "#F97316",
+                bottomRight: "#1D1A27",
+              }}
             />
             <WardrobeFilterTabs />
             <WardrobeMessageBar />

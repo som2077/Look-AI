@@ -1,7 +1,8 @@
+import { IconFlameFilled } from "@tabler/icons-react-native";
+import type { ReactNode } from "react";
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
-import { Svg, Circle } from "react-native-svg";
-import { IconFlameFilled } from "@tabler/icons-react-native";
+import { Circle, Svg } from "react-native-svg";
 
 const TRACK_COLOR = "#F8F7FC" as const;
 
@@ -13,6 +14,34 @@ export interface RingProgressSegment {
   readonly strokeWidth: number;
 }
 
+export interface RingStatLabels {
+  readonly topLeft: string;
+  readonly bottomLeft: string;
+  readonly topRight: string;
+  readonly bottomRight: string;
+}
+
+const DEFAULT_LABELS: RingStatLabels = {
+  topLeft: "Worn clothes",
+  bottomLeft: "Total Items",
+  topRight: "Total wears",
+  bottomRight: "Never worn",
+};
+
+export interface RingStatColors {
+  readonly topLeft: string;
+  readonly bottomLeft: string;
+  readonly topRight: string;
+  readonly bottomRight: string;
+}
+
+const DEFAULT_COLORS: RingStatColors = {
+  topLeft: "#E5904F",
+  bottomLeft: "#1D1A27",
+  topRight: "#6B7AE8",
+  bottomRight: "#E26B6B",
+};
+
 export interface WardrobeRingSummaryCardProps {
   readonly wornPercentage: number;
   readonly totalWorn: number;
@@ -20,6 +49,10 @@ export interface WardrobeRingSummaryCardProps {
   readonly neverCount: number;
   readonly ringSegments: readonly RingProgressSegment[];
   readonly streak?: number;
+  readonly labels?: Partial<RingStatLabels>;
+  readonly statColors?: Partial<RingStatColors>;
+  readonly showStreakIcon?: boolean;
+  readonly bottomContent?: ReactNode;
 }
 
 const clampProgress = (value: number) => {
@@ -36,7 +69,19 @@ export function WardrobeRingSummaryCard({
   neverCount,
   ringSegments,
   streak = 1,
+  labels,
+  statColors,
+  showStreakIcon = true,
+  bottomContent,
 }: WardrobeRingSummaryCardProps) {
+  const resolvedLabels: RingStatLabels = {
+    ...DEFAULT_LABELS,
+    ...labels,
+  };
+  const resolvedColors: RingStatColors = {
+    ...DEFAULT_COLORS,
+    ...statColors,
+  };
   const sanitizedSegments = useMemo(
     () =>
       ringSegments
@@ -76,26 +121,26 @@ export function WardrobeRingSummaryCard({
     >
       <View className="flex-row items-center justify-between gap-3">
         {/* Left Stats */}
-        <View className="flex-1 items-end gap-5 py-1">
+        <View className="flex-1 items-end gap-10 py-1">
           <View className="items-end">
             <Text
               style={{
                 fontSize: 22,
                 fontFamily: "TikTokSans16pt-Bold",
-                color: "#E5904F",
+                color: resolvedColors.topLeft,
               }}
             >
               {formattedPercentage}%
             </Text>
             <Text
               style={{
-                fontSize: 10,
+                fontSize: 11,
                 fontFamily: "TikTokSans16pt-Medium",
-                color: "#E5904F",
+                color: resolvedColors.topLeft,
                 marginTop: 2,
               }}
             >
-              Worn clothes
+              {resolvedLabels.topLeft}
             </Text>
           </View>
           <View className="items-end">
@@ -103,20 +148,20 @@ export function WardrobeRingSummaryCard({
               style={{
                 fontSize: 22,
                 fontFamily: "TikTokSans16pt-Bold",
-                color: "#1D1A27",
+                color: resolvedColors.bottomLeft,
               }}
             >
               {totalWorn}
             </Text>
             <Text
               style={{
-                fontSize: 10,
+                fontSize: 11,
                 fontFamily: "TikTokSans16pt-Medium",
-                color: "#868693",
+                color: resolvedColors.bottomLeft,
                 marginTop: 2,
               }}
             >
-              Total Items
+              {resolvedLabels.bottomLeft}
             </Text>
           </View>
         </View>
@@ -161,42 +206,44 @@ export function WardrobeRingSummaryCard({
             })}
           </Svg>
           {/* Absolutely centered fire icon */}
-          <View
-            style={{
-              position: "absolute",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 80,
-              height: 80,
-            }}
-          >
-            <View className="h-10 w-10 items-center justify-center rounded-full  bg-[#F8F7FC]">
-              <IconFlameFilled size={20} color="#1D1A27" />
+          {showStreakIcon && (
+            <View
+              style={{
+                position: "absolute",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 80,
+                height: 80,
+              }}
+            >
+              <View className="h-10 w-10 items-center justify-center rounded-full  bg-[#F8F7FC]">
+                <IconFlameFilled size={20} color="#1D1A27" />
+              </View>
             </View>
-          </View>
+          )}
         </View>
 
         {/* Right Stats */}
-        <View className="flex-1 items-start gap-5 py-1">
+        <View className="flex-1 items-start gap-10 py-1">
           <View>
             <Text
               style={{
                 fontSize: 22,
                 fontFamily: "TikTokSans16pt-Bold",
-                color: "#6B7AE8",
+                color: resolvedColors.topRight,
               }}
             >
               {wearCount}
             </Text>
             <Text
               style={{
-                fontSize: 10,
+                fontSize: 11,
                 fontFamily: "TikTokSans16pt-Medium",
-                color: "#6B7AE8",
+                color: resolvedColors.topRight,
                 marginTop: 2,
               }}
             >
-              Total wears
+              {resolvedLabels.topRight}
             </Text>
           </View>
           <View>
@@ -204,24 +251,25 @@ export function WardrobeRingSummaryCard({
               style={{
                 fontSize: 22,
                 fontFamily: "TikTokSans16pt-Bold",
-                color: "#E26B6B",
+                color: resolvedColors.bottomRight,
               }}
             >
               {neverCount}
             </Text>
             <Text
               style={{
-                fontSize: 10,
+                fontSize: 11,
                 fontFamily: "TikTokSans16pt-Medium",
-                color: "#E26B6B",
+                color: resolvedColors.bottomRight,
                 marginTop: 2,
               }}
             >
-              Never worn
+              {resolvedLabels.bottomRight}
             </Text>
           </View>
         </View>
       </View>
+      {bottomContent && <View style={{ marginTop: 12 }}>{bottomContent}</View>}
     </View>
   );
 }

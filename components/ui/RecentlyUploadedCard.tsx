@@ -1,8 +1,8 @@
-import React from "react";
-import { Image as ExpoImage } from "expo-image";
-import { Pressable, Text, View } from "react-native";
-import { IconBell, IconX } from "@tabler/icons-react-native";
 import { useOutfitAnalysisStore } from "@/backend/store/outfit-analysis-store";
+import { IconBell, IconX } from "@tabler/icons-react-native";
+import { Image as ExpoImage } from "expo-image";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
 // import Svg, { Polygon, Defs, LinearGradient, Stop } from "react-native-svg";
 
 export const RecentlyUploadedHeading = React.memo(

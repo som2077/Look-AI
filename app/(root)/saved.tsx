@@ -11,6 +11,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppGradientBackground } from "../../components/ui/AppGradientBackground";
@@ -19,7 +20,7 @@ const { width } = Dimensions.get("window");
 const GRID_SPACING = 2;
 const ITEM_SIZE = (width - GRID_SPACING * 2) / 3;
 
-const FILTERS = ["All", "Collections", "Series", "Reels", "Posts", "Audio"];
+const FILTERS = ["All", "Outfits", "Posts", "Scans"];
 
 // Mock data matching the grid in the screenshot
 const SAVED_POSTS = [
@@ -86,20 +87,14 @@ export default function SavedScreen() {
     <View style={styles.container}>
       {/* Top Navigation */}
       <View style={styles.navBar}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <ArrowLeft color="#1D1A27" size={28} strokeWidth={1.5} />
-          </TouchableOpacity>
-          <Text style={styles.navTitle}>Saved</Text>
-        </View>
         <TouchableOpacity
+          onPress={() => router.back()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ position: "absolute", left: 16, zIndex: 10 }}
         >
-          <Plus color="#1D1A27" size={28} strokeWidth={2} />
+          <ArrowLeft color="#1D1A27" size={28} strokeWidth={1.5} />
         </TouchableOpacity>
+        <Text style={[styles.navTitle, { marginLeft: 0, textAlign: "center", width: "100%" }]}>Saved</Text>
       </View>
 
       {/* Filter Tabs */}
@@ -130,36 +125,18 @@ export default function SavedScreen() {
         </ScrollView>
       </View>
 
-      {/* Collections Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Collections</Text>
-        <TouchableOpacity>
-          <Text style={styles.actionText}>See all</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.collectionItem}>
-        <View style={styles.collectionImageContainer}>
-          <Image
-            source={{
-              uri: "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=400&q=80",
-            }}
-            style={styles.collectionImage}
-          />
-        </View>
-        <View style={styles.collectionInfo}>
-          <Text style={styles.collectionName}>free</Text>
-          <View style={styles.privateContainer}>
-            <Lock color="#8E8E93" size={12} strokeWidth={2} />
-            <Text style={styles.privateText}>Private</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-
-      {/* Reels and Posts Header */}
+      {/* Posts Header */}
       <View style={[styles.sectionHeader, { marginTop: 24, marginBottom: 12 }]}>
-        <Text style={styles.sectionTitle}>Reels and posts</Text>
-        <TouchableOpacity>
+        <Text style={styles.sectionTitle}>Posts</Text>
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert("Manage Posts", "Choose an action", [
+              { text: "Share", onPress: () => {} },
+              { text: "Delete", style: "destructive", onPress: () => {} },
+              { text: "Cancel", style: "cancel" },
+            ]);
+          }}
+        >
           <Text style={styles.actionText}>Manage</Text>
         </TouchableOpacity>
       </View>

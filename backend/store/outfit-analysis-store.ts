@@ -11,6 +11,8 @@ export interface LastOutfit {
   occasion: string;
   weather: string;
   itemCount: number;
+  mode: string;
+  isSaved?: boolean;
 }
 
 interface OutfitAnalysisState {
@@ -18,11 +20,13 @@ interface OutfitAnalysisState {
   isDone: boolean;
   imageUri: string | null;
   progress: number;
+  currentMode: string | null;
   lastOutfits: LastOutfit[];
-  startAnalysis: (imageUri: string) => void;
+  startAnalysis: (imageUri: string, mode?: string) => void;
   clearAnalysis: () => void;
   removeOutfit: (index: number) => void;
   clearAllOutfits: () => void;
+  toggleSaved: (index: number) => void;
 }
 
 let _interval: ReturnType<typeof setInterval> | null = null;
@@ -98,9 +102,10 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
     isDone: false,
     imageUri: null,
     progress: 0,
+    currentMode: null,
     lastOutfits: [],
 
-    startAnalysis: (imageUri: string) => {
+    startAnalysis: (imageUri: string, mode?: string) => {
       if (_interval) {
         clearInterval(_interval);
         _interval = null;
@@ -110,7 +115,7 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
         _doneTimeout = null;
       }
 
-      set({ isAnalyzing: true, isDone: false, imageUri, progress: 0 });
+      set({ isAnalyzing: true, isDone: false, imageUri, progress: 0, currentMode: mode || "scan-cloth" });
 
       _interval = setInterval(() => {
         const current = get().progress;
@@ -120,6 +125,7 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
           clearInterval(_interval!);
           _interval = null;
           const uri = get().imageUri!;
+          const currentMode = get().currentMode || "scan-cloth";
           const idx = get().lastOutfits.length % OUTFIT_NAMES.length;
           set({
             progress: 100,
@@ -138,12 +144,13 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
                 occasion: OCCASIONS[idx],
                 weather: WEATHERS[idx % WEATHERS.length],
                 itemCount: ITEMS[idx],
+                mode: currentMode,
               },
             ],
           });
 
           _doneTimeout = setTimeout(() => {
-            set({ isDone: false, imageUri: null, progress: 0 });
+            set({ isDone: false, imageUri: null, progress: 0, currentMode: null });
             _doneTimeout = null;
           }, 4000);
         } else {
@@ -168,5 +175,14 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
       set({ lastOutfits: get().lastOutfits.filter((_, i) => i !== index) }),
 
     clearAllOutfits: () => set({ lastOutfits: [] }),
+
+    toggleSaved: (index: number) =>
+      set((state) => {
+        const outfits = [...state.lastOutfits];
+        if (outfits[index]) {
+          outfits[index] = { ...outfits[index], isSaved: !outfits[index].isSaved };
+        }
+        return { lastOutfits: outfits };
+      }),
   }),
 );
