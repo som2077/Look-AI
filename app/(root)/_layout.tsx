@@ -14,6 +14,8 @@ export default function RootLayout() {
         options={{ animation: "slide_from_right" }}
       />
       <Stack.Screen name="onboarding" />
+      <Stack.Screen name="terms" options={{ animation: "slide_from_bottom" }} />
+      <Stack.Screen name="privacy" options={{ animation: "slide_from_bottom" }} />
       <Stack.Screen
         name="log-outfit"
         options={{ animation: "slide_from_bottom" }}
@@ -26,36 +28,48 @@ export default function RootLayout() {
         name="calendar"
         options={{ animation: "slide_from_right" }}
       />
-      <Stack.Screen name="streak" options={{ animation: "slide_from_right" }} />
-      <Stack.Screen name="score" options={{ animation: "slide_from_right" }} />
       <Stack.Screen
-        name="subscription"
+        name="(analytics)/streak"
         options={{ animation: "slide_from_right" }}
       />
       <Stack.Screen
-        name="manage-subscription"
+        name="(analytics)/score"
         options={{ animation: "slide_from_right" }}
       />
-      <Stack.Screen name="outfit" options={{ animation: "slide_from_right" }} />
-      <Stack.Screen name="saved" options={{ animation: "slide_from_right" }} />
+      <Stack.Screen
+        name="(subscription)/subscription"
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="(subscription)/manage-subscription"
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="(ai-features)/outfit"
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="(wardrobe)/saved"
+        options={{ animation: "slide_from_right" }}
+      />
       <Stack.Screen
         name="cloth-details"
         options={{ animation: "slide_from_right" }}
       />
       <Stack.Screen
-        name="trend-feed"
+        name="(social)/trend-feed"
         options={{ animation: "slide_from_right" }}
       />
       <Stack.Screen
-        name="look-ai"
+        name="(ai-features)/look-ai"
         options={{ animation: "slide_from_right" }}
       />
       <Stack.Screen
-        name="wardrobe-highlights"
+        name="(wardrobe)/wardrobe-highlights"
         options={{ animation: "slide_from_right" }}
       />
       <Stack.Screen
-        name="outfit-log-detail"
+        name="(ai-features)/outfit-log-detail"
         options={{ animation: "slide_from_bottom" }}
       />
     </Stack>

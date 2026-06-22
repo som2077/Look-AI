@@ -18,9 +18,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { ArrowLeft, Users } from "lucide-react-native";
+import { useGroupPosts, GroupPost as Post } from "../../../backend/hooks/useGroupPosts";
+import { useGroups } from "../../../backend/hooks/useGroups";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -28,54 +31,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const ONLY_3_EMOJIS = ["👍", "❤️", "😂"];
 
-const MOCK_POSTS = [
-  {
-    id: "1",
-    username: "sarah_k",
-    avatar: "https://i.pravatar.cc/80?img=1",
-    timeAgo: "3d",
-    content:
-      "Find looks for every occasion. Browse community style ideas. Save outfits you love. Create your next perfect fit.",
-    replyCount: 0,
-    reactions: {} as Record<string, number>,
-    myReaction: null as string | null,
-  },
-  {
-    id: "2",
-    username: "james_m",
-    avatar: "https://i.pravatar.cc/80?img=2",
-    timeAgo: "1d",
-    content:
-      "Find looks for every occasion. Browse community style ideas. Save outfits you love. Create your next perfect fit.",
-    replyCount: 2,
-    reactions: { "😂": 2 } as Record<string, number>,
-    myReaction: null as string | null,
-  },
-  {
-    id: "3",
-    username: "priya_v",
-    avatar: "https://i.pravatar.cc/80?img=3",
-    timeAgo: "2h",
-    content:
-      "Find looks for every occasion. Browse community style ideas. Save outfits you love. Create your next perfect fit.",
-    replyCount: 5,
-    reactions: { "👍": 3, "❤️": 1 } as Record<string, number>,
-    myReaction: null as string | null,
-  },
-  {
-    id: "4",
-    username: "alex_t",
-    avatar: "https://i.pravatar.cc/80?img=4",
-    timeAgo: "30m",
-    content:
-      "Loving this community! The style ideas here are truly amazing and inspiring every day.",
-    replyCount: 0,
-    reactions: {} as Record<string, number>,
-    myReaction: null as string | null,
-  },
-];
-
-type Post = (typeof MOCK_POSTS)[0];
+// MOCK_POSTS and Post type moved to social-store
 
 // ─── Emoji Sheet ───────────────────────────────────────────────────────────────
 
@@ -370,11 +326,16 @@ function LeaderboardTab() {
 // ─── Group Detail Screen ───────────────────────────────────────────────────────
 
 export default function GroupDetailScreen() {
-  const { name, image } = useLocalSearchParams<{ name: string; image: string }>();
+  const { id: groupId, name, image } = useLocalSearchParams<{ id: string; name: string; image: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const { posts, loading, addPost, toggleReaction } = useGroupPosts(groupId);
+  const { joinedGroupIds, joinGroup } = useGroups();
+  
+  const isJoined = joinedGroupIds.includes(groupId);
 
   const [activeTab, setActiveTab] = useState<"chat" | "leaderboard">("chat");
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
 
   // Emoji sheet state
   const [emojiSheetPostId, setEmojiSheetPostId] = useState<string | null>(null);
@@ -395,31 +356,10 @@ export default function GroupDetailScreen() {
   const handleEmojiSelect = useCallback(
     (emoji: string) => {
       if (!emojiSheetPostId) return;
-      setPosts((prev) =>
-        prev.map((p) => {
-          if (p.id !== emojiSheetPostId) return p;
-
-          const newReactions = { ...p.reactions };
-          if (p.myReaction === emoji) {
-            // Toggle off
-            newReactions[emoji] = (newReactions[emoji] ?? 1) - 1;
-            if (newReactions[emoji] <= 0) delete newReactions[emoji];
-            return { ...p, myReaction: null, reactions: newReactions };
-          } else {
-            // Remove previous reaction
-            if (p.myReaction) {
-              newReactions[p.myReaction] = (newReactions[p.myReaction] ?? 1) - 1;
-              if (newReactions[p.myReaction] <= 0) delete newReactions[p.myReaction];
-            }
-            // Add new
-            newReactions[emoji] = (newReactions[emoji] ?? 0) + 1;
-            return { ...p, myReaction: emoji, reactions: newReactions };
-          }
-        })
-      );
+      toggleReaction(emojiSheetPostId, emoji);
       setEmojiSheetPostId(null);
     },
-    [emojiSheetPostId]
+    [emojiSheetPostId, toggleReaction]
   );
 
   const handleReply = useCallback((username: string) => {
@@ -429,9 +369,12 @@ export default function GroupDetailScreen() {
 
   const handleSend = useCallback(() => {
     if (!message.trim()) return;
+    
+    addPost(message);
+    
     setMessage("");
     setReplyingTo(null);
-  }, [message]);
+  }, [message, addPost]);
 
   const handleCancelReply = useCallback(() => {
     setReplyingTo(null);
@@ -443,8 +386,8 @@ export default function GroupDetailScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={0}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
           {/* ── Header ── */}
           <View
@@ -458,10 +401,8 @@ export default function GroupDetailScreen() {
               gap: 12,
             }}
           >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={{ fontSize: 22, color: "#1D1A27", fontWeight: "600" }}>
-                ‹
-              </Text>
+            <TouchableOpacity onPress={() => router.back()} style={{ padding: 4 }}>
+              <ArrowLeft size={24} color="#1D1A27" />
             </TouchableOpacity>
 
             <Image
@@ -469,9 +410,16 @@ export default function GroupDetailScreen() {
               style={{ width: 36, height: 36, borderRadius: 18 }}
             />
 
-            <Text style={{ fontSize: 17, fontWeight: "700", color: "#1D1A27", flex: 1 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27", flex: 1 }}>
               {name}
             </Text>
+
+            <TouchableOpacity 
+              style={{ padding: 4 }}
+              onPress={() => router.push({ pathname: "/(root)/(social)/group-info", params: { id: groupId, name, image } })}
+            >
+              <Users size={24} color="#1D1A27" />
+            </TouchableOpacity>
           </View>
 
           {/* ── Sub-tabs ── */}
@@ -530,89 +478,113 @@ export default function GroupDetailScreen() {
             )}
           </View>
 
-          {/* ── Message Input (only on chat tab) ── */}
+          {/* ── Message Input or Join Prompt ── */}
           {activeTab === "chat" && (
             <View
               style={{
                 borderTopWidth: 1,
                 borderTopColor: "#F0F0F4",
                 backgroundColor: "#fff",
+                paddingBottom: Math.max(insets.bottom, 12),
               }}
             >
-              {/* Replying to banner */}
-              {replyingTo && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    backgroundColor: "#F5F5F7",
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#EAEAEE",
-                  }}
-                >
-                  <Text
-                    style={{ flex: 1, fontSize: 13, color: "#6B7280", fontWeight: "500" }}
+              {isJoined ? (
+                <>
+                  {/* Replying to banner */}
+                  {replyingTo && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                        backgroundColor: "#F5F5F7",
+                        borderBottomWidth: 1,
+                        borderBottomColor: "#EAEAEE",
+                      }}
+                    >
+                      <Text
+                        style={{ flex: 1, fontSize: 13, color: "#6B7280", fontWeight: "500" }}
+                      >
+                        Replying to{" "}
+                        <Text style={{ color: "#1D1A27", fontWeight: "700" }}>
+                          @{replyingTo}
+                        </Text>
+                      </Text>
+                      <TouchableOpacity onPress={handleCancelReply}>
+                        <Text style={{ fontSize: 18, color: "#9CA3AF", lineHeight: 20 }}>
+                          ✕
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Input row */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingHorizontal: 16,
+                      paddingVertical: 10,
+                      gap: 10,
+                    }}
                   >
-                    Replying to{" "}
-                    <Text style={{ color: "#1D1A27", fontWeight: "700" }}>
-                      @{replyingTo}
-                    </Text>
+                    <TextInput
+                      ref={inputRef}
+                      placeholder="Type a message..."
+                      placeholderTextColor="#9CA3AF"
+                      value={message}
+                      onChangeText={setMessage}
+                      style={{
+                        flex: 1,
+                        backgroundColor: "#F5F5F7",
+                        borderRadius: 22,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                        fontSize: 14,
+                        color: "#1D1A27",
+                        maxHeight: 100,
+                      }}
+                      multiline
+                      returnKeyType="send"
+                      onSubmitEditing={handleSend}
+                    />
+
+                    <TouchableOpacity
+                      onPress={handleSend}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: message.trim() ? "#1D1A27" : "#E5E7EB",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ fontSize: 16 }}>➤</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <View style={{ padding: 16, alignItems: "center" }}>
+                  <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 12, textAlign: "center" }}>
+                    You must join this group to post messages.
                   </Text>
-                  <TouchableOpacity onPress={handleCancelReply}>
-                    <Text style={{ fontSize: 18, color: "#9CA3AF", lineHeight: 20 }}>
-                      ✕
+                  <TouchableOpacity
+                    onPress={() => joinGroup(groupId)}
+                    style={{
+                      backgroundColor: "#1D1A27",
+                      paddingHorizontal: 32,
+                      paddingVertical: 12,
+                      borderRadius: 24,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
+                      Join Group
                     </Text>
                   </TouchableOpacity>
                 </View>
               )}
-
-              {/* Input row */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  gap: 10,
-                }}
-              >
-                <TextInput
-                  ref={inputRef}
-                  placeholder="Type a message..."
-                  placeholderTextColor="#9CA3AF"
-                  value={message}
-                  onChangeText={setMessage}
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#F5F5F7",
-                    borderRadius: 22,
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    fontSize: 14,
-                    color: "#1D1A27",
-                    maxHeight: 100,
-                  }}
-                  multiline
-                  returnKeyType="send"
-                  onSubmitEditing={handleSend}
-                />
-
-                <TouchableOpacity
-                  onPress={handleSend}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: message.trim() ? "#1D1A27" : "#E5E7EB",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text style={{ fontSize: 16 }}>➤</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
         </KeyboardAvoidingView>

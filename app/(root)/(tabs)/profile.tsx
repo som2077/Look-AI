@@ -345,10 +345,12 @@ const ClassicProfileUI = ({
       <ListItem
         icon={<IconNotes size={18} color="#1D1D1D" />}
         title="Terms and Conditions"
+        onPress={() => router.push("/(root)/terms" as never)}
       />
       <ListItem
         icon={<IconShield size={18} color="#1D1D1D" />}
         title="Privacy policy"
+        onPress={() => router.push("/(root)/privacy" as never)}
         hasBorder={false}
       />
     </CardContainer>
@@ -790,10 +792,12 @@ const ExploreStyleProfileUI = ({
           <ListItem
             icon={<IconNotes size={18} color="#1D1D1D" />}
             title="Terms and Conditions"
+            onPress={() => router.push("/(root)/terms" as never)}
           />
           <ListItem
             icon={<IconShield size={18} color="#1D1D1D" />}
             title="Privacy policy"
+            onPress={() => router.push("/(root)/privacy" as never)}
             hasBorder={false}
           />
         </CardContainer>

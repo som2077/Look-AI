@@ -1,4 +1,5 @@
 import { usePostHog } from 'posthog-react-native';
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
@@ -21,11 +22,15 @@ export default function SetupAccountScreen() {
   const { completeOnboarding, isSaving, error } = useOnboardingState();
   const [messageIndex, setMessageIndex] = useState(0);
 
+  const router = useRouter();
+
   useEffect(() => {
     if (isInitializing || !user?.id) return;
 
-    void completeOnboarding(user.id, supabase);
-  }, [isInitializing, supabase, completeOnboarding, user?.id]);
+    completeOnboarding(user.id, supabase).then(() => {
+      router.replace("/(root)/(tabs)" as never);
+    }).catch(console.error);
+  }, [isInitializing, supabase, completeOnboarding, user?.id, router]);
 
   useEffect(() => {
     const interval = setInterval(() => {

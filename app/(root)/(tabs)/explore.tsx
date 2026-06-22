@@ -31,6 +31,7 @@ import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
 import { StatusBar } from "expo-status-bar";
+import { useGroups, Group } from "../../../backend/hooks/useGroups";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -47,32 +48,6 @@ const STYLE_OF_THE_DAY = {
   ]
 };
 
-const MISSING_PIECES = [
-  {
-    id: "m1",
-    title: "White Graphic Tee",
-    reason: "Matches 3 of your jeans",
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&q=80",
-    price: "₹1,299",
-    brand: "Urban Basics"
-  },
-  {
-    id: "m2",
-    title: "White Sneakers",
-    reason: "Perfect for your casual fits",
-    image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&q=80",
-    price: "₹3,499",
-    brand: "SneakerX"
-  },
-  {
-    id: "m3",
-    title: "Beige Chinos",
-    reason: "Versatile for smart casuals",
-    image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&q=80",
-    price: "₹1,899",
-    brand: "Zara"
-  }
-];
 
 const COMMUNITY_POSTS = [
   {
@@ -131,60 +106,7 @@ const COMMUNITY_POSTS = [
   },
 ];
 
-const ALL_GROUPS = [
-  {
-    id: "1",
-    name: "Minimalist Style",
-    members: 3200,
-    description: "Clean looks, timeless pieces & effortless fashion.",
-    avatars: [
-      "https://i.pravatar.cc/40?img=10",
-      "https://i.pravatar.cc/40?img=11",
-      "https://i.pravatar.cc/40?img=12",
-    ],
-    image: "https://i.pravatar.cc/80?img=10",
-    color: "#E8E4F3",
-  },
-  {
-    id: "2",
-    name: "Trending Fashion",
-    members: 5100,
-    description: "Explore the latest styles loved by the community.",
-    avatars: [
-      "https://i.pravatar.cc/40?img=20",
-      "https://i.pravatar.cc/40?img=21",
-      "https://i.pravatar.cc/40?img=22",
-    ],
-    image: "https://i.pravatar.cc/80?img=20",
-    color: "#F3E8E8",
-  },
-  {
-    id: "3",
-    name: "Streetwear & Urban",
-    members: 8700,
-    description: "Urban fits, sneakers & modern street fashion.",
-    avatars: [
-      "https://i.pravatar.cc/40?img=30",
-      "https://i.pravatar.cc/40?img=31",
-      "https://i.pravatar.cc/40?img=32",
-    ],
-    image: "https://i.pravatar.cc/80?img=30",
-    color: "#E8F3E8",
-  },
-  {
-    id: "4",
-    name: "Y2K Revival",
-    members: 4200,
-    description: "Bringing back the early 2000s aesthetic.",
-    avatars: [
-      "https://i.pravatar.cc/40?img=40",
-      "https://i.pravatar.cc/40?img=41",
-      "https://i.pravatar.cc/40?img=42",
-    ],
-    image: "https://i.pravatar.cc/80?img=40",
-    color: "#F3EBE8",
-  },
-];
+// Removed ALL_GROUPS, using useSocialStore instead
 
 // ─── Add Post Modal ────────────────────────────────────────────────────────────
 
@@ -326,58 +248,7 @@ function ForYouTab() {
     (typeof COMMUNITY_POSTS)[0] | null
   >(null);
 
-  const renderMissingPiece = ({ item }: { item: (typeof MISSING_PIECES)[0] }) => (
-    <View
-      style={{
-        width: 240,
-        backgroundColor: "#FFFFFF",
-        borderRadius: 20,
-        marginRight: 12,
-        padding: 12,
-        flexDirection: "row",
-        shadowColor: "#000",
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: "#F0F0F0"
-      }}
-    >
-      <Image
-        source={{ uri: item.image }}
-        style={{ width: 80, height: 100, borderRadius: 12, backgroundColor: "#F5F5F7" }}
-      />
-      <View style={{ flex: 1, marginLeft: 12, justifyContent: "center" }}>
-        <Text style={{ fontSize: 10, fontWeight: "700", color: "#4C36F5", textTransform: "uppercase", marginBottom: 4 }}>
-          {item.brand}
-        </Text>
-        <Text style={{ fontSize: 14, fontWeight: "800", color: "#1D1A27", marginBottom: 2 }} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text style={{ fontSize: 11, color: "#6B7280", marginBottom: 8 }} numberOfLines={2}>
-          {item.reason}
-        </Text>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ fontSize: 14, fontWeight: "700", color: "#1D1A27" }}>
-            {item.price}
-          </Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: "#1D1A27",
-              width: 28,
-              height: 28,
-              borderRadius: 14,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <ShoppingBag size={14} color="#FFF" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
+
 
   return (
     <ScrollView
@@ -436,27 +307,6 @@ function ForYouTab() {
         </View>
       </View>
 
-      {/* ── Missing Piece / Shop the Look ── */}
-      <View style={{ marginTop: 32 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 16, marginBottom: 14 }}>
-          <View>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>Missing Pieces</Text>
-            <Text style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>Complete your wardrobe</Text>
-          </View>
-          <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={{ fontSize: 13, fontWeight: "600", color: "#4C36F5" }}>See all</Text>
-            <ChevronRight size={16} color="#4C36F5" />
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          data={MISSING_PIECES}
-          keyExtractor={(item) => item.id}
-          renderItem={renderMissingPiece}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
-        />
-      </View>
 
       {/* Community Looks */}
       <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
@@ -622,7 +472,7 @@ function GroupCard({
   onJoin,
   onPress,
 }: {
-  group: (typeof ALL_GROUPS)[0];
+  group: Group;
   joined: boolean;
   onJoin: () => void;
   onPress: () => void;
@@ -656,7 +506,7 @@ function GroupCard({
           {group.name}
         </Text>
         <Text style={{ fontSize: 12, color: "#6B7280", marginTop: 1 }}>
-          {group.members.toLocaleString()} members
+          {(group.members_count || 0).toLocaleString()} members
         </Text>
         <Text
           style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}
@@ -669,7 +519,7 @@ function GroupCard({
       {/* Member Avatars + Join */}
       <View style={{ alignItems: "center", marginLeft: 8 }}>
         <View style={{ flexDirection: "row", marginBottom: 8 }}>
-          {group.avatars.map((av, idx) => (
+          {(group.avatars || []).map((av, idx) => (
             <Image
               key={idx}
               source={{ uri: av }}
@@ -728,18 +578,27 @@ function GroupCard({
 function GroupsTab({
   onGroupPress,
 }: {
-  onGroupPress: (group: (typeof ALL_GROUPS)[0]) => void;
+  onGroupPress: (group: Group) => void;
 }) {
-  const [joinedIds, setJoinedIds] = useState<string[]>([]);
+  const { groups, joinedGroupIds, joinGroup, leaveGroup, loading } = useGroups();
 
-  const handleJoin = useCallback((id: string) => {
-    setJoinedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  }, []);
+  const handleJoin = useCallback(
+    (id: string) => {
+      if (joinedGroupIds.includes(id)) {
+        leaveGroup(id);
+      } else {
+        joinGroup(id);
+      }
+    },
+    [joinedGroupIds, joinGroup, leaveGroup]
+  );
 
-  const joinedGroups = ALL_GROUPS.filter((g) => joinedIds.includes(g.id));
-  const discoverGroups = ALL_GROUPS.filter((g) => !joinedIds.includes(g.id));
+  if (loading) {
+    return <Text style={{ padding: 20, textAlign: "center", color: "#6B7280" }}>Loading groups...</Text>;
+  }
+
+  const joinedGroups = groups.filter((g) => joinedGroupIds.includes(g.id));
+  const discoverGroups = groups.filter((g) => !joinedGroupIds.includes(g.id));
 
   return (
     <ScrollView
@@ -810,7 +669,7 @@ export default function ExploreScreen() {
   const [showAddPost, setShowAddPost] = useState(false);
 
   const handleGroupPress = useCallback(
-    (group: (typeof ALL_GROUPS)[0]) => {
+    (group: Group) => {
       router.push({
         pathname: "/(root)/(social)/group-detail" as any,
         params: { id: group.id, name: group.name, image: group.image },

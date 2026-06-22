@@ -101,7 +101,7 @@ export default function CameraScreen() {
   const goToAnalyzing = useCallback(
     (uri: string) => {
       useOutfitAnalysisStore.getState().startAnalysis(uri, activeMode);
-      router.replace("/(root)/(tabs)" as never);
+      router.replace({ pathname: "/(root)/log-outfit/analyzing", params: { photoUri: uri } } as any);
     },
     [router, activeMode],
   );
