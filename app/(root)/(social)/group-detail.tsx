@@ -174,11 +174,11 @@ function PostItem({
   onReact: (postId: string) => void;
   onReply: (username: string) => void;
 }) {
-  const totalReactions = Object.values(post.reactions).reduce(
+  const totalReactions = Object.values(post.reactions || {}).reduce(
     (s, v) => s + v,
     0
   );
-  const reactionEmojis = Object.keys(post.reactions);
+  const reactionEmojis = Object.keys(post.reactions || {});
 
   return (
     <View
@@ -202,7 +202,9 @@ function PostItem({
           <Text style={{ fontSize: 14, fontWeight: "700", color: "#1D1A27" }}>
             {post.username}
           </Text>
-          <Text style={{ fontSize: 12, color: "#9CA3AF" }}>{post.timeAgo}</Text>
+          <Text style={{ fontSize: 12, color: "#9CA3AF" }}>
+            {post.created_at ? new Date(post.created_at).toLocaleDateString() : "Recently"}
+          </Text>
         </View>
 
         {/* Content */}
@@ -240,16 +242,16 @@ function PostItem({
 
         {/* Action buttons */}
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10, gap: 18 }}>
-          <TouchableOpacity onPress={() => onReply(post.username)}>
+          <TouchableOpacity onPress={() => onReply(post.username || "User")}>
             <Text style={{ fontSize: 13, color: "#6B7280", fontWeight: "600" }}>
               Reply
             </Text>
           </TouchableOpacity>
 
-          {post.replyCount > 0 && (
+          {((post as any).replyCount || 0) > 0 && (
             <TouchableOpacity>
               <Text style={{ fontSize: 13, color: "#6B7280", fontWeight: "600" }}>
-                View {post.replyCount} repl{post.replyCount === 1 ? "y" : "ies"}
+                View {(post as any).replyCount} repl{(post as any).replyCount === 1 ? "y" : "ies"}
               </Text>
             </TouchableOpacity>
           )}

@@ -8,7 +8,6 @@ import {
   IconHanger,
   IconHeart,
   IconLayoutGrid,
-  IconPhoto,
   IconPlus,
   IconScissors,
   IconShirt,
@@ -17,11 +16,19 @@ import {
 } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
+  Animated,
   Dimensions,
   Image,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   Text,
@@ -101,10 +108,21 @@ interface ClothingItem {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_GAP = 8;
 const GRID_PADDING = 14;
-const CARD_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
 
-const MASONRY_HEIGHTS = [
-  120, 160, 140, 150, 130, 170, 110, 180, 145, 125, 155, 135,
+const CONTENT_WIDTH = SCREEN_WIDTH - GRID_PADDING * 2;
+const BENTO_FULL = CONTENT_WIDTH;
+// Subtract a tiny bit from half/large/small to prevent wrapping issues due to pixel rounding
+const BENTO_HALF = (CONTENT_WIDTH - GRID_GAP) / 2 - 0.1;
+const BENTO_LARGE = (CONTENT_WIDTH - GRID_GAP) * 0.6 - 0.1;
+const BENTO_SMALL = (CONTENT_WIDTH - GRID_GAP) * 0.4 - 0.1;
+
+const BENTO_PATTERN = [
+  { width: BENTO_FULL, height: 240 },
+  { width: BENTO_LARGE, height: 180 },
+  { width: BENTO_SMALL, height: 180 },
+  { width: BENTO_HALF, height: 160 },
+  { width: BENTO_HALF, height: 160 },
+  { width: BENTO_FULL, height: 200 },
 ];
 
 const CATEGORIES: CategoryChip[] = [
@@ -346,13 +364,15 @@ const clampRatio = (value: number): number => {
   return value;
 };
 
-// ─── Pinterest masonry card ───────────────────────────────────────────────────
+// ─── Bento grid card ───────────────────────────────────────────────────
 
-const MasonryCard = React.memo(function MasonryCard({
+const BentoCard = React.memo(function BentoCard({
   item,
+  width,
   height,
 }: {
   item: ClothingItem;
+  width: number;
   height: number;
 }) {
   const router = useRouter();
@@ -361,9 +381,9 @@ const MasonryCard = React.memo(function MasonryCard({
     <Pressable
       onPress={() => router.push(`/(root)/cloth-details/${item.id}` as never)}
       style={{
-        width: "100%",
+        width,
         height,
-        borderRadius: 12,
+        borderRadius: 16,
         overflow: "hidden",
         marginBottom: GRID_GAP,
         backgroundColor: bg,
@@ -441,7 +461,7 @@ const AISuggestionBanner = React.memo(function AISuggestionBanner({
   );
 });
 
-// ─── Empty state ──────────────────────────────────────────────────────────────
+// ─── Empty state ───
 
 const EmptyState = React.memo(function EmptyState({
   onAdd,
@@ -522,12 +542,76 @@ export default function WardrobeScreen() {
   const { summary } = useWardrobeSummary(user?.id);
   const userItems = useUserWardrobeStore((state) => state.items);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const panY = useRef(new Animated.Value(400)).current;
+
+  // Trigger slide up when showAddMenu becomes true
+  useEffect(() => {
+    if (showAddMenu) {
+      panY.setValue(400); // Start off-screen
+      Animated.timing(panY, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showAddMenu]);
+
+  const handleClose = useCallback(() => {
+    Animated.timing(panY, {
+      toValue: 400,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowAddMenu(false);
+      panY.setValue(400);
+    });
+  }, [panY]);
+
+  const resetPositionAnim = Animated.timing(panY, {
+    toValue: 0,
+    duration: 250,
+    useNativeDriver: true,
+  });
+
+  const closeAnim = Animated.timing(panY, {
+    toValue: 400,
+    duration: 200,
+    useNativeDriver: true,
+  });
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.dy > 10;
+      },
+      onPanResponderGrant: () => {
+        panY.setValue(0);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          panY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.4) {
+          closeAnim.start(() => {
+            setShowAddMenu(false);
+            panY.setValue(400);
+          });
+        } else {
+          resetPositionAnim.start();
+        }
+      },
+    }),
+  ).current;
+
   const [activeFilter, setActiveFilter] = useState("Today");
 
   const TIME_FILTERS = ["Today", "3day", "5day", "This week"] as const;
 
   const allItems = useMemo(() => {
-    const saved = userItems.map(
+    return userItems.map(
       (item): ClothingItem => ({
         id: item.id,
         name: item.name,
@@ -542,47 +626,33 @@ export default function WardrobeScreen() {
           `https://picsum.photos/seed/${item.id}/300/400`,
       }),
     );
-    const mocked = MOCK_ITEMS.map((item) => ({
-      ...item,
-      image: `https://picsum.photos/seed/${item.id}/300/400`,
-    }));
-    return [...saved, ...mocked];
   }, [userItems]);
   const ADD_MENU_OPTIONS = [
     {
       id: "add_clothing",
-      label: "Add Clothing",
-      subtitle: "Upload a photo of your clothes",
+      label: "Add Cloth",
+      subtitle: "Add clothing items manually",
       icon: IconShirt,
       color: "#6366F1",
       bg: "#EEF2FF",
       onPress: () => {
         setShowAddMenu(false);
-        router.push("/(root)/add-clothes" as never);
+        router.push({
+          pathname: "/(root)/add-clothes/form",
+          params: { mode: "manual" },
+        } as never);
       },
     },
     {
       id: "scan",
-      label: "Scan & Add",
-      subtitle: "Use camera to scan your clothing",
+      label: "Scan and Add Cloth",
+      subtitle: "Scan items or pick from gallery",
       icon: IconCamera,
       color: "#10B981",
       bg: "#ECFDF5",
       onPress: () => {
         setShowAddMenu(false);
-        router.push("/(root)/add-clothes" as never);
-      },
-    },
-    {
-      id: "gallery",
-      label: "Add from Gallery",
-      subtitle: "Pick multiple items from photos",
-      icon: IconPhoto,
-      color: "#F59E0B",
-      bg: "#FFFBEB",
-      onPress: () => {
-        setShowAddMenu(false);
-        router.push("/(root)/add-clothes" as never);
+        router.push("/(root)/add-clothes/camera" as never);
       },
     },
     {
@@ -649,8 +719,8 @@ export default function WardrobeScreen() {
   }, [displayWorn, displayUnworn, totalItems]);
 
   const handleAddClothes = useCallback(() => {
-    router.push("/(root)/add-clothes" as never);
-  }, [router]);
+    setShowAddMenu(true);
+  }, []);
 
   const handleSaved = useCallback(() => {
     router.push("/(root)/saved" as never);
@@ -742,7 +812,7 @@ export default function WardrobeScreen() {
   return (
     <SwipeTabWrapper tabIndex={1}>
       <AppGradientBackground>
-        <StatusBar style="dark" />
+        <StatusBar style={showAddMenu ? "light" : "dark"} />
         <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
           {/* ── Header ── */}
           <View
@@ -798,8 +868,9 @@ export default function WardrobeScreen() {
           <Modal
             visible={showAddMenu}
             transparent
-            animationType="slide"
-            onRequestClose={() => setShowAddMenu(false)}
+            animationType="fade"
+            onRequestClose={handleClose}
+            statusBarTranslucent
           >
             <Pressable
               style={{
@@ -807,118 +878,125 @@ export default function WardrobeScreen() {
                 backgroundColor: "rgba(0,0,0,0.4)",
                 justifyContent: "flex-end",
               }}
-              onPress={() => setShowAddMenu(false)}
+              onPress={handleClose}
             >
-              <Pressable onPress={() => {}}>
-                <View
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    borderTopLeftRadius: 28,
-                    borderTopRightRadius: 28,
-                    paddingTop: 12,
-                    paddingBottom: 40,
-                    paddingHorizontal: 20,
-                  }}
-                >
+              <Animated.View
+                {...panResponder.panHandlers}
+                style={{
+                  transform: [{ translateY: panY }],
+                }}
+              >
+                <Pressable onPress={() => {}}>
                   <View
                     style={{
-                      width: 40,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: "#E0E0E8",
-                      alignSelf: "center",
-                      marginBottom: 20,
-                    }}
-                  />
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: 20,
+                      backgroundColor: "#FFFFFF",
+                      borderTopLeftRadius: 28,
+                      borderTopRightRadius: 28,
+                      paddingTop: 12,
+                      paddingBottom: 40,
+                      paddingHorizontal: 20,
                     }}
                   >
-                    <Text
+                    <View
                       style={{
-                        fontSize: 18,
-                        fontWeight: "700",
-                        color: "#1D1A27",
+                        width: 40,
+                        height: 4,
+                        borderRadius: 2,
+                        backgroundColor: "#E0E0E8",
+                        alignSelf: "center",
+                        marginBottom: 20,
+                      }}
+                    />
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 20,
                       }}
                     >
-                      Add to Wardrobe
-                    </Text>
-                    {/* <Pressable onPress={() => setShowAddMenu(false)}>
-                      <View
+                      <Text
                         style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 16,
-                          backgroundColor: "#EEF0F5",
-                          alignItems: "center",
-                          justifyContent: "center",
+                          fontSize: 18,
+                          fontWeight: "700",
+                          color: "#1D1A27",
                         }}
                       >
-                        <IconX size={16} color="#1D1A27" strokeWidth={2.5} />
-                      </View>
-                    </Pressable> */}
-                  </View>
-                  {ADD_MENU_OPTIONS.map((opt) => {
-                    const Icon = opt.icon;
-                    return (
-                      <Pressable
-                        key={opt.id}
-                        onPress={opt.onPress}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 16,
-                          paddingVertical: 14,
-                          borderBottomWidth: 1,
-                          borderBottomColor: "#F4F4F8",
-                        }}
-                      >
+                        Add to Wardrobe
+                      </Text>
+                      {/* <Pressable onPress={() => setShowAddMenu(false)}>
                         <View
                           style={{
-                            width: 48,
-                            height: 48,
+                            width: 32,
+                            height: 32,
                             borderRadius: 16,
-                            backgroundColor: opt.bg,
+                            backgroundColor: "#EEF0F5",
                             alignItems: "center",
                             justifyContent: "center",
                           }}
                         >
-                          <Icon size={22} color={opt.color} strokeWidth={2} />
+                          <IconX size={16} color="#1D1A27" strokeWidth={2.5} />
                         </View>
-                        <View style={{ flex: 1 }}>
-                          <Text
+                      </Pressable> */}
+                    </View>
+                    {ADD_MENU_OPTIONS.map((opt) => {
+                      const Icon = opt.icon;
+                      return (
+                        <Pressable
+                          key={opt.id}
+                          onPress={opt.onPress}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 16,
+                            paddingVertical: 14,
+                            borderBottomWidth: 1,
+                            borderBottomColor: "#F4F4F8",
+                          }}
+                        >
+                          <View
                             style={{
-                              fontSize: 15,
-                              fontWeight: "600",
-                              color: "#1D1A27",
+                              width: 48,
+                              height: 48,
+                              borderRadius: 16,
+                              backgroundColor: opt.bg,
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
-                            {opt.label}
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: 12,
-                              color: "#9B9BAF",
-                              marginTop: 2,
-                            }}
-                          >
-                            {opt.subtitle}
-                          </Text>
-                        </View>
-                        <IconChevronRight
-                          size={18}
-                          color="#C0C0CC"
-                          strokeWidth={2}
-                        />
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </Pressable>
+                            <Icon size={22} color={opt.color} strokeWidth={2} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={{
+                                fontSize: 15,
+                                fontWeight: "600",
+                                color: "#1D1A27",
+                              }}
+                            >
+                              {opt.label}
+                            </Text>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: "#9B9BAF",
+                                marginTop: 2,
+                              }}
+                            >
+                              {opt.subtitle}
+                            </Text>
+                          </View>
+                          <IconChevronRight
+                            size={18}
+                            color="#C0C0CC"
+                            strokeWidth={2}
+                          />
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </Pressable>
+              </Animated.View>
             </Pressable>
           </Modal>
 
@@ -937,49 +1015,22 @@ export default function WardrobeScreen() {
               <View
                 style={{
                   flexDirection: "row",
+                  flexWrap: "wrap",
                   paddingHorizontal: GRID_PADDING,
                   gap: GRID_GAP,
                 }}
               >
-                <View style={{ flex: 1 }}>
-                  {displayItems
-                    .filter((_, i) => i % 3 === 0)
-                    .map((item, i) => (
-                      <MasonryCard
-                        key={item.id}
-                        item={item}
-                        height={
-                          MASONRY_HEIGHTS[(i * 3) % MASONRY_HEIGHTS.length]
-                        }
-                      />
-                    ))}
-                </View>
-                <View style={{ flex: 1 }}>
-                  {displayItems
-                    .filter((_, i) => i % 3 === 1)
-                    .map((item, i) => (
-                      <MasonryCard
-                        key={item.id}
-                        item={item}
-                        height={
-                          MASONRY_HEIGHTS[(i * 3 + 1) % MASONRY_HEIGHTS.length]
-                        }
-                      />
-                    ))}
-                </View>
-                <View style={{ flex: 1 }}>
-                  {displayItems
-                    .filter((_, i) => i % 3 === 2)
-                    .map((item, i) => (
-                      <MasonryCard
-                        key={item.id}
-                        item={item}
-                        height={
-                          MASONRY_HEIGHTS[(i * 3 + 2) % MASONRY_HEIGHTS.length]
-                        }
-                      />
-                    ))}
-                </View>
+                {displayItems.map((item, index) => {
+                  const pattern = BENTO_PATTERN[index % BENTO_PATTERN.length];
+                  return (
+                    <BentoCard
+                      key={item.id}
+                      item={item}
+                      width={pattern.width}
+                      height={pattern.height}
+                    />
+                  );
+                })}
               </View>
             )}
           </ScrollView>

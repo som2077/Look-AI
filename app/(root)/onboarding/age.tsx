@@ -1,5 +1,5 @@
 import { usePostHog } from 'posthog-react-native';
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
 
 import { AgePicker } from "@/components/onboarding/AgePicker";
@@ -9,6 +9,7 @@ import { useOnboardingState } from "@/backend/store/onboarding-store";
 
 export default function AgeScreen() {
   const posthog = usePostHog();
+  const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { age, setAge } = useOnboardingState();
 
   return (
@@ -22,7 +23,7 @@ export default function AgeScreen() {
       <Text className="px-9 text-left text-4xl  font-semibold tracking-tight text-[#1D1A27]">
         How old are you?
       </Text>
-      <Text className="px-9 mt-2 text-left text-xl text-[#000000]">
+      <Text className="px-9 mt-2 text-left text-xl font-regular text-[#000000]">
         This will be used to calibrate your custom plan
       </Text>
 
@@ -34,7 +35,13 @@ export default function AgeScreen() {
       {/* Continue button pinned to bottom */}
       <View className="px-5">
         <ContinueButton
-          onPress={() => router.push("/(root)/onboarding/height")}
+          onPress={() => {
+            if (fromProfile === "true") {
+              router.back();
+            } else {
+              router.push("/(root)/onboarding/height");
+            }
+          }}
         />
       </View>
     </View>

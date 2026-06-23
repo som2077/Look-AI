@@ -72,18 +72,18 @@ export function HeightPicker({
                 : i === 0 || i === 4
                   ? 20
                   : 25;
-            const fontWeight = isSelected
-              ? "700"
+            const fontFamily = isSelected
+              ? "TikTokSans16pt-Bold"
               : i === 1 || i === 3
-                ? "500"
-                : "400";
+                ? "TikTokSans16pt-Medium"
+                : "TikTokSans16pt-Regular";
             const color = isSelected
               ? "#1D1A27"
               : i === 1 || i === 3
                 ? "#6B7280"
                 : "#9CA3AF";
             return (
-              <Text key={i} style={{ fontSize, fontWeight, color }}>
+              <Text key={i} style={{ fontSize, fontFamily, color }}>
                 {inRange ? val : ""}
               </Text>
             );

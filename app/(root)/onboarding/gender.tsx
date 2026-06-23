@@ -1,6 +1,6 @@
 import { usePostHog } from 'posthog-react-native';
 import { useCallback } from "react";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { ContinueButton } from "@/components/onboarding/ContinueButton";
@@ -27,13 +27,18 @@ const GENDER_OPTIONS = [
 
 export default function GenderScreen() {
   const posthog = usePostHog();
+  const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { gender, setGender } = useOnboardingState();
   const handleContinue = useCallback(() => {
     posthog?.capture('onboarding_step_completed', { step: 'gender' });
     if (!gender) return;
 
-    router.push("/(root)/onboarding/age");
-  }, [gender]);
+    if (fromProfile === "true") {
+      router.back();
+    } else {
+      router.push("/(root)/onboarding/age");
+    }
+  }, [gender, fromProfile]);
 
   return (
     <View className="flex-1 mx-7 pb-6 pt-2">
@@ -41,7 +46,7 @@ export default function GenderScreen() {
       <Text className="text-4xl font-semibold tracking-tight px-3 text-[#1D1A27]">
         Choose your Gender
       </Text>
-      <Text className="mt-2 text-xl px-3 text-[#000000]">
+      <Text className="mt-2 text-xl px-3 font-regular text-[#000000]">
         This will be used to calibrate your custom plan
       </Text>
 

@@ -1,14 +1,12 @@
 import {
   IconArrowLeft,
-  IconCalendar,
-  IconCamera,
-  IconCheck,
+  IconCalendarMonth,
+  IconCameraPlus,
   IconChevronDown,
-  IconEdit,
-  IconPhoto,
-  IconRuler,
-  IconUser,
-  IconUserCircle,
+  IconFilter2Edit,
+  IconNotes,
+  IconRulerMeasure2,
+  IconUserCheck,
 } from "@tabler/icons-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -18,15 +16,15 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Modal,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { uploadToCloudinary } from "../../backend/api/cloudinary";
+import { useOnboardingState } from "../../backend/store/onboarding-store";
+import { AppGradientBackground } from "../../components/ui/AppGradientBackground";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,7 +86,7 @@ const FieldRow = ({
         {field.value || "—"}
       </Text>
     </View>
-    {field.editable && <IconEdit size={18} color="#9263FE" />}
+    {field.editable && <IconFilter2Edit size={18} color="#00000080" />}
   </Pressable>
 );
 
@@ -97,85 +95,53 @@ const FieldRow = ({
 export default function PersonalDetailsScreen() {
   const router = useRouter();
 
-  const [userData, setUserData] = useState({
-    name: "Lina Cho",
-    username: "lina_cho",
-    dob: "01 Jan 1998",
-    height: "165 cm",
-    gender: "Female",
-  });
+  const onboardingState = useOnboardingState();
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [bannerUri, setBannerUri] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
 
-  const [editingField, setEditingField] = useState<Field | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const GENDER_OPTIONS = ["Female", "Male", "Non-binary", "Prefer not to say"];
-  const HEIGHT_OPTIONS = [
-    "145 cm",
-    "150 cm",
-    "155 cm",
-    "158 cm",
-    "160 cm",
-    "162 cm",
-    "165 cm",
-    "168 cm",
-    "170 cm",
-    "172 cm",
-    "175 cm",
-    "178 cm",
-    "180 cm",
-    "183 cm",
-    "185 cm",
-    "190 cm",
-  ];
-
   const fields: Field[] = [
     {
       key: "name",
-      label: "Full Name",
-      value: userData.name,
-      icon: <IconUserCircle size={20} color="#9263FE" />,
-      editable: true,
-      type: "text",
-    },
-    {
-      key: "username",
-      label: "Username",
-      value: "@" + userData.username,
-      icon: <IconUser size={20} color="#9263FE" />,
+      label: "Nickname",
+      value: onboardingState.nickname || "",
+      icon: <IconUserCheck size={24} color="#00000090" />,
       editable: true,
       type: "text",
     },
     {
       key: "dob",
-      label: "Date of Birth",
-      value: userData.dob,
-      icon: <IconCalendar size={20} color="#9263FE" />,
+      label: "Age",
+      value: onboardingState.age ? onboardingState.age.toString() : "",
+      icon: <IconCalendarMonth size={24} color="#00000090" />,
       editable: true,
       type: "text",
     },
     {
       key: "height",
       label: "Height",
-      value: userData.height,
-      icon: <IconRuler size={20} color="#9263FE" />,
+      value: onboardingState.height ? `${onboardingState.height} cm` : "",
+      icon: <IconRulerMeasure2 size={24} color="#00000090" />,
       editable: true,
       type: "select",
-      options: HEIGHT_OPTIONS,
     },
     {
       key: "gender",
       label: "Gender",
-      value: userData.gender,
-      icon: <IconChevronDown size={20} color="#9263FE" />,
+      value: onboardingState.gender || "",
+      icon: <IconChevronDown size={24} color="#00000080" />,
       editable: true,
       type: "select",
-      options: GENDER_OPTIONS,
+    },
+    {
+      key: "about",
+      label: "About",
+      value: onboardingState.about || "Tap to add your bio...",
+      icon: <IconNotes size={24} color="#00000080" />,
+      editable: true,
+      type: "text",
     },
   ];
 
@@ -235,407 +201,302 @@ export default function PersonalDetailsScreen() {
   // ── Field Edit ─────────────────────────────────────────────────────────────
 
   const openEdit = (field: Field) => {
-    setEditingField(field);
-    setEditValue(
-      field.key === "username"
-        ? userData.username
-        : (userData as any)[field.key],
-    );
-    setModalVisible(true);
-  };
-
-  const handleSave = () => {
-    if (!editingField) return;
-    setUserData((prev) => ({ ...prev, [editingField.key]: editValue }));
-    setModalVisible(false);
-    setEditingField(null);
+    let route = "";
+    switch (field.key) {
+      case "name":
+      case "username":
+        route = "/(root)/onboarding/nickname";
+        break;
+      case "dob":
+        route = "/(root)/onboarding/age";
+        break;
+      case "height":
+        route = "/(root)/onboarding/height";
+        break;
+      case "gender":
+        route = "/(root)/onboarding/gender";
+        break;
+      case "about":
+        route = "/(root)/onboarding/about";
+        break;
+      default:
+        return;
+    }
+    router.push(`${route}?fromProfile=true` as any);
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#FAFAFA" }}>
-      <StatusBar style="dark" />
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+      <AppGradientBackground>
+        <SafeAreaView style={{ flex: 1 }}>
+          <StatusBar style="dark" />
 
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          backgroundColor: "#FFFFFF",
-          borderBottomWidth: 1,
-          borderBottomColor: "#F3F4F6",
-        }}
-      >
-        <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
-          <IconArrowLeft size={24} color="#1D1A27" />
-        </Pressable>
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 18,
-            fontWeight: "700",
-            color: "#1D1A27",
-            marginRight: 28,
-          }}
-        >
-          Personal Details
-        </Text>
-      </View>
-
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* ── Banner + Avatar Section ── */}
-        <View
-          style={{
-            backgroundColor: "#FFFFFF",
-            marginBottom: 12,
-          }}
-        >
-          {/* Banner */}
-          <Pressable
-            onPress={() => pickImage("banner")}
-            style={{ position: "relative" }}
-          >
-            <View
-              style={{
-                width: "100%",
-                height: 130,
-                backgroundColor: "#0014FF",
-                overflow: "hidden",
-              }}
-            >
-              {bannerUri ? (
-                <Image
-                  source={{ uri: bannerUri }}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                />
-              ) : (
-                // Default gradient-style pattern
-                <View
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#0014FF",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 24,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "white",
-                      fontSize: 40,
-                      fontWeight: "900",
-                      transform: [{ rotate: "45deg" }],
-                    }}
-                  >
-                    ↑
-                  </Text>
-                  <Text
-                    style={{
-                      color: "white",
-                      fontSize: 40,
-                      fontWeight: "900",
-                      transform: [{ rotate: "135deg" }],
-                    }}
-                  >
-                    ↑
-                  </Text>
-                  <Text
-                    style={{
-                      color: "white",
-                      fontSize: 40,
-                      fontWeight: "900",
-                      transform: [{ rotate: "315deg" }],
-                    }}
-                  >
-                    ↑
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Banner edit badge / uploading spinner */}
-            <View
-              style={{
-                position: "absolute",
-                bottom: 8,
-                right: 12,
-                backgroundColor: "rgba(0,0,0,0.55)",
-                borderRadius: 20,
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              {uploadingBanner ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <IconPhoto size={14} color="#FFFFFF" />
-              )}
-              <Text
-                style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}
-              >
-                {uploadingBanner ? "Uploading..." : "Edit Banner"}
-              </Text>
-            </View>
-          </Pressable>
-
-          {/* Avatar */}
+          {/* Header */}
           <View
             style={{
+              flexDirection: "row",
               alignItems: "center",
-              marginTop: -48,
-              marginBottom: 16,
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+              backgroundColor: "transparent",
             }}
           >
-            <Pressable
-              onPress={() => pickImage("avatar")}
-              style={{ position: "relative" }}
-            >
-              <View
-                style={{
-                  width: 96,
-                  height: 96,
-                  borderRadius: 48,
-                  borderWidth: 3,
-                  borderColor: "#FFFFFF",
-                  overflow: "hidden",
-                  backgroundColor: "#EDE9FE",
-                }}
-              >
-                {avatarUri ? (
-                  <Image
-                    source={{ uri: avatarUri }}
-                    style={{ width: "100%", height: "100%" }}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Image
-                    source={{
-                      uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-                    }}
-                    style={{ width: "100%", height: "100%" }}
-                    resizeMode="cover"
-                  />
-                )}
-              </View>
-
-              {/* Camera badge / uploading spinner */}
-              <View
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
-                  backgroundColor: "#9263FE",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderWidth: 2,
-                  borderColor: "#FFFFFF",
-                }}
-              >
-                {uploadingAvatar ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <IconCamera size={14} color="#FFFFFF" />
-                )}
-              </View>
+            <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
+              <IconArrowLeft size={24} color="#1D1A27" />
             </Pressable>
-
             <Text
               style={{
-                fontSize: 20,
-                fontWeight: "800",
-                color: "#1D1A27",
-                marginTop: 10,
-              }}
-            >
-              {userData.name}
-            </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                color: "#9263FE",
-                fontWeight: "600",
-                marginTop: 2,
-              }}
-            >
-              @{userData.username}
-            </Text>
-          </View>
-        </View>
-
-        {/* Fields Card */}
-        <View
-          style={{
-            marginHorizontal: 16,
-            backgroundColor: "#FFFFFF",
-            borderRadius: 20,
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: "#F3F4F6",
-            shadowColor: "#000",
-            shadowOpacity: 0.04,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 2 },
-            elevation: 2,
-          }}
-        >
-          {fields.map((field) => (
-            <FieldRow key={field.key} field={field} onEdit={openEdit} />
-          ))}
-        </View>
-
-        <Text
-          style={{
-            fontSize: 12,
-            color: "#9CA3AF",
-            textAlign: "center",
-            marginTop: 20,
-            paddingHorizontal: 32,
-            lineHeight: 18,
-          }}
-        >
-          Tap any field to edit your personal information.
-        </Text>
-      </ScrollView>
-
-      {/* ── Edit Modal ── */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <Pressable
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.4)",
-            justifyContent: "flex-end",
-          }}
-          onPress={() => setModalVisible(false)}
-        >
-          <Pressable
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              paddingHorizontal: 20,
-              paddingBottom: 40,
-              maxHeight: "80%",
-            }}
-            onPress={() => {}}
-          >
-            {/* Handle */}
-            <View
-              style={{
-                width: 36,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: "#E5E7EB",
-                alignSelf: "center",
-                marginTop: 12,
-                marginBottom: 20,
-              }}
-            />
-
-            <Text
-              style={{
-                fontSize: 16,
+                flex: 1,
+                textAlign: "center",
+                fontSize: 18,
                 fontWeight: "700",
                 color: "#1D1A27",
-                marginBottom: 20,
+                marginRight: 28,
               }}
             >
-              Edit {editingField?.label}
+              Personal Details
             </Text>
+          </View>
 
-            {/* Text Input */}
-            {editingField?.type === "text" && (
-              <TextInput
-                value={editValue}
-                onChangeText={setEditValue}
-                placeholder={`Enter ${editingField?.label}`}
-                placeholderTextColor="#9CA3AF"
-                style={{
-                  borderWidth: 1.5,
-                  borderColor: "#9263FE",
-                  borderRadius: 14,
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
-                  fontSize: 16,
-                  color: "#1D1A27",
-                  marginBottom: 20,
-                }}
-                autoFocus
-              />
-            )}
-
-            {/* Select Options */}
-            {editingField?.type === "select" && editingField.options && (
-              <ScrollView style={{ maxHeight: 280, marginBottom: 20 }}>
-                {editingField.options.map((opt) => (
-                  <Pressable
-                    key={opt}
-                    onPress={() => setEditValue(opt)}
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {/* ── Banner + Avatar Section ── */}
+            <View
+              style={{
+                backgroundColor: "transparent",
+                marginBottom: 12,
+              }}
+            >
+              {/* Banner */}
+              <View style={{ paddingHorizontal: 16, paddingTop: 1 }}>
+                <Pressable
+                  onPress={() => pickImage("banner")}
+                  style={{
+                    position: "relative",
+                    borderRadius: 24,
+                    overflow: "hidden",
+                  }}
+                >
+                  <View
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingVertical: 14,
-                      paddingHorizontal: 16,
-                      borderRadius: 12,
-                      marginBottom: 6,
-                      backgroundColor:
-                        editValue === opt ? "#F5F3FF" : "#F9FAFB",
-                      borderWidth: 1.5,
-                      borderColor:
-                        editValue === opt ? "#9263FE" : "transparent",
+                      width: "100%",
+                      height: 200,
+                      backgroundColor: bannerUri ? "#D1D5DB" : "#0014FF",
                     }}
                   >
+                    {bannerUri ? (
+                      <Image
+                        source={{ uri: bannerUri }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View
+                        style={{
+                          flex: 1,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 24,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 40,
+                            fontWeight: "900",
+                            transform: [{ rotate: "45deg" }],
+                          }}
+                        >
+                          ↑
+                        </Text>
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 40,
+                            fontWeight: "900",
+                            transform: [{ rotate: "135deg" }],
+                          }}
+                        >
+                          ↑
+                        </Text>
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 40,
+                            fontWeight: "900",
+                            transform: [{ rotate: "315deg" }],
+                          }}
+                        >
+                          ↑
+                        </Text>
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 40,
+                            fontWeight: "900",
+                            transform: [{ rotate: "225deg" }],
+                          }}
+                        >
+                          ↑
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Banner edit badge / uploading spinner */}
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 12,
+                      right: 12,
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      shadowColor: "#000",
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                  >
+                    {uploadingBanner && (
+                      <ActivityIndicator size="small" color="#1D1A27" />
+                    )}
                     <Text
                       style={{
-                        flex: 1,
-                        fontSize: 15,
-                        fontWeight: editValue === opt ? "600" : "400",
-                        color: editValue === opt ? "#9263FE" : "#1D1A27",
+                        color: "#1D1A27",
+                        fontSize: 13,
+                        fontWeight: "600",
                       }}
                     >
-                      {opt}
+                      {uploadingBanner ? "Uploading..." : "Edit Banner"}
                     </Text>
-                    {editValue === opt && (
-                      <IconCheck size={18} color="#9263FE" />
-                    )}
-                  </Pressable>
-                ))}
-              </ScrollView>
-            )}
+                  </View>
+                </Pressable>
+              </View>
 
-            {/* Save Button */}
-            <Pressable
-              onPress={handleSave}
+              {/* Avatar and Info */}
+              <View
+                style={{
+                  paddingHorizontal: 32,
+                  marginTop: -40,
+                  marginBottom: 24,
+                  alignItems: "flex-start",
+                }}
+              >
+                <Pressable
+                  onPress={() => pickImage("avatar")}
+                  style={{ position: "relative" }}
+                >
+                  <View
+                    style={{
+                      width: 96,
+                      height: 96,
+                      borderRadius: 48,
+                      borderWidth: 4,
+                      borderColor: "#FFFFFF",
+                      overflow: "hidden",
+                      backgroundColor: "#6B7280",
+                    }}
+                  >
+                    {avatarUri ? (
+                      <Image
+                        source={{ uri: avatarUri }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Image
+                        source={{
+                          uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
+                        }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                      />
+                    )}
+                  </View>
+
+                  {/* Camera badge / uploading spinner */}
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      right: 0,
+                      width: 28,
+                      height: 28,
+                      borderRadius: 14,
+                      backgroundColor: "#E5E7EB",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderWidth: 2,
+                      borderColor: "#FFFFFF",
+                    }}
+                  >
+                    {uploadingAvatar ? (
+                      <ActivityIndicator size="small" color="#1D1A27" />
+                    ) : (
+                      <IconCameraPlus size={14} color="#1D1A27" />
+                    )}
+                  </View>
+                </Pressable>
+
+                <Text
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "500",
+                    color: "#1D1A27",
+                    marginTop: 5,
+                  }}
+                >
+                  {onboardingState.nickname || "Your Name"}
+                </Text>
+                <Text style={{ fontSize: 16, color: "#9263FE", marginTop: 2 }}>
+                  {onboardingState.username
+                    ? "@" + onboardingState.username
+                    : ""}
+                </Text>
+              </View>
+            </View>
+
+            {/* Fields Card */}
+            <View
               style={{
-                backgroundColor: "#9263FE",
-                paddingVertical: 16,
-                borderRadius: 16,
-                alignItems: "center",
+                marginHorizontal: 16,
+                backgroundColor: "#FFFFFF",
+                borderRadius: 20,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: "#F3F4F6",
+                shadowColor: "#000",
+                shadowOpacity: 0.04,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 2 },
+                // elevation: 1,
               }}
             >
-              <Text
-                style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}
-              >
-                Save Changes
-              </Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </SafeAreaView>
+              {fields.map((field) => (
+                <FieldRow key={field.key} field={field} onEdit={openEdit} />
+              ))}
+            </View>
+
+            <Text
+              style={{
+                fontSize: 12,
+                color: "#9CA3AF",
+                textAlign: "center",
+                marginTop: 20,
+                paddingHorizontal: 32,
+                lineHeight: 18,
+              }}
+            >
+              Tap any field to edit your personal information.
+            </Text>
+          </ScrollView>
+        </SafeAreaView>
+      </AppGradientBackground>
+    </View>
   );
 }

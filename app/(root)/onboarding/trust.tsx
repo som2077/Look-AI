@@ -56,7 +56,7 @@ export default function TrustScreen() {
       </View>
 
       {!!error && (
-        <Text className="mt-4 text-center text-sm text-red-500">{error}</Text>
+        <Text className="mt-4 text-center text-sm font-medium text-red-500">{error}</Text>
       )}
 
       <View className="mt-auto w-full">

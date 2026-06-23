@@ -26,7 +26,11 @@ import {
   IconSettings,
   IconBell,
   IconRefresh,
+  IconPencil,
+  IconPlus,
+  IconUser,
 } from "@tabler/icons-react-native";
+import * as ImagePicker from "expo-image-picker";
 
 
 // ─── Constants & Types ────────────────────────────────────────────────────────
@@ -342,32 +346,25 @@ export default function OutfitScreen() {
     return SUGGESTIONS_DATA.find((o) => o.id === selectedId) || SUGGESTIONS_DATA[0];
   }, [selectedId]);
 
-  // Build & Rate States
-  const [activeTab, setActiveTab] = useState<"curated" | "build">("curated");
-  const [selectedTop, setSelectedTop] = useState<any>(null);
-  const [selectedBottom, setSelectedBottom] = useState<any>(null);
-  const [selectedFootwear, setSelectedFootwear] = useState<any>(null);
-  const [showPickerFor, setShowPickerFor] = useState<"top" | "bottoms" | "footwear" | null>(null);
-  const [buildLoading, setBuildLoading] = useState(false);
-  const [aiScore, setAiScore] = useState<number | null>(null);
-  const [aiFeedback, setAiFeedback] = useState<string | null>(null);
+  // Outfit States
+  const [activeTab, setActiveTab] = useState<"curated" | "tryon">("curated");
+  const [personImage, setPersonImage] = useState<string | null>(null);
+  const [outfitImage, setOutfitImage] = useState<string | null>(null);
 
-  const handleRateFit = useCallback(() => {
-    setBuildLoading(true);
-    setAiScore(null);
-    setAiFeedback(null);
-    setTimeout(() => {
-      // Dummy logic for rating
-      const randomScore = Math.floor(Math.random() * (99 - 75 + 1)) + 75;
-      setAiScore(randomScore);
-      setAiFeedback(
-        randomScore > 90 
-          ? "Incredible combination! The colors balance perfectly and the silhouette is highly modern. A true head-turner."
-          : "Good attempt. The pieces are safe together, though adding a contrasting accessory might elevate the overall look."
-      );
-      setBuildLoading(false);
-    }, 2000);
-  }, []);
+  const pickImage = async (setImage: (uri: string) => void) => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+  // Build & Rate States Removed
+
+  // Loading Phrase cycle
 
   // Loading Phrase cycle
   useEffect(() => {
@@ -485,8 +482,8 @@ export default function OutfitScreen() {
                   <Pressable onPress={() => setActiveTab("curated")} style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: activeTab === "curated" ? "#FFFFFF" : "transparent", alignItems: "center", shadowColor: activeTab === "curated" ? "#000" : "transparent", shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: activeTab === "curated" ? 2 : 0 }}>
                     <Text style={{ fontSize: 13, fontWeight: activeTab === "curated" ? "700" : "500", color: activeTab === "curated" ? "#1D1A27" : "#9B9BAF" }}>Curated for You</Text>
                   </Pressable>
-                  <Pressable onPress={() => setActiveTab("build")} style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: activeTab === "build" ? "#FFFFFF" : "transparent", alignItems: "center", shadowColor: activeTab === "build" ? "#000" : "transparent", shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: activeTab === "build" ? 2 : 0 }}>
-                    <Text style={{ fontSize: 13, fontWeight: activeTab === "build" ? "700" : "500", color: activeTab === "build" ? "#1D1A27" : "#9B9BAF" }}>Build & Rate</Text>
+                  <Pressable onPress={() => setActiveTab("tryon")} style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: activeTab === "tryon" ? "#FFFFFF" : "transparent", alignItems: "center", shadowColor: activeTab === "tryon" ? "#000" : "transparent", shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: activeTab === "tryon" ? 2 : 0 }}>
+                    <Text style={{ fontSize: 13, fontWeight: activeTab === "tryon" ? "700" : "500", color: activeTab === "tryon" ? "#1D1A27" : "#9B9BAF" }}>Virtual Try-On</Text>
                   </Pressable>
                 </View>
               </View>
@@ -753,55 +750,94 @@ export default function OutfitScreen() {
                 })}
               </ScrollView>
               </>
-              ) : (
-                /* Build & Rate View */
-                <View style={{ paddingHorizontal: 24 }}>
-                  <Text style={{ fontSize: 15, fontWeight: "700", color: "#1D1A27", marginBottom: 16 }}>Select your pieces</Text>
-                  {/* Slots */}
-                  {["top", "bottoms", "footwear"].map((cat) => {
-                    const sel = cat === "top" ? selectedTop : cat === "bottoms" ? selectedBottom : selectedFootwear;
-                    const label = cat === "top" ? "Top" : cat === "bottoms" ? "Bottom" : "Footwear";
-                    return (
-                      <Pressable key={cat} onPress={() => setShowPickerFor(cat as any)} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#F8F8FA", borderRadius: 16, padding: 16, marginBottom: 12 }}>
-                        {sel ? (
-                          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                            {(sel as any).image ? <Image source={{ uri: (sel as any).image }} style={{ width: 40, height: 40, borderRadius: 8 }} /> : <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: sel.bgColor || "#EAE8FF" }} />}
-                            <View>
-                              <Text style={{ fontSize: 14, fontWeight: "600", color: "#1D1A27" }}>{sel.name}</Text>
-                              <Text style={{ fontSize: 12, color: "#9B9BAF" }}>{label}</Text>
-                            </View>
-                          </View>
-                        ) : (
-                          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                            <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: "#EAE8FF", alignItems: "center", justifyContent: "center" }}>
-                              <IconSparkles size={16} color="#4C36F5" />
-                            </View>
-                            <Text style={{ fontSize: 14, fontWeight: "600", color: "#9B9BAF" }}>Select {label}</Text>
-                          </View>
-                        )}
-                        <Text style={{ fontSize: 12, fontWeight: "700", color: "#4C36F5" }}>{sel ? "Change" : "Add"}</Text>
-                      </Pressable>
-                    );
-                  })}
-                  
-                  {/* Rate My Fit Button */}
-                  {selectedTop && selectedBottom && selectedFootwear && (
-                    <Pressable onPress={handleRateFit} disabled={buildLoading} style={{ backgroundColor: "#1D1A27", borderRadius: 16, paddingVertical: 16, alignItems: "center", marginTop: 12 }}>
-                      {buildLoading ? <ActivityIndicator color="#FFF" /> : <Text style={{ fontSize: 15, fontWeight: "700", color: "#FFFFFF" }}>Rate My Fit</Text>}
-                    </Pressable>
-                  )}
+              ) : activeTab === "tryon" ? (
+                /* Virtual Try-On View */
+                <View style={{ paddingHorizontal: 24, alignItems: "center" }}>
+                  {/* Card 1: Your Image */}
+                  <Pressable 
+                    onPress={() => pickImage(setPersonImage)}
+                    style={{
+                      width: '100%',
+                      height: 380,
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: 24,
+                      borderWidth: 1,
+                      borderColor: "#E2E2EA",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {personImage ? (
+                      <>
+                        <Image source={{ uri: personImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                        <View style={{ position: 'absolute', top: 12, right: 12, width: 36, height: 36, borderRadius: 18, backgroundColor: '#D1F4D9', alignItems: 'center', justifyContent: 'center' }}>
+                          <IconPencil size={20} color="#000000" />
+                        </View>
+                      </>
+                    ) : (
+                      <>
+                         <IconUser size={48} color="#008000" />
+                         <Text style={{ marginTop: 12, fontSize: 16, fontWeight: '700', color: '#008000' }}>Select Your Photo</Text>
+                         <Text style={{ marginTop: 4, fontSize: 13, color: '#9B9BAF' }}>Tap to choose from camera or gallery</Text>
+                      </>
+                    )}
+                  </Pressable>
+                  <Text style={{ marginTop: 16, fontSize: 16, fontWeight: '700', color: '#008000' }}>Your Image</Text>
 
-                  {/* AI Feedback */}
-                  {aiScore && (
-                    <View style={{ marginTop: 32, padding: 20, backgroundColor: "#F4F3FF", borderRadius: 20, borderWidth: 1, borderColor: "#EAE8FF" }}>
-                      <Text style={{ fontSize: 12, fontWeight: "800", color: "#4C36F5", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>AI Style Score</Text>
-                      <Text style={{ fontSize: 42, fontWeight: "800", color: "#1D1A27", marginBottom: 12 }}>{aiScore}/100</Text>
-                      <Text style={{ fontSize: 11, fontWeight: "800", color: "#1D1A27", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Curator&apos;s Note</Text>
-                      <Text style={{ fontSize: 14, color: "#4A4A5A", lineHeight: 22 }}>{aiFeedback}</Text>
-                    </View>
-                  )}
+                  {/* Separator Plus */}
+                  <View style={{ marginVertical: 24, width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: '#E2E2EA', alignItems: 'center', justifyContent: 'center' }}>
+                    <IconPlus size={24} color="#9B9BAF" strokeWidth={2.5} />
+                  </View>
+
+                  <Text style={{ marginBottom: 16, fontSize: 16, fontWeight: '700', color: '#1D1A27' }}>Outfit Image</Text>
+                  {/* Card 2: Outfit Image */}
+                  <Pressable 
+                    onPress={() => pickImage(setOutfitImage)}
+                    style={{
+                      width: '100%',
+                      height: 380,
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: 24,
+                      borderWidth: 1,
+                      borderColor: "#E2E2EA",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {outfitImage ? (
+                      <>
+                        <Image source={{ uri: outfitImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                        <View style={{ position: 'absolute', top: 12, right: 12, width: 36, height: 36, borderRadius: 18, backgroundColor: '#D1F4D9', alignItems: 'center', justifyContent: 'center' }}>
+                          <IconPencil size={20} color="#000000" />
+                        </View>
+                      </>
+                    ) : (
+                      <>
+                         <IconHanger size={48} color="#008000" />
+                         <Text style={{ marginTop: 12, fontSize: 16, fontWeight: '700', color: '#008000' }}>Select Outfit</Text>
+                         <Text style={{ marginTop: 4, fontSize: 13, color: '#9B9BAF' }}>Tap to choose from camera or gallery</Text>
+                      </>
+                    )}
+                  </Pressable>
+                  
+                  {/* Action Button */}
+                  <Pressable 
+                     disabled={!personImage || !outfitImage}
+                     style={{
+                       width: '100%',
+                       marginTop: 32,
+                       backgroundColor: (!personImage || !outfitImage) ? "#E2E2EA" : "#1D1A27",
+                       borderRadius: 16,
+                       paddingVertical: 18,
+                       alignItems: "center",
+                     }}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: (!personImage || !outfitImage) ? "#9B9BAF" : "#FFFFFF" }}>Generate Try-On</Text>
+                  </Pressable>
                 </View>
-              )}
+              ) : null}
             </ScrollView>
           )}
 
@@ -890,41 +926,7 @@ export default function OutfitScreen() {
           )}
       </SafeAreaView>
 
-      {/* Wardrobe Item Picker Modal */}
-      <Modal visible={!!showPickerFor} animationType="slide" transparent>
-        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }}>
-          <View style={{ backgroundColor: "#FFFFFF", borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, height: "70%" }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>Select {showPickerFor}</Text>
-              <Pressable onPress={() => setShowPickerFor(null)}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: "#9B9BAF" }}>Cancel</Text>
-              </Pressable>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {MOCK_WARDROBE_ITEMS.filter((item) => item.category === showPickerFor).map((item) => (
-                <Pressable
-                  key={item.id}
-                  onPress={() => {
-                    if (showPickerFor === "top") setSelectedTop(item);
-                    if (showPickerFor === "bottoms") setSelectedBottom(item);
-                    if (showPickerFor === "footwear") setSelectedFootwear(item);
-                    setShowPickerFor(null);
-                  }}
-                  style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F8F8FA" }}
-                >
-                  <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: item.bgColor || "#F0F0F5", alignItems: "center", justifyContent: "center" }}>
-                    {(item as any).image ? <Image source={{ uri: (item as any).image }} style={{ width: "100%", height: "100%", borderRadius: 12 }} /> : <IconSparkles size={20} color="#9B9BAF" />}
-                  </View>
-                  <View>
-                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#1D1A27" }}>{item.name}</Text>
-                    <Text style={{ fontSize: 12, color: "#9B9BAF", marginTop: 2 }}>{item.color}</Text>
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+
     </View>
   );
 }

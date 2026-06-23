@@ -18,32 +18,36 @@ import {
   MessageCircle,
   Share2,
   MoreHorizontal,
-  //  ChevronDown,
   X,
   Pin,
   Download,
   Grid,
 } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
+import { useCommunityPosts } from "../../../backend/hooks/useCommunityPosts";
 
 export default function PostDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
   // Extract params passed from explore.tsx
-  const { image, user, avatar, likes } = params;
+  const { id, image, user, avatar, likes: initialLikesParam, caption } = params;
 
   const [isOptionsVisible, setIsOptionsVisible] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-
-  // Compute actual like count
-  const initialLikes = parseInt((likes as string) || "388", 10);
-  const displayedLikes = isLiked ? initialLikes + 1 : initialLikes;
+  
+  const { posts, likedPostIds, toggleLike } = useCommunityPosts();
+  
+  // Find the real-time post data if available, otherwise fallback to params
+  const realtimePost = posts.find((p) => p.id === id);
+  const isLiked = likedPostIds.has(id as string);
+  
+  // Compute actual like count from realtime data or fallback to params
+  const displayedLikes = realtimePost ? realtimePost.likes_count : parseInt((initialLikesParam as string) || "0", 10);
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Check out this amazing look by ${user || "FinSavvy Panda"}: ${image}`,
+        message: `Check out this amazing look by ${user || "Style Explorer"}: ${image}`,
       });
     } catch (error) {
       console.log(error);
@@ -52,6 +56,14 @@ export default function PostDetailScreen() {
 
   const handleComment = () => {
     Alert.alert("Comments", "Comment section is opening...");
+  };
+
+  const handleLikePress = async () => {
+    try {
+      await toggleLike(id as string);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -75,8 +87,6 @@ export default function PostDetailScreen() {
             style={{
               width: "100%",
               height: "100%",
-              // borderTopLeftRadius: 32,
-              // borderTopRightRadius: 32,
               borderRadius: 23,
             }}
             contentFit="cover"
@@ -108,14 +118,12 @@ export default function PostDetailScreen() {
             justifyContent: "space-between",
             paddingHorizontal: 16,
             paddingVertical: 5,
-            // borderBottomWidth: 1,
-            // borderBottomColor: "#F0F0",
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
             <TouchableOpacity
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-              onPress={() => setIsLiked(!isLiked)}
+              onPress={handleLikePress}
             >
               <Heart
                 color={isLiked ? "#E60023" : "#1D1A27"}
@@ -185,8 +193,7 @@ export default function PostDetailScreen() {
             }}
             numberOfLines={1}
           >
-            {user || "FinSavvy Panda"} | Frugal Living, Saving Money, Side
-            Hustles
+            {user || "Style Explorer"}
           </Text>
         </View>
 
@@ -202,13 +209,13 @@ export default function PostDetailScreen() {
           <Text
             style={{
               flex: 1,
-              fontSize: 20,
-              fontWeight: "800",
+              fontSize: 16,
+              fontWeight: "600",
               color: "#1D1A27",
-              lineHeight: 28,
+              lineHeight: 24,
             }}
           >
-            9 Google Jobs You Can Do From Ho...
+            {caption || "My latest style creation ✨"}
           </Text>
           {/* <View
             style={{

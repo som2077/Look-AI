@@ -66,6 +66,9 @@ export default function AddClothesFormScreen() {
   const [localPhotoUri, setLocalPhotoUri] = useState<string>(
     params.photoUri ?? "",
   );
+  const [occasion, setOccasion] = useState<Occasion>("Casual");
+  const [season, setSeason] = useState<Season>("All");
+  const [notes, setNotes] = useState<string>("");
 
   const handlePickPhoto = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -77,9 +80,6 @@ export default function AddClothesFormScreen() {
       setLocalPhotoUri(result.assets[0].uri);
     }
   }, []);
-  const [occasion, setOccasion] = useState<Occasion>("Casual");
-  const [season, setSeason] = useState<Season>("All");
-  const [notes, setNotes] = useState<string>("");
 
   const handleBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -107,36 +107,37 @@ export default function AddClothesFormScreen() {
   }, [router, name, category, color, occasion, localPhotoUri, addItem]);
 
   return (
-    <View className="flex-1 bg-[#0c0c0c]">
-      <StatusBar style="light" />
+    <View className="flex-1 bg-white">
+      <StatusBar style="dark" />
       <SafeAreaView className="flex-1" edges={["top"]}>
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-[#1e1e1e]">
+        <View className="flex-row items-center justify-between px-5 py-4 border-b border-gray-100 bg-white">
           <Pressable
             onPress={handleBack}
-            className="h-9 w-9 items-center justify-center rounded-xl bg-[#141414] border border-[#1e1e1e]"
+            className="h-10 w-10 items-center justify-center rounded-full bg-[#ECEDF9]"
           >
-            <IconArrowLeft size={16} color="#ffffff" />
+            <IconArrowLeft size={18} color="#1D1A27" strokeWidth={2.5} />
           </Pressable>
-          <Text className="text-white text-sm font-bold">
+          <Text className="text-[#1D1A27] text-base font-semibold">
             {isScanned ? "Confirm details" : "Add manually"}
           </Text>
           <Pressable onPress={handleConfirm}>
-            <Text className="text-[#c9a84c] font-bold text-xs">Save</Text>
+            <Text className="text-[#1D1A27] font-semibold text-sm">Save</Text>
           </Pressable>
         </View>
 
         <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ padding: 14, paddingBottom: 30 }}
+          className="flex-1 bg-white"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           {/* Photo / placeholder */}
           <Pressable
             onPress={isManual ? handlePickPhoto : undefined}
             disabled={!isManual}
-            className="rounded-2xl border border-[#1e1e1e] overflow-hidden items-center justify-center mb-4"
-            style={{ height: 200, backgroundColor: "#141414" }}
+            className="rounded-3xl border border-dashed border-gray-200 overflow-hidden items-center justify-center mb-6 relative bg-[#FAFAFA]"
+            style={{ height: 220 }}
           >
             {localPhotoUri ? (
               <ExpoImage
@@ -147,84 +148,88 @@ export default function AddClothesFormScreen() {
               />
             ) : (
               <View className="items-center">
-                <IconMesh size={48} color="#333" strokeWidth={1.5} />
+                <View className="h-14 w-14 items-center justify-center rounded-full bg-[#ECEDF9] mb-3">
+                  <IconPhoto size={24} color="#1D1A27" strokeWidth={2} />
+                </View>
                 {isManual ? (
-                  <Text className="text-[#555] text-[11px] mt-2">
+                  <Text className="text-[#6B7280] text-xs font-medium">
                     Tap to add photo (optional)
                   </Text>
                 ) : (
-                  <Text className="text-[#555] text-[11px] mt-2">No photo</Text>
+                  <Text className="text-[#6B7280] text-xs font-medium">No photo</Text>
                 )}
               </View>
             )}
-            {isScanned ? (
-              <View className="absolute top-2 right-2 flex-row items-center gap-1 bg-[#c9a84c] px-2 py-1 rounded-full">
-                <IconSparkles size={10} color="#1a1400" />
-                <Text className="text-[#1a1400] text-[9px] font-bold">
-                  AI prefilled
+
+            {isScanned && (
+              <View className="absolute top-3 right-3 flex-row items-center gap-1 bg-[#DCE754] px-3 py-1.5 rounded-full shadow-sm">
+                <IconSparkles size={11} color="#1E1A27" strokeWidth={2.5} />
+                <Text className="text-[#1E1A27] text-[10px] font-semibold">
+                  AI Prefilled
                 </Text>
               </View>
-            ) : null}
-            {isManual && !localPhotoUri ? (
-              <View className="absolute bottom-3 flex-row items-center gap-1 bg-[#1e1e1e]/90 rounded-full px-3 py-1.5">
-                <IconPhoto size={12} color="#888" />
-                <Text className="text-[#888] text-[10px]">
+            )}
+
+            {isManual && !localPhotoUri && (
+              <View className="absolute bottom-3 flex-row items-center gap-1 bg-[#1D1A27]/90 rounded-full px-4 py-2 shadow-sm">
+                <IconPhoto size={12} color="#FFFFFF" />
+                <Text className="text-white text-[11px] font-medium">
                   Tap to pick from gallery
                 </Text>
               </View>
-            ) : null}
-            {isManual && localPhotoUri ? (
+            )}
+
+            {isManual && localPhotoUri && (
               <Pressable
                 onPress={handlePickPhoto}
-                className="absolute top-2 right-2 bg-[#141414]/90 border border-[#1e1e1e] rounded-full px-2.5 py-1 flex-row items-center gap-1"
+                className="absolute top-3 right-3 bg-white/95 border border-gray-100 rounded-full px-3 py-1.5 flex-row items-center gap-1 shadow-sm"
               >
-                <IconPhoto size={10} color="#c9a84c" />
-                <Text className="text-[#c9a84c] text-[9px] font-bold">
+                <IconPhoto size={11} color="#1D1A27" />
+                <Text className="text-[#1D1A27] text-[10px] font-semibold">
                   Change
                 </Text>
               </Pressable>
-            ) : null}
+            )}
           </Pressable>
 
-          {isScanned ? (
-            <Text className="text-[#888] text-[11px] mb-4 leading-4">
-              We&apos;ve prefilled what AI detected. Edit anything before saving
-              to your wardrobe.
+          {isScanned && (
+            <Text className="text-[#6B7280] text-xs font-regular mb-6 leading-5">
+              We&apos;ve prefilled what AI detected. Edit anything before saving to your wardrobe.
             </Text>
-          ) : null}
+          )}
 
           {/* Item name */}
-          <Text className="text-[#888] text-[10px] uppercase tracking-wider font-semibold mb-2">
+          <Text className="text-[#6B7280] text-[11px] uppercase tracking-wider font-semibold mb-2">
             Item name
           </Text>
           <TextInput
             value={name}
             onChangeText={setName}
             placeholder="e.g. Blue kurta"
-            placeholderTextColor="#555"
-            className="bg-[#141414] border border-[#1e1e1e] rounded-xl px-3 py-3 text-white text-sm mb-4"
+            placeholderTextColor="#9CA3AF"
+            className="bg-[#FAFAFA] border border-gray-100 rounded-2xl px-4 py-4 text-[#1D1A27] text-sm font-medium mb-5"
           />
 
           {/* Category */}
-          <Text className="text-[#888] text-[10px] uppercase tracking-wider font-semibold mb-2">
+          <Text className="text-[#6B7280] text-[11px] uppercase tracking-wider font-semibold mb-2">
             Category
           </Text>
-          <View className="flex-row flex-wrap gap-1.5 mb-4">
+          <View className="flex-row flex-wrap gap-2 mb-5">
             {CATEGORIES.map((c) => {
               const sel = c.id === category;
               return (
                 <Pressable
                   key={c.id}
                   onPress={() => setCategory(c.id)}
-                  className={`px-3.5 py-1.5 rounded-full border ${
+                  className={`px-4 py-2.5 rounded-full border ${
                     sel
-                      ? "bg-[#c9a84c]/15 border-[#c9a84c]"
-                      : "bg-[#141414] border-[#1e1e1e]"
+                      ? "bg-[#1D1A27] border-transparent"
+                      : "bg-white border-gray-200"
                   }`}
                 >
                   <Text
                     className={`text-xs font-semibold ${
-                      sel ? "text-[#c9a84c]" : "text-[#aaa]"
+                      sel ? "text-white" : "text-[#4B5563]"
                     }`}
                   >
                     {c.label}
@@ -235,42 +240,42 @@ export default function AddClothesFormScreen() {
           </View>
 
           {/* Color */}
-          <Text className="text-[#888] text-[10px] uppercase tracking-wider font-semibold mb-2">
+          <Text className="text-[#6B7280] text-[11px] uppercase tracking-wider font-semibold mb-2">
             Color
           </Text>
           <TextInput
             value={color}
             onChangeText={setColor}
             placeholder="e.g. Beige, Navy blue"
-            placeholderTextColor="#555"
-            className="bg-[#141414] border border-[#1e1e1e] rounded-xl px-3 py-3 text-white text-sm mb-4"
+            placeholderTextColor="#9CA3AF"
+            className="bg-[#FAFAFA] border border-gray-100 rounded-2xl px-4 py-4 text-[#1D1A27] text-sm font-medium mb-5"
           />
 
           {/* Occasion */}
-          <Text className="text-[#888] text-[10px] uppercase tracking-wider font-semibold mb-2">
+          <Text className="text-[#6B7280] text-[11px] uppercase tracking-wider font-semibold mb-2">
             Best for
           </Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            className="mb-4"
+            className="mb-5"
           >
-            <View className="flex-row gap-1.5 pr-4">
+            <View className="flex-row gap-2 pr-4">
               {OCCASIONS.map((o) => {
                 const sel = o === occasion;
                 return (
                   <Pressable
                     key={o}
                     onPress={() => setOccasion(o)}
-                    className={`px-3.5 py-1.5 rounded-full border ${
+                    className={`px-4 py-2.5 rounded-full border ${
                       sel
-                        ? "bg-[#1d1d1d] border-[#444]"
-                        : "bg-transparent border-[#1e1e1e]"
+                        ? "bg-[#1D1A27] border-transparent"
+                        : "bg-white border-gray-200"
                     }`}
                   >
                     <Text
                       className={`text-xs font-semibold ${
-                        sel ? "text-white" : "text-[#aaa]"
+                        sel ? "text-white" : "text-[#4B5563]"
                       }`}
                     >
                       {o}
@@ -282,25 +287,25 @@ export default function AddClothesFormScreen() {
           </ScrollView>
 
           {/* Season */}
-          <Text className="text-[#888] text-[10px] uppercase tracking-wider font-semibold mb-2">
+          <Text className="text-[#6B7280] text-[11px] uppercase tracking-wider font-semibold mb-2">
             Season
           </Text>
-          <View className="flex-row gap-1.5 mb-4">
+          <View className="flex-row gap-2 mb-5">
             {SEASONS.map((s) => {
               const sel = s === season;
               return (
                 <Pressable
                   key={s}
                   onPress={() => setSeason(s)}
-                  className={`px-3.5 py-1.5 rounded-full border ${
+                  className={`px-4 py-2.5 rounded-full border ${
                     sel
-                      ? "bg-[#1d1d1d] border-[#444]"
-                      : "bg-transparent border-[#1e1e1e]"
+                      ? "bg-[#1D1A27] border-transparent"
+                      : "bg-white border-gray-200"
                   }`}
                 >
                   <Text
                     className={`text-xs font-semibold ${
-                      sel ? "text-white" : "text-[#aaa]"
+                      sel ? "text-white" : "text-[#4B5563]"
                     }`}
                   >
                     {s}
@@ -311,28 +316,28 @@ export default function AddClothesFormScreen() {
           </View>
 
           {/* Notes */}
-          <Text className="text-[#888] text-[10px] uppercase tracking-wider font-semibold mb-2">
+          <Text className="text-[#6B7280] text-[11px] uppercase tracking-wider font-semibold mb-2">
             Notes (optional)
           </Text>
           <TextInput
             value={notes}
             onChangeText={setNotes}
             placeholder="e.g. Gifted by mom, hand wash only"
-            placeholderTextColor="#555"
+            placeholderTextColor="#9CA3AF"
             multiline
             numberOfLines={3}
-            className="bg-[#141414] border border-[#1e1e1e] rounded-xl px-3 py-3 text-white text-sm mb-2"
-            style={{ textAlignVertical: "top", minHeight: 70 }}
+            className="bg-[#FAFAFA] border border-gray-100 rounded-2xl px-4 py-4 text-[#1D1A27] text-sm font-medium mb-2"
+            style={{ textAlignVertical: "top", minHeight: 80 }}
           />
         </ScrollView>
 
         {/* Bottom CTA */}
-        <View className="px-4 pb-6 pt-2 bg-[#0c0c0c] border-t border-[#1e1e1e]">
+        <View className="px-5 pb-8 pt-4 bg-white border-t border-gray-100">
           <Pressable
             onPress={handleConfirm}
-            className="bg-[#c9a84c] rounded-xl py-3.5 items-center"
+            className="bg-[#1D1A27] rounded-2xl py-5 items-center justify-center shadow-sm"
           >
-            <Text className="text-[#1a1400] font-bold text-sm">
+            <Text className="text-white font-semibold text-base">
               {isScanned ? "Confirm & add to wardrobe" : "Add to wardrobe"}
             </Text>
           </Pressable>

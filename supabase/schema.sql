@@ -6,6 +6,7 @@ CREATE TABLE user_profiles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id TEXT UNIQUE NOT NULL,
   nickname TEXT,
+  username TEXT UNIQUE,
   age INTEGER,
   height INTEGER,
   gender TEXT,

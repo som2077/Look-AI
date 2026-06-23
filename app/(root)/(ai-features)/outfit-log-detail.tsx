@@ -597,4 +597,51 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "TikTokSans16pt-Bold",
   },
+  ringContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    width: 100,
+    height: 100,
+  },
+  ringCenter: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringScore: {
+    fontSize: 24,
+    fontFamily: "TikTokSans16pt-Bold",
+  },
+  ringLabel: {
+    fontSize: 10,
+    fontFamily: "TikTokSans16pt-Medium",
+    color: "#9B9BAF",
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 16,
+    gap: 12,
+    flex: 1,
+  },
+  chipIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chipLabel: {
+    fontSize: 12,
+    fontFamily: "TikTokSans16pt-Medium",
+    color: "#4C4B5E",
+  },
+  chipValue: {
+    fontSize: 14,
+    fontFamily: "TikTokSans16pt-Bold",
+    color: "#1D1A27",
+  },
 });

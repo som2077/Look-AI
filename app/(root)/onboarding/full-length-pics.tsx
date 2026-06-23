@@ -1,7 +1,11 @@
-import { usePostHog } from 'posthog-react-native';
+import { createSupabaseClient } from "@/backend/api/supabase";
+import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { useAuth } from "@clerk/clerk-expo";
+import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { Info, Upload, X } from "lucide-react-native";
+import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -11,10 +15,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
-import { createSupabaseClient } from "@/backend/api/supabase";
-import * as Haptics from "expo-haptics";
-import { Info, Upload, X } from "lucide-react-native";
 
 const BUCKET = "full-length-pics";
 
@@ -135,7 +135,7 @@ export default function FullLengthPicsScreen() {
               <View key={idx} className="relative">
                 <Image
                   source={{ uri: img.uri }}
-                  className="h-[280px] w-[150px] rounded-2xl border border-[#E5E7EB]"
+                  className="h-[280px] w-[150px] rounded-2xl border border-[#7f8fad]"
                   resizeMode="cover"
                 />
                 <TouchableOpacity
@@ -162,24 +162,83 @@ export default function FullLengthPicsScreen() {
           </View>
         ) : (
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={0.9}
             onPress={handlePickImages}
-            className="w-full items-center justify-center rounded-3xl border-2 border-dashed border-[#D1D1D8] bg-[#FAFAFA] py-10"
+            className="w-full items-center justify-center py-6"
           >
-            <Image
-              source={require("@/assets/images/full-lenght.png")}
-              className="h-[200px] w-[200px] mb-6"
-              resizeMode="contain"
-            />
-            <View className="flex-row items-center justify-center rounded-full bg-[#1D1A27] px-6 py-3">
-              <Upload size={18} color="#FFFFFF" />
-              <Text className="ml-2 text-sm font-semibold text-white">
-                Upload Photos
-              </Text>
+            {/* 3 stacked tilted cards */}
+            <View className="h-[240px] w-full items-center justify-center relative">
+              {/* Card 1: Left */}
+              <View
+                style={{
+                  position: "absolute",
+                  transform: [
+                    { rotate: "-15deg" },
+                    { translateX: -70 },
+                    { translateY: 10 },
+                  ],
+                  shadowColor: "#000000",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.12,
+                  shadowRadius: 10,
+                  elevation: 6,
+                  zIndex: 1,
+                }}
+                className="h-[270px] w-[225px] rounded-3xl bg-white p-[6px]"
+              >
+                <Image
+                  source={require("@/assets/images/mirror_selfie_girl.png")}
+                  className="h-full w-full rounded-[18px]"
+                  resizeMode="cover"
+                />
+              </View>
+
+              {/* Card 3: Right */}
+              <View
+                style={{
+                  position: "absolute",
+                  transform: [
+                    { rotate: "15deg" },
+                    { translateX: 70 },
+                    { translateY: 10 },
+                  ],
+                  shadowColor: "#000000",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.12,
+                  shadowRadius: 10,
+                  elevation: 6,
+                  zIndex: 2,
+                }}
+                className="h-[270px] w-[225px] rounded-3xl bg-white p-[6px]"
+              >
+                <Image
+                  source={require("@/assets/images/mirror_selfie_girl.png")}
+                  className="h-full w-full rounded-[18px]"
+                  resizeMode="cover"
+                />
+              </View>
+
+              {/* Card 2: Center (Top layer) */}
+              <View
+                style={{
+                  position: "absolute",
+                  transform: [{ rotate: "-3deg" }, { translateY: 15 }],
+                  shadowColor: "#000000",
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.18,
+                  shadowRadius: 12,
+                  elevation: 8,
+                  zIndex: 3,
+                }}
+                className="h-[320px] w-[200px] rounded-3xl bg-white p-[6px]"
+              >
+                <Image
+                  source={require("@/assets/images/mirror_selfie_guy.png")}
+                  className="h-full w-full rounded-[18px]"
+                  resizeMode="cover"
+                />
+              </View>
             </View>
-            <Text className="mt-3 text-xs font-regular text-[#9CA3AF]">
-              Max 2 photos • JPEG or PNG
-            </Text>
           </TouchableOpacity>
         )}
       </View>

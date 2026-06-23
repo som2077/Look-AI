@@ -82,7 +82,7 @@ export function AgePicker({
                 <Text
                   style={{
                     fontSize: isSelected ? 45 : 35,
-                    fontWeight: isSelected ? "700" : "500",
+                    fontFamily: isSelected ? "TikTokSans16pt-Bold" : "TikTokSans16pt-Medium",
                     // selected → white, others → muted gray
                     color: isSelected ? "#FFFFFF" : "#A3A3A3",
                   }}

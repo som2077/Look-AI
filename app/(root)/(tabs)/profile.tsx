@@ -2,11 +2,9 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import {
   IconBell,
   IconChevronRight,
-
   IconLink,
   IconLogout,
   IconMail,
-  IconMapPin,
   IconNotes,
   IconSettings,
   IconShield,
@@ -31,8 +29,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useOnboardingState } from "../../../backend/store/onboarding-store";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
+import { GradientButton } from "../../../components/ui/GradientButton";
 import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
 
 // ─── Shared Components ───────────────────────────────────────────────────────
@@ -285,7 +285,7 @@ const ClassicProfileUI = ({
           <Pressable
             onPress={() => router.push("/(root)/subscription" as never)}
             style={{
-              backgroundColor: "white",
+              backgroundColor: "#FFFFFF",
               paddingVertical: 6,
               paddingHorizontal: 12,
               borderRadius: 16,
@@ -340,7 +340,11 @@ const ClassicProfileUI = ({
       <ListItem
         icon={<IconMail size={18} color="#1D1D1D" />}
         title="Support Email"
-        onPress={() => Linking.openURL("mailto:somgoutam0@gmail.com?subject=Look AI Support&body=Hi Look AI Team,")}
+        onPress={() =>
+          Linking.openURL(
+            "mailto:somgoutam0@gmail.com?subject=Look AI Support&body=Hi Look AI Team,",
+          )
+        }
       />
       <ListItem
         icon={<IconNotes size={18} color="#1D1D1D" />}
@@ -426,407 +430,395 @@ const ExploreStyleProfileUI = ({
   handleDeleteAccount,
   isLoggingOut,
   onLogoutPress,
-}: any) => (
-  <View style={{ paddingHorizontal: 0, paddingBottom: 116 }}>
-    {/* Visual Header (Cover Photo & Avatar) */}
-    <View
-      style={{
-        position: "relative",
-        marginBottom: 60,
-        marginTop: 2,
-        paddingHorizontal: 13,
-      }}
-    >
-      {/* Cover Photo */}
+}: any) => {
+  const { about } = useOnboardingState();
+  return (
+    <View style={{ paddingHorizontal: 0, paddingBottom: 116 }}>
+      {/* Visual Header (Cover Photo & Avatar) */}
       <View
         style={{
-          width: "100%",
-          height: 200,
-          borderRadius: 30,
-          backgroundColor: "#0014FF",
-          overflow: "hidden",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "row",
-          gap: 24,
+          position: "relative",
+          marginBottom: 60,
+          marginTop: 2,
+          paddingHorizontal: 13,
         }}
       >
-        <Text
-          style={{
-            color: "white",
-            fontSize: 50,
-            fontWeight: "900",
-            transform: [{ rotate: "45deg" }],
-          }}
-        >
-          ↑
-        </Text>
-        <Text
-          style={{
-            color: "white",
-            fontSize: 50,
-            fontWeight: "900",
-            transform: [{ rotate: "135deg" }],
-          }}
-        >
-          ↑
-        </Text>
-        <Text
-          style={{
-            color: "white",
-            fontSize: 50,
-            fontWeight: "900",
-            transform: [{ rotate: "315deg" }],
-          }}
-        >
-          ↑
-        </Text>
-        <Text
-          style={{
-            color: "white",
-            fontSize: 50,
-            fontWeight: "900",
-            transform: [{ rotate: "225deg" }],
-          }}
-        >
-          ↑
-        </Text>
-      </View>
-
-      {/* Link top right below banner */}
-      <View
-        style={{
-          position: "absolute",
-          right: 24,
-          bottom: -40,
-          flexDirection: "row",
-          gap: 16,
-        }}
-      >
-        <IconLink color="#00000080" size={20} />
-      </View>
-
-      {/* Avatar */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: -50,
-          left: 32,
-          width: 104,
-          height: 104,
-          borderRadius: 52,
-          backgroundColor: "#E5E7EB",
-          borderWidth: 4,
-          borderColor: "#FAFAFC",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <ImageBackground
-          source={{
-            uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-          }}
+        {/* Cover Photo */}
+        <View
           style={{
             width: "100%",
-            height: "100%",
-            borderRadius: 50,
+            height: 200,
+            borderRadius: 30,
+            backgroundColor: "#0014FF",
             overflow: "hidden",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "row",
+            gap: 24,
           }}
-        />
-      </View>
-    </View>
-
-    <View style={{ paddingHorizontal: 32 }}>
-      {/* Name & Title */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-        <Text style={{ fontSize: 24, fontWeight: "800", color: "#1D1A27" }}>
-          Lina Cho
-        </Text>
-        {/* <IconStarFilled size={18} color="#FBBF24"  */}
-      </View>
-      <Text
-        style={{
-          fontSize: 14,
-          color: "#9263FE",
-          fontWeight: "600",
-          marginTop: 2,
-        }}
-      >
-        @lina_cho
-      </Text>
-      <Text
-        style={{
-          fontSize: 14,
-          color: "#6B7280",
-          fontWeight: "500",
-          marginTop: 4,
-        }}
-      >
-        Independent Designer <Text style={{ color: "#D1D5DB" }}>|</Text> Studio
-        Else
-      </Text>
-
-      {/* Stats Row */}
-      <View
-        style={{
-          flexDirection: "row",
-          marginTop: 24,
-          gap: 24,
-          alignItems: "center",
-        }}
-      >
-        <Pressable onPress={() => router.push("/(root)/profile-network?tab=followers" as never)}>
+        >
           <Text
             style={{
-              fontSize: 13,
-              color: "#9CA3AF",
-              fontWeight: "500",
-              marginBottom: 4,
+              color: "white",
+              fontSize: 50,
+              fontWeight: "900",
+              transform: [{ rotate: "45deg" }],
             }}
           >
-            Followers
+            ↑
           </Text>
-          <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
-            678
-          </Text>
-        </Pressable>
-        <View style={{ width: 1, height: 30, backgroundColor: "#E5E7EB" }} />
-        <Pressable onPress={() => router.push("/(root)/profile-network?tab=following" as never)}>
           <Text
             style={{
-              fontSize: 13,
-              color: "#9CA3AF",
-              fontWeight: "500",
-              marginBottom: 4,
+              color: "white",
+              fontSize: 50,
+              fontWeight: "900",
+              transform: [{ rotate: "135deg" }],
             }}
           >
-            Following
+            ↑
           </Text>
-          <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
-            312
-          </Text>
-        </Pressable>
-        <View style={{ width: 1, height: 30, backgroundColor: "#E5E7EB" }} />
-        <Pressable onPress={() => router.push("/(root)/profile-network?tab=posts" as never)}>
           <Text
             style={{
-              fontSize: 13,
-              color: "#9CA3AF",
-              fontWeight: "500",
-              marginBottom: 4,
+              color: "white",
+              fontSize: 50,
+              fontWeight: "900",
+              transform: [{ rotate: "315deg" }],
             }}
           >
-            Posts
+            ↑
           </Text>
-          <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
-            18
+          <Text
+            style={{
+              color: "white",
+              fontSize: 50,
+              fontWeight: "900",
+              transform: [{ rotate: "225deg" }],
+            }}
+          >
+            ↑
           </Text>
-        </Pressable>
-      </View>
+        </View>
 
-      {/* Divider */}
-      <View
-        style={{
-          height: 1,
-          width: "100%",
-          borderWidth: 1,
-          borderColor: "#E5E7EB",
-          borderStyle: "dotted",
-          marginTop: 24,
-          marginBottom: 24,
-          borderRadius: 1,
-        }}
-      />
-
-      {/* About Section */}
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: "800",
-          color: "#1D1A27",
-          marginBottom: 12,
-        }}
-      >
-        About
-      </Text>
-      <Text
-        style={{
-          fontSize: 14,
-          color: "#6B7280",
-          lineHeight: 22,
-          marginBottom: 20,
-        }}
-      >
-        I&apos;m an independent designer based in Seoul. I partner with brands and
-        startups through Studio Else to create bold, minimal interfaces and
-        meaningful digital experiences.
-      </Text>
-
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 10,
-        }}
-      >
-        <IconMapPin size={18} color="#9CA3AF" />
-        <Text style={{ fontSize: 14, color: "#6B7280", fontWeight: "500" }}>
-          Seoul, Korea
-        </Text>
-      </View>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <IconLink size={18} color="#9CA3AF" />
-        <Text style={{ fontSize: 14, color: "#6B7280", fontWeight: "500" }}>
-          studioelse.co
-        </Text>
-      </View>
-
-      {/* Unlock Pro Banner (Explore Style) */}
-      <Pressable
-        onPress={() => router.push("/(root)/subscription" as never)}
-        style={{
-          width: "100%",
-          height: 160,
-          borderRadius: 24,
-          overflow: "hidden",
-          position: "relative",
-          marginTop: 24,
-        }}
-      >
-        <ImageBackground
-          source={{
-            uri: "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?q=80&w=1170&auto=format&fit=crop",
-          }}
-          style={{ width: "100%", height: "100%" }}
-        />
+        {/* Link top right below banner */}
         <View
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.4)",
-            justifyContent: "flex-end",
-            padding: 20,
+            right: 24,
+            bottom: -40,
+            flexDirection: "row",
+            gap: 16,
           }}
         >
-          <Text
-            style={{
-              color: "#fff",
-              fontSize: 24,
-              fontWeight: "800",
-              // marginBottom: 20,
+          <IconLink color="#00000080" size={20} />
+        </View>
+
+        {/* Avatar */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: -50,
+            left: 32,
+            width: 104,
+            height: 104,
+            borderRadius: 52,
+            backgroundColor: "#E5E7EB",
+            borderWidth: 4,
+            borderColor: "#FAFAFC",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ImageBackground
+            source={{
+              uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
             }}
-          >
-            Advanced Analysis
-          </Text>
-          <Text
             style={{
-              color: "rgba(255,255,255,0.8)",
-              fontSize: 14,
-              fontWeight: "500",
-              marginBottom: 30,
+              width: "100%",
+              height: "100%",
+              borderRadius: 50,
+              overflow: "hidden",
             }}
-          >
-            Unlock unlimited outfit combinations.
+          />
+        </View>
+      </View>
+
+      <View style={{ paddingHorizontal: 32 }}>
+        {/* Name & Title */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Text style={{ fontSize: 24, fontWeight: "800", color: "#1D1A27" }}>
+            Lina Cho
           </Text>
+          {/* <IconStarFilled size={18} color="#FBBF24"  */}
+        </View>
+        <Text
+          style={{
+            fontSize: 14,
+            color: "#9263FE",
+            fontWeight: "600",
+            marginTop: 2,
+          }}
+        >
+          @lina_cho
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: "#6B7280",
+            fontWeight: "500",
+            marginTop: 4,
+          }}
+        >
+          Independent Designer <Text style={{ color: "#D1D5DB" }}>|</Text>{" "}
+          Studio Else
+        </Text>
+
+        {/* Stats Row */}
+        <View
+          style={{
+            flexDirection: "row",
+            marginTop: 24,
+            gap: 24,
+            alignItems: "center",
+          }}
+        >
           <Pressable
-            onPress={() => router.push("/(root)/subscription" as never)}
-            style={{
-              backgroundColor: "#fff",
-              paddingVertical: 10,
-              paddingHorizontal: 20,
-              borderRadius: 20,
-              alignSelf: "flex-start",
-            }}
+            onPress={() =>
+              router.push("/(root)/profile-network?tab=followers" as never)
+            }
           >
-            <Text style={{ color: "#1D1A27", fontWeight: "700", fontSize: 14 }}>
-              Upgrade Now
+            <Text
+              style={{
+                fontSize: 13,
+                color: "#9CA3AF",
+                fontWeight: "500",
+                marginBottom: 4,
+              }}
+            >
+              Followers
+            </Text>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
+              678
+            </Text>
+          </Pressable>
+          <View style={{ width: 1, height: 30, backgroundColor: "#E5E7EB" }} />
+          <Pressable
+            onPress={() =>
+              router.push("/(root)/profile-network?tab=following" as never)
+            }
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                color: "#9CA3AF",
+                fontWeight: "500",
+                marginBottom: 4,
+              }}
+            >
+              Following
+            </Text>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
+              312
+            </Text>
+          </Pressable>
+          <View style={{ width: 1, height: 30, backgroundColor: "#E5E7EB" }} />
+          <Pressable
+            onPress={() =>
+              router.push("/(root)/profile-network?tab=posts" as never)
+            }
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                color: "#9CA3AF",
+                fontWeight: "500",
+                marginBottom: 4,
+              }}
+            >
+              Posts
+            </Text>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
+              18
             </Text>
           </Pressable>
         </View>
-      </Pressable>
 
-      {/* Settings Sections from ClassicProfileUI */}
-      <View style={{ marginTop: 10 }}>
-        {/* Account Section */}
-        <SectionTitle title="Account" />
-        <CardContainer>
-          <ListItem
-            icon={<IconUser size={18} color="#1D1D1D" />}
-            title="Personal details"
-            onPress={() => router.push("/(root)/personal-details" as never)}
-          />
-          <ListItem
-            icon={<IconSettings size={18} color="#1D1D1D" />}
-            title="Preferences"
-          />
-          <ListItem
-            icon={<IconBell size={18} color="#1D1D1D" />}
-            title="Notification"
-            hasBorder={false}
-            rightElement={
-              <CustomSwitch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-              />
-            }
-          />
-        </CardContainer>
+        {/* Divider */}
+        <View
+          style={{
+            height: 1,
+            width: "100%",
+            borderWidth: 1,
+            borderColor: "#E5E7EB",
+            borderStyle: "dotted",
+            marginTop: 24,
+            marginBottom: 24,
+            borderRadius: 1,
+          }}
+        />
 
-        {/* Support & Legal Section */}
-        <SectionTitle title="Support & Legal" />
-        <CardContainer>
-          <ListItem
-            icon={<IconSpeakerphone size={18} color="#1D1D1D" />}
-            title="Request a feature"
-            onPress={() => Linking.openURL("https://tally.so/r/9qx7e1")}
-          />
-          <ListItem
-            icon={<IconMail size={18} color="#1D1D1D" />}
-            title="Support Email"
-            onPress={() => Linking.openURL("mailto:somgoutam0@gmail.com?subject=Look AI Support&body=Hi Look AI Team,")}
-          />
-          <ListItem
-            icon={<IconNotes size={18} color="#1D1D1D" />}
-            title="Terms and Conditions"
-            onPress={() => router.push("/(root)/terms" as never)}
-          />
-          <ListItem
-            icon={<IconShield size={18} color="#1D1D1D" />}
-            title="Privacy policy"
-            onPress={() => router.push("/(root)/privacy" as never)}
-            hasBorder={false}
-          />
-        </CardContainer>
+        {/* About Section */}
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: "800",
+            color: "#1D1A27",
+            marginBottom: 12,
+          }}
+        >
+          About
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: "#6B7280",
+            lineHeight: 22,
+            marginBottom: 20,
+          }}
+        >
+          {about || "No bio added yet."}
+        </Text>
 
-        {/* Account Action Section */}
-        <SectionTitle title="Account Action" />
-        <CardContainer>
-          <ListItem
-            icon={<IconUserMinus size={18} color="#1D1D1D" />}
-            title="Delete account"
-            onPress={handleDeleteAccount}
+        {/* Unlock Pro Banner (Explore Style) */}
+        <Pressable
+          onPress={() => router.push("/(root)/subscription" as never)}
+          style={{
+            width: "100%",
+            height: 160,
+            borderRadius: 24,
+            overflow: "hidden",
+            position: "relative",
+            // marginTop: 2,
+          }}
+        >
+          <ImageBackground
+            source={{
+              uri: "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?q=80&w=1170&auto=format&fit=crop",
+            }}
+            style={{ width: "100%", height: "100%" }}
           />
-          <ListItem
-            icon={
-              isLoggingOut ? (
-                <ActivityIndicator size="small" color="#1D1D1D" />
-              ) : (
-                <IconLogout size={18} color="#1D1D1D" />
-              )
-            }
-            title="Logout"
-            onPress={onLogoutPress}
-            hasBorder={false}
-          />
-        </CardContainer>
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              justifyContent: "flex-end",
+              padding: 20,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 24,
+                fontWeight: "800",
+                // marginBottom: 20,
+              }}
+            >
+              Advanced Analysis
+            </Text>
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.8)",
+                fontSize: 14,
+                fontWeight: "500",
+                marginBottom: 30,
+              }}
+            >
+              Unlock unlimited outfit combinations.
+            </Text>
+            <GradientButton
+              title="Upgrade Now"
+              onPress={() => router.push("/(root)/subscription" as never)}
+              style={{ alignSelf: "flex-start" }}
+            />
+          </View>
+        </Pressable>
+
+        {/* Settings Sections from ClassicProfileUI */}
+        <View style={{ marginTop: 10 }}>
+          {/* Account Section */}
+          <SectionTitle title="Account" />
+          <CardContainer>
+            <ListItem
+              icon={<IconUser size={18} color="#1D1D1D" />}
+              title="Personal details"
+              onPress={() => router.push("/(root)/personal-details" as never)}
+            />
+            <ListItem
+              icon={<IconSettings size={18} color="#1D1D1D" />}
+              title="Preferences"
+            />
+            <ListItem
+              icon={<IconBell size={18} color="#1D1D1D" />}
+              title="Notification"
+              hasBorder={false}
+              rightElement={
+                <CustomSwitch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                />
+              }
+            />
+          </CardContainer>
+
+          {/* Support & Legal Section */}
+          <SectionTitle title="Support & Legal" />
+          <CardContainer>
+            <ListItem
+              icon={<IconSpeakerphone size={18} color="#1D1D1D" />}
+              title="Request a feature"
+              onPress={() => Linking.openURL("https://tally.so/r/9qx7e1")}
+            />
+            <ListItem
+              icon={<IconMail size={18} color="#1D1D1D" />}
+              title="Support Email"
+              onPress={() =>
+                Linking.openURL(
+                  "mailto:somgoutam0@gmail.com?subject=Look AI Support&body=Hi Look AI Team,",
+                )
+              }
+            />
+            <ListItem
+              icon={<IconNotes size={18} color="#1D1D1D" />}
+              title="Terms and Conditions"
+              onPress={() => router.push("/(root)/terms" as never)}
+            />
+            <ListItem
+              icon={<IconShield size={18} color="#1D1D1D" />}
+              title="Privacy policy"
+              onPress={() => router.push("/(root)/privacy" as never)}
+              hasBorder={false}
+            />
+          </CardContainer>
+
+          {/* Account Action Section */}
+          <SectionTitle title="Account Action" />
+          <CardContainer>
+            <ListItem
+              icon={<IconUserMinus size={18} color="#1D1D1D" />}
+              title="Delete account"
+              onPress={handleDeleteAccount}
+            />
+            <ListItem
+              icon={
+                isLoggingOut ? (
+                  <ActivityIndicator size="small" color="#1D1D1D" />
+                ) : (
+                  <IconLogout size={18} color="#1D1D1D" />
+                )
+              }
+              title="Logout"
+              onPress={onLogoutPress}
+              hasBorder={false}
+            />
+          </CardContainer>
+        </View>
       </View>
     </View>
-  </View>
-);
+  );
+};
 
 // ─── Main Profile Screen ───────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
-import { useSupabase } from "./useSupabase";
 import { useUser } from "@clerk/clerk-expo";
+import { useCallback, useEffect, useState } from "react";
+import { useSupabase } from "./useSupabase";
 
 export interface Group {
   id: string;
@@ -84,5 +84,12 @@ export function useGroups() {
     }
   };
 
-  return { groups, joinedGroupIds, loading, joinGroup, leaveGroup, refresh: fetchGroups };
+  return {
+    groups,
+    joinedGroupIds,
+    loading,
+    joinGroup,
+    leaveGroup,
+    refresh: fetchGroups,
+  };
 }

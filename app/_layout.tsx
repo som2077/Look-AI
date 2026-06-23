@@ -156,7 +156,7 @@ const RootNavigator = memo(function RootNavigator() {
       return;
     }
 
-    if (inOnboarding || inAuth || !inRoot) {
+    if (inAuth || !inRoot) {
       router.replace("/(root)/(tabs)");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

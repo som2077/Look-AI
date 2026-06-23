@@ -10,6 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -32,79 +33,13 @@ import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper"
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
 import { StatusBar } from "expo-status-bar";
 import { useGroups, Group } from "../../../backend/hooks/useGroups";
+import { useAffiliateProducts } from "../../../backend/hooks/useAffiliateProducts";
+import { useCommunityPosts, CommunityPost } from "../../../backend/hooks/useCommunityPosts";
+import * as ImagePicker from "expo-image-picker";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// ─── Mock Data ─────────────────────────────────────────────────────────────────
-
-const STYLE_OF_THE_DAY = {
-  title: "Style of the Day",
-  weather: "Rainy, 22°C",
-  description: "Since it's raining today, here is a cozy look from your wardrobe.",
-  image: "https://images.unsplash.com/photo-1520975954732-57dd22299614?w=800&q=80",
-  items: [
-    { id: "1", type: "Jacket", name: "Black Denim Jacket" },
-    { id: "2", type: "Jeans", name: "Classic Blue Jeans" }
-  ]
-};
-
-
-const COMMUNITY_POSTS = [
-  {
-    id: "1",
-    user: "sarah_k",
-    avatar: "https://i.pravatar.cc/80?img=1",
-    image:
-      "https://images.unsplash.com/photo-1434389678232-068a8ebce4ea?w=400&q=80",
-    likes: 312,
-    aspectRatio: 4 / 5,
-  },
-  {
-    id: "2",
-    user: "james_m",
-    avatar: "https://i.pravatar.cc/80?img=2",
-    image:
-      "https://images.unsplash.com/photo-1550614000-4b95d466f289?w=400&q=80",
-    likes: 198,
-    aspectRatio: 1,
-  },
-  {
-    id: "3",
-    user: "priya_v",
-    avatar: "https://i.pravatar.cc/80?img=3",
-    image:
-      "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=400&q=80",
-    likes: 445,
-    aspectRatio: 2 / 3,
-  },
-  {
-    id: "4",
-    user: "alex_t",
-    avatar: "https://i.pravatar.cc/80?img=4",
-    image:
-      "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=400&q=80",
-    likes: 87,
-    aspectRatio: 3 / 4,
-  },
-  {
-    id: "5",
-    user: "mia_w",
-    avatar: "https://i.pravatar.cc/80?img=5",
-    image:
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80",
-    likes: 532,
-    aspectRatio: 3 / 4,
-  },
-  {
-    id: "6",
-    user: "david_l",
-    avatar: "https://i.pravatar.cc/80?img=6",
-    image:
-      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=400&q=80",
-    likes: 211,
-    aspectRatio: 1,
-  },
-];
+// Removed mock COMMUNITY_POSTS data to show real community posts only
 
 // Removed ALL_GROUPS, using useSocialStore instead
 
@@ -118,6 +53,35 @@ function AddPostModal({
   onClose: () => void;
 }) {
   const [caption, setCaption] = useState("");
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const { createPost, uploading } = useCommunityPosts();
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!imageUri) {
+      alert("Please select an image first!");
+      return;
+    }
+    try {
+      await createPost(imageUri, caption);
+      setCaption("");
+      setImageUri(null);
+      onClose();
+    } catch (error) {
+      alert("Failed to share post. Please try again.");
+    }
+  };
 
   return (
     <Modal
@@ -145,16 +109,17 @@ function AddPostModal({
             New Post
           </Text>
           <TouchableOpacity
-            onPress={onClose}
+            onPress={handleShare}
+            disabled={uploading}
             style={{
-              backgroundColor: "#1D1A27",
+              backgroundColor: uploading ? "#A0A0A0" : "#1D1A27",
               paddingHorizontal: 18,
               paddingVertical: 8,
               borderRadius: 20,
             }}
           >
             <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>
-              Share
+              {uploading ? "Sharing..." : "Share"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -162,6 +127,7 @@ function AddPostModal({
         <View style={{ padding: 20 }}>
           {/* Image placeholder */}
           <TouchableOpacity
+            onPress={pickImage}
             style={{
               width: "100%",
               height: 280,
@@ -173,12 +139,19 @@ function AddPostModal({
               borderWidth: 2,
               borderColor: "#E0E0E8",
               borderStyle: "dashed",
+              overflow: "hidden"
             }}
           >
-            <Text style={{ fontSize: 40, marginBottom: 8 }}>📷</Text>
-            <Text style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "600" }}>
-              Tap to add photo
-            </Text>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={{ width: "100%", height: "100%" }} />
+            ) : (
+              <>
+                <Text style={{ fontSize: 40, marginBottom: 8 }}>📷</Text>
+                <Text style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "600" }}>
+                  Tap to add photo
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <TextInput
@@ -229,7 +202,7 @@ const CommunityPostCard = ({
       }}
     >
       <Image
-        source={{ uri: post.image }}
+        source={{ uri: post.image_url || post.image }}
         style={{ width: "100%", aspectRatio: post.aspectRatio || 3 / 4 }}
         resizeMode="cover"
       />
@@ -244,9 +217,11 @@ function ForYouTab() {
   const { onScroll } = useScrollToHideTabBar();
   const [activeBanner, setActiveBanner] = useState(0);
   const bannerRef = useRef<FlatList>(null);
-  const [selectedPostOptions, setSelectedPostOptions] = useState<
-    (typeof COMMUNITY_POSTS)[0] | null
-  >(null);
+  const [selectedPostOptions, setSelectedPostOptions] = useState<any>(null);
+
+  const { products, loading: productsLoading } = useAffiliateProducts();
+  const { posts: communityPosts } = useCommunityPosts();
+  const displayPosts = communityPosts;
 
 
 
@@ -257,56 +232,85 @@ function ForYouTab() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: "50%" }}
     >
-      {/* ── Style of the Day ── */}
-      <View style={{ paddingHorizontal: 16, marginTop: 15 }}>
-        <View
-          style={{
-            borderRadius: 28,
-            overflow: "hidden",
-            backgroundColor: "#FFFFFF",
-            shadowColor: "#000",
-            shadowOpacity: 0.08,
-            shadowRadius: 16,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 5,
-            borderWidth: 1,
-            borderColor: "#F0F0F0"
-          }}
-        >
-          <View style={{ height: 220, position: "relative" }}>
-            <Image
-              source={{ uri: STYLE_OF_THE_DAY.image }}
-              style={{ width: "100%", height: "100%" }}
-            />
-            <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.6)"]}
-              style={{ position: "absolute", inset: 0 }}
-            />
-            <View style={{ position: "absolute", top: 16, left: 16, backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderColor: "rgba(255,255,255,0.4)" }}>
-              <CloudRain size={14} color="#FFFFFF" />
-              <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>{STYLE_OF_THE_DAY.weather}</Text>
-            </View>
-            <View style={{ position: "absolute", bottom: 16, left: 16, right: 16 }}>
-              <Text style={{ color: "#FFF", fontSize: 24, fontWeight: "800", marginBottom: 4 }}>{STYLE_OF_THE_DAY.title}</Text>
-              <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: "500", lineHeight: 18 }}>{STYLE_OF_THE_DAY.description}</Text>
-            </View>
-          </View>
-          <View style={{ padding: 16 }}>
-            <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
-              {STYLE_OF_THE_DAY.items.map((item, index) => (
-                <View key={item.id} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F5F5F7", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, gap: 8 }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: index === 0 ? "#4C36F5" : "#1D1A27" }} />
-                  <Text style={{ fontSize: 13, fontWeight: "600", color: "#1D1A27" }}>{item.name}</Text>
-                </View>
-              ))}
-            </View>
-            <TouchableOpacity style={{ backgroundColor: "#4C36F5", paddingVertical: 14, borderRadius: 16, alignItems: "center" }}>
-              <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "700" }}>Log This Outfit</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
 
+
+      {/* ── Shop the Look (Affiliates) ── */}
+      <View style={{ marginTop: 32 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 16, marginBottom: 14 }}>
+          <View>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>Trending For You</Text>
+            <Text style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>Shop the latest styles</Text>
+          </View>
+          <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#4C36F5" }}>See all</Text>
+            <ChevronRight size={16} color="#4C36F5" />
+          </TouchableOpacity>
+        </View>
+
+        {productsLoading ? (
+          <View style={{ padding: 20, alignItems: "center" }}>
+             <Text style={{ color: "#9CA3AF" }}>Finding the best pieces for you...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={products}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(item.url)}
+                style={{
+                  width: 160,
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 20,
+                  marginRight: 16,
+                  paddingBottom: 12,
+                  shadowColor: "#000",
+                  shadowOpacity: 0.04,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 2,
+                  borderWidth: 1,
+                  borderColor: "#F0F0F0",
+                  overflow: "hidden"
+                }}
+              >
+                <Image
+                  source={{ uri: item.image }}
+                  style={{ width: "100%", height: 200, backgroundColor: "#F5F5F7" }}
+                />
+                <View style={{ padding: 12 }}>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: "#4C36F5", textTransform: "uppercase", marginBottom: 4 }} numberOfLines={1}>
+                    {item.brand}
+                  </Text>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: "#1D1A27", marginBottom: 4 }} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                    <Text style={{ fontSize: 15, fontWeight: "800", color: "#1D1A27" }}>
+                      {item.price}
+                    </Text>
+                    <View
+                      style={{
+                        backgroundColor: "#1D1A27",
+                        width: 28,
+                        height: 28,
+                        borderRadius: 14,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <ShoppingBag size={14} color="#FFF" />
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
+          />
+        )}
+      </View>
 
       {/* Community Looks */}
       <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
@@ -320,38 +324,58 @@ function ForYouTab() {
         >
           Community Looks
         </Text>
-        <View style={{ flexDirection: "row", gap: 5 }}>
-          <View style={{ flex: 1 }}>
-            {COMMUNITY_POSTS.filter((_, i) => i % 2 === 0).map((post) => (
-              <CommunityPostCard
-                key={post.id}
-                post={post}
-                onMenuPress={() => setSelectedPostOptions(post)}
-                onCardPress={() =>
-                  router.push({
-                    pathname: "/(root)/post/[id]",
-                    params: post as any,
-                  })
-                }
-              />
-            ))}
+        {displayPosts.length === 0 ? (
+          <View style={{ padding: 24, alignItems: "center", backgroundColor: "#F5F5F7", borderRadius: 20 }}>
+            <Text style={{ fontSize: 32, marginBottom: 8 }}>✨</Text>
+            <Text style={{ fontSize: 15, fontWeight: "600", color: "#1D1A27", marginBottom: 4 }}>No looks shared yet</Text>
+            <Text style={{ fontSize: 13, color: "#6B7280", textAlign: "center" }}>Be the first to share your style with the community!</Text>
           </View>
-          <View style={{ flex: 1 }}>
-            {COMMUNITY_POSTS.filter((_, i) => i % 2 !== 0).map((post) => (
-              <CommunityPostCard
-                key={post.id}
-                post={post}
-                onMenuPress={() => setSelectedPostOptions(post)}
-                onCardPress={() =>
-                  router.push({
-                    pathname: "/(root)/post/[id]",
-                    params: post as any,
-                  })
-                }
-              />
-            ))}
+        ) : (
+          <View style={{ flexDirection: "row", gap: 5 }}>
+            <View style={{ flex: 1 }}>
+              {displayPosts.filter((_, i) => i % 2 === 0).map((post) => (
+                <CommunityPostCard
+                  key={post.id}
+                  post={post}
+                  onMenuPress={() => setSelectedPostOptions(post)}
+                  onCardPress={() =>
+                    router.push({
+                      pathname: "/(root)/post/[id]",
+                      params: {
+                        id: post.id,
+                        image: post.image_url || (post as any).image,
+                        user: post.user_profiles?.username ? `@${post.user_profiles.username}` : (post.user_profiles?.nickname || (post as any).user || "Style Explorer"),
+                        likes: String(post.likes_count || (post as any).likes || 0),
+                        caption: post.caption || "",
+                      } as any,
+                    })
+                  }
+                />
+              ))}
+            </View>
+            <View style={{ flex: 1 }}>
+              {displayPosts.filter((_, i) => i % 2 !== 0).map((post) => (
+                <CommunityPostCard
+                  key={post.id}
+                  post={post}
+                  onMenuPress={() => setSelectedPostOptions(post)}
+                  onCardPress={() =>
+                    router.push({
+                      pathname: "/(root)/post/[id]",
+                      params: {
+                        id: post.id,
+                        image: post.image_url || (post as any).image,
+                        user: post.user_profiles?.username ? `@${post.user_profiles.username}` : (post.user_profiles?.nickname || (post as any).user || "Style Explorer"),
+                        likes: String(post.likes_count || (post as any).likes || 0),
+                        caption: post.caption || "",
+                      } as any,
+                    })
+                  }
+                />
+              ))}
+            </View>
           </View>
-        </View>
+        )}
       </View>
 
       <Modal

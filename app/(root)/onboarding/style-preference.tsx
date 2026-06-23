@@ -1,11 +1,11 @@
-import { usePostHog } from 'posthog-react-native';
-import React, { useCallback } from "react";
-import { useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
-import * as Haptics from "expo-haptics";
+import { useOnboardingState } from "@/backend/store/onboarding-store";
 import { ContinueButton } from "@/components/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/backend/store/onboarding-store";
+import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
+import React, { useCallback } from "react";
+import { Pressable, Text, View } from "react-native";
 
 interface StyleChipProps {
   label: string;
@@ -30,7 +30,7 @@ const StyleChip = React.memo(function StyleChip({
       }`}
     >
       <Text
-        className={`text-base ${selected ? "font-medium text-white" : "text-[#1D1A27]"}`}
+        className={`text-base ${selected ? "font-semibold text-white" : "font-regular text-[#1D1A27]"}`}
       >
         {label}
       </Text>
@@ -74,7 +74,7 @@ export default function StylePreferenceScreen() {
   const { stylePreferences, toggleStyle } = useOnboardingState();
 
   const handleContinue = useCallback(() => {
-    posthog?.capture('onboarding_step_completed', { step: 'style-preference' });
+    posthog?.capture("onboarding_step_completed", { step: "style-preference" });
     if (stylePreferences.length !== 5) return;
 
     router.push("/(root)/onboarding/full-length-pics");
@@ -87,10 +87,10 @@ export default function StylePreferenceScreen() {
       <Text className="text-4xl font-semibold tracking-tight text-center text-[#1D1A27]">
         Style preferences
       </Text>
-      <Text className="mt-2 text-xl text-center text-[#000000]">
+      <Text className="mt-2 text-xl font-regular text-center text-[#000000]">
         Select fashion styles you like most.
       </Text>
-      <View className="flex-row flex-wrap gap-[5px] mt-8 items-center justify-center">
+      <View className="flex-row flex-wrap gap-[7px] mt-8 items-center justify-center">
         {styles.map((style) => (
           <StyleChip
             key={style}
