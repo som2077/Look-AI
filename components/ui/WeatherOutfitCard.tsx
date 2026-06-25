@@ -1,33 +1,33 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useWeatherStore } from "@/backend/store/weather-store";
 import {
-  Animated,
-  Easing,
-  Text,
-  View,
-  StyleSheet,
-  Pressable,
-} from "react-native";
-import Svg, { Circle } from "react-native-svg";
-import {
-  IconDroplet,
-  IconWind,
-  IconSun,
-  IconMoon,
+  IconAlertCircle,
   IconCloud,
   IconCloudRain,
   IconCloudSnow,
   IconCloudStorm,
+  IconDroplet,
   IconMapPin,
+  IconMoon,
   IconRefresh,
-  IconAlertCircle,
+  IconSun,
   // IconTemperature,
   IconUvIndex,
+  IconWind,
 } from "@tabler/icons-react-native";
-import { useWeatherStore } from "@/backend/store/weather-store";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import Svg, { Circle } from "react-native-svg";
 
 // ─── Comfort Ring ─────────────────────────────────────────────────────────────
 
-const RING_SIZE = 65;
+const RING_SIZE = 70;
 const STROKE = 6;
 const RADIUS = (RING_SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -327,14 +327,19 @@ export const WeatherOutfitCard = React.memo(function WeatherOutfitCard() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  outerWrapper: { marginTop: 10 },
+  outerWrapper: { marginTop: 7 },
 
   card: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#E5E7F0",
+    borderColor: "#F0F0F5",
     borderWidth: 1,
     borderRadius: 24,
-    padding: 16,
+    padding: 25,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 1,
   },
 
   skeleton: {
@@ -375,7 +380,7 @@ const styles = StyleSheet.create({
 
   iconBox: {
     alignItems: "center",
-    gap: 4,
+    gap: 9,
   },
   conditionText: {
     fontSize: 10,

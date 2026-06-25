@@ -193,10 +193,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     shadowColor: "#000000",
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.04,
     shadowRadius: 20,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
 
   // ── Top card

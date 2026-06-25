@@ -12,6 +12,7 @@ type OnboardingFormData = {
   bodyType: string;
   nickname: string;
   username: string;
+  bio: string;
   about: string;
   stylePreferences: string[];
 };
@@ -27,6 +28,7 @@ type OnboardingState = OnboardingFormData & {
   setBodyType: (value: string) => void;
   setNickname: (value: string) => void;
   setUsername: (value: string) => void;
+  setBio: (value: string) => void;
   setAbout: (value: string) => void;
   toggleStyle: (value: string) => void;
   ensureUserSession: (userId: string) => void;
@@ -44,6 +46,7 @@ const createInitialFormState = (): OnboardingFormData => ({
   bodyType: "",
   nickname: "",
   username: "",
+  bio: "",
   about: "",
   stylePreferences: [],
 });
@@ -69,6 +72,7 @@ export const useOnboardingState = create<OnboardingState>()(
       setBodyType: (bodyType) => set({ bodyType }),
       setNickname: (nickname) => set({ nickname }),
       setUsername: (username) => set({ username }),
+      setBio: (bio) => set({ bio }),
       setAbout: (about) => set({ about }),
       toggleStyle: (style) =>
         set((state) => {
@@ -116,6 +120,7 @@ export const useOnboardingState = create<OnboardingState>()(
               body_type: state.bodyType,
               nickname: state.nickname,
               username: state.username,
+              bio: state.bio,
               style_preferences: state.stylePreferences,
             },
             { onConflict: "user_id" },

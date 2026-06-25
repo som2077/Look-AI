@@ -7,6 +7,7 @@ import {
   IconNotes,
   IconRulerMeasure2,
   IconUserCheck,
+  IconBriefcase,
 } from "@tabler/icons-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -136,6 +137,14 @@ export default function PersonalDetailsScreen() {
       type: "select",
     },
     {
+      key: "bio",
+      label: "Bio (Headline)",
+      value: onboardingState.bio || "Tap to add your headline...",
+      icon: <IconBriefcase size={24} color="#00000080" />,
+      editable: true,
+      type: "text",
+    },
+    {
       key: "about",
       label: "About",
       value: onboardingState.about || "Tap to add your bio...",
@@ -215,6 +224,9 @@ export default function PersonalDetailsScreen() {
         break;
       case "gender":
         route = "/(root)/onboarding/gender";
+        break;
+      case "bio":
+        route = "/(root)/onboarding/bio";
         break;
       case "about":
         route = "/(root)/onboarding/about";
@@ -357,7 +369,7 @@ export default function PersonalDetailsScreen() {
                       alignItems: "center",
                       gap: 6,
                       shadowColor: "#000",
-                      shadowOpacity: 0.1,
+                      shadowOpacity: 0.04,
                       shadowRadius: 4,
                       elevation: 2,
                     }}

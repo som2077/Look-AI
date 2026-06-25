@@ -1,9 +1,9 @@
-import React, { useCallback } from "react";
 import { CURRENT_STREAK_DAYS } from "@/constants/streak";
 import { Image as ExpoImage } from "expo-image";
-import { TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 export const HomeHeader = React.memo(function HomeHeader() {
   const router = useRouter();
@@ -22,7 +22,7 @@ export const HomeHeader = React.memo(function HomeHeader() {
         <TouchableOpacity
           onPress={() => router.push("/(root)/streak" as never)}
           activeOpacity={0.7}
-          className="flex-row items-center rounded-full border border-[#E2E2EA] bg-[#F8F7FC] p-[9.9px]"
+          className="flex-row items-center rounded-full border border-[#E2E2EA] bg-[#F8F7FC] px-4 py-[8.5px]"
         >
           <LottieView
             source={{
@@ -32,6 +32,9 @@ export const HomeHeader = React.memo(function HomeHeader() {
             loop
             style={{ width: 21, height: 21 }}
           />
+          <Text className="text-[#1D1A27] font-bold text-[15px] ml-1.5">
+            {streak}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity

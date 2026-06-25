@@ -23,6 +23,7 @@ import {
   Linking,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Switch,
   Text,
@@ -280,7 +281,7 @@ const ClassicProfileUI = ({
               marginBottom: 12,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.15,
+              shadowOpacity: 0.04,
               shadowRadius: 2,
               elevation: 2,
             }}
@@ -416,7 +417,7 @@ const CustomSwitch = ({
           alignSelf: value ? "flex-end" : "flex-start",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.15,
+          shadowOpacity: 0.04,
           shadowRadius: 2,
           elevation: 2,
         }}
@@ -436,7 +437,7 @@ const ExploreStyleProfileUI = ({
   isLoggingOut,
   onLogoutPress,
 }: any) => {
-  const { about } = useOnboardingState();
+  const { about, nickname, username, bio } = useOnboardingState();
   return (
     <View style={{ paddingHorizontal: 0, paddingBottom: 116 }}>
       {/* Visual Header (Cover Photo & Avatar) */}
@@ -514,7 +515,28 @@ const ExploreStyleProfileUI = ({
             gap: 16,
           }}
         >
-          <IconLink color="#00000080" size={20} />
+          <Pressable
+            onPress={async () => {
+              try {
+                const profileUrl = `https://lookai.app/@${username || "user"}`;
+                await Share.share(
+                  {
+                    title: `${nickname || "My"} Profile on Look AI`,
+                    message: `Discover my style and daily outfits on Look AI! ✨\n\nCheck out my profile here: ${profileUrl}`,
+                    url: profileUrl,
+                  },
+                  {
+                    dialogTitle: "Share your Look AI Profile",
+                    subject: "Check out my style on Look AI!",
+                  }
+                );
+              } catch (error) {
+                console.log("Error sharing:", error);
+              }
+            }}
+          >
+            <IconLink color="#00000080" size={20} />
+          </Pressable>
         </View>
 
         {/* Avatar */}
@@ -551,7 +573,7 @@ const ExploreStyleProfileUI = ({
         {/* Name & Title */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text style={{ fontSize: 24, fontWeight: "800", color: "#1D1A27" }}>
-            Lina Cho
+            {nickname || "Lina Cho"}
           </Text>
           {/* <IconStarFilled size={18} color="#FBBF24"  */}
         </View>
@@ -563,7 +585,7 @@ const ExploreStyleProfileUI = ({
             marginTop: 2,
           }}
         >
-          @lina_cho
+          {username ? `@${username}` : "@lina_cho"}
         </Text>
         <Text
           style={{
@@ -573,8 +595,7 @@ const ExploreStyleProfileUI = ({
             marginTop: 4,
           }}
         >
-          Independent Designer <Text style={{ color: "#D1D5DB" }}>|</Text>{" "}
-          Studio Else
+          {bio || "Independent Designer | Studio Else"}
         </Text>
 
         {/* Stats Row */}

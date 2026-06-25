@@ -22,24 +22,24 @@ export interface RingStatLabels {
 }
 
 const DEFAULT_LABELS: RingStatLabels = {
-  topLeft: "Worn clothes",
-  bottomLeft: "Total Items",
-  topRight: "Total wears",
-  bottomRight: "Never worn",
+  topLeft: "Worn",
+  topRight: "Avg Wears",
+  bottomLeft: "Streak",
+  bottomRight: "Total Items",
 };
 
 export interface RingStatColors {
   readonly topLeft: string;
-  readonly bottomLeft: string;
   readonly topRight: string;
+  readonly bottomLeft: string;
   readonly bottomRight: string;
 }
 
 const DEFAULT_COLORS: RingStatColors = {
-  topLeft: "#E5904F",
-  bottomLeft: "#1D1A27",
-  topRight: "#6B7AE8",
-  bottomRight: "#E26B6B",
+  topLeft: "#01B3F7",
+  topRight: "#AB86F1",
+  bottomLeft: "#FEC466",
+  bottomRight: "#000000",
 };
 
 export interface WardrobeRingSummaryCardProps {
@@ -134,9 +134,9 @@ export function WardrobeRingSummaryCard({
             </Text>
             <Text
               style={{
-                fontSize: 11,
-                fontFamily: "TikTokSans16pt-Medium",
-                color: resolvedColors.topLeft,
+                fontSize: 13,
+                fontFamily: "TikTokSans16pt-Bold",
+                color: "#1D1A27",
                 marginTop: 2,
               }}
             >
@@ -155,9 +155,9 @@ export function WardrobeRingSummaryCard({
             </Text>
             <Text
               style={{
-                fontSize: 11,
-                fontFamily: "TikTokSans16pt-Medium",
-                color: resolvedColors.bottomLeft,
+                fontSize: 13,
+                fontFamily: "TikTokSans16pt-Bold",
+                color: "#1D1A27",
                 marginTop: 2,
               }}
             >
@@ -215,7 +215,7 @@ export function WardrobeRingSummaryCard({
                           Math.sin(2 * Math.PI * segment.progress - Math.PI / 2)
                       }
                       r={segment.strokeWidth / 2 - 2.5}
-                      fill="#1D1A27"
+                      fill="#FFFFFF"
                     />
                   )}
                 </React.Fragment>
@@ -254,9 +254,9 @@ export function WardrobeRingSummaryCard({
             </Text>
             <Text
               style={{
-                fontSize: 11,
-                fontFamily: "TikTokSans16pt-Medium",
-                color: resolvedColors.topRight,
+                fontSize: 13,
+                fontFamily: "TikTokSans16pt-Bold",
+                color: "#1D1A27",
                 marginTop: 2,
               }}
             >
@@ -275,9 +275,9 @@ export function WardrobeRingSummaryCard({
             </Text>
             <Text
               style={{
-                fontSize: 11,
-                fontFamily: "TikTokSans16pt-Medium",
-                color: resolvedColors.bottomRight,
+                fontSize: 13,
+                fontFamily: "TikTokSans16pt-Bold",
+                color: "#1D1A27",
                 marginTop: 2,
               }}
             >

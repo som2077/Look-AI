@@ -1,7 +1,7 @@
 import { useWardrobeSummary } from "@/backend/hooks/useWardrobeSummary";
 import { useUser } from "@clerk/clerk-expo";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, FlatList, View } from "react-native";
+import { Animated, AppState, Dimensions, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
@@ -18,9 +18,11 @@ import { WeeklyCalendarStrip } from "../../../components/ui/WeeklyCalendarStrip"
 import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
 // import { TrendFeed } from "../../../components/ui/TrendFeed";
 import { CURRENT_STREAK_DAYS } from "@/constants/streak";
+import * as SecureStore from "expo-secure-store";
+import { AddClothesCTA } from "../../../components/ui/AddClothesCTA";
 import { LookAIBanner } from "../../../components/ui/LookAIBanner";
+import { StreakPopup } from "../../../components/ui/StreakPopup";
 import { WardrobeFilterTabs } from "../../../components/ui/WardrobeFilterTabs";
-import { WardrobeHighlights } from "../../../components/ui/WardrobeHighlights";
 import { WardrobeMessageBar } from "../../../components/ui/WardrobeMessageBar";
 import { WeatherOutfitCard } from "../../../components/ui/WeatherOutfitCard";
 
@@ -31,10 +33,10 @@ const H_PADDING = 20;
 const HEADER_HEIGHT = 140;
 
 const RING_SEGMENT_BASE: readonly Omit<RingProgressSegment, "progress">[] = [
-  { id: "outer", color: "#E5904F", radius: 88, strokeWidth: 13 },
-  { id: "middle", color: "#E26B6B", radius: 74.7, strokeWidth: 13 },
-  { id: "inner", color: "#6B7AE8", radius: 61.4, strokeWidth: 13 },
-  { id: "innermost", color: "#F97316", radius: 47.9, strokeWidth: 13 },
+  { id: "outer", color: "#01B3F7", radius: 88, strokeWidth: 13 },
+  { id: "middle", color: "#AB86F1", radius: 74.7, strokeWidth: 13 },
+  { id: "inner", color: "#FEC466", radius: 61.4, strokeWidth: 13 },
+  { id: "innermost", color: "#000000", radius: 47.9, strokeWidth: 13 },
 ] as const;
 
 const clampRatio = (value: number): number => {
@@ -53,6 +55,40 @@ export default function HomeScreen() {
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
   const flatListRef = useRef<FlatList>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
+
+  React.useEffect(() => {
+    const triggerPopup = async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const lastSeen = await SecureStore.getItemAsync(
+          "last_streak_popup_date",
+        );
+
+        if (lastSeen !== today) {
+          setShowStreakPopup(true);
+          await SecureStore.setItemAsync("last_streak_popup_date", today);
+        }
+      } catch (err) {
+        console.warn("Failed to check streak popup date", err);
+      }
+    };
+
+    // Trigger on initial mount (login / fresh start)
+    const timer = setTimeout(triggerPopup, 800);
+
+    // Trigger whenever app is reopened (brought to foreground)
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        setTimeout(triggerPopup, 500);
+      }
+    });
+
+    return () => {
+      clearTimeout(timer);
+      subscription.remove();
+    };
+  }, []);
 
   const ringSegments = useMemo<readonly RingProgressSegment[]>(() => {
     const total = summary.totalWorn; // total wardrobe items
@@ -120,13 +156,13 @@ export default function HomeScreen() {
               ringSegments={ringSegments}
               streak={CURRENT_STREAK_DAYS}
               labels={{
-                topLeft: "Worn %",
+                topLeft: "Worn",
                 bottomLeft: "Streak",
                 topRight: "Avg Wears",
                 bottomRight: "Total Items",
               }}
               statColors={{
-                bottomLeft: "#F97316",
+                bottomLeft: "#FEC466",
                 bottomRight: "#1D1A27",
               }}
             />
@@ -167,7 +203,7 @@ export default function HomeScreen() {
         <SafeAreaView className="flex-1">
           <Animated.ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 24 }}
+            contentContainerStyle={{ paddingBottom: 140 }}
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { y: scrollY } } }],
               { useNativeDriver: true, listener: hideTabBarOnScroll },
@@ -223,11 +259,13 @@ export default function HomeScreen() {
                   <View
                     key={i}
                     style={{
-                      width: i === indicatorIndex ? 16 : 6,
-                      height: 6,
-                      borderRadius: 3,
+                      width: i === indicatorIndex ? 16 : 7,
+                      height: 7,
+                      borderRadius: 15,
+                      borderWidth: 0.5,
+                      borderColor: "#1D1A27",
                       backgroundColor:
-                        i === indicatorIndex ? "#1D1A27" : "#E0E2EE",
+                        i === indicatorIndex ? "#1D1A27" : "#FFFFFF",
                     }}
                   />
                 ))}
@@ -237,12 +275,17 @@ export default function HomeScreen() {
               <NotifyBanner />
               <EmptyStyleBanner />
               <OutfitAnalyzingCard />
-              <WardrobeHighlights />
+              <AddClothesCTA />
               {/* <TrendFeed /> */}
             </View>
           </Animated.ScrollView>
         </SafeAreaView>
       </AppGradientBackground>
+      <StreakPopup
+        visible={showStreakPopup}
+        onClose={() => setShowStreakPopup(false)}
+        streakCount={CURRENT_STREAK_DAYS}
+      />
     </SwipeTabWrapper>
   );
 }

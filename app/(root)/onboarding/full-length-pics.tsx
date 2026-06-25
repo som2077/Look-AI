@@ -178,10 +178,10 @@ export default function FullLengthPicsScreen() {
                     { translateY: 10 },
                   ],
                   shadowColor: "#000000",
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: 0.12,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.04,
                   shadowRadius: 10,
-                  elevation: 6,
+                  elevation: 2,
                   zIndex: 1,
                 }}
                 className="h-[270px] w-[225px] rounded-3xl bg-white p-[6px]"
@@ -203,10 +203,10 @@ export default function FullLengthPicsScreen() {
                     { translateY: 10 },
                   ],
                   shadowColor: "#000000",
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: 0.12,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.04,
                   shadowRadius: 10,
-                  elevation: 6,
+                  elevation: 2,
                   zIndex: 2,
                 }}
                 className="h-[270px] w-[225px] rounded-3xl bg-white p-[6px]"
@@ -224,10 +224,10 @@ export default function FullLengthPicsScreen() {
                   position: "absolute",
                   transform: [{ rotate: "-3deg" }, { translateY: 15 }],
                   shadowColor: "#000000",
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.18,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.04,
                   shadowRadius: 12,
-                  elevation: 8,
+                  elevation: 2,
                   zIndex: 3,
                 }}
                 className="h-[320px] w-[200px] rounded-3xl bg-white p-[6px]"

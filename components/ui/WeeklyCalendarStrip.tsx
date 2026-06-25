@@ -70,7 +70,7 @@ const DayCell = React.memo(function DayCell({
             ? {
                 backgroundColor: "#1D1A27",
                 // shadowColor: "#000000",
-                // shadowOpacity: 0.1,
+                // shadowOpacity: 0.04,
                 // shadowRadius: 3,
                 // shadowOffset: { width: 0, height: 1.5 },
                 // elevation: 2,

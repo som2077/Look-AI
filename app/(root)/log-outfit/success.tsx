@@ -37,7 +37,7 @@ export default function SuccessScreen() {
             className="h-[88px] w-[88px] rounded-full bg-[#1D9E75] items-center justify-center mb-5"
             style={{
               shadowColor: "#1D9E75",
-              shadowOpacity: 0.4,
+              shadowOpacity: 0.04,
               shadowRadius: 20,
               shadowOffset: { width: 0, height: 0 },
             }}

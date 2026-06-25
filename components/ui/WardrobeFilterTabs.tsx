@@ -23,7 +23,11 @@ export function WardrobeFilterTabs({ onChange }: WardrobeFilterTabsProps) {
         <Pressable
           key={tab}
           onPress={() => handlePress(tab)}
-          style={[styles.tab, active === tab && styles.tabActive]}
+          style={[
+            styles.tab,
+            active === tab && styles.tabActive,
+            { zIndex: active === tab ? 10 : 0 },
+          ]}
         >
           <Text style={[styles.label, active === tab && styles.labelActive]}>
             {tab}
@@ -38,28 +42,24 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     backgroundColor: "#F8F7FC",
-    padding: 2,
+    padding: 3,
     marginTop: 8,
     borderRadius: 14,
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 9.5,
     borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
   },
   tabActive: {
     backgroundColor: "#FFFFFF",
-    // borderColor: "#E9EBF8",
-    // borderWidth: 1,
-    shadowColor: "#000000",
+    shadowColor: "#000",
     shadowOpacity: 0.05,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1.5 },
-    elevation: 1,
-    borderWidth: 0.5,
-    borderColor: "#EBEBEB",
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   label: {
     fontSize: 14,

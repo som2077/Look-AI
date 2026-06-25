@@ -1,35 +1,29 @@
+import {
+  IconFlame,
+  IconLock,
+  IconMapPin,
+  IconStar,
+  IconTrendingUp,
+} from "@tabler/icons-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { ChevronRight } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
 import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
   Dimensions,
+  Pressable,
+  Text,
   TouchableOpacity,
+  View,
 } from "react-native";
-import {
-  IconChartLine,
-  IconCrown,
-  IconMapPin,
-  IconTrendingUp,
-  IconLock,
-  IconStar,
-  IconFlame,
-  IconArrowRight,
-} from "@tabler/icons-react-native";
-import { ChevronRight } from "lucide-react-native";
-import { useRouter } from "expo-router";
-import { Image as ExpoImage } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import Svg, {
   Circle,
-  Path,
   Defs,
-  LinearGradient as SvgLinearGradient,
-  Stop,
   Line,
+  Path,
+  Stop,
+  LinearGradient as SvgLinearGradient,
   Text as SvgText,
-  G,
 } from "react-native-svg";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -300,7 +294,7 @@ export const TrendCard = React.memo(function TrendCard({
             borderWidth: 1.5,
             borderColor: "#FFFFFF",
             shadowColor: "#000000",
-            shadowOpacity: 0.1,
+            shadowOpacity: 0.04,
             shadowRadius: 2,
             shadowOffset: { width: 0, height: 1 },
             elevation: 1,
@@ -790,7 +784,7 @@ export const TrendChartCard = React.memo(function TrendChartCard({
                       backgroundColor: "#FFFFFF",
                       borderRadius: 10,
                       shadowColor: "#000000",
-                      shadowOpacity: 0.15,
+                      shadowOpacity: 0.04,
                       shadowRadius: 3,
                       shadowOffset: { width: 0, height: 1.5 },
                       elevation: 2.5,
@@ -921,8 +915,6 @@ export const TrendFeed = React.memo(function TrendFeed() {
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
       />
-
-      
     </View>
   );
 });

@@ -856,10 +856,10 @@ export default function OutfitScreen() {
                 paddingHorizontal: 10,
                 alignItems: "center",
                 shadowColor: "#000",
-                shadowOpacity: 0.25,
+                shadowOpacity: 0.04,
                 shadowRadius: 15,
-                shadowOffset: { width: 0, height: 8 },
-                elevation: 10,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 2,
               }}
             >
               <Pressable

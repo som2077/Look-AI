@@ -28,11 +28,11 @@ export const NotifyBanner = React.memo(function NotifyBanner() {
   if (isAnalyzing || lastOutfits.length > 0 || isDismissed) return null;
 
   return (
-    <View className="mx-6  mt-2 mb-2 flex-row  border border-[#E9EBF8]  items-center justify-between bg-[#FFFFFF] rounded-[16px] px-4 py-4">
+    <View className="mx-6  mt-2 mb-2 flex-row  border border-[#E9EBF8]  items-center justify-between bg-[#FFFFFF] rounded-[16px] px-4 py-4 ">
       <View className="flex-row items-center flex-1 pr-3">
         <IconBell size={24} color="#1D1A27" strokeWidth={1.5} />
         <Text
-          className="ml-3 text-[#1D1A27] font-sans"
+          className="ml-3 text-[#1D1A27] font-sans "
           style={{ fontSize: 12, lineHeight: 18, flex: 1 }}
         >
           You can switch apps or turn off your phone. {"\n"}
@@ -84,7 +84,7 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
           />
         </View>
 
-        {/* Right Circle: Girl Selfie (overlapping) */}
+        {/* mid Circle: Girl Selfie (overlapping) */}
         <View
           style={{
             width: 60,
@@ -99,6 +99,26 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
         >
           <ExpoImage
             source={require("../../assets/images/mirror_selfie_girl.png")}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+          />
+        </View>
+        {/* Right Circle: Girl Selfie (overlapping) */}
+        <View
+          style={{
+            width: 60,
+            height: 60,
+            borderRadius: 38,
+            borderWidth: 1,
+            borderColor: "#FFFFFF",
+            overflow: "hidden",
+            backgroundColor: "#F3F4F6",
+            marginLeft: -30,
+          }}
+        >
+          <ExpoImage
+            source={require("../../assets/images/selfi3rd.jpg")}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             cachePolicy="memory-disk"

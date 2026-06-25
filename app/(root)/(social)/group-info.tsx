@@ -172,9 +172,9 @@ const styles = StyleSheet.create({
     minWidth: 120,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.04,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 2,
     zIndex: 20,
   },
   menuItem: {

@@ -1,10 +1,13 @@
 import { useSSO } from "@clerk/clerk-expo";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { Href, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Image,
   Platform,
   Text,
@@ -37,6 +40,23 @@ export default function SignIn() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(animatedValue, {
+        toValue: 1,
+        duration: 3500,
+        useNativeDriver: true,
+      }),
+    ).start();
+  }, [animatedValue]);
+
+  const translateX = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-300, 300],
+  });
 
   useEffect(() => {
     if (Platform.OS !== "android") return;
@@ -87,11 +107,48 @@ export default function SignIn() {
         </View>
 
         {/* ── Text ── */}
-        <View className="flex-1 items-center justify-center -mt-[50px]">
-          <Text className="text-center px-30 text-[40px] font-bold leading-[38px] text-[#1D1A27] tracking-tight">
-            Scan Your Clothes,{"\n"}Get Styled Instantly
-          </Text>
-          <Text className="mt-10 text-center text-[19px] font-medium text-[#1D1A27]/70 leading-[22px] px-4">
+        <View className="flex-1 items-center justify-center -mt-[60px]">
+          <MaskedView
+            style={{ minHeight: 80, width: "100%", overflow: "hidden" }}
+            maskElement={
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: "transparent",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text className="text-center px-30  text-[42px] font-bold leading-[38px] text-black tracking-tight">
+                  Scan Your Clothes,{"\n"}Get Styled Instantly
+                </Text>
+              </View>
+            }
+          >
+            <Animated.View
+              style={{
+                flex: 1,
+                width: "300%",
+                marginLeft: "-100%",
+                transform: [{ translateX }],
+              }}
+            >
+              <LinearGradient
+                colors={[
+                  "#F35E44",
+                  "#D84F75",
+                  "#B8589B",
+                  "#6B79B5",
+                  "#F35E44",
+                  "#D84F75",
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ flex: 1 }}
+              />
+            </Animated.View>
+          </MaskedView>
+          <Text className="mt-10 text-center text-[23px] font-semibold text-[#1D1A27] leading-[23px] px-4">
             Build your digital wardrobe and unlock personalized outfit
             recommendations.
           </Text>

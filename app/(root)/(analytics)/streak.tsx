@@ -1,25 +1,22 @@
+import { CURRENT_STREAK_DAYS } from "@/constants/streak";
+import {
+  IconArrowLeft,
+  IconCheck,
+  IconShare,
+} from "@tabler/icons-react-native";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import LottieView from "lottie-react-native";
 import React from "react";
 import {
+  Dimensions,
   ScrollView,
+  Share,
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
-  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { Image as ExpoImage } from "expo-image";
-import LottieView from "lottie-react-native";
-import {
-  CURRENT_STREAK_DAYS,
-} from "@/constants/streak";
-import {
-  IconArrowLeft,
-  IconShare,
-  IconCheck,
-} from "@tabler/icons-react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -36,11 +33,11 @@ const MOCK_WEEKLY = [
 ];
 
 const MILESTONES = [
-  { days: 1,   label: "1 day" },
-  { days: 5,   label: "5 days" },
-  { days: 10,  label: "10 days" },
-  { days: 25,  label: "25 days" },
-  { days: 50,  label: "50 days" },
+  { days: 1, label: "1 day" },
+  { days: 5, label: "5 days" },
+  { days: 10, label: "10 days" },
+  { days: 25, label: "25 days" },
+  { days: 50, label: "50 days" },
   { days: 100, label: "100 days" },
   { days: 150, label: "150 days" },
   { days: 200, label: "200 days" },
@@ -65,7 +62,10 @@ export default function StreakScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F7F8FA" }} edges={["top"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#F7F8FA" }}
+      edges={["top"]}
+    >
       <StatusBar style="dark" />
 
       {/* ── Header ── */}
@@ -101,9 +101,18 @@ export default function StreakScreen() {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         {/* ── Hero Streak Section ── */}
-        <View style={{ alignItems: "center", marginTop: 24, paddingHorizontal: 20 }}>
+        <View
+          style={{ alignItems: "center", marginTop: 24, paddingHorizontal: 20 }}
+        >
           {/* Large Fire Illustration with Number Overlay */}
-          <View style={{ width: 180, height: 200, alignItems: "center", justifyContent: "flex-end" }}>
+          <View
+            style={{
+              width: 180,
+              height: 200,
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
             <LottieView
               source={{
                 uri: "https://lottie.host/90aa36ae-cfef-49e5-bd8e-8c4c54fc2004/df47Z2J4nI.json",
@@ -112,7 +121,7 @@ export default function StreakScreen() {
               loop
               style={{ width: 180, height: 180, position: "absolute", top: 0 }}
             />
-            
+
             {/* Number Overlay */}
             <Text
               style={{
@@ -129,7 +138,14 @@ export default function StreakScreen() {
             </Text>
           </View>
 
-          <Text style={{ fontSize: 26, fontWeight: "800", color: "#1D1A27", marginTop: 16 }}>
+          <Text
+            style={{
+              fontSize: 26,
+              fontWeight: "800",
+              color: "#1D1A27",
+              marginTop: 16,
+            }}
+          >
             {currentStreak} day streak!
           </Text>
           <Text
@@ -165,7 +181,14 @@ export default function StreakScreen() {
             elevation: 2,
           }}
         >
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", position: "relative" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              position: "relative",
+            }}
+          >
             {/* Horizontal Line behind nodes */}
             <View
               style={{
@@ -184,7 +207,7 @@ export default function StreakScreen() {
                 position: "absolute",
                 top: 36,
                 left: 15,
-                width: "60%", 
+                width: "60%",
                 height: 3,
                 backgroundColor: "#F26D3D",
                 zIndex: 1,
@@ -192,7 +215,10 @@ export default function StreakScreen() {
             />
 
             {MOCK_WEEKLY.map((item, index) => (
-              <View key={item.day} style={{ alignItems: "center", zIndex: 2, width: 44 }}>
+              <View
+                key={item.day}
+                style={{ alignItems: "center", zIndex: 2, width: 44 }}
+              >
                 <Text
                   style={{
                     fontSize: 11,
@@ -235,16 +261,38 @@ export default function StreakScreen() {
 
         {/* ── Milestones Grid ── */}
         <View style={{ marginHorizontal: 20, marginTop: 48 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
-             <Text style={{ fontSize: 13, fontWeight: "800", color: "#8E8E9F", letterSpacing: 1.5, textTransform: "uppercase" }}>
-               MILESTONES
-             </Text>
-             <Text style={{ fontSize: 13, fontWeight: "700", color: "#F26D3D" }}>
-               1/10
-             </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              marginBottom: 24,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "800",
+                color: "#8E8E9F",
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+              }}
+            >
+              MILESTONES
+            </Text>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: "#F26D3D" }}>
+              1/10
+            </Text>
           </View>
 
-          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-start", gap: (SCREEN_WIDTH - 40 - (86 * 3)) / 2 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              justifyContent: "flex-start",
+              gap: (SCREEN_WIDTH - 40 - 86 * 3) / 2,
+            }}
+          >
             {MILESTONES.map((m, index) => {
               const reached = currentStreak >= m.days;
               return (
@@ -264,7 +312,9 @@ export default function StreakScreen() {
                       backgroundColor: "#FFFFFF",
                       alignItems: "center",
                       justifyContent: "center",
-                      shadowColor: reached ? "rgba(242, 109, 61, 0.3)" : "rgba(0,0,0,0.05)",
+                      shadowColor: reached
+                        ? "rgba(242, 109, 61, 0.3)"
+                        : "rgba(0,0,0,0.05)",
                       shadowOpacity: 1,
                       shadowRadius: 10,
                       shadowOffset: { width: 0, height: 4 },
@@ -275,12 +325,15 @@ export default function StreakScreen() {
                     <View
                       style={{
                         position: "absolute",
-                        top: 5, left: 5, right: 5, bottom: 5,
+                        top: 5,
+                        left: 5,
+                        right: 5,
+                        bottom: 5,
                         borderRadius: 40,
                         borderWidth: 4,
                         borderColor: reached ? "#F26D3D" : "#F4F4F6",
                         borderTopColor: reached ? "#FF4B26" : "#EAEAEA",
-                        transform: [{ rotate: "45deg" }]
+                        transform: [{ rotate: "45deg" }],
                       }}
                     />
                     <Text
@@ -308,7 +361,6 @@ export default function StreakScreen() {
             })}
           </View>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

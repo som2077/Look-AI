@@ -1,21 +1,32 @@
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { Text, View } from "react-native";
 
-export const LookAIBanner = React.memo(function LookAIBanner() {
-  const router = useRouter();
+interface LookAIBannerProps {
+  score?: number; // 0 to 10
+}
+
+export const LookAIBanner = React.memo(function LookAIBanner({
+  score = 8,
+}: LookAIBannerProps) {
+  const clampedScore = Math.max(0, Math.min(10, score));
+  const progressPercent = (clampedScore / 10) * 100;
 
   return (
-    <Pressable
-      onPress={() => router.push("/(root)/look-ai" as never)}
+    <View
       style={{
         marginTop: 7,
         backgroundColor: "#FFFFFF",
+        borderColor: "#F0F0F5",
         borderWidth: 1,
-        borderColor: "#E5E7F0",
         borderRadius: 20,
         paddingHorizontal: 20,
         paddingVertical: 16,
+        shadowColor: "#000",
+        shadowOpacity: 0.04,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 12 },
+        elevation: 1,
       }}
     >
       {/* Row 1: Outfit Score */}
@@ -43,22 +54,35 @@ export const LookAIBanner = React.memo(function LookAIBanner() {
             fontFamily: "TikTokSans16pt-Bold",
           }}
         >
-          0/10
+          {clampedScore}/10
         </Text>
       </View>
 
-      {/* Row 2: Progress Bar — solid gray pill (score 0/10 = empty track) */}
+      {/* Row 2: Progress Bar */}
       <View
         style={{
           width: "100%",
           height: 10,
-          // backgroundColor: "#E2E2E2",
+          backgroundColor: "#F4F5F9",
           borderRadius: 100,
           borderWidth: 1,
           borderColor: "#E5E7F0",
           marginBottom: 10,
+          overflow: "hidden",
         }}
-      />
+      >
+        {/* Inner Fill */}
+        <LinearGradient
+          colors={["#00000070", "#000000"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            width: `${progressPercent}%`,
+            height: "100%",
+            borderRadius: 100,
+          }}
+        />
+      </View>
 
       {/* Row 3: Helper Text */}
       <Text
@@ -72,6 +96,6 @@ export const LookAIBanner = React.memo(function LookAIBanner() {
         Weather-friendly style starts here. Find outfits curated for
         today&apos;s forecast. Tap to see outfit suggestions.
       </Text>
-    </Pressable>
+    </View>
   );
 });

@@ -138,7 +138,7 @@ export default function AddClothesScanningScreen() {
                 scanStyle,
                 {
                   shadowColor: "#534AB7",
-                  shadowOpacity: 0.8,
+                  shadowOpacity: 0.04,
                   shadowRadius: 12,
                   shadowOffset: { width: 0, height: 0 },
                 },

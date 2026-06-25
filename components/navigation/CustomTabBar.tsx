@@ -176,7 +176,7 @@ export function CustomTabBar({
               //   width: 0,
               //   height: 12,
               // },
-              // shadowOpacity: 0.25,
+              // shadowOpacity: 0.04,
               // shadowRadius: 3.84,
               elevation: 2,
               paddingHorizontal: 8,

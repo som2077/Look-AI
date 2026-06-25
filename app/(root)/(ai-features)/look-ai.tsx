@@ -1,28 +1,29 @@
-import React from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Path } from "react-native-svg";
 import {
   ChevronLeft,
+  Droplets,
+  Footprints,
+  Shirt,
   Sparkles,
   Sun,
-  Droplets,
-  Wind,
-  Shirt,
-  Footprints,
   Watch,
+  Wind,
 } from "lucide-react-native";
+import React from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Path } from "react-native-svg";
 
-// Custom Trousers/Pants Icon Component
-function TrousersIcon({ size = 24, color = "#2563EB" }: { size?: number; color?: string }) {
+function TrousersIcon({
+  size = 24,
+  color = "#2563EB",
+}: {
+  size?: number;
+  color?: string;
+}) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
       <Path
@@ -36,150 +37,209 @@ function TrousersIcon({ size = 24, color = "#2563EB" }: { size?: number; color?:
   );
 }
 
+const OUTFIT_DATA = [
+  {
+    id: "top",
+    label: "Top",
+    name: "White Linen Shirt",
+    icon: Shirt,
+    color: "#4C4B5E",
+    bgColor: "#F4F4F6",
+  },
+  {
+    id: "bottom",
+    label: "Bottom",
+    name: "Navy Cotton Trousers",
+    icon: TrousersIcon,
+    color: "#3B82F6",
+    bgColor: "#EFF6FF",
+  },
+  {
+    id: "shoes",
+    label: "Shoes",
+    name: "Tan Loafers",
+    icon: Footprints,
+    color: "#D97706",
+    bgColor: "#FFFBEB",
+  },
+  {
+    id: "accessory",
+    label: "Accessory",
+    name: "Silver Watch",
+    icon: Watch,
+    color: "#1D1A27",
+    bgColor: "#F4F4F6",
+  },
+];
+
 export default function LookAIScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-[#FAFAFC]" edges={["top"]}>
       <StatusBar style="dark" />
 
       {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
+      <View className="flex-row items-center justify-between px-6 py-4 bg-[#FAFAFC] z-10">
         <TouchableOpacity
           onPress={() => router.back()}
           activeOpacity={0.7}
-          className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+          className="w-11 h-11 rounded-full bg-white items-center justify-center border border-[#E9EBF8]"
+          style={{
+            shadowColor: "#000",
+            shadowOpacity: 0.03,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 2 },
+            elevation: 1,
+          }}
         >
-          <ChevronLeft size={20} color="#1D1A27" />
+          <ChevronLeft size={22} color="#1D1A27" />
         </TouchableOpacity>
 
-        <View className="flex-row items-center justify-center gap-1.5 absolute left-0 right-0 justify-center -z-10">
-          <Sparkles size={18} color="#9333EA" fill="#9333EA" />
-          <Text className="text-xl font-bold text-[#1D1A27]">LookAI</Text>
+        <View className="flex-row items-center justify-center gap-1.5 absolute left-0 right-0 -z-10">
+          <Sparkles size={20} color="#9333EA" fill="#9333EA" />
+          <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 20, color: "#1D1A27" }}>
+            LookAI
+          </Text>
         </View>
 
-        <View className="w-10 h-10" />
+        <View className="w-11 h-11" />
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}
         className="flex-1 px-6"
       >
         {/* Weather Card */}
-        <View className="mt-6 rounded-3xl overflow-hidden border border-[#E9ECF8]">
+        <Animated.View 
+          entering={FadeInDown.duration(500).springify()}
+          className="rounded-[32px] overflow-hidden border border-[#E9EBF8]"
+          style={{
+            shadowColor: "#000",
+            shadowOpacity: 0.04,
+            shadowRadius: 24,
+            shadowOffset: { width: 0, height: 12 },
+            elevation: 2,
+          }}
+        >
           <LinearGradient
-            colors={["#F8F9FF", "#E9ECF8"]}
+            colors={["#FFFFFF", "#F4F6FB"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             className="p-6"
           >
             <View className="flex-row justify-between items-start">
               <View>
-                <Text className="text-[#8E8E9F] text-sm font-semibold tracking-wide">
-                  Indore, IN
+                <Text style={{ fontFamily: "TikTokSans16pt-Medium", fontSize: 13, color: "#8E8D98", letterSpacing: 0.5 }}>
+                  INDORE, IN
                 </Text>
-                <Text className="text-5xl font-extrabold text-[#1D1A27] mt-2">
-                  32°C
+                <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 56, color: "#1D1A27", marginTop: 4 }}>
+                  32°
                 </Text>
-                <Text className="text-[#1D1A27] text-base font-bold mt-1">
+                <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 16, color: "#1D1A27", marginTop: 2 }}>
                   Sunny & Clear
                 </Text>
               </View>
-              <Sun size={56} color="#F59E0B" className="mt-1" />
+              <Sun size={64} color="#F59E0B" fill="#FDE68A" className="mt-2 mr-2" />
             </View>
 
-            <View className="flex-row gap-3 mt-6">
-              <View className="bg-white rounded-full px-4 py-2 border border-gray-100 flex-row items-center gap-1.5">
-                <Droplets size={14} color="#3B82F6" />
-                <Text className="text-xs font-bold text-[#1D1A27]">
+            <View className="flex-row gap-3 mt-8">
+              <View className="bg-white/80 rounded-full px-4 py-2.5 flex-row items-center gap-2 border border-[#E9EBF8]">
+                <Droplets size={16} color="#3B82F6" />
+                <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 12, color: "#1D1A27" }}>
                   Humidity 40%
                 </Text>
               </View>
 
-              <View className="bg-white rounded-full px-4 py-2 border border-gray-100 flex-row items-center gap-1.5">
-                <Wind size={14} color="#6B7280" />
-                <Text className="text-xs font-bold text-[#1D1A27]">
+              <View className="bg-white/80 rounded-full px-4 py-2.5 flex-row items-center gap-2 border border-[#E9EBF8]">
+                <Wind size={16} color="#6B7280" />
+                <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 12, color: "#1D1A27" }}>
                   Wind 12km/h
                 </Text>
               </View>
             </View>
           </LinearGradient>
-        </View>
+        </Animated.View>
 
         {/* AI Insight Card */}
-        <View className="bg-[#FAF5FF] border-l-4 border-[#7C3AED] rounded-r-2xl rounded-l-sm p-5 mt-5">
-          <Text className="text-[#4C4B5E] text-sm font-medium leading-5">
-            {"It's quite warm today. I recommend wearing breathable fabrics like cotton or linen. Stick to lighter colors to reflect the heat."}
-          </Text>
-        </View>
+        <Animated.View 
+          entering={FadeInDown.delay(100).duration(500).springify()}
+          className="mt-6 rounded-[24px] overflow-hidden"
+          style={{
+            shadowColor: "#9333EA",
+            shadowOpacity: 0.08,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 3,
+          }}
+        >
+          <LinearGradient
+            colors={["#FAF5FF", "#F3E8FF"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="p-5 border border-[#E9D5FF] rounded-[24px]"
+          >
+            <View className="flex-row items-start gap-3">
+              <View className="w-8 h-8 rounded-full bg-[#9333EA] items-center justify-center mt-1">
+                <Sparkles size={14} color="#FFFFFF" fill="#FFFFFF" />
+              </View>
+              <Text 
+                style={{ fontFamily: "TikTokSans16pt-Medium", fontSize: 14, color: "#4C4B5E", lineHeight: 22, flex: 1 }}
+              >
+                It's quite warm today. I recommend wearing breathable fabrics like cotton or linen. Stick to lighter colors to reflect the heat.
+              </Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
 
         {/* Suggested Outfit Title */}
-        <Text className="text-lg font-bold text-[#1D1A27] mt-8 mb-4">
+        <Animated.Text 
+          entering={FadeIn.delay(200).duration(400)}
+          style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 20, color: "#1D1A27", marginTop: 32 }}
+          className="mb-4"
+        >
           Suggested Outfit
-        </Text>
+        </Animated.Text>
 
         {/* Outfit list items */}
         <View className="gap-3">
-          {/* Top Card */}
-          <View className="bg-white border border-[#EAEAEF] rounded-2xl p-4 flex-row items-center">
-            <View className="w-14 h-14 rounded-2xl bg-[#F4F4F6] items-center justify-center mr-4">
-              <Shirt size={26} color="#4C4B5E" strokeWidth={1.5} />
-            </View>
-            <View>
-              <Text className="text-xs font-semibold text-[#8E8E9F] tracking-wide mb-0.5">
-                Top
-              </Text>
-              <Text className="text-base font-bold text-[#1D1A27]">
-                White Linen Shirt
-              </Text>
-            </View>
-          </View>
-
-          {/* Bottom Card */}
-          <View className="bg-white border border-[#EAEAEF] rounded-2xl p-4 flex-row items-center">
-            <View className="w-14 h-14 rounded-2xl bg-[#EFF6FF] items-center justify-center mr-4">
-              <TrousersIcon size={26} color="#3B82F6" />
-            </View>
-            <View>
-              <Text className="text-xs font-semibold text-[#8E8E9F] tracking-wide mb-0.5">
-                Bottom
-              </Text>
-              <Text className="text-base font-bold text-[#1D1A27]">
-                Navy Cotton Trousers
-              </Text>
-            </View>
-          </View>
-
-          {/* Shoes Card */}
-          <View className="bg-white border border-[#EAEAEF] rounded-2xl p-4 flex-row items-center">
-            <View className="w-14 h-14 rounded-2xl bg-[#FFFBEB] items-center justify-center mr-4">
-              <Footprints size={26} color="#D97706" strokeWidth={1.5} />
-            </View>
-            <View>
-              <Text className="text-xs font-semibold text-[#8E8E9F] tracking-wide mb-0.5">
-                Shoes
-              </Text>
-              <Text className="text-base font-bold text-[#1D1A27]">
-                Tan Loafers
-              </Text>
-            </View>
-          </View>
-
-          {/* Accessory Card */}
-          <View className="bg-white border border-[#EAEAEF] rounded-2xl p-4 flex-row items-center">
-            <View className="w-14 h-14 rounded-2xl bg-[#F4F4F6] items-center justify-center mr-4">
-              <Watch size={26} color="#1D1A27" strokeWidth={1.5} />
-            </View>
-            <View>
-              <Text className="text-xs font-semibold text-[#8E8E9F] tracking-wide mb-0.5">
-                Accessory
-              </Text>
-              <Text className="text-base font-bold text-[#1D1A27]">
-                Silver Watch
-              </Text>
-            </View>
-          </View>
+          {OUTFIT_DATA.map((item, index) => (
+            <Animated.View 
+              key={item.id}
+              entering={FadeInDown.delay(300 + (index * 100)).duration(500).springify()}
+            >
+              <TouchableOpacity 
+                activeOpacity={0.8}
+                className="bg-white border border-[#E9EBF8] rounded-[24px] p-4 flex-row items-center"
+                style={{
+                  shadowColor: "#000",
+                  shadowOpacity: 0.02,
+                  shadowRadius: 10,
+                  shadowOffset: { width: 0, height: 4 },
+                  elevation: 1,
+                }}
+              >
+                <View 
+                  className="w-14 h-14 rounded-[18px] items-center justify-center mr-4"
+                  style={{ backgroundColor: item.bgColor }}
+                >
+                  <item.icon size={26} color={item.color} strokeWidth={1.5} />
+                </View>
+                <View className="flex-1">
+                  <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 12, color: "#8E8D98", textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+                    {item.label}
+                  </Text>
+                  <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 16, color: "#1D1A27" }}>
+                    {item.name}
+                  </Text>
+                </View>
+                
+                {/* Simulated checkbox circle */}
+                <View className="w-6 h-6 rounded-full border-2 border-[#E9EBF8] mr-2" />
+              </TouchableOpacity>
+            </Animated.View>
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>

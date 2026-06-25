@@ -1,4 +1,6 @@
 import { useSignIn, useSignUp } from "@clerk/clerk-expo";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -432,9 +434,31 @@ export default function EmailAuthScreen() {
         </View>
 
         {/* Heading */}
-        <Text className="text-center text-4xl font-bold leading-10 text-[#000000] mt-16 mb-16">
-          Discover what to wear,{"\n"}instantly and effortlessly.
-        </Text>
+        <MaskedView
+          className="mt-16 mb-16"
+          style={{ minHeight: 90 }}
+          maskElement={
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "transparent",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text className="text-center text-4xl font-bold leading-10 text-black">
+                Discover what to wear,{"\n"}instantly and effortlessly.
+              </Text>
+            </View>
+          }
+        >
+          <LinearGradient
+            colors={["#F35E44", "#D84F75", "#B8589B", "#6B79B5"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ flex: 1 }}
+          />
+        </MaskedView>
 
         {/* Subtext */}
         <Text className="text-center text-xl font-medium text-[#000000] mb-2">
