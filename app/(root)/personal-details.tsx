@@ -475,6 +475,7 @@ export default function PersonalDetailsScreen() {
                 shadowRadius: 10,
                 shadowOffset: { width: 0, height: 2 },
                 // elevation: 1,
+                // marginTop:-20
               }}
             >
               {fields.map((field) => (

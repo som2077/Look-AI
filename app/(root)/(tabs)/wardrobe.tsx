@@ -633,8 +633,8 @@ export default function WardrobeScreen() {
       label: "Add Cloth",
       subtitle: "Add clothing items manually",
       icon: IconShirt,
-      color: "#6366F1",
-      bg: "#EEF2FF",
+      color: "#00000090",
+      bg: "#F5F3FF",
       onPress: () => {
         setShowAddMenu(false);
         router.push({
@@ -648,8 +648,8 @@ export default function WardrobeScreen() {
       label: "Scan and Add Cloth",
       subtitle: "Scan items or pick from gallery",
       icon: IconCamera,
-      color: "#10B981",
-      bg: "#ECFDF5",
+      color: "#00000090",
+      bg: "#F5F3FF",
       onPress: () => {
         setShowAddMenu(false);
         router.push("/(root)/add-clothes/camera" as never);
@@ -660,8 +660,8 @@ export default function WardrobeScreen() {
       label: "Create Outfit",
       subtitle: "Combine pieces into an outfit",
       icon: IconHanger,
-      color: "#EC4899",
-      bg: "#FDF2F8",
+      color: "#00000090",
+      bg: "#F5F3FF",
       onPress: () => {
         setShowAddMenu(false);
       },
@@ -924,20 +924,6 @@ export default function WardrobeScreen() {
                       >
                         Add to Wardrobe
                       </Text>
-                      {/* <Pressable onPress={() => setShowAddMenu(false)}>
-                        <View
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 16,
-                            backgroundColor: "#EEF0F5",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <IconX size={16} color="#1D1A27" strokeWidth={2.5} />
-                        </View>
-                      </Pressable> */}
                     </View>
                     {ADD_MENU_OPTIONS.map((opt) => {
                       const Icon = opt.icon;

@@ -77,14 +77,14 @@ export default function SubscriptionScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0F0C1A]">
+    <SafeAreaView className="flex-1 bg-[#FBFBFC]">
       <View className="flex-1 px-5 pt-4">
         {/* Header */}
         <View className="mb-6">
-          <Text className="text-white text-2xl font-bold">
+          <Text className="text-[#1D1A27] text-2xl font-bold">
             Choose Your Plan
           </Text>
-          <Text className="text-[#8B8A9B] text-sm mt-1">
+          <Text className="text-[#8E8D98] text-sm mt-1">
             {isPremium
               ? `Your plan: ${planName}`
               : "Upgrade to unlock all premium features"}
@@ -111,8 +111,8 @@ export default function SubscriptionScreen() {
         {/* Loading state while billing initialises */}
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#A78BFA" size="large" />
-            <Text className="text-[#8B8A9B] text-sm mt-4">Loading plans…</Text>
+            <ActivityIndicator color="#1D1A27" size="large" />
+            <Text className="text-[#8E8D98] text-sm mt-4">Loading plans…</Text>
           </View>
         ) : (
           <PlanList
@@ -132,11 +132,11 @@ export default function SubscriptionScreen() {
           className="flex-row items-center justify-center py-3 mt-2"
         >
           {isRestoring ? (
-            <ActivityIndicator color="#8B8A9B" size="small" />
+            <ActivityIndicator color="#8E8D98" size="small" />
           ) : (
             <>
-              <RotateCw size={14} color="#8B8A9B" />
-              <Text className="text-[#8B8A9B] text-sm ml-2">
+              <RotateCw size={14} color="#8E8D98" />
+              <Text className="text-[#8E8D98] text-sm ml-2">
                 Restore Purchases
               </Text>
             </>

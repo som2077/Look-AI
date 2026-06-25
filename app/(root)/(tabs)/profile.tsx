@@ -278,6 +278,11 @@ const ClassicProfileUI = ({
               fontSize: 16,
               fontWeight: "700",
               marginBottom: 12,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.15,
+              shadowRadius: 2,
+              elevation: 2,
             }}
           >
             Advanced outfit analysis.

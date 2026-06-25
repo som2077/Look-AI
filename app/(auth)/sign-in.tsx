@@ -1,6 +1,6 @@
-import { Href, useRouter } from "expo-router";
 import { useSSO } from "@clerk/clerk-expo";
 import * as Linking from "expo-linking";
+import { Href, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useState } from "react";
 import {
@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const authPhone = require("../../assets/images/auth-phone.png");
+const startImage = require("../../assets/startImage1.png");
 
 const getErrorMessage = (error: unknown) => {
   if (
@@ -77,21 +77,24 @@ export default function SignIn() {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
       <View className="flex-1 px-5 pb-10">
-        {/* ── Image + Text overlay ── */}
-        <View className="flex-1 items-center justify-center">
-          {/* Phone mockup image */}
+        {/* ── Image ── */}
+        <View className="items-center justify-center mt-40">
           <Image
-            source={authPhone}
-            className="h-[100%] w-[130%] -mb-60"
+            source={startImage}
+            className="w-[109%] h-[320px]"
             resizeMode="contain"
           />
+        </View>
 
-          {/* Text overlay: image ke upar */}
-          <View className="flex absolute bottom-[70px] left-0 right-0 items-center px-15">
-            <Text className="text-center text-[35px] font-semibold leading-[35px] text-[#1D1A27]">
-              Scan Your Clothes,{"\n"}Get Styled Instantly
-            </Text>
-          </View>
+        {/* ── Text ── */}
+        <View className="flex-1 items-center justify-center -mt-[50px]">
+          <Text className="text-center px-30 text-[40px] font-bold leading-[38px] text-[#1D1A27] tracking-tight">
+            Scan Your Clothes,{"\n"}Get Styled Instantly
+          </Text>
+          <Text className="mt-10 text-center text-[19px] font-medium text-[#1D1A27]/70 leading-[22px] px-4">
+            Build your digital wardrobe and unlock personalized outfit
+            recommendations.
+          </Text>
         </View>
 
         {/* ── Buttons & Terms ── */}
@@ -106,7 +109,7 @@ export default function SignIn() {
           <TouchableOpacity
             onPress={onGooglePress}
             disabled={isLoading}
-            className="flex-row mt-[-50] items-center justify-center rounded-2xl border border-[#D8D6DD] bg-white py-4"
+            className="flex-row items-center justify-center rounded-2xl border border-[#D8D6DD] bg-white py-5"
           >
             {isLoading ? (
               <ActivityIndicator color="#2563EB" />
@@ -117,7 +120,7 @@ export default function SignIn() {
                   className="mr-2 h-5 w-5"
                   resizeMode="contain"
                 />
-                <Text className="text-base font-medium text-[#1D1A27]">
+                <Text className="text-base font-semibold text-[#1D1A27]">
                   Continue with Google
                 </Text>
               </>
@@ -128,21 +131,21 @@ export default function SignIn() {
           <TouchableOpacity
             onPress={() => router.push("/(auth)/email" as Href)}
             disabled={isLoading}
-            className="mt-3 items-center rounded-2xl bg-[#1A1827] py-4"
+            className="mt-3 items-center rounded-2xl bg-[#1A1827] py-5"
           >
-            <Text className="text-base font-medium text-white">
+            <Text className="text-base font-semibold text-white">
               Continue with Email
             </Text>
           </TouchableOpacity>
 
           {/* Terms */}
-          <Text className="mt-2 px-5 text-center text-[11px] leading-5 font-regular text-[#1b1b1b]">
+          <Text className="mt-2 px-5 text-center text-[11px] leading-5 font-medium text-[#1b1b1b]">
             By continuing, you accept our{" "}
-            <Text className="font-semibold text-[#1D1A27] underline">
+            <Text className="font-bold text-[#1D1A27] underline">
               Terms of conditions
             </Text>{" "}
             and acknowledge our{" "}
-            <Text className="font-semibold text-[#1D1A27] underline">
+            <Text className="font-bold text-[#1D1A27] underline">
               Privacy Policy
             </Text>
             . You can tap them to view details.

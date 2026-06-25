@@ -1,20 +1,25 @@
 import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
-import { Image as ExpoImage } from "expo-image";
-import { Pressable, View, Animated, Text } from "react-native";
-import { useRouter, type Href } from "expo-router";
-import React, { ReactNode, useCallback, useRef, useState , useEffect } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  IconSmartHome,
-  IconPlus,
-  IconMesh,
   IconCompass,
+  IconMesh,
+  IconPlus,
+  IconSmartHome,
   type IconProps,
 } from "@tabler/icons-react-native";
-import { AddActionMenu } from "./AddActionMenu";
+import { Image as ExpoImage } from "expo-image";
+import { useRouter, type Href } from "expo-router";
 import LottieView from "lottie-react-native";
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { Animated, Pressable, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUIStore } from "../../backend/store/ui-store";
-
+import { AddActionMenu } from "./AddActionMenu";
 
 type TabIconComponent = React.ComponentType<IconProps>;
 type TabConfig = Record<string, TabIconComponent>;

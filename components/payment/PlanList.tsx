@@ -39,16 +39,16 @@ export const PlanList = React.memo(function PlanList({
       contentContainerClassName="pb-10"
     >
       {/* Billing cycle toggle */}
-      <View className="flex-row bg-[#1D1A27] rounded-xl p-1 mb-6">
+      <View className="flex-row bg-[#F0F0F5] rounded-[14px] p-1 mb-6">
         <TouchableOpacity
           onPress={onMonthly}
-          className={`flex-1 py-2 rounded-lg items-center ${
-            billingCycle === "monthly" ? "bg-[#A78BFA]" : ""
+          className={`flex-1 py-2.5 rounded-[10px] items-center ${
+            billingCycle === "monthly" ? "bg-[#ffffff] shadow-sm" : ""
           }`}
         >
           <Text
             className={`text-sm font-semibold ${
-              billingCycle === "monthly" ? "text-white" : "text-[#8B8A9B]"
+              billingCycle === "monthly" ? "text-[#1D1A27]" : "text-[#8E8D98]"
             }`}
           >
             Monthly
@@ -57,31 +57,31 @@ export const PlanList = React.memo(function PlanList({
 
         <TouchableOpacity
           onPress={onYearly}
-          className={`flex-1 py-2 rounded-lg items-center ${
-            billingCycle === "yearly" ? "bg-[#A78BFA]" : ""
+          className={`flex-1 py-2.5 rounded-[10px] items-center ${
+            billingCycle === "yearly" ? "bg-[#ffffff] shadow-sm" : ""
           }`}
         >
           <Text
             className={`text-sm font-semibold ${
-              billingCycle === "yearly" ? "text-white" : "text-[#8B8A9B]"
+              billingCycle === "yearly" ? "text-[#1D1A27]" : "text-[#8E8D98]"
             }`}
           >
             Yearly
           </Text>
-          {billingCycle !== "yearly" && (
-            <Text className="text-[#22C55E] text-[10px] font-semibold mt-0.5">
+          {billingCycle !== "yearly" ? (
+            <Text className="text-[#1D9E75] text-[10px] font-semibold mt-0.5">
               Save 30%
             </Text>
-          )}
+          ) : null}
         </TouchableOpacity>
       </View>
 
       {/* Google Play badge */}
       <View className="flex-row items-center justify-center mb-6 gap-x-2">
-        <View className="bg-[#1D1A27] px-3 py-1.5 rounded-full">
-          <Text className="text-[#8B8A9B] text-xs">
+        <View className="bg-[#F0F0F5] px-3 py-1.5 rounded-full border border-[#EBECEF]">
+          <Text className="text-[#8E8D98] text-xs">
             Payments secured by{" "}
-            <Text className="text-white font-semibold">Google Play</Text>
+            <Text className="text-[#1D1A27] font-semibold">Google Play</Text>
           </Text>
         </View>
       </View>
@@ -96,7 +96,7 @@ export const PlanList = React.memo(function PlanList({
         />
       ))}
 
-      <Text className="text-[#4B4A5C] text-xs text-center mt-4 px-4">
+      <Text className="text-[#8E8D98] text-xs text-center mt-4 px-4">
         Subscriptions automatically renew unless cancelled at least 24 hours
         before the end of the current period. Manage or cancel via Google Play
         Store → Subscriptions.

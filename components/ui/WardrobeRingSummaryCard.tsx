@@ -201,6 +201,23 @@ export function WardrobeRingSummaryCard({
                     fill="transparent"
                     transform={`rotate(-90 ${center} ${center})`}
                   />
+                  {/* Tip circle (hole/shadow effect) */}
+                  {segment.progress > 0 && (
+                    <Circle
+                      cx={
+                        center +
+                        segment.radius *
+                          Math.cos(2 * Math.PI * segment.progress - Math.PI / 2)
+                      }
+                      cy={
+                        center +
+                        segment.radius *
+                          Math.sin(2 * Math.PI * segment.progress - Math.PI / 2)
+                      }
+                      r={segment.strokeWidth / 2 - 2.5}
+                      fill="#1D1A27"
+                    />
+                  )}
                 </React.Fragment>
               );
             })}

@@ -1,5 +1,7 @@
 import { useOutfitAnalysisStore } from "@/backend/store/outfit-analysis-store";
+import * as Haptics from "expo-haptics";
 import {
+  IconArrowLeft,
   IconBarcode,
   IconBolt,
   IconPhoto,
@@ -78,6 +80,7 @@ export default function CameraScreen() {
   const [capturing, setCapturing] = useState(false);
   const [flashOn, setFlashOn] = useState(false);
   const [activeMode, setActiveMode] = useState("scan-cloth");
+  const [hasScanned, setHasScanned] = useState(false);
   const insets = useSafeAreaInsets();
 
   const SCAN_MODES = [
@@ -98,10 +101,34 @@ export default function CameraScreen() {
     };
   }, []);
 
+  const handleBarcodeScanned = useCallback(
+    ({ type, data }: { type: string; data: string }) => {
+      if (hasScanned || activeMode !== "barcode") return;
+      setHasScanned(true);
+      
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      // Simulate adding a clothing item from the barcode
+      router.replace({
+        pathname: "/(root)/add-clothes/form",
+        params: { mode: "manual", name: `Barcode: ${data}` },
+      } as any);
+    },
+    [hasScanned, activeMode, router]
+  );
+
+  // Reset scan state when mode changes
+  useEffect(() => {
+    if (activeMode !== "barcode") {
+      setHasScanned(false);
+    }
+  }, [activeMode]);
+
   const goToAnalyzing = useCallback(
     (uri: string) => {
       useOutfitAnalysisStore.getState().startAnalysis(uri, activeMode);
-      router.replace({ pathname: "/(root)/log-outfit/analyzing", params: { photoUri: uri } } as any);
+      // Directly go to the home screen to show the analyzing banner
+      router.replace("/(root)/(tabs)" as never);
     },
     [router, activeMode],
   );
@@ -192,6 +219,10 @@ export default function CameraScreen() {
         facing={facing}
         flash={flashOn ? "on" : "off"}
         enableTorch={flashOn}
+        barcodeScannerSettings={{
+          barcodeTypes: ["qr", "ean13", "ean8", "code128", "code39", "upc_a", "upc_e"],
+        }}
+        onBarcodeScanned={activeMode === "barcode" ? handleBarcodeScanned : undefined}
       />
 
       {/* Subtle vignette */}

@@ -163,3 +163,6 @@ npx expo start --clear
 <div align="center">
   <p>Built with ❤️ for modern fashion.</p>
 </div>
+
+
+<!-- sdk.dir=C\:\\Users\\skynet\\AppData\\Local\\Android\\Sdk  -->

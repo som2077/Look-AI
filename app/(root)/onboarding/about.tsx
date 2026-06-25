@@ -1,11 +1,11 @@
-import { usePostHog } from 'posthog-react-native';
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { useOnboardingState } from "@/backend/store/onboarding-store";
 import { ContinueButton } from "@/components/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/backend/store/onboarding-store";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
+import { Text, TextInput, View } from "react-native";
 
-const MAX_LENGTH = 500;
+const MAX_LENGTH = 150;
 
 export default function AboutScreen() {
   const posthog = usePostHog();
@@ -14,8 +14,8 @@ export default function AboutScreen() {
   const { about, setAbout } = useOnboardingState();
 
   const handleContinue = () => {
-    posthog?.capture('onboarding_step_completed', { step: 'about' });
-    
+    posthog?.capture("onboarding_step_completed", { step: "about" });
+
     if (fromProfile === "true") {
       router.back();
     } else {
