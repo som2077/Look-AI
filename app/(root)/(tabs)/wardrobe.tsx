@@ -1,6 +1,5 @@
 import { useWardrobeSummary } from "@/backend/hooks/useWardrobeSummary";
 import { useUserWardrobeStore } from "@/backend/store/user-wardrobe-store";
-import { MOCK_WARDROBE_ITEMS } from "@/constants/mock-wardrobe-items";
 import { useUser } from "@clerk/clerk-expo";
 import {
   IconCamera,
@@ -269,8 +268,6 @@ const CATEGORY_BG: Partial<Record<CategoryId, string>> = {
   favorites: "#FFF1F2",
   recommended: "#EEF2FF",
 };
-
-const MOCK_ITEMS = MOCK_WARDROBE_ITEMS as ClothingItem[];
 
 // ─── Sub-Components ──────────────────────────────────────────────────────────
 

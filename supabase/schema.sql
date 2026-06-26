@@ -124,3 +124,32 @@ DROP TRIGGER IF EXISTS entitlements_updated_at ON entitlements;
 CREATE TRIGGER entitlements_updated_at
   BEFORE UPDATE ON entitlements
   FOR EACH ROW EXECUTE FUNCTION update_entitlement_updated_at();
+
+-- =============================================
+-- LOGGED OUTFITS
+-- =============================================
+DROP TABLE IF EXISTS logged_outfits;
+CREATE TABLE logged_outfits (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user_profiles(user_id),
+  date DATE NOT NULL,
+  title TEXT NOT NULL,
+  worn_time TIME NOT NULL,
+  items_worn TEXT NOT NULL,
+  item_count INTEGER DEFAULT 1,
+  score INTEGER,
+  description TEXT,
+  weather_condition TEXT,
+  weather_temp TEXT,
+  image_url TEXT,
+  is_planned BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE logged_outfits ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "select_own_outfits" ON logged_outfits FOR SELECT
+USING (auth.jwt() ->> 'sub' = user_id);
+
+CREATE POLICY "insert_own_outfits" ON logged_outfits FOR INSERT
+WITH CHECK (auth.jwt() ->> 'sub' = user_id);

@@ -25,6 +25,7 @@ import { StreakPopup } from "../../../components/ui/StreakPopup";
 import { WardrobeFilterTabs } from "../../../components/ui/WardrobeFilterTabs";
 import { WardrobeMessageBar } from "../../../components/ui/WardrobeMessageBar";
 import { WeatherOutfitCard } from "../../../components/ui/WeatherOutfitCard";
+import { UpcomingEvents } from "../../../components/ui/UpcomingEvents";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -272,6 +273,7 @@ export default function HomeScreen() {
               </View>
 
               <RecentlyUploadedHeading />
+              <UpcomingEvents date={new Date()} showAISuggestion={false} />
               <NotifyBanner />
               <EmptyStyleBanner />
               <OutfitAnalyzingCard />

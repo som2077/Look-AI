@@ -1,12 +1,14 @@
+import { useSupabase } from "@/backend/hooks/useSupabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Calendar from "expo-calendar";
 import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import * as Calendar from "expo-calendar";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Dimensions,
+  PanResponder,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -14,11 +16,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppGradientBackground } from "../../components/ui/AppGradientBackground";
+import { UpcomingEvents } from "../../components/ui/UpcomingEvents";
 
 import {
   IconArrowLeft,
   IconChevronDown,
-  IconDots,
   IconPlus,
   IconShirt,
 } from "@tabler/icons-react-native";
@@ -54,41 +56,12 @@ interface LoggedOutfit {
   itemCount: number;
   score: number;
   description: string;
+  weather?: { condition: string; temp: string };
+  imageUri?: string;
+  isPlanned?: boolean;
 }
 
 // Predefined mock outfit logs mapping date string to details
-const LOGGED_OUTFITS_DATA: Record<string, LoggedOutfit> = {
-  // Today's log
-  [new Date().toDateString()]: {
-    title: "Smart Casual Look",
-    wornTime: "10:00 AM",
-    itemsWorn: "Beige Knit Polo · Charcoal Chinos · White Sneakers",
-    itemCount: 3,
-    score: 94,
-    description:
-      "Worn for daily activities. Structured texture and clean color contrasts provided A-grade coordination.",
-  },
-  // Yesterday's log
-  [new Date(Date.now() - 86400000).toDateString()]: {
-    title: "Office Work Classic",
-    wornTime: "08:30 AM",
-    itemsWorn: "White Shirt · Grey Blazer · Chinos",
-    itemCount: 3,
-    score: 92,
-    description:
-      "Worn for meetings. Crisp white base layered with structured blazers keeps style consistency high.",
-  },
-  // Three days ago
-  [new Date(Date.now() - 86400000 * 3).toDateString()]: {
-    title: "Summer Relaxed",
-    wornTime: "11:15 AM",
-    itemsWorn: "White Linen Shirt · Navy Trousers · Tan Derby",
-    itemCount: 3,
-    score: 98,
-    description:
-      "Worn for casual brunch. Extreme comfort linen fabrics coordinate perfectly with sunny clear weather.",
-  },
-};
 
 // Helper checks if dates represent same calendar day
 const isSameDay = (a: Date, b: Date) =>
@@ -136,6 +109,64 @@ export default function CalendarScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [deviceEvents, setDeviceEvents] = useState<Calendar.Event[]>([]);
 
+  const { supabase } = useSupabase();
+  const [loggedOutfitsData, setLoggedOutfitsData] = useState<
+    Record<string, LoggedOutfit>
+  >({});
+  const [isLoadingOutfits, setIsLoadingOutfits] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchOutfits = async () => {
+      setIsLoadingOutfits(true);
+      try {
+        const startDate = new Date(viewYear, viewMonth, 1).toISOString();
+        const endDate = new Date(viewYear, viewMonth + 1, 0).toISOString();
+
+        const { data, error } = await supabase
+          .from("logged_outfits")
+          .select("*")
+          .gte("date", startDate)
+          .lte("date", endDate);
+
+        if (error) throw error;
+
+        if (isMounted && data) {
+          const formatted: Record<string, LoggedOutfit> = {};
+          data.forEach((row: any) => {
+            const dateStr = new Date(row.date).toDateString();
+            formatted[dateStr] = {
+              title: row.title,
+              wornTime: row.worn_time,
+              itemsWorn: row.items_worn,
+              itemCount: row.item_count,
+              score: row.score,
+              description: row.description,
+              weather: row.weather_condition
+                ? { condition: row.weather_condition, temp: row.weather_temp }
+                : undefined,
+              imageUri: row.image_url,
+              isPlanned: row.is_planned,
+            };
+          });
+          setLoggedOutfitsData(formatted);
+        }
+      } catch (err) {
+        console.log("Error fetching outfits:", err);
+      } finally {
+        if (isMounted) setIsLoadingOutfits(false);
+      }
+    };
+
+    if (supabase) {
+      fetchOutfits();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [viewYear, viewMonth, supabase]);
+
   useEffect(() => {
     (async () => {
       const { status } = await Calendar.requestCalendarPermissionsAsync();
@@ -147,15 +178,23 @@ export default function CalendarScreen() {
 
   const fetchDeviceEvents = async () => {
     try {
-      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-      const visibleCalendars = calendars.filter(c => c.allowsModifications || c.source.type !== 'local');
-      const calendarIds = visibleCalendars.map(c => c.id);
+      const calendars = await Calendar.getCalendarsAsync(
+        Calendar.EntityTypes.EVENT,
+      );
+      const visibleCalendars = calendars.filter(
+        (c) => c.allowsModifications || c.source.type !== "local",
+      );
+      const calendarIds = visibleCalendars.map((c) => c.id);
 
       if (calendarIds.length > 0) {
         const startDate = new Date(viewYear, viewMonth, 1);
         const endDate = new Date(viewYear, viewMonth + 1, 0);
-        
-        const events = await Calendar.getEventsAsync(calendarIds, startDate, endDate);
+
+        const events = await Calendar.getEventsAsync(
+          calendarIds,
+          startDate,
+          endDate,
+        );
         setDeviceEvents(events);
       }
     } catch (e) {
@@ -166,6 +205,35 @@ export default function CalendarScreen() {
   const days = useMemo(
     () => buildCalendarDays(viewYear, viewMonth),
     [viewYear, viewMonth],
+  );
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return Math.abs(gestureState.dx) > 30 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dx > 50) {
+            // swipe right -> previous month
+            if (viewMonth === 0) {
+              setViewMonth(11);
+              setViewYear(viewYear - 1);
+            } else {
+              setViewMonth(viewMonth - 1);
+            }
+          } else if (gestureState.dx < -50) {
+            // swipe left -> next month
+            if (viewMonth === 11) {
+              setViewMonth(0);
+              setViewYear(viewYear + 1);
+            } else {
+              setViewMonth(viewMonth + 1);
+            }
+          }
+        },
+      }),
+    [viewMonth, viewYear]
   );
 
   const handleDaySelect = useCallback((date: Date) => {
@@ -185,11 +253,13 @@ export default function CalendarScreen() {
   );
 
   const selectedLog = useMemo(() => {
-    return LOGGED_OUTFITS_DATA[selected.toDateString()];
-  }, [selected]);
+    return loggedOutfitsData[selected.toDateString()];
+  }, [selected, loggedOutfitsData]);
 
   const selectedDayEvents = useMemo(() => {
-    return deviceEvents.filter(e => isSameDay(new Date(e.startDate), selected));
+    return deviceEvents.filter((e) =>
+      isSameDay(new Date(e.startDate), selected),
+    );
   }, [selected, deviceEvents]);
 
   return (
@@ -220,10 +290,10 @@ export default function CalendarScreen() {
                 alignItems: "center",
                 justifyContent: "center",
                 // shadowColor: "#000",
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 2,
+                // shadowOpacity: 0.08,
+                // shadowRadius: 8,
+                // shadowOffset: { width: 0, height: 4 },
+                // elevation: 2,
               }}
             >
               <IconArrowLeft size={22} color="#171421" />
@@ -363,7 +433,7 @@ export default function CalendarScreen() {
             </View>
 
             {/* Calendar days cells grid */}
-            <View style={{ paddingHorizontal: 20 }}>
+            <View {...panResponder.panHandlers} style={{ paddingHorizontal: 20 }}>
               {Array.from({ length: days.length / 7 }, (_, weekIdx) => (
                 <View
                   key={weekIdx}
@@ -377,10 +447,18 @@ export default function CalendarScreen() {
                     const isSelected = isSameDay(date, selected);
                     const isToday = isSameDay(date, today);
                     const isCurrentMonth = date.getMonth() === viewMonth;
-                    const hasOutfit =
-                      !!LOGGED_OUTFITS_DATA[date.toDateString()];
-                    
-                    const dayEvents = deviceEvents.filter(e => isSameDay(new Date(e.startDate), date));
+                    const hasOutfit = !!loggedOutfitsData[date.toDateString()];
+
+                    const isPastOrToday =
+                      new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() <=
+                      new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+                    const isMissingOutfit = isPastOrToday && !hasOutfit;
+
+                    const outfitData = loggedOutfitsData[date.toDateString()];
+
+                    const dayEvents = deviceEvents.filter((e) =>
+                      isSameDay(new Date(e.startDate), date),
+                    );
                     const hasDeviceEvent = dayEvents.length > 0;
 
                     if (!isCurrentMonth) {
@@ -402,43 +480,69 @@ export default function CalendarScreen() {
                           height: CELL_WIDTH,
                           borderRadius: 12,
                           borderWidth: isSelected ? 0 : 1,
-                          borderColor: isToday ? "#171421" : "#E2E2EA",
-                          backgroundColor: isSelected ? "#4C36F5" : "#FFFFFF",
+                          borderColor: isSelected 
+                            ? "transparent" 
+                            : isToday 
+                              ? "#171421" 
+                              : isMissingOutfit 
+                                ? "#FFB3B3" 
+                                : "#E2E2EA",
+                          backgroundColor: isSelected 
+                            ? "#4C36F5" 
+                            : isMissingOutfit 
+                              ? "#FFF0F0" 
+                              : "#FFFFFF",
                           alignItems: "center",
                           justifyContent: "center",
                           opacity: isCurrentMonth ? 1 : 0.35,
                           position: "relative",
+                          overflow: "hidden",
                         }}
                       >
+                        {hasOutfit && outfitData?.imageUri && (
+                          <ExpoImage
+                            source={{ uri: outfitData.imageUri }}
+                            style={{
+                              position: "absolute",
+                              width: "100%",
+                              height: "100%",
+                              opacity: isSelected ? 0.3 : 0.6,
+                            }}
+                            contentFit="cover"
+                          />
+                        )}
                         <Text
                           style={{
-                            fontSize: 12,
-                            fontWeight: "700",
-                            color: isSelected ? "#FFFFFF" : "#171421",
+                            fontSize: 15,
+                            fontWeight: "600",
+                            color: isSelected 
+                              ? "#FFFFFF" 
+                              : isMissingOutfit 
+                                ? "#FF3B30" 
+                                : "#171421",
+                            zIndex: 1,
                           }}
                         >
                           {date.getDate()}
                         </Text>
-                        <View style={{ flexDirection: "row", gap: 3, position: "absolute", bottom: 5 }}>
-                          {hasOutfit && (
-                            <View
-                              style={{
-                                width: 4,
-                                height: 4,
-                                borderRadius: 2,
-                                backgroundColor: isSelected
-                                  ? "#FFFFFF"
-                                  : "#4C36F5",
-                              }}
-                            />
-                          )}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            gap: 3,
+                            position: "absolute",
+                            bottom: 5,
+                            zIndex: 1,
+                          }}
+                        >
                           {hasDeviceEvent && (
                             <View
                               style={{
                                 width: 4,
                                 height: 4,
                                 borderRadius: 2,
-                                backgroundColor: isSelected ? "#E2E2EA" : "#D97706",
+                                backgroundColor: isSelected
+                                  ? "#E2E2EA"
+                                  : "#D97706",
                               }}
                             />
                           )}
@@ -503,18 +607,41 @@ export default function CalendarScreen() {
                           alignItems: "center",
                         }}
                       >
-                        <Text
+                        <View
                           style={{
-                            fontSize: 15,
-                            fontWeight: "800",
-                            color: "#1D1A27",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 8,
                           }}
                         >
-                          {selectedLog.title}
-                        </Text>
-                        <TouchableOpacity style={{ padding: 4 }}>
-                          <IconDots size={16} color="#9B9BAF" />
-                        </TouchableOpacity>
+                          <Text
+                            style={{
+                              fontSize: 15,
+                              fontWeight: "800",
+                              color: "#1D1A27",
+                            }}
+                          >
+                            {selectedLog.title}
+                          </Text>
+                          {selectedLog.weather && (
+                            <View>
+                              <Text
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: "600",
+                                  color: "#5A5A6A",
+                                }}
+                              >
+                                {selectedLog.weather.condition === "Sunny"
+                                  ? "☀️"
+                                  : selectedLog.weather.condition === "Cloudy"
+                                    ? "☁️"
+                                    : "🌤️"}{" "}
+                                {selectedLog.weather.temp}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
                       </View>
 
                       <Text
@@ -663,7 +790,7 @@ export default function CalendarScreen() {
                       padding: 20,
                       alignItems: "center",
                       justifyContent: "center",
-                      height: 120,
+                      height: 140,
                     }}
                   >
                     <Text
@@ -674,7 +801,9 @@ export default function CalendarScreen() {
                         marginBottom: 10,
                       }}
                     >
-                      No outfit logged
+                      {selected.getTime() > today.getTime()
+                        ? "Plan your outfit"
+                        : "No outfit logged"}
                     </Text>
                     <Text
                       style={{
@@ -682,10 +811,40 @@ export default function CalendarScreen() {
                         color: "#9B9BAF",
                         textAlign: "center",
                         fontWeight: "500",
+                        marginBottom: 16,
                       }}
                     >
-                      Tap the &#39;+&#39; icon above to log what you wore today.
+                      {selected.getTime() > today.getTime()
+                        ? "Get ahead of your schedule. Plan what you'll wear!"
+                        : "Tap the '+' icon above to log what you wore today."}
                     </Text>
+
+                    {selected.getTime() > today.getTime() && (
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/(root)/log-outfit/camera" as never)}
+                        style={{
+                          backgroundColor: "#4C36F5",
+                          paddingHorizontal: 20,
+                          paddingVertical: 10,
+                          borderRadius: 20,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <IconPlus size={16} color="#FFFFFF" strokeWidth={2.5} />
+                        <Text
+                          style={{
+                            color: "#FFFFFF",
+                            fontWeight: "700",
+                            fontSize: 13,
+                          }}
+                        >
+                          Plan Future Outfit
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               )}
@@ -693,19 +852,11 @@ export default function CalendarScreen() {
 
             {/* Upcoming Events Section */}
             {selectedDayEvents.length > 0 && (
-              <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-                <Text style={{ fontSize: 16, fontWeight: "700", color: "#1D1A27", marginBottom: 12 }}>
-                  Upcoming Events
-                </Text>
-                {selectedDayEvents.map(event => (
-                  <View key={event.id} style={{ backgroundColor: "#FFFFFF", padding: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: "#E2E2EA" }}>
-                    <Text style={{ fontSize: 15, fontWeight: "700", color: "#1D1A27" }}>{event.title}</Text>
-                    <Text style={{ fontSize: 12, color: "#5A5A6A", marginTop: 4, fontWeight: "500" }}>
-                      {new Date(event.startDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {new Date(event.endDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+              <UpcomingEvents
+                date={selected}
+                showAISuggestion={true}
+                preFetchedEvents={selectedDayEvents}
+              />
             )}
           </ScrollView>
           {showDatePicker && (

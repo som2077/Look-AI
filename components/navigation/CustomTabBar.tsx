@@ -211,7 +211,7 @@ export function CustomTabBar({
                   >
                     <LottieView
                       source={require("../../assets/icons/home.json")}
-                      autoPlay={focused}
+                      // autoPlay={focused}/
                       loop={false}
                       style={{ width: 28, height: 28 }}
                       colorFilters={[
@@ -261,7 +261,7 @@ export function CustomTabBar({
                   >
                     <LottieView
                       source={require("../../assets/icons/explore.json")}
-                      autoPlay={focused}
+                      // autoPlay={focused}
                       loop={false}
                       style={{ width: 28, height: 28 }}
                       colorFilters={[

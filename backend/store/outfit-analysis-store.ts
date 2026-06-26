@@ -13,6 +13,7 @@ export interface LastOutfit {
   itemCount: number;
   mode: string;
   isSaved?: boolean;
+  colorPalette?: string[];
 }
 
 interface OutfitAnalysisState {
@@ -25,6 +26,7 @@ interface OutfitAnalysisState {
   startAnalysis: (imageUri: string, mode?: string) => void;
   clearAnalysis: () => void;
   removeOutfit: (index: number) => void;
+  updateOutfit: (index: number, updates: Partial<LastOutfit>) => void;
   clearAllOutfits: () => void;
   toggleSaved: (index: number) => void;
 }
@@ -95,6 +97,14 @@ const WEATHERS = [
 ];
 const SCORES = [92, 88, 95, 78, 85, 90];
 const ITEMS = [3, 4, 3, 5, 4, 3];
+const COLOR_PALETTES = [
+  ["#D2C4B7", "#4A5568", "#1A202C"], // Breezy Office Look
+  ["#FFFFFF", "#2B6CB0", "#E2E8F0"], // Smart Casual Vibes
+  ["#F56565", "#1A202C", "#EDF2F7"], // Weekend Ready
+  ["#000000", "#D69E2E", "#E2E8F0"], // Evening Chic
+  ["#2D3748", "#1A202C", "#CBD5E0"], // Power Formal
+  ["#4299E1", "#FFFFFF", "#F7FAFC"], // Effortless Everyday
+];
 
 export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
   (set, get) => ({
@@ -145,6 +155,7 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
                 weather: WEATHERS[idx % WEATHERS.length],
                 itemCount: ITEMS[idx],
                 mode: currentMode,
+                colorPalette: COLOR_PALETTES[idx],
               },
             ],
           });
@@ -171,10 +182,25 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
       set({ isAnalyzing: false, isDone: false, imageUri: null, progress: 0 });
     },
 
-    removeOutfit: (index: number) =>
-      set({ lastOutfits: get().lastOutfits.filter((_, i) => i !== index) }),
+    removeOutfit: (index) => {
+      set({
+        lastOutfits: get().lastOutfits.filter((_, i) => i !== index),
+      });
+    },
 
-    clearAllOutfits: () => set({ lastOutfits: [] }),
+    updateOutfit: (index, updates) => {
+      set((state) => {
+        const newOutfits = [...state.lastOutfits];
+        if (newOutfits[index]) {
+          newOutfits[index] = { ...newOutfits[index], ...updates };
+        }
+        return { lastOutfits: newOutfits };
+      });
+    },
+
+    clearAllOutfits: () => {
+      set({ lastOutfits: [] });
+    },
 
     toggleSaved: (index: number) =>
       set((state) => {
