@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useSupabase } from "./useSupabase";
 import { useUser } from "@clerk/clerk-expo";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSupabase } from "./useSupabase";
 
 export interface GroupPost {
   id: string;
@@ -30,9 +30,11 @@ export function useGroupPosts(groupId: string) {
       // 1. Fetch posts
       const { data: postsData, error: postsError } = await supabase
         .from("group_posts")
-        .select(`
+        .select(
+          `
           id, group_id, user_id, content, created_at
-        `)
+        `,
+        )
         .eq("group_id", groupId)
         .order("created_at", { ascending: false });
 
@@ -51,14 +53,16 @@ export function useGroupPosts(groupId: string) {
 
       // 3. Fetch user profiles for avatars/usernames
       // First get unique user IDs from posts
-      const userIds = Array.from(new Set(postsData?.map((p) => p.user_id) || []));
+      const userIds = Array.from(
+        new Set(postsData?.map((p) => p.user_id) || []),
+      );
       let profiles: Record<string, any> = {};
       if (userIds.length > 0) {
         const { data: profs, error: profError } = await supabase
           .from("user_profiles")
           .select("user_id, nickname")
           .in("user_id", userIds);
-        
+
         if (!profError && profs) {
           profs.forEach((p) => {
             profiles[p.user_id] = { username: p.nickname };
@@ -68,7 +72,9 @@ export function useGroupPosts(groupId: string) {
 
       // 4. Assemble data
       const assembled: GroupPost[] = (postsData || []).map((post) => {
-        const postReactions = reactionsData.filter((r) => r.post_id === post.id);
+        const postReactions = reactionsData.filter(
+          (r) => r.post_id === post.id,
+        );
         const reactionsCount: Record<string, number> = {};
         let myReaction: string | null = null;
 
@@ -81,7 +87,9 @@ export function useGroupPosts(groupId: string) {
 
         return {
           ...post,
-          username: profiles[post.user_id]?.username || "user_" + post.user_id.slice(0, 4),
+          username:
+            profiles[post.user_id]?.username ||
+            "user_" + post.user_id.slice(0, 4),
           // Fallback avatar since user_profiles doesn't store avatar URL yet
           avatar: `https://ui-avatars.com/api/?name=${profiles[post.user_id]?.username || "User"}`,
           reactions: reactionsCount,
@@ -105,20 +113,25 @@ export function useGroupPosts(groupId: string) {
         .channel(`public:group_posts:${groupId}`)
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "group_posts", filter: `group_id=eq.${groupId}` },
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "group_posts",
+            filter: `group_id=eq.${groupId}`,
+          },
           (payload) => {
             fetchPosts(); // For MVP simplicity, refetch all to get profiles/reactions
-          }
+          },
         )
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "group_post_reactions" },
           (payload) => {
             fetchPosts();
-          }
+          },
         )
         .subscribe();
-      
+
       channelRef.current = channel;
 
       return () => {
@@ -130,11 +143,12 @@ export function useGroupPosts(groupId: string) {
   const addPost = async (content: string) => {
     if (!user) return;
     try {
-      await supabase.from("group_posts").insert({
+      const { error } = await supabase.from("group_posts").insert({
         group_id: groupId,
         user_id: user.id,
         content,
       });
+      if (error) throw error;
     } catch (e) {
       console.error("Error adding post:", e);
     }
@@ -142,7 +156,7 @@ export function useGroupPosts(groupId: string) {
 
   const toggleReaction = async (postId: string, emoji: string) => {
     if (!user) return;
-    
+
     // Find if user already reacted
     const post = posts.find((p) => p.id === postId);
     if (!post) return;
@@ -150,27 +164,30 @@ export function useGroupPosts(groupId: string) {
     try {
       if (post.myReaction === emoji) {
         // Remove reaction
-        await supabase
+        const { error } = await supabase
           .from("group_post_reactions")
           .delete()
           .eq("post_id", postId)
           .eq("user_id", user.id)
           .eq("emoji", emoji);
+        if (error) throw error;
       } else {
         // If reacted with different emoji, delete old
         if (post.myReaction) {
-          await supabase
+          const { error } = await supabase
             .from("group_post_reactions")
             .delete()
             .eq("post_id", postId)
             .eq("user_id", user.id);
+          if (error) throw error;
         }
         // Insert new reaction
-        await supabase.from("group_post_reactions").insert({
+        const { error } = await supabase.from("group_post_reactions").insert({
           post_id: postId,
           user_id: user.id,
           emoji,
         });
+        if (error) throw error;
       }
     } catch (e) {
       console.error("Error toggling reaction:", e);

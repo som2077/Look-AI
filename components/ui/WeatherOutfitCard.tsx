@@ -1,4 +1,4 @@
-import { useWeatherStore } from "@/backend/store/weather-store";
+import { useWeatherStore } from "@/store/weather-store";
 import {
   IconAlertCircle,
   IconCloud,

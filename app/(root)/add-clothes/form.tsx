@@ -1,8 +1,8 @@
-import { useUserWardrobeStore } from "@/backend/store/user-wardrobe-store";
+import { ScanningOverlay } from "@/components/ui/ScanningOverlay";
+import { useUserWardrobeStore } from "@/store/user-wardrobe-store";
 import {
   IconArrowLeft,
-  IconEdit,
-  IconGridDots,
+  IconBookmark,
   IconPhoto,
   IconSparkles,
   IconX,
@@ -57,6 +57,7 @@ type FormParams = {
   name?: string;
   category?: string;
   color?: string;
+  isScanning?: string;
 };
 
 const ImageFan = () => {
@@ -131,6 +132,9 @@ export default function AddClothesFormScreen() {
   const [category, setCategory] = useState<string>(params.category ?? "top");
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [customCategoryText, setCustomCategoryText] = useState("");
+  const [showScanOverlay, setShowScanOverlay] = useState(
+    params.isScanning === "true",
+  );
 
   // Bottom Sheet State
   const [showMoreModal, setShowMoreModal] = useState(false);
@@ -274,7 +278,7 @@ export default function AddClothesFormScreen() {
             {isScanned ? "Confirm details" : "Add manually"}
           </Text>
           <Pressable onPress={handleConfirm}>
-            <Text className="text-[#1D1A27] font-semibold text-md">Save</Text>
+            <IconBookmark size={24} color="#1D1A27" strokeWidth={2} />
           </Pressable>
         </View>
 
@@ -358,174 +362,65 @@ export default function AddClothesFormScreen() {
             className="bg-[#F8F7FC] border border-gray-100 rounded-2xl px-4 py-4 text-[#1D1A27] text-sm font-medium mb-5"
           />
 
-          {/* Category */}
-          <Text className="text-[#000000] text-[13px] tracking-wider font-semibold mb-2">
-            Category
+          {/* Choose your best mood */}
+          <Text className="text-[#000000] text-[15px] font-semibold mb-3 mt-4">
+            Choose your best mood
           </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mb-5"
-            contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-          >
-            {/* Custom Category UI (Pencil) */}
-            {showCustomCategory ? (
-              <TextInput
-                autoFocus
-                value={customCategoryText}
-                onChangeText={setCustomCategoryText}
-                onBlur={() => {
-                  setShowCustomCategory(false);
-                  if (customCategoryText.trim()) {
-                    setCategory(customCategoryText.trim());
-                  }
-                }}
-                onSubmitEditing={() => {
-                  setShowCustomCategory(false);
-                  if (customCategoryText.trim()) {
-                    setCategory(customCategoryText.trim());
-                  }
-                }}
-                placeholder="Custom..."
-                placeholderTextColor="#9CA3AF"
-                className="px-5 py-2.5 rounded-full border border-gray-200 bg-[#F9FAFB] text-base font-medium text-[#111827]"
-                style={{ minWidth: 100 }}
-              />
-            ) : !CATEGORIES.some((c) => c.id === category) &&
-              category !== "" ? (
+          <View className="flex-row gap-2 mb-8">
+            {[
+              {
+                label: "Occasion",
+                value: occasion,
+                onPress: () => setOccasion("Casual"),
+              },
+              {
+                label: "Season",
+                value: season,
+                onPress: () => setSeason("Summer"),
+              },
+            ].map((chip) => (
               <Pressable
-                onPress={() => {
-                  setCustomCategoryText(category);
-                  setShowCustomCategory(true);
-                }}
-                className="px-5 py-2.5 rounded-full border border-transparent bg-[#111827]"
+                key={chip.label}
+                onPress={chip.onPress}
+                className={`px-5 py-2.5 rounded-full ${chip.label === "Occasion" && occasion ? "bg-[#1D1A27]" : chip.label === "Season" && season !== "All" ? "bg-[#1D1A27]" : "bg-[#E5E5E5]"}`}
               >
-                <Text className="text-white text-base font-medium">
-                  {category}
+                <Text
+                  className={`text-[12px] font-medium ${chip.label === "Occasion" && occasion ? "text-white" : chip.label === "Season" && season !== "All" ? "text-white" : "text-[#000000]"}`}
+                >
+                  {chip.label}
                 </Text>
               </Pressable>
-            ) : (
+            ))}
+          </View>
+
+          {/* Color Palette */}
+          <Text className="text-[#000000] text-[15px] font-semibold mb-3">
+            Color Palette
+          </Text>
+          <View className="flex-row gap-4 mb-8">
+            {[
+              { hex: "#996A6A", label: "#996A6A" },
+              { hex: "#62ADBC", label: "#62ADBC" },
+              { hex: "#974040", label: "#974040" },
+            ].map((c) => (
               <Pressable
-                onPress={() => setShowCustomCategory(true)}
-                className="h-[44px] w-[44px] rounded-full border border-gray-200 bg-[#F9FAFB] items-center justify-center"
+                key={c.hex}
+                onPress={() => setColor(c.hex)}
+                className="items-center"
               >
-                <IconEdit size={20} color="#111827" strokeWidth={1.5} />
+                <View
+                  className={`w-12 h-12 rounded-full mb-2 border-2 ${color === c.hex ? "border-[#1D1A27]" : "border-transparent"}`}
+                  style={{ backgroundColor: c.hex }}
+                />
+                <Text className="text-[10px] text-[#000000] font-medium">
+                  {c.label}
+                </Text>
               </Pressable>
-            )}
-
-            {CATEGORIES.map((c) => {
-              const sel = c.id === category;
-              return (
-                <Pressable
-                  key={c.id}
-                  onPress={() => setCategory(c.id)}
-                  className={`px-5 py-2.5 rounded-full border ${
-                    sel
-                      ? "border-transparent bg-[#111827]"
-                      : "border-gray-200 bg-[#F9FAFB]"
-                  }`}
-                  style={{ height: 44, justifyContent: "center" }}
-                >
-                  <Text
-                    className={`text-base ${
-                      sel
-                        ? "text-white font-medium"
-                        : "text-[#111827] font-normal"
-                    }`}
-                  >
-                    {c.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-
-            {/* Trailing Grid Icon */}
-            <Pressable
-              onPress={() => setShowMoreModal(true)}
-              className="h-[44px] w-[44px] rounded-full border border-gray-200 bg-[#F9FAFB] items-center justify-center"
-            >
-              <IconGridDots size={20} color="#111827" strokeWidth={1.5} />
-            </Pressable>
-          </ScrollView>
-
-          {/* Color */}
-          <Text className="text-[#000000] text-[13px] tracking-wider font-semibold mb-2">
-            Color
-          </Text>
-          <TextInput
-            value={color}
-            onChangeText={setColor}
-            placeholder="e.g. Beige, Navy blue"
-            placeholderTextColor="#9CA3AF"
-            className="bg-[#F8F7FC] border border-gray-100 rounded-2xl px-4 py-4 text-[#1D1A27] text-sm font-medium mb-5"
-          />
-
-          {/* Occasion */}
-          <Text className="text-[#000000] text-[13px]  tracking-wider font-semibold mb-2">
-            Best for
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mb-5"
-          >
-            <View className="flex-row gap-2 pr-4">
-              {OCCASIONS.map((o) => {
-                const sel = o === occasion;
-                return (
-                  <Pressable
-                    key={o}
-                    onPress={() => setOccasion(o)}
-                    className={`px-4 py-2.5 rounded-full border ${
-                      sel
-                        ? "bg-[#1D1A27] border-transparent"
-                        : "bg-white border-gray-200"
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-semibold ${
-                        sel ? "text-white" : "text-[#4B5563]"
-                      }`}
-                    >
-                      {o}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </ScrollView>
-
-          {/* Season */}
-          <Text className="text-[#000000] text-[13px] tracking-wider font-semibold mb-2">
-            Season
-          </Text>
-          <View className="flex-row gap-2 mb-5">
-            {SEASONS.map((s) => {
-              const sel = s === season;
-              return (
-                <Pressable
-                  key={s}
-                  onPress={() => setSeason(s)}
-                  className={`px-4 py-2.5 rounded-full border ${
-                    sel
-                      ? "bg-[#1D1A27] border-transparent"
-                      : "bg-white border-gray-200"
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-semibold ${
-                      sel ? "text-white" : "text-[#4B5563]"
-                    }`}
-                  >
-                    {s}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            ))}
           </View>
 
           {/* Notes */}
-          <Text className="text-[#000000] text-[11px] uppercase tracking-wider font-semibold mb-2">
+          <Text className="text-[#000000] text-[15px] font-semibold mb-2 mt-4">
             Notes (optional)
           </Text>
           <TextInput
@@ -682,6 +577,11 @@ export default function AddClothesFormScreen() {
             </Animated.View>
           </Pressable>
         </Modal>
+
+        <ScanningOverlay
+          visible={showScanOverlay}
+          onComplete={() => setShowScanOverlay(false)}
+        />
       </SafeAreaView>
     </View>
   );

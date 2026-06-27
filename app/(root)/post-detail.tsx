@@ -1,4 +1,14 @@
-import { IconArrowLeft, IconBookmark, IconBookmarkFilled, IconDots, IconHeart, IconHeartFilled, IconMessage, IconSend, IconTrash } from "@tabler/icons-react-native";
+import {
+  IconArrowLeft,
+  IconBookmark,
+  IconBookmarkFilled,
+  IconDots,
+  IconHeart,
+  IconHeartFilled,
+  IconMessage,
+  IconSend,
+  IconTrash,
+} from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
@@ -17,15 +27,69 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const { width } = Dimensions.get("window");
 
 const MOCK_POSTS = [
-  { id: "0", url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop", likes: 124, comments: 12, time: "3 minutes ago" },
-  { id: "1", url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=800&auto=format&fit=crop", likes: 89, comments: 7, time: "1 hour ago" },
-  { id: "2", url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800&auto=format&fit=crop", likes: 213, comments: 24, time: "5 hours ago" },
-  { id: "3", url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop", likes: 67, comments: 4, time: "1 day ago" },
-  { id: "4", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop", likes: 301, comments: 45, time: "2 days ago" },
-  { id: "5", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop", likes: 55, comments: 2, time: "3 days ago" },
-  { id: "6", url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop", likes: 178, comments: 19, time: "4 days ago" },
-  { id: "7", url: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=800&auto=format&fit=crop", likes: 92, comments: 8, time: "5 days ago" },
-  { id: "8", url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=800&auto=format&fit=crop", likes: 145, comments: 17, time: "1 week ago" },
+  {
+    id: "0",
+    url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
+    likes: 124,
+    comments: 12,
+    time: "3 minutes ago",
+  },
+  {
+    id: "1",
+    url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=800&auto=format&fit=crop",
+    likes: 89,
+    comments: 7,
+    time: "1 hour ago",
+  },
+  {
+    id: "2",
+    url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800&auto=format&fit=crop",
+    likes: 213,
+    comments: 24,
+    time: "5 hours ago",
+  },
+  {
+    id: "3",
+    url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop",
+    likes: 67,
+    comments: 4,
+    time: "1 day ago",
+  },
+  {
+    id: "4",
+    url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop",
+    likes: 301,
+    comments: 45,
+    time: "2 days ago",
+  },
+  {
+    id: "5",
+    url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop",
+    likes: 55,
+    comments: 2,
+    time: "3 days ago",
+  },
+  {
+    id: "6",
+    url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop",
+    likes: 178,
+    comments: 19,
+    time: "4 days ago",
+  },
+  {
+    id: "7",
+    url: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=800&auto=format&fit=crop",
+    likes: 92,
+    comments: 8,
+    time: "5 days ago",
+  },
+  {
+    id: "8",
+    url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=800&auto=format&fit=crop",
+    likes: 145,
+    comments: 17,
+    time: "1 week ago",
+  },
 ];
 
 export default function PostDetailScreen() {
@@ -51,18 +115,14 @@ export default function PostDetailScreen() {
 
   const handleDelete = () => {
     setMenuVisible(false);
-    Alert.alert(
-      "Delete Post",
-      "Are you sure you want to delete this post?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => router.back(),
-        },
-      ]
-    );
+    Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => router.back(),
+      },
+    ]);
   };
 
   return (
@@ -96,7 +156,10 @@ export default function PostDetailScreen() {
         </Text>
       </View>
 
-      <ScrollView style={{ flex: 1, backgroundColor: "#000000" }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: "#000000" }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* User Info Row */}
         <View
           style={{
@@ -120,9 +183,7 @@ export default function PostDetailScreen() {
             }}
           />
           <View style={{ flex: 1 }}>
-            <Text
-              style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}
-            >
+            <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}>
               sindustries2030
             </Text>
             <Text style={{ fontSize: 12, color: "#9CA3AF", marginTop: 1 }}>
@@ -163,7 +224,11 @@ export default function PostDetailScreen() {
           {/* Like */}
           <Pressable
             onPress={handleLike}
-            style={{ flexDirection: "row", alignItems: "center", marginRight: 20 }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginRight: 20,
+            }}
           >
             {liked ? (
               <IconHeartFilled size={26} color="#F43F5E" />
@@ -184,7 +249,11 @@ export default function PostDetailScreen() {
 
           {/* Comment */}
           <Pressable
-            style={{ flexDirection: "row", alignItems: "center", marginRight: 20 }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginRight: 20,
+            }}
           >
             <IconMessage size={26} color="#FFFFFF" />
             <Text
@@ -307,7 +376,9 @@ export default function PostDetailScreen() {
                 paddingVertical: 16,
               }}
             >
-              <Text style={{ fontSize: 16, fontWeight: "500", color: "#9CA3AF" }}>
+              <Text
+                style={{ fontSize: 16, fontWeight: "500", color: "#9CA3AF" }}
+              >
                 Cancel
               </Text>
             </Pressable>

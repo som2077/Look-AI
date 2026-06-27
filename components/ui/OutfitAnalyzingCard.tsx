@@ -12,7 +12,7 @@ import Svg, { Circle, G } from "react-native-svg";
 import {
   LastOutfit,
   useOutfitAnalysisStore,
-} from "@/backend/store/outfit-analysis-store";
+} from "@/store/outfit-analysis-store";
 import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
 

@@ -4,8 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { useOnboardingState } from "@/backend/store/onboarding-store";
-import { useSupabase } from "@/backend/hooks/useSupabase";
+import { useOnboardingState } from "@/store/onboarding-store";
+import { useSupabase } from "@/hooks/useSupabase";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 const LOADING_MESSAGES = [

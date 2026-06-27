@@ -1,8 +1,6 @@
 import { useAnalysisCompleteNotification } from "@/services/notificationService";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef } from "react";
-import { Text, View } from "react-native";
+import { Modal, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,51 +8,46 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function AddClothesScanningScreen() {
-  const router = useRouter();
-  const { photoUri } = useLocalSearchParams<{ photoUri?: string }>();
+interface ScanningOverlayProps {
+  visible: boolean;
+  onComplete: () => void;
+}
+
+export function ScanningOverlay({ visible, onComplete }: ScanningOverlayProps) {
   const spin = useSharedValue(0);
   const notifyComplete = useAnalysisCompleteNotification();
   const notifyRef = useRef(notifyComplete);
   notifyRef.current = notifyComplete;
 
   useEffect(() => {
-    spin.value = withRepeat(
-      withTiming(1, { duration: 1500, easing: Easing.linear }),
-      -1,
-      false,
-    );
+    if (visible) {
+      spin.value = withRepeat(
+        withTiming(1, { duration: 1500, easing: Easing.linear }),
+        -1,
+        false,
+      );
 
-    const t = setTimeout(() => {
-      notifyRef.current();
-      setTimeout(() => {
-        router.replace({
-          pathname: "/(root)/add-clothes/form",
-          params: {
-            mode: "scanned",
-            photoUri: photoUri ?? "",
-            name: "Blue kurta",
-            category: "ethnic",
-            color: "Blue",
-          },
-        } as never);
-      }, 600);
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [router, photoUri, spin]);
+      const t = setTimeout(() => {
+        notifyRef.current();
+        const completionTimeout = setTimeout(() => {
+          onComplete();
+        }, 600);
+        return () => clearTimeout(completionTimeout);
+      }, 4000);
+      return () => clearTimeout(t);
+    }
+  }, [visible, spin, onComplete]);
 
   const spinStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${spin.value * 360}deg` }],
   }));
 
   return (
-    <View className="flex-1 bg-[#5A5A5A] items-center justify-center">
-      <StatusBar style="light" />
-      <SafeAreaView className="flex-1 w-full items-center justify-center">
+    <Modal visible={visible} transparent animationType="fade">
+      <View className="flex-1 bg-black/60  items-center justify-center">
         {/* Outer Light Gray Card */}
-        <View className="bg-[#D9D9D9] w-[88%] rounded-[48px] px-6 py-10 pb-12 shadow-sm">
+        <View className="bg-[#ffffff] w-[88%] rounded-[48px] px-6 py-10 pb-12 shadow-sm">
           <View className="mb-8 pl-2">
             <Text className="text-[26px] font-extrabold text-black tracking-tight">
               Scanning your item...
@@ -111,7 +104,7 @@ export default function AddClothesScanningScreen() {
             </Text>
           </View>
         </View>
-      </SafeAreaView>
-    </View>
+      </View>
+    </Modal>
   );
 }

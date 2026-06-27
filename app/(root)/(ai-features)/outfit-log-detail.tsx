@@ -1,5 +1,5 @@
-import { useOutfitAnalysisStore } from "@/backend/store/outfit-analysis-store";
-import { useSavedStore } from "@/backend/store/saved-store";
+import { useOutfitAnalysisStore } from "@/store/outfit-analysis-store";
+import { useSavedStore } from "@/store/saved-store";
 import {
   IconArrowLeft,
   IconBookmark,

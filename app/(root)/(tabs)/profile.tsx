@@ -30,7 +30,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useOnboardingState } from "../../../backend/store/onboarding-store";
+import { useOnboardingState } from "../../../store/onboarding-store";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
 import { GradientButton } from "../../../components/ui/GradientButton";

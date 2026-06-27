@@ -14,7 +14,7 @@ import {
   IconStar,
   IconStarFilled,
 } from "@tabler/icons-react-native";
-import { useUserWardrobeStore } from "@/backend/store/user-wardrobe-store";
+import { useUserWardrobeStore } from "@/store/user-wardrobe-store";
 
 type Occasion = "Casual" | "Office" | "Party" | "Wedding" | "Date";
 

@@ -52,35 +52,40 @@ export function useGroups() {
 
   const joinGroup = async (groupId: string) => {
     if (!user) return;
-    // Optimistic update
-    setJoinedGroupIds((prev) => [...prev, groupId]);
+    if (joinedGroupIds.includes(groupId)) return;
+
+    setJoinedGroupIds((prev) =>
+      prev.includes(groupId) ? prev : [...prev, groupId],
+    );
     try {
-      await supabase.from("group_members").insert({
+      const { error } = await supabase.from("group_members").insert({
         group_id: groupId,
         user_id: user.id,
       });
-      // Optionally update members_count in groups table (can be a trigger or just ignore for MVP)
+      if (error) throw error;
     } catch (e) {
       console.error("Error joining group:", e);
-      // Revert optimistic update
       setJoinedGroupIds((prev) => prev.filter((id) => id !== groupId));
     }
   };
 
   const leaveGroup = async (groupId: string) => {
     if (!user) return;
-    // Optimistic update
+    if (!joinedGroupIds.includes(groupId)) return;
+
     setJoinedGroupIds((prev) => prev.filter((id) => id !== groupId));
     try {
-      await supabase
+      const { error } = await supabase
         .from("group_members")
         .delete()
         .eq("group_id", groupId)
         .eq("user_id", user.id);
+      if (error) throw error;
     } catch (e) {
       console.error("Error leaving group:", e);
-      // Revert optimistic update
-      setJoinedGroupIds((prev) => [...prev, groupId]);
+      setJoinedGroupIds((prev) =>
+        prev.includes(groupId) ? prev : [...prev, groupId],
+      );
     }
   };
 

@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { useSupabase } from "./useSupabase";
-import { uploadToCloudinary } from "../api/cloudinary";
 import { useAuth } from "@clerk/clerk-expo";
+import { useEffect, useState } from "react";
+import { create } from "zustand";
+import { uploadToCloudinary } from "../lib/cloudinary";
+import { useSupabase } from "./useSupabase";
 
 export interface CommunityPost {
   id: string;
@@ -16,8 +17,31 @@ export interface CommunityPost {
   };
 }
 
+interface CommunityPostsStore {
+  posts: CommunityPost[];
+  hasFetched: boolean;
+  setPosts: (posts: CommunityPost[]) => void;
+  addPost: (post: CommunityPost) => void;
+  setHasFetched: (val: boolean) => void;
+}
+
+const usePostsStore = create<CommunityPostsStore>((set) => ({
+  posts: [],
+  hasFetched: false,
+  setPosts: (posts) => set({ posts }),
+  addPost: (post) => set((state) => ({ posts: [post, ...state.posts] })),
+  setHasFetched: (val) => set({ hasFetched: val }),
+}));
+
+const removeOptimisticPosts = () => {
+  usePostsStore.setState((state) => ({
+    posts: state.posts.filter((post) => !post.id.includes("0.")),
+  }));
+};
+
 export function useCommunityPosts() {
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const { posts, setPosts, addPost, hasFetched, setHasFetched } =
+    usePostsStore();
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -41,7 +65,17 @@ export function useCommunityPosts() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setPosts(data as any);
+
+      const backendPosts = (data ?? []) as any[];
+      const localMockPosts = usePostsStore
+        .getState()
+        .posts.filter((p) => p.id.includes("0."));
+
+      if (localMockPosts.length > 0 && backendPosts.length > 0) {
+        removeOptimisticPosts();
+      }
+
+      setPosts(backendPosts);
 
       if (userId) {
         const { data: profile } = await supabase
@@ -49,13 +83,13 @@ export function useCommunityPosts() {
           .select("id")
           .eq("user_id", userId)
           .single();
-          
+
         if (profile) {
           const { data: likes } = await supabase
             .from("post_likes")
             .select("post_id")
             .eq("user_id", profile.id);
-            
+
           if (likes) {
             setLikedPostIds(new Set(likes.map((l: any) => l.post_id)));
           }
@@ -70,7 +104,11 @@ export function useCommunityPosts() {
 
   useEffect(() => {
     if (isInitializing || !supabase) return;
-    fetchPosts();
+
+    if (!hasFetched) {
+      fetchPosts();
+      setHasFetched(true);
+    }
 
     const subscription = supabase
       .channel("public:community_posts")
@@ -86,7 +124,7 @@ export function useCommunityPosts() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [supabase, isInitializing, userId]);
+  }, [supabase, isInitializing, userId, hasFetched]);
 
   const toggleLike = async (postId: string) => {
     if (!userId) throw new Error("You must be logged in to like.");
@@ -102,7 +140,7 @@ export function useCommunityPosts() {
       if (!profile) return;
 
       const isLiked = likedPostIds.has(postId);
-      
+
       // Optimistic UI Update
       setLikedPostIds((prev) => {
         const next = new Set(prev);
@@ -115,28 +153,54 @@ export function useCommunityPosts() {
       });
 
       if (isLiked) {
-        await supabase
+        const { error } = await supabase
           .from("post_likes")
           .delete()
           .match({ post_id: postId, user_id: profile.id });
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from("post_likes")
           .insert({ post_id: postId, user_id: profile.id });
+        if (error) throw error;
       }
     } catch (err) {
       console.error("Error toggling like:", err);
-      // Optional: Revert optimistic update here
+      setLikedPostIds((prev) => {
+        const next = new Set(prev);
+        if (likedPostIds.has(postId)) {
+          next.add(postId);
+        } else {
+          next.delete(postId);
+        }
+        return next;
+      });
     }
   };
 
   const createPost = async (imageUri: string, caption: string) => {
-    if (!userId) throw new Error("You must be logged in to post.");
-    if (!supabase) throw new Error("Supabase client not initialized.");
-
     setUploading(true);
+    const newPost: CommunityPost = {
+      id: Math.random().toString(),
+      user_id: userId || "mock_user",
+      image_url: imageUri,
+      caption: caption,
+      likes_count: 0,
+      created_at: new Date().toISOString(),
+      user_profiles: {
+        nickname: "You",
+        username: "you",
+      },
+    };
+
     try {
-      // First get the user's UUID from user_profiles table using their Clerk ID
+      addPost(newPost);
+
+      if (!userId || !supabase) {
+        console.warn("Missing auth or supabase, skipping backend upload");
+        return true;
+      }
+
       const { data: profile, error: profileError } = await supabase
         .from("user_profiles")
         .select("id")
@@ -144,15 +208,16 @@ export function useCommunityPosts() {
         .single();
 
       if (profileError || !profile) {
-        throw new Error(
-          "User profile not found. Please complete onboarding first.",
-        );
+        console.warn("Profile not found, keeping local only");
+        return true;
       }
 
-      // 1. Upload to Cloudinary
       const cloudinaryUrl = await uploadToCloudinary(imageUri);
 
-      // 2. Save to Supabase using the UUID
+      if (!cloudinaryUrl) {
+        throw new Error("Image upload failed. Please try again.");
+      }
+
       const { error } = await supabase.from("community_posts").insert({
         user_id: profile.id,
         image_url: cloudinaryUrl,
@@ -161,14 +226,26 @@ export function useCommunityPosts() {
 
       if (error) throw error;
 
+      removeOptimisticPosts();
       return true;
     } catch (err) {
       console.error("Error creating post:", err);
-      throw err;
+      usePostsStore.setState((state) => ({
+        posts: state.posts.filter((post) => post.id !== newPost.id),
+      }));
+      return false;
     } finally {
       setUploading(false);
     }
   };
 
-  return { posts, likedPostIds, loading, uploading, createPost, toggleLike, refetch: fetchPosts };
+  return {
+    posts,
+    likedPostIds,
+    loading,
+    uploading,
+    createPost,
+    toggleLike,
+    refetch: fetchPosts,
+  };
 }

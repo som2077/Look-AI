@@ -20,26 +20,22 @@ export function useAffiliateProducts() {
         const apiKey = process.env.EXPO_PUBLIC_RAPIDAPI_KEY;
         const apiHost =
           process.env.EXPO_PUBLIC_RAPIDAPI_HOST || "asos2.p.rapidapi.com";
-
-        if (!apiKey) {
-          setProducts(getDummyData());
-          setLoading(false);
-          return;
-        }
-
-        // Using ASOS API v2 list endpoint
-        // categoryId 4209 is Men's clothing (just as a default)
         const url =
           "https://asos2.p.rapidapi.com/products/v2/list?store=US&offset=0&categoryId=4209&limit=10&country=US&sort=freshness&currency=USD&sizeSchema=US&lang=en-US";
-        const options = {
+
+        if (!apiKey) throw new Error("Missing API Key");
+
+        const response = await fetch(url, {
           method: "GET",
           headers: {
             "X-RapidAPI-Key": apiKey,
             "X-RapidAPI-Host": apiHost,
           },
-        };
+        });
 
-        const response = await fetch(url, options);
+        if (!response.ok) {
+          throw new Error("Failed to load affiliate products");
+        }
         const data = await response.json();
 
         if (data && data.products) {

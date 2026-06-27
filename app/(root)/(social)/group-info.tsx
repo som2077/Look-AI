@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Image, Share, Modal, StyleSheet, Dimensio
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, MoreVertical, Share2, MessageSquare, Copy } from "lucide-react-native";
-import { useGroups } from "../../../backend/hooks/useGroups";
+import { useGroups } from "../../../hooks/useGroups";
 import * as Clipboard from "expo-clipboard";
 
 const { width } = Dimensions.get("window");

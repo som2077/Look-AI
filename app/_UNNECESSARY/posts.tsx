@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
-import { useSupabase } from "@/backend/hooks/useSupabase";
-import { useSupabaseQuery } from "@/backend/hooks/useSupabaseQuery";
+import { useSupabase } from "@/hooks/useSupabase";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 
 type Post = {
   id: string;

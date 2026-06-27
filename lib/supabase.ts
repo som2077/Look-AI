@@ -25,19 +25,13 @@ export const createSupabaseClient = (
       detectSessionInUrl: false,
     },
     global: {
-      fetch: async (url, options = {}) => {
-        const headers = new Headers(options?.headers);
-        if (getToken) {
-          const clerkToken = await getToken();
-          if (clerkToken) {
-            headers.set("Authorization", `Bearer ${clerkToken}`);
-          }
-        }
-        return fetch(url, {
-          ...options,
-          headers,
-        });
+      headers: {
+        apikey: supabaseAnonKey,
       },
+    },
+    accessToken: async () => {
+      const clerkToken = getToken ? await getToken() : null;
+      return clerkToken ?? null;
     },
   });
 };

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useUIStore } from "../backend/store/ui-store";
+import { useUIStore } from "../store/ui-store";
 
 export function useScrollToHideTabBar() {
   const setTabBarVisible = useUIStore((state) => state.setTabBarVisible);

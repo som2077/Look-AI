@@ -1,4 +1,4 @@
-import { useSupabase } from "@/backend/hooks/useSupabase";
+import { useSupabase } from "@/hooks/useSupabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Calendar from "expo-calendar";
 import { Image as ExpoImage } from "expo-image";

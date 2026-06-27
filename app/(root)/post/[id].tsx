@@ -24,7 +24,7 @@ import {
   Grid,
 } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
-import { useCommunityPosts } from "../../../backend/hooks/useCommunityPosts";
+import { useCommunityPosts } from "../../../hooks/useCommunityPosts";
 
 export default function PostDetailScreen() {
   const router = useRouter();

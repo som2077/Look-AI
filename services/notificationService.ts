@@ -4,7 +4,7 @@ import { useCallback } from "react";
 
 // ── Sound ─────────────────────────────────────────────────────────
  
-const CHIME_ASSET = require("../../assets/sounds/analysis-complete.wav");
+const CHIME_ASSET = require("../assets/sounds/analysis-complete.wav");
  
 
 /**

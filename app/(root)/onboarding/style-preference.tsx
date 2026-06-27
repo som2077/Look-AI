@@ -1,4 +1,4 @@
-import { useOnboardingState } from "@/backend/store/onboarding-store";
+import { useOnboardingState } from "@/store/onboarding-store";
 import { ContinueButton } from "@/components/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import * as Haptics from "expo-haptics";

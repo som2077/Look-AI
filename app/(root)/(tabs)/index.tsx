@@ -1,4 +1,4 @@
-import { useWardrobeSummary } from "@/backend/hooks/useWardrobeSummary";
+import { useWardrobeSummary } from "@/hooks/useWardrobeSummary";
 import { useUser } from "@clerk/clerk-expo";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Animated, AppState, Dimensions, FlatList, View } from "react-native";

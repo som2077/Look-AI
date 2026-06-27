@@ -1,4 +1,4 @@
-import { createSupabaseClient } from "@/backend/api/supabase";
+import { createSupabaseClient } from "@/lib/supabase";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { useAuth } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";

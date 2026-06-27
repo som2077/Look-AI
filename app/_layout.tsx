@@ -5,11 +5,11 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSupabase } from "@/backend/hooks/useSupabase";
+import { useSupabase } from "@/hooks/useSupabase";
 import {
   OnboardingProvider,
   useOnboardingState,
-} from "@/backend/store/onboarding-store";
+} from "@/store/onboarding-store";
 import { BillingService } from "@/billing/BillingService";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";

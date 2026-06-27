@@ -3,7 +3,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text, TextInput, View } from "react-native";
 import { ContinueButton } from "@/components/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/backend/store/onboarding-store";
+import { useOnboardingState } from "@/store/onboarding-store";
 
 const MAX_LENGTH = 15;
 

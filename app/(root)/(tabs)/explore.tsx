@@ -1,41 +1,40 @@
-import React, { useCallback, useRef, useState, useEffect } from "react";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import {
+  ChevronRight,
+  Download,
+  Grid,
+  ImagePlus,
+  Pin,
+  Plus,
+  Share2,
+  ShoppingBag,
+  X,
+} from "lucide-react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Animated,
   Dimensions,
   FlatList,
   Image,
+  Linking,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import {
-  Plus,
-  Settings,
-  MoreHorizontal,
-  X,
-  Pin,
-  Share2,
-  Download,
-  Grid,
-  CloudRain,
-  ShoppingBag,
-  ChevronRight,
-} from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
 import { SwipeTabWrapper } from "../../../components/navigation/SwipeTabWrapper";
 import { AppGradientBackground } from "../../../components/ui/AppGradientBackground";
-import { StatusBar } from "expo-status-bar";
-import { useGroups, Group } from "../../../backend/hooks/useGroups";
-import { useAffiliateProducts } from "../../../backend/hooks/useAffiliateProducts";
-import { useCommunityPosts, CommunityPost } from "../../../backend/hooks/useCommunityPosts";
-import * as ImagePicker from "expo-image-picker";
+import { useAffiliateProducts } from "../../../hooks/useAffiliateProducts";
+import { useCommunityPosts } from "../../../hooks/useCommunityPosts";
+import { Group, useGroups } from "../../../hooks/useGroups";
+import { useScrollToHideTabBar } from "../../../hooks/useScrollToHideTabBar";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -59,7 +58,7 @@ function AddPostModal({
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      allowsEditing: false,
       quality: 0.8,
     });
 
@@ -67,6 +66,73 @@ function AddPostModal({
       setImageUri(result.assets[0].uri);
     }
   };
+
+  const panY = useRef(
+    new Animated.Value(Dimensions.get("window").height),
+  ).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(panY, {
+          toValue: 0,
+          useNativeDriver: true,
+          bounciness: 4,
+        }),
+      ]).start();
+    } else {
+      panY.setValue(Dimensions.get("window").height);
+      fadeAnim.setValue(0);
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(panY, {
+        toValue: Dimensions.get("window").height,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: (_, gestureState) =>
+        gestureState.dy > 10 &&
+        Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
+      onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 10,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          panY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          handleClose();
+        } else {
+          Animated.spring(panY, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 4,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   const handleShare = async () => {
     if (!imageUri) {
@@ -77,7 +143,7 @@ function AddPostModal({
       await createPost(imageUri, caption);
       setCaption("");
       setImageUri(null);
-      onClose();
+      handleClose();
     } catch (error) {
       alert("Failed to share post. Please try again.");
     }
@@ -86,94 +152,181 @@ function AddPostModal({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
+      animationType="none"
+      transparent={true}
+      onRequestClose={handleClose}
     >
-      <View style={{ flex: 1, backgroundColor: "#ffff" }}>
-        <View
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "flex-end",
+        }}
+      >
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+            },
+            { opacity: fadeAnim },
+          ]}
+        >
+          <Pressable style={{ flex: 1 }} onPress={handleClose} />
+        </Animated.View>
+        <Animated.View
+          {...panResponder.panHandlers}
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingTop: 20,
-            paddingBottom: 16,
-            borderBottomWidth: 1,
-            borderBottomColor: "#F0F0F0",
+            backgroundColor: "#FFFFFF",
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            maxHeight: "90%",
+            transform: [{ translateY: panY }],
           }}
         >
-          <TouchableOpacity onPress={onClose}>
-            <Text style={{ fontSize: 16, color: "#6B7280" }}>Cancel</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: "#1D1A27" }}>
-            New Post
-          </Text>
-          <TouchableOpacity
-            onPress={handleShare}
-            disabled={uploading}
+          <View
             style={{
-              backgroundColor: uploading ? "#A0A0A0" : "#1D1A27",
-              paddingHorizontal: 18,
-              paddingVertical: 8,
-              borderRadius: 20,
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>
-              {uploading ? "Sharing..." : "Share"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ padding: 20 }}>
-          {/* Image placeholder */}
-          <TouchableOpacity
-            onPress={pickImage}
-            style={{
-              width: "100%",
-              height: 280,
-              backgroundColor: "#F5F5F7",
-              borderRadius: 20,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 20,
-              borderWidth: 2,
-              borderColor: "#E0E0E8",
-              borderStyle: "dashed",
-              overflow: "hidden"
-            }}
-          >
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={{ width: "100%", height: "100%" }} />
-            ) : (
-              <>
-                <Text style={{ fontSize: 40, marginBottom: 8 }}>📷</Text>
-                <Text style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "600" }}>
-                  Tap to add photo
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <TextInput
-            placeholder="Write a caption..."
-            placeholderTextColor="#9CA3AF"
-            multiline
-            value={caption}
-            onChangeText={setCaption}
-            style={{
-              fontSize: 15,
-              color: "#1D1A27",
-              backgroundColor: "#F5F5F7",
-              borderRadius: 14,
-              padding: 16,
-              minHeight: 80,
-              textAlignVertical: "top",
+              width: 40,
+              height: 4,
+              backgroundColor: "#E5E7EB",
+              borderRadius: 2,
+              alignSelf: "center",
+              marginTop: 12,
+              marginBottom: 8,
             }}
           />
-        </View>
+          {/* Top Header */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 20,
+              paddingTop: 24,
+              paddingBottom: 16,
+            }}
+          >
+            <TouchableOpacity onPress={handleClose} style={{ padding: 4 }}>
+              <X size={24} color="#1D1A27" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
+              New Post
+            </Text>
+            <TouchableOpacity
+              onPress={handleShare}
+              disabled={uploading}
+              style={{
+                backgroundColor: uploading ? "#E5E7EB" : "#4C36F5",
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 24,
+                shadowColor: "#4C36F5",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: uploading ? 0 : 0.3,
+                shadowRadius: 8,
+                elevation: uploading ? 0 : 4,
+              }}
+            >
+              <Text
+                style={{
+                  color: uploading ? "#9CA3AF" : "#FFFFFF",
+                  fontWeight: "700",
+                  fontSize: 14,
+                }}
+              >
+                {uploading ? "Sharing" : "Post"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
+          >
+            {/* Image Picker Area */}
+            <TouchableOpacity
+              onPress={pickImage}
+              style={{
+                width: "100%",
+                height: 200,
+                backgroundColor: "#F9FAFB",
+                borderRadius: 24,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 24,
+                borderWidth: imageUri ? 0 : 2,
+                borderColor: "#E5E7EB",
+                borderStyle: "dashed",
+                overflow: "hidden",
+              }}
+            >
+              {imageUri ? (
+                <Image
+                  source={{ uri: imageUri }}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={{ alignItems: "center" }}>
+                  <View
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: 32,
+                      backgroundColor: "#EEF2FF",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <ImagePlus size={32} color="#4C36F5" strokeWidth={1.5} />
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 17,
+                      color: "#1D1A27",
+                      fontWeight: "700",
+                      marginBottom: 6,
+                    }}
+                  >
+                    Upload a photo
+                  </Text>
+                  <Text style={{ fontSize: 14, color: "#6B7280" }}>
+                    Show off your latest outfit
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Caption Input Area */}
+            <View
+              style={{
+                backgroundColor: "#F9FAFB",
+                borderRadius: 20,
+                padding: 16,
+              }}
+            >
+              <TextInput
+                placeholder="Write a caption for your look..."
+                placeholderTextColor="#9CA3AF"
+                multiline
+                value={caption}
+                onChangeText={setCaption}
+                style={{
+                  fontSize: 16,
+                  color: "#1D1A27",
+                  minHeight: 100,
+                  textAlignVertical: "top",
+                }}
+              />
+            </View>
+          </ScrollView>
+        </Animated.View>
       </View>
     </Modal>
-    // </Modal>
   );
 }
 
@@ -186,7 +339,7 @@ const CommunityPostCard = ({
   onMenuPress: () => void;
   onCardPress: () => void;
 }) => (
-  <View style={{ marginBottom:5 }}>
+  <View style={{ marginBottom: 5 }}>
     <Pressable
       onPress={onCardPress}
       style={{
@@ -207,6 +360,24 @@ const CommunityPostCard = ({
         resizeMode="cover"
       />
     </Pressable>
+    <Pressable
+      onPress={onMenuPress}
+      style={{
+        position: "absolute",
+        top: 12,
+        right: 12,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: "rgba(255,255,255,0.9)",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text style={{ fontSize: 20, fontWeight: "700", color: "#1D1A27" }}>
+        ⋯
+      </Text>
+    </Pressable>
   </View>
 );
 
@@ -223,8 +394,6 @@ function ForYouTab() {
   const { posts: communityPosts } = useCommunityPosts();
   const displayPosts = communityPosts;
 
-
-
   return (
     <ScrollView
       onScroll={onScroll}
@@ -232,24 +401,38 @@ function ForYouTab() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: "50%" }}
     >
-
-
       {/* ── Shop the Look (Affiliates) ── */}
       <View style={{ marginTop: 32 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 16, marginBottom: 14 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            paddingHorizontal: 16,
+            marginBottom: 14,
+          }}
+        >
           <View>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>Trending For You</Text>
-            <Text style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>Shop the latest styles</Text>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
+              Trending For You
+            </Text>
+            <Text style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
+              Shop the latest styles
+            </Text>
           </View>
-          <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={{ fontSize: 13, fontWeight: "600", color: "#4C36F5" }}>See all</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#4C36F5" }}>
+              See all
+            </Text>
             <ChevronRight size={16} color="#4C36F5" />
-          </TouchableOpacity>
+          </View>
         </View>
 
         {productsLoading ? (
           <View style={{ padding: 20, alignItems: "center" }}>
-             <Text style={{ color: "#9CA3AF" }}>Finding the best pieces for you...</Text>
+            <Text style={{ color: "#9CA3AF" }}>
+              Finding the best pieces for you...
+            </Text>
           </View>
         ) : (
           <FlatList
@@ -271,22 +454,56 @@ function ForYouTab() {
                   elevation: 2,
                   borderWidth: 1,
                   borderColor: "#F0F0F0",
-                  overflow: "hidden"
+                  overflow: "hidden",
                 }}
               >
                 <Image
                   source={{ uri: item.image }}
-                  style={{ width: "100%", height: 200, backgroundColor: "#F5F5F7" }}
+                  style={{
+                    width: "100%",
+                    height: 200,
+                    backgroundColor: "#F5F5F7",
+                  }}
                 />
                 <View style={{ padding: 12 }}>
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: "#4C36F5", textTransform: "uppercase", marginBottom: 4 }} numberOfLines={1}>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "700",
+                      color: "#4C36F5",
+                      textTransform: "uppercase",
+                      marginBottom: 4,
+                    }}
+                    numberOfLines={1}
+                  >
                     {item.brand}
                   </Text>
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: "#1D1A27", marginBottom: 4 }} numberOfLines={2}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      color: "#1D1A27",
+                      marginBottom: 4,
+                    }}
+                    numberOfLines={2}
+                  >
                     {item.title}
                   </Text>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-                    <Text style={{ fontSize: 15, fontWeight: "800", color: "#1D1A27" }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: "800",
+                        color: "#1D1A27",
+                      }}
+                    >
                       {item.price}
                     </Text>
                     <View
@@ -325,54 +542,90 @@ function ForYouTab() {
           Community Looks
         </Text>
         {displayPosts.length === 0 ? (
-          <View style={{ padding: 24, alignItems: "center", backgroundColor: "#F5F5F7", borderRadius: 20 }}>
+          <View
+            style={{
+              padding: 24,
+              alignItems: "center",
+              backgroundColor: "#F5F5F7",
+              borderRadius: 20,
+            }}
+          >
             <Text style={{ fontSize: 32, marginBottom: 8 }}>✨</Text>
-            <Text style={{ fontSize: 15, fontWeight: "600", color: "#1D1A27", marginBottom: 4 }}>No looks shared yet</Text>
-            <Text style={{ fontSize: 13, color: "#6B7280", textAlign: "center" }}>Be the first to share your style with the community!</Text>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "600",
+                color: "#1D1A27",
+                marginBottom: 4,
+              }}
+            >
+              No looks shared yet
+            </Text>
+            <Text
+              style={{ fontSize: 13, color: "#6B7280", textAlign: "center" }}
+            >
+              Be the first to share your style with the community!
+            </Text>
           </View>
         ) : (
           <View style={{ flexDirection: "row", gap: 5 }}>
             <View style={{ flex: 1 }}>
-              {displayPosts.filter((_, i) => i % 2 === 0).map((post) => (
-                <CommunityPostCard
-                  key={post.id}
-                  post={post}
-                  onMenuPress={() => setSelectedPostOptions(post)}
-                  onCardPress={() =>
-                    router.push({
-                      pathname: "/(root)/post/[id]",
-                      params: {
-                        id: post.id,
-                        image: post.image_url || (post as any).image,
-                        user: post.user_profiles?.username ? `@${post.user_profiles.username}` : (post.user_profiles?.nickname || (post as any).user || "Style Explorer"),
-                        likes: String(post.likes_count || (post as any).likes || 0),
-                        caption: post.caption || "",
-                      } as any,
-                    })
-                  }
-                />
-              ))}
+              {displayPosts
+                .filter((_, i) => i % 2 === 0)
+                .map((post) => (
+                  <CommunityPostCard
+                    key={post.id}
+                    post={post}
+                    onMenuPress={() => setSelectedPostOptions(post)}
+                    onCardPress={() =>
+                      router.push({
+                        pathname: "/(root)/post/[id]",
+                        params: {
+                          id: post.id,
+                          image: post.image_url || (post as any).image,
+                          user: post.user_profiles?.username
+                            ? `@${post.user_profiles.username}`
+                            : post.user_profiles?.nickname ||
+                              (post as any).user ||
+                              "Style Explorer",
+                          likes: String(
+                            post.likes_count || (post as any).likes || 0,
+                          ),
+                          caption: post.caption || "",
+                        } as any,
+                      })
+                    }
+                  />
+                ))}
             </View>
             <View style={{ flex: 1 }}>
-              {displayPosts.filter((_, i) => i % 2 !== 0).map((post) => (
-                <CommunityPostCard
-                  key={post.id}
-                  post={post}
-                  onMenuPress={() => setSelectedPostOptions(post)}
-                  onCardPress={() =>
-                    router.push({
-                      pathname: "/(root)/post/[id]",
-                      params: {
-                        id: post.id,
-                        image: post.image_url || (post as any).image,
-                        user: post.user_profiles?.username ? `@${post.user_profiles.username}` : (post.user_profiles?.nickname || (post as any).user || "Style Explorer"),
-                        likes: String(post.likes_count || (post as any).likes || 0),
-                        caption: post.caption || "",
-                      } as any,
-                    })
-                  }
-                />
-              ))}
+              {displayPosts
+                .filter((_, i) => i % 2 !== 0)
+                .map((post) => (
+                  <CommunityPostCard
+                    key={post.id}
+                    post={post}
+                    onMenuPress={() => setSelectedPostOptions(post)}
+                    onCardPress={() =>
+                      router.push({
+                        pathname: "/(root)/post/[id]",
+                        params: {
+                          id: post.id,
+                          image: post.image_url || (post as any).image,
+                          user: post.user_profiles?.username
+                            ? `@${post.user_profiles.username}`
+                            : post.user_profiles?.nickname ||
+                              (post as any).user ||
+                              "Style Explorer",
+                          likes: String(
+                            post.likes_count || (post as any).likes || 0,
+                          ),
+                          caption: post.caption || "",
+                        } as any,
+                      })
+                    }
+                  />
+                ))}
             </View>
           </View>
         )}
@@ -599,12 +852,9 @@ function GroupCard({
 
 // ─── Groups Tab ────────────────────────────────────────────────────────────────
 
-function GroupsTab({
-  onGroupPress,
-}: {
-  onGroupPress: (group: Group) => void;
-}) {
-  const { groups, joinedGroupIds, joinGroup, leaveGroup, loading } = useGroups();
+function GroupsTab({ onGroupPress }: { onGroupPress: (group: Group) => void }) {
+  const { groups, joinedGroupIds, joinGroup, leaveGroup, loading } =
+    useGroups();
 
   const handleJoin = useCallback(
     (id: string) => {
@@ -614,11 +864,15 @@ function GroupsTab({
         joinGroup(id);
       }
     },
-    [joinedGroupIds, joinGroup, leaveGroup]
+    [joinedGroupIds, joinGroup, leaveGroup],
   );
 
   if (loading) {
-    return <Text style={{ padding: 20, textAlign: "center", color: "#6B7280" }}>Loading groups...</Text>;
+    return (
+      <Text style={{ padding: 20, textAlign: "center", color: "#6B7280" }}>
+        Loading groups...
+      </Text>
+    );
   }
 
   const joinedGroups = groups.filter((g) => joinedGroupIds.includes(g.id));
@@ -767,7 +1021,7 @@ export default function ExploreScreen() {
 
             {/* Right buttons */}
             <View
-              style={{ flexDirection: "row", gap: 10, alignItems: "center",  }}
+              style={{ flexDirection: "row", gap: 10, alignItems: "center" }}
             >
               <TouchableOpacity
                 onPress={() => setShowAddPost(true)}

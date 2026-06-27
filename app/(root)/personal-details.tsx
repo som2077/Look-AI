@@ -23,8 +23,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { uploadToCloudinary } from "../../backend/api/cloudinary";
-import { useOnboardingState } from "../../backend/store/onboarding-store";
+import { uploadToCloudinary } from "../../lib/cloudinary";
+import { useOnboardingState } from "../../store/onboarding-store";
 import { AppGradientBackground } from "../../components/ui/AppGradientBackground";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

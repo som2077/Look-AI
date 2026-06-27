@@ -1,5 +1,3 @@
-import * as FileSystem from "expo-file-system";
-
 /**
  * Uploads an image to Cloudinary using unsigned upload.
  * Make sure to set EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME and EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET
@@ -18,16 +16,16 @@ export const uploadToCloudinary = async (
       return null;
     }
 
-    // Convert local file to base64
-    const base64 = await FileSystem.readAsStringAsync(localUri, {
-      encoding: "base64",
-    });
-
-    const fileExt = localUri.split(".").pop() || "jpg";
-    const dataUri = `data:image/${fileExt};base64,${base64}`;
+    const fileName = localUri.split("/").pop() || "image.jpg";
+    const fileExt = (fileName.split(".").pop() || "jpg").toLowerCase();
+    const mimeType = fileExt === "png" ? "image/png" : "image/jpeg";
 
     const data = new FormData();
-    data.append("file", dataUri);
+    data.append("file", {
+      uri: localUri,
+      name: fileName,
+      type: mimeType,
+    } as any);
     data.append("upload_preset", uploadPreset);
     if (folder) {
       data.append("folder", folder);

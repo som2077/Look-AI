@@ -8,11 +8,12 @@ import {
   FlatList,
   Modal,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SavedOutfit, useSavedStore } from "../../../backend/store/saved-store";
+import { SavedOutfit, useSavedStore } from "../../../store/saved-store";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const NUM_COLUMNS = 3;
@@ -24,11 +25,21 @@ export default function SavedScreen() {
   const { outfits, removeSavedItem } = useSavedStore();
   const [isManaging, setIsManaging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState("Barcode");
 
   const filteredOutfits = useMemo(() => {
-    // Basic mock filtering based on active chip
-    return outfits;
-  }, [outfits]);
+    if (activeCategory === "Barcode") return outfits;
+
+    return outfits.filter((outfit) => {
+      const tags = outfit.tags?.map((tag) => tag.toLowerCase()) ?? [];
+      const categoryLabel = activeCategory.toLowerCase();
+      return (
+        tags.includes(categoryLabel) ||
+        outfit.occasion?.toLowerCase() === categoryLabel ||
+        outfit.name.toLowerCase().includes(categoryLabel)
+      );
+    });
+  }, [activeCategory, outfits]);
 
   const renderGridItem = useCallback(
     ({ item }: { item: SavedOutfit }) => (
@@ -120,6 +131,39 @@ export default function SavedScreen() {
               {isManaging ? "Done" : "Manage"}
             </Text>
           </Pressable>
+        </View>
+
+        {/* Categories */}
+        <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+          >
+            {["Barcode", "Cloth label", "Post", "AI outfit"].map((cat) => (
+              <Pressable
+                key={cat}
+                onPress={() => setActiveCategory(cat)}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor:
+                    activeCategory === cat ? "#1D1A27" : "#F4F4F6",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: activeCategory === cat ? "#FFFFFF" : "#6B7280",
+                  }}
+                >
+                  {cat}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
 
         <FlatList

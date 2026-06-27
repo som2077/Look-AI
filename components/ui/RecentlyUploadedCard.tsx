@@ -1,4 +1,4 @@
-import { useOutfitAnalysisStore } from "@/backend/store/outfit-analysis-store";
+import { useOutfitAnalysisStore } from "@/store/outfit-analysis-store";
 import { IconBell, IconX } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import React from "react";

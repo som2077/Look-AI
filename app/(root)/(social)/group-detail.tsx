@@ -22,8 +22,8 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ArrowLeft, Users } from "lucide-react-native";
-import { useGroupPosts, GroupPost as Post } from "../../../backend/hooks/useGroupPosts";
-import { useGroups } from "../../../backend/hooks/useGroups";
+import { useGroupPosts, GroupPost as Post } from "../../../hooks/useGroupPosts";
+import { useGroups } from "../../../hooks/useGroups";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 

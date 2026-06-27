@@ -1,8 +1,9 @@
 import {
-  IconArrowLeft,
+  IconBolt,
   IconMesh,
   IconPhoto,
-  IconRotate,
+  IconQuestionMark,
+  IconX,
 } from "@tabler/icons-react-native";
 import { CameraView, useCameraPermissions, type CameraType } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
@@ -23,8 +24,12 @@ export default function AddClothesCameraScreen() {
   const goToScanning = useCallback(
     (uri: string) => {
       router.replace({
-        pathname: "/(root)/add-clothes/scanning",
-        params: { photoUri: uri },
+        pathname: "/(root)/add-clothes/form",
+        params: {
+          mode: "scanned",
+          photoUri: uri,
+          isScanning: "true",
+        },
       } as never);
     },
     [router],
@@ -115,24 +120,24 @@ export default function AddClothesCameraScreen() {
 
       <SafeAreaView className="flex-1" edges={["top"]}>
         {/* Top bar */}
-        <View className="flex-row items-center justify-between px-4 py-3">
+        <View className="flex-row items-center justify-between px-6 py-4">
           <Pressable
             onPress={handleBack}
-            className="h-10 w-10 items-center justify-center rounded-xl bg-black/55 border border-white/10"
+            className="h-10 w-10 items-center justify-center rounded-full bg-white/20"
           >
-            <IconArrowLeft size={18} color="#ffffff" />
+            <IconX size={20} color="#ffffff" />
           </Pressable>
-          <Text className="text-white text-base font-bold">Add clothes</Text>
-          <View className="w-10" />
+          <Pressable
+            onPress={handleGallery}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white/20"
+          >
+            <IconQuestionMark size={20} color="#ffffff" />
+          </Pressable>
         </View>
-
-        <Text className="text-center text-white/85 text-xs px-6 mb-4">
-          Lay the item flat or hang on a plain wall
-        </Text>
 
         {/* Framing guide — corner brackets */}
         <View className="flex-1 items-center justify-center">
-          <View style={{ width: 280, height: 340, position: "relative" }}>
+          <View style={{ width: 330, height: 330, position: "relative" }}>
             {/* Top-Left */}
             <View
               style={{
@@ -236,57 +241,37 @@ export default function AddClothesCameraScreen() {
                 />
               </Svg>
             </View>
-
-            {/* Center hint */}
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <IconMesh
-                size={48}
-                color="rgba(255,255,255,0.30)"
-                strokeWidth={1.5}
-              />
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.50)",
-                  fontSize: 12,
-                  marginTop: 10,
-                }}
-              >
-                Place item inside frame
-              </Text>
-            </View>
           </View>
         </View>
 
         {/* Bottom controls */}
-        <View className="flex-row items-center justify-between px-8 pb-6 pt-4 bg-black/55">
-          <Pressable
-            onPress={handleGallery}
-            className="h-12 w-12 items-center justify-center rounded-xl bg-black/55 border border-white/15"
-          >
-            <IconPhoto size={20} color="#ffffff" />
+        <View className="flex-row items-center justify-between px-10 pb-16 pt-4">
+          <Pressable onPress={handleGallery} className="items-center">
+            <View className="h-12 w-12 items-center justify-center rounded-xl border border-white/30 mb-2">
+              <IconPhoto size={24} color="#ffffff" />
+            </View>
+            <Text className="text-white/80 text-[10px] font-medium">
+              From Gallery
+            </Text>
           </Pressable>
+
           <Pressable
             onPress={handleShutter}
             disabled={capturing}
-            className="h-[72px] w-[72px] rounded-full border-[3px] border-white items-center justify-center"
+            className="h-[76px] w-[76px] mr-5 rounded-full border-[4px] border-white items-center justify-center"
           >
             {capturing ? (
               <ActivityIndicator color="#0c0c0c" />
             ) : (
-              <View className="h-14 w-14 rounded-full bg-white" />
+              <View className="h-[60px] w-[60px] rounded-full bg-white" />
             )}
           </Pressable>
+
           <Pressable
             onPress={toggleFacing}
-            className="h-12 w-12 items-center justify-center rounded-xl bg-black/55 border border-white/15"
+            className="h-12 w-12 items-center justify-center rounded-full bg-white/10"
           >
-            <IconRotate size={20} color="#ffffff" />
+            <IconBolt size={20} color="#ffffff" />
           </Pressable>
         </View>
       </SafeAreaView>

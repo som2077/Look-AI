@@ -6,12 +6,12 @@
  * receipt verification) so the client can never self-grant premium.
  */
 
-import { createSupabaseClient } from "./supabase";
 import type {
   Entitlement,
   VerifyPurchaseRequest,
   VerifyPurchaseResponse,
 } from "@/billing/types";
+import { createSupabaseClient } from "./supabase";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
@@ -24,22 +24,35 @@ export async function verifyPurchase(
   payload: VerifyPurchaseRequest,
   clerkToken: string,
 ): Promise<VerifyPurchaseResponse> {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-purchase`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${clerkToken}`,
-      apikey: SUPABASE_ANON_KEY,
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/verify-purchase`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${clerkToken}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify(payload),
+      },
+    );
 
-  if (!response.ok) {
-    const body = await response.text();
-    return { success: false, error: `Verification failed (${response.status}): ${body}` };
+    if (!response.ok) {
+      const body = await response.text();
+      return {
+        success: false,
+        error: `Verification failed (${response.status}): ${body}`,
+      };
+    }
+
+    return response.json() as Promise<VerifyPurchaseResponse>;
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Verification failed",
+    };
   }
-
-  return response.json() as Promise<VerifyPurchaseResponse>;
 }
 
 // ─── Fetch current entitlement for a user ────────────────────────────────────

@@ -11,7 +11,7 @@ import {
   verifyPurchase,
   fetchEntitlement,
   isEntitlementActive,
-} from "@/backend/api/entitlement";
+} from "@/lib/entitlement";
 import type { BillingState, Entitlement, SubscriptionPlanId } from "./types";
 import { PLAN_MAP } from "./constants";
 

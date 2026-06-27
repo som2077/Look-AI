@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@clerk/clerk-expo";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useErrorStore } from "../components/ui/ErrorStateView";
 import { useSupabase } from "./useSupabase";
-import { useErrorStore } from "../../components/ui/ErrorStateView";
 
 type QueryBuilder = ReturnType<
   ReturnType<
@@ -29,8 +30,10 @@ function getCacheKey(
   table: string,
   select?: string,
   suffix?: string,
+  userId?: string | null,
 ): string {
-  const base = `${table}::${select ?? "*"}`;
+  const scopedUserId = userId ?? "anonymous";
+  const base = `${scopedUserId}::${table}::${select ?? "*"}`;
   return suffix ? `${base}::${suffix}` : base;
 }
 
@@ -39,11 +42,13 @@ export const useSupabaseQuery = <T extends Record<string, unknown>>(
   options?: UseSupabaseQueryOptions,
 ) => {
   const { supabase, isInitializing } = useSupabase();
+  const { userId } = useAuth();
   const enabled = options?.enabled !== false;
   const cacheKey = getCacheKey(
     table,
     options?.select,
     options?.cacheKeySuffix,
+    userId,
   );
 
   // Initialise from cache immediately to avoid flash of empty state
@@ -55,7 +60,7 @@ export const useSupabaseQuery = <T extends Record<string, unknown>>(
     }
     return [];
   });
-  const [loading, setLoading] = useState(() => !enabled ? false : true);
+  const [loading, setLoading] = useState(() => (!enabled ? false : true));
   const [error, setError] = useState<PostgrestError | Error | null>(null);
   const optionsRef = useRef(options);
   optionsRef.current = options;
@@ -69,7 +74,7 @@ export const useSupabaseQuery = <T extends Record<string, unknown>>(
       return;
     }
 
-    const key = getCacheKey(table, opts?.select, opts?.cacheKeySuffix);
+    const key = getCacheKey(table, opts?.select, opts?.cacheKeySuffix, userId);
 
     // Serve from cache if still fresh
     const cached = queryCache.get(key);
@@ -121,7 +126,7 @@ export const useSupabaseQuery = <T extends Record<string, unknown>>(
     } finally {
       setLoading(false);
     }
-  }, [isInitializing, supabase, table, cacheKey]);
+  }, [isInitializing, supabase, table, cacheKey, userId]);
 
   useEffect(() => {
     void fetchData();

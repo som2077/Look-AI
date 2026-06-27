@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/backend/store/onboarding-store";
+import { useOnboardingState } from "@/store/onboarding-store";
 
 const maleBodyTypes: BodyTypeOption[] = [
   {

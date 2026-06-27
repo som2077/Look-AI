@@ -1,15 +1,20 @@
-import React from "react";
-import { View, Text, Pressable, Dimensions, StyleSheet } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  IconChevronLeft,
-  IconHeart,
-  IconShare,
-} from "@tabler/icons-react-native";
-import { StatusBar } from "expo-status-bar";
 import { getMockWardrobeItemById } from "@/constants/mock-wardrobe-items";
-import { useUserWardrobeStore } from "@/backend/store/user-wardrobe-store";
+import { useUserWardrobeStore } from "@/store/user-wardrobe-store";
+import { IconArrowLeft, IconDots } from "@tabler/icons-react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useRef } from "react";
+import {
+  Animated,
+  Dimensions,
+  Image,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -43,69 +48,162 @@ export default function ClothDetailsScreen() {
   const itemOccasion = userItem?.occasion ?? mockItem?.occasion ?? "Casual";
   const bg = mockItem?.bgColor ?? "#F4F4F6";
 
+  const MIN_HEIGHT = SCREEN_HEIGHT * 0.45;
+  const MAX_HEIGHT = SCREEN_HEIGHT * 0.85;
+  const HIDDEN_OFFSET = MAX_HEIGHT - MIN_HEIGHT;
+  const translateY = useRef(new Animated.Value(HIDDEN_OFFSET)).current;
+  const isExpandedRef = useRef(false);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dy) > 10,
+      onPanResponderMove: (_, gestureState) => {
+        let newY = isExpandedRef.current
+          ? gestureState.dy
+          : HIDDEN_OFFSET + gestureState.dy;
+        if (newY < 0) newY = 0;
+        if (newY > HIDDEN_OFFSET) newY = HIDDEN_OFFSET;
+        translateY.setValue(newY);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy < -50) {
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 4,
+          }).start();
+          isExpandedRef.current = true;
+        } else if (gestureState.dy > 50) {
+          Animated.spring(translateY, {
+            toValue: HIDDEN_OFFSET,
+            useNativeDriver: true,
+            bounciness: 4,
+          }).start();
+          isExpandedRef.current = false;
+        } else {
+          const snapTo = isExpandedRef.current ? 0 : HIDDEN_OFFSET;
+          Animated.spring(translateY, {
+            toValue: snapTo,
+            useNativeDriver: true,
+            bounciness: 4,
+          }).start();
+        }
+      },
+    }),
+  ).current;
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
       {/* Full Screen Image/Placeholder */}
       <View style={[styles.imageContainer, { backgroundColor: bg }]}>
-        {/* Replace this View with an Image component when you have real images */}
-        <View style={styles.placeholderImage} />
+        {userItem?.photoUri ? (
+          <Image
+            source={{ uri: userItem?.photoUri }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.placeholderImage} />
+        )}
       </View>
 
       {/* Top Navigation Bar */}
       <SafeAreaView style={styles.topNav} edges={["top"]}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}>
-          <IconChevronLeft size={24} color="#1D1A27" />
+        <Pressable onPress={() => router.back()}>
+          <IconArrowLeft size={24} color="#1D1A27" strokeWidth={2.5} />
         </Pressable>
-        <View style={styles.topRightActions}>
-          <Pressable style={styles.iconButton}>
-            <IconShare size={22} color="#1D1A27" />
-          </Pressable>
-          <Pressable style={styles.iconButton}>
-            <IconHeart size={22} color="#1D1A27" />
-          </Pressable>
-        </View>
+
+        <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
+          Confirm details
+        </Text>
+
+        <Pressable
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: "#E5E5E5",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <IconDots size={20} color="#1D1A27" strokeWidth={2.5} />
+        </Pressable>
       </SafeAreaView>
 
-      {/* Worn/New Badge */}
-      <View style={styles.badgeContainer}>
-        <Text style={styles.badgeText}>{isWorn ? "Worn" : "New"}</Text>
-      </View>
-
       {/* Bottom Details Card */}
-      <View style={styles.detailsCard}>
+      <Animated.View
+        style={[styles.detailsCard, { transform: [{ translateY }] }]}
+        {...panResponder.panHandlers}
+      >
         <View style={styles.dragHandle} />
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>{itemName}</Text>
-          <View style={styles.wearPill}>
-            <Text style={styles.wearPillText}>{wearCount}× worn</Text>
-          </View>
+
+        <Text
+          style={{
+            fontSize: 13,
+            color: "#1D1A27",
+            marginBottom: 20,
+            lineHeight: 18,
+            fontWeight: "500",
+            paddingHorizontal: 4,
+          }}
+        >
+          We&apos;ve prefilled what AI detected. Edit anything before saving to
+          your wardrobe.
+        </Text>
+
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: "600",
+            color: "#1D1A27",
+            marginBottom: 8,
+            paddingHorizontal: 4,
+          }}
+        >
+          Item name
+        </Text>
+        <View
+          style={{
+            backgroundColor: "#F4F4F6",
+            borderRadius: 16,
+            padding: 16,
+            marginBottom: 24,
+          }}
+        >
+          <Text style={{ fontSize: 15, color: "#1D1A27", fontWeight: "500" }}>
+            {itemName}
+          </Text>
         </View>
 
-        <View style={styles.tagsContainer}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{categoryName}</Text>
-          </View>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{itemColor}</Text>
-          </View>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{itemOccasion}</Text>
-          </View>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {[
+            { label: categoryName },
+            { label: itemOccasion },
+            { label: itemColor },
+          ].map((chip) => (
+            <View
+              key={chip.label}
+              style={{
+                backgroundColor: "#FFFFFF",
+                paddingHorizontal: 18,
+                paddingVertical: 12,
+                borderRadius: 24,
+              }}
+            >
+              <Text
+                style={{ fontSize: 12, fontWeight: "600", color: "#1D1A27" }}
+              >
+                {chip.label}
+              </Text>
+            </View>
+          ))}
         </View>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Last Worn</Text>
-            <Text style={styles.statValue}>2 days ago</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Cost per Wear</Text>
-            <Text style={styles.statValue}>$12.50</Text>
-          </View>
-        </View>
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -117,7 +215,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT * 0.75, // Takes up 75% of screen
+    height: SCREEN_HEIGHT,
     position: "absolute",
     top: 0,
   },
@@ -171,11 +269,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     width: SCREEN_WIDTH,
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    height: SCREEN_HEIGHT * 0.85,
+    backgroundColor: "#C9C9C9",
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
     padding: 24,
-    paddingTop: 12,
+    paddingTop: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.04,
