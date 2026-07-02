@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "folder-structure": {
+      "source": "citypaul/.dotfiles",
+      "sourceType": "github",
+      "skillPath": "claude/.claude/skills/folder-structure/SKILL.md",
+      "computedHash": "5ef7ad706ada30a78c08a0d4b8b42e1c891fa9cafccb1048c039f9f9236b993d"
+    }
+  }
+}

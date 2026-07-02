@@ -3,8 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      "@/assets/*": [
+        "./assets/*"
+      ],
       "@/*": [
-        "./*"
+        "./src/*"
       ]
     }
   },
@@ -16,6 +19,6 @@
     "nativewind-env.d.ts"
   ],
   "exclude": [
-    "supabase"
+    "src/shared/api-client/supabase-backend"
   ]
 }
