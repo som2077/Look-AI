@@ -118,12 +118,12 @@ export default function BarcodeResultScreen() {
 const handleSave = () => {
     if (saved) return
     addItem({
-      name: result.itemName || "Clothing Item",
+      customName: result.itemName || "Clothing Item",
       category: "top",
-      color: result.color,
-      photoUri: params.photoUri,
-      material: result.material,
-      tags: result.brand ? [result.brand] : [],
+      primaryColor: result.color,
+      imageUrl: params.photoUri,
+      fabricGuess: result.material,
+      brand: result.brand,
     })
     setSaved(true)
   }

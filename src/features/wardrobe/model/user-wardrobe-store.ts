@@ -4,18 +4,39 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 export type UserClothingItem = {
   id: string;
-  name: string;
+  userId?: string;
+  customName?: string;
+  brand?: string;
+
+  // Core Visual Attributes
   category: string;
-  color?: string;
-  colorHex?: string;
-  photoUri?: string;
-  occasion?: string;
-  season?: string;
-  material?: string;
+  subCategory?: string;
+  primaryColor?: string;
+  secondaryColors?: string[];
   pattern?: string;
+  fabricGuess?: string;
+  fit?: string;
   sleeveType?: string;
   neckType?: string;
-  tags?: string[];
+
+  // Styling Intelligence
+  style?: string[];
+  season?: string[];
+  occasion?: string[];
+  formalityScore?: number;
+  versatilityTags?: string[];
+
+  // Metadata
+  imageUrl?: string;
+  originalImageUrl?: string;
+  confidence?: number;
+  source?: "camera" | "gallery" | "barcode" | "label_scan" | "manual";
+  
+  // Editable/Tracking
+  isFavorite?: boolean;
+  wearCount?: number;
+  lastWornDate?: string;
+
   createdAt: string;
 };
 
@@ -82,7 +103,7 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
         return get().items.some(
           (i) =>
             i.category.toLowerCase() === category.toLowerCase() &&
-            i.color?.toLowerCase() === color.toLowerCase(),
+            i.primaryColor?.toLowerCase() === color.toLowerCase(),
         );
       },
 

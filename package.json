@@ -27,6 +27,7 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "babel-preset-expo": "^55.0.19",
+    "crypto-js": "^4.2.0",
     "expo": "~54.0.34",
     "expo-application": "~7.0.8",
     "expo-audio": "~1.1.1",
@@ -77,6 +78,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "@types/react": "~19.1.0",
     "eslint": "^9.39.4",
     "eslint-config-expo": "~10.0.0",

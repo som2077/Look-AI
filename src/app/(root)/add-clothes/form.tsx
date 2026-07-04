@@ -212,11 +212,11 @@ export default function AddClothesFormScreen() {
 
   const handleConfirm = useCallback(() => {
     addItem({
-      name: name || "Untitled item",
+      customName: name || "Untitled item",
       category,
-      color: color || undefined,
-      photoUri: localPhotoUri || undefined,
-      occasion: occasion || undefined,
+      primaryColor: color || undefined,
+      imageUrl: localPhotoUri || undefined,
+      occasion: occasion ? [occasion] : undefined,
     });
     router.replace({
       pathname: "/(root)/add-clothes/success",

@@ -13,21 +13,6 @@ const MODELS = [
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface FullClothingAnalysis {
-  name: string;
-  category: "top" | "bottoms" | "footwear" | "outerwear" | "dress" | "ethnic" | "accessory";
-  color: string;
-  colorHex: string;
-  material: string;
-  pattern: string;
-  sleeveType: string;
-  neckType: string;
-  occasion: "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym";
-  season: "All" | "Summer" | "Winter" | "Monsoon" | "Spring";
-  matchingColors: Array<{ name: string; hex: string }>;
-  confidence: number;
-}
-
 export interface BarcodeAnalysis {
   brand: string;
   itemName: string;
@@ -46,16 +31,39 @@ export interface LabelAnalysis {
   drying: string;
   fabricComposition: string;
   aiExplanation: string;
+  error?: string;
 }
 
 export interface FitCheckAnalysis {
   fitScore: number;
-  colorHarmony: string;
-  occasionMatch: string;
-  layering: string;
-  suggestions: string[];
   rating: string;
-  outfitItems: string[];
+  silhouette: {
+    bodyShape: string;
+    waistDefinition: string;
+    verticalRatio: string;
+    ruleOfThirds: string;
+  };
+  fitPrecision: {
+    shoulderFit: string;
+    sleeveLength: string;
+    trouserBreak: string;
+    tightness: string;
+  };
+  colorTheory: {
+    harmonyType: string;
+    skinToneCompat: string;
+    contrastLevel: string;
+  };
+  styling: {
+    layering: string;
+    accessoryGaps: string;
+    footwearPairing: string;
+  };
+  styleCategory: {
+    archetype: string;
+    trendRelevance: string;
+  };
+  actionableFixes: string[];
 }
 
 // ─── Core Gemini caller ───────────────────────────────────────────────────────
@@ -137,49 +145,72 @@ function parseJson<T>(text: string | null, fallback: T): T {
   }
 }
 
+export interface FullClothingAnalysis {
+  category: string;
+  subCategory: string;
+  primaryColor: string;
+  secondaryColors: string[];
+  pattern: string;
+  fabricGuess: string;
+  fit: string;
+  sleeveType: string;
+  neckType: string;
+  style: string[];
+  season: string[];
+  occasion: string[];
+  formalityScore: number;
+  versatilityTags: string[];
+  confidence: number;
+}
+
 // ─── 1. Full Clothing Scan ────────────────────────────────────────────────────
 
-const CLOTH_PROMPT = `You are a fashion AI. Analyze the clothing item in this image.
-IMPORTANT: This app is STRICTLY for clothing and fashion. If the image contains NO clothing, fashion accessories, or related items (e.g., if it is food, animals, random objects), you MUST set name and category to "Not Clothing", set color, material, pattern, sleeveType, neckType to "Unknown", and set confidence to 0. DO NOT try to analyze non-clothing items.
+const CLOTH_PROMPT = `You are a STRICT fashion AI validator and analyzer. 
+STEP 1: EVALUATE IMAGE TYPE.
+- If you see a FULL HUMAN BODY (e.g. head to toe, or waist up showing an outfit), or a person wearing multiple clothing items (like jeans + jacket), YOU MUST REJECT IT. To reject, return exactly: {"category": "Full Body", "confidence": 0} and ignore all other fields. Do NOT try to extract a single item like a jacket from a full body photo.
+- If you see NO clothing at all, return exactly: {"category": "Not Clothing", "confidence": 0}.
 
-Return ONLY a valid JSON object with exactly these fields:
+STEP 2: ANALYZE SINGLE ITEM.
+ONLY IF the image is a clear shot of a SINGLE clothing item, accessory, or footwear (e.g., laid flat, on a hanger, or a very close-up shot of just the item), return a valid JSON object with EXACTLY these fields:
 {
-  "name": "descriptive item name (e.g. Navy Blue Denim Jacket)",
-  "category": one of: "top" | "bottoms" | "footwear" | "outerwear" | "dress" | "ethnic" | "accessory",
-  "color": "human readable color (e.g. Navy Blue)",
-  "colorHex": "dominant hex color (e.g. #1B3A6B)",
-  "material": "fabric type (e.g. Cotton, Polyester, Denim, Silk, Wool)",
-  "pattern": "pattern type (e.g. Solid, Stripes, Floral, Checks, Polka Dots)",
-  "sleeveType": "sleeve type (e.g. Full Sleeve, Half Sleeve, Sleeveless, N/A)",
-  "neckType": "neck type (e.g. Round Neck, V-Neck, Collar, Turtleneck, N/A)",
-  "occasion": one of: "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym",
-  "season": one of: "All" | "Summer" | "Winter" | "Monsoon" | "Spring",
-  "matchingColors": [{"name":"color name","hex":"#hexcode"}, {"name":"color name","hex":"#hexcode"}, {"name":"color name","hex":"#hexcode"}],
-  "confidence": number between 0.7 and 1.0 (or 0 if not clothing)
+  "category": "Top, Bottoms, Footwear, Outerwear, Dress, Ethnic, or Accessory",
+  "subCategory": "e.g., T-shirt, Shirt, Jeans, Kurta, Hoodie, Jacket",
+  "primaryColor": "main color (e.g., Navy Blue)",
+  "secondaryColors": ["color1", "color2"] (if applicable, else empty array),
+  "pattern": "Solid, Striped, Checked, Floral, Printed, Textured, etc.",
+  "fabricGuess": "Cotton, Denim, Silk, Polyester, Wool, etc.",
+  "fit": "Slim, Regular, Oversized, Loose, or Unknown",
+  "sleeveType": "Full, Half, Sleeveless, 3/4th, or null",
+  "neckType": "Round, V-neck, Collar, Turtleneck, or null",
+  "style": ["Casual", "Formal", "Streetwear", "Ethnic", "Athleisure", "Party"], (array of applicable styles)
+  "season": ["Summer", "Winter", "Monsoon", "All-season"], (array of applicable seasons)
+  "occasion": ["Office", "Party", "Wedding", "Gym", "Daily wear", "Date"], (array of applicable occasions)
+  "formalityScore": number from 1 to 10 (1 = very casual, 10 = very formal),
+  "versatilityTags": ["pairs well with denim", "good for layering", etc.],
+  "confidence": number between 0.0 and 1.0
 }
 Return only valid JSON. No markdown, no explanation.`;
 
 export async function analyzeClothingFull(
-  imageUri: string,
+  imageUri: string, // Can be Cloudinary URL or local URI
 ): Promise<FullClothingAnalysis> {
   const text = await callGeminiVision(imageUri, CLOTH_PROMPT);
   return parseJson<FullClothingAnalysis>(text, {
-    name: "Casual Top",
-    category: "top",
-    color: "White",
-    colorHex: "#FFFFFF",
-    material: "Cotton",
+    category: "Top",
+    subCategory: "T-shirt",
+    primaryColor: "White",
+    secondaryColors: [],
     pattern: "Solid",
-    sleeveType: "Half Sleeve",
-    neckType: "Round Neck",
-    occasion: "Casual",
-    season: "All",
-    matchingColors: [
-      { name: "Navy Blue", hex: "#1B3A6B" },
-      { name: "Beige", hex: "#F5F0E8" },
-      { name: "Olive", hex: "#6B7A3A" },
-    ],
-    confidence: 0.75,
+    fabricGuess: "Cotton",
+    fit: "Regular",
+    sleeveType: "Half",
+    neckType: "Round",
+    style: ["Casual"],
+    season: ["All-season"],
+    occasion: ["Daily wear"],
+    formalityScore: 3,
+    versatilityTags: ["Pairs well with jeans"],
+    confidence: 0.8,
   });
 }
 
@@ -218,7 +249,11 @@ export async function analyzeBarcodeImage(
 // ─── 3. Care Label OCR ────────────────────────────────────────────────────────
 
 const LABEL_PROMPT = `You are a clothing care expert. Analyze this clothing care label image.
-IMPORTANT: This app is STRICTLY for clothing and fashion. If the image contains NO clothing, clothing labels, or fashion items (e.g., if it is a food label, nutrition facts, or random object), you MUST set aiExplanation to "This does not appear to be a clothing care label." and all other fields to "Not detected". DO NOT try to extract non-clothing information.
+IMPORTANT LAWS (STRICT VALIDATION):
+1. You MUST verify that the image is actually a photo of a clothing care label, price tag, or brand tag.
+2. If the image is a full body shot, a person wearing clothes, or just a piece of clothing with NO visible care label/tag, you MUST set the "error" field to: "No care label detected. Please zoom in and take a clear photo of the clothing's care tag."
+3. If the image is of a completely unrelated object (e.g., food nutrition label, bottle, animal), you MUST set the "error" field to: "This does not appear to be a clothing care label. Please scan a valid clothing tag."
+4. If an error is set, set all other fields to "Not detected".
 
 Extract care instructions and return ONLY a valid JSON:
 {
@@ -228,7 +263,8 @@ Extract care instructions and return ONLY a valid JSON:
   "bleach": "bleach instructions (e.g. Do not bleach, Bleach when needed)",
   "drying": "drying instructions (e.g. Tumble dry low, Hang dry, Do not tumble dry)",
   "fabricComposition": "fabric percentages (e.g. 80% Cotton 20% Polyester)",
-  "aiExplanation": "Simple 2-3 sentence explanation of how to care for this item in plain English"
+  "aiExplanation": "Simple 2-3 sentence explanation of how to care for this item in plain English",
+  "error": "Error message if validation fails, otherwise omit this field"
 }
 Return only valid JSON. No markdown.`;
 
@@ -251,19 +287,44 @@ export async function analyzeClothLabel(
 // ─── 4. Fit Check Analysis ────────────────────────────────────────────────────
 
 const FITCHECK_PROMPT = `You are a professional fashion stylist. Analyze this full-body outfit photo.
-IMPORTANT: This app is STRICTLY for clothing and fashion. If the image contains NO person wearing an outfit or no fashion items (e.g., if it is food, animals, or random objects), you MUST set fitScore to 0, rating to "Not an Outfit", and suggestions to ["Please upload a photo of a person wearing an outfit or fashion items."]. DO NOT try to style non-clothing items.
+IMPORTANT: This app is STRICTLY for clothing and fashion. If the image contains NO person wearing an outfit or no fashion items, you MUST set fitScore to 0, rating to "Not an Outfit", and provide a fix like "Please upload a photo of a person wearing an outfit."
 
 Return ONLY a valid JSON:
 {
   "fitScore": number from 0 to 100 (overall outfit score),
-  "colorHarmony": "Excellent" | "Good" | "Needs Work",
-  "occasionMatch": "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym" | "Streetwear",
-  "layering": "short feedback about layering (e.g. Great layering, Could add a jacket, Clean minimal look)",
-  "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"],
   "rating": "Stylish" | "Good Look" | "Needs Work" | "Try These Tips" | "Not an Outfit",
-  "outfitItems": ["detected item 1", "detected item 2", "detected item 3"]
+  "silhouette": {
+    "bodyShape": "Rectangle, Hourglass, Triangle, Inverted Triangle, or Oval",
+    "waistDefinition": "high-waist/low-waist balance observation",
+    "verticalRatio": "top:bottom ratio (e.g. 40:60, 50:50)",
+    "ruleOfThirds": "does the outfit visually break at good points?"
+  },
+  "fitPrecision": {
+    "shoulderFit": "good fit, drop shoulder, too tight/loose",
+    "sleeveLength": "wrist length, short, long",
+    "trouserBreak": "no break, slight break, full break",
+    "tightness": "observation on chest, waist, thigh tightness"
+  },
+  "colorTheory": {
+    "harmonyType": "Complementary, Analogous, Monochrome, Clashing, etc.",
+    "skinToneCompat": "how colors work with estimated skin undertone",
+    "contrastLevel": "high-contrast (bold) vs low-contrast (tonal)"
+  },
+  "styling": {
+    "layering": "assessment of layer structures or lack thereof",
+    "accessoryGaps": "missing accessories (belt, watch, bag) to complete look",
+    "footwearPairing": "how shoes match the outfit formality"
+  },
+  "styleCategory": {
+    "archetype": "Minimalist, Streetwear, Old Money, Y2K, Business Casual, etc.",
+    "trendRelevance": "current trend alignment vs dated"
+  },
+  "actionableFixes": [
+    "Specific replacement suggestion 1 (e.g. swap loose shirt for fitted)",
+    "Specific fix 2 (e.g. add a brown leather belt)"
+  ]
 }
-Be constructive and specific. Return only valid JSON. No markdown.`;
+Be constructive and highly specific. Return only valid JSON. No markdown.`;
 
 export async function analyzeFitCheck(
   imageUri: string,
@@ -271,15 +332,36 @@ export async function analyzeFitCheck(
   const text = await callGeminiVision(imageUri, FITCHECK_PROMPT);
   return parseJson<FitCheckAnalysis>(text, {
     fitScore: 75,
-    colorHarmony: "Good",
-    occasionMatch: "Casual",
-    layering: "Clean and minimal look",
-    suggestions: [
+    rating: "Good Look",
+    silhouette: {
+      bodyShape: "Unknown",
+      waistDefinition: "Looks balanced",
+      verticalRatio: "50:50",
+      ruleOfThirds: "Good proportion",
+    },
+    fitPrecision: {
+      shoulderFit: "Good",
+      sleeveLength: "Good",
+      trouserBreak: "Slight break",
+      tightness: "Comfortable fit",
+    },
+    colorTheory: {
+      harmonyType: "Neutral",
+      skinToneCompat: "Good match",
+      contrastLevel: "Medium",
+    },
+    styling: {
+      layering: "Simple look",
+      accessoryGaps: "Could add a watch",
+      footwearPairing: "Matches well",
+    },
+    styleCategory: {
+      archetype: "Casual",
+      trendRelevance: "Timeless",
+    },
+    actionableFixes: [
       "Try adding a statement accessory",
       "Consider tucking in your shirt for a more polished look",
-      "Your color combination works well together",
     ],
-    rating: "Good Look",
-    outfitItems: ["Top", "Bottoms", "Footwear"],
   });
 }

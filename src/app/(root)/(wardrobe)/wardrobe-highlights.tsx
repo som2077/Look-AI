@@ -1,26 +1,31 @@
+import {
+  IconArrowLeft,
+  IconAward,
+  IconInfoCircle,
+  IconShirt,
+  IconSparkles,
+} from "@tabler/icons-react-native";
+import { Image as ExpoImage } from "expo-image";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
+  Dimensions,
   Pressable,
   ScrollView,
   Text,
-  View,
-  Dimensions,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { Image as ExpoImage } from "expo-image";
-import Svg, { Circle, Path, Defs, LinearGradient, Stop, Line } from "react-native-svg";
-import {
-  IconArrowLeft,
-  IconTrendingUp,
-  IconFlame,
-  IconSparkles,
-  IconInfoCircle,
-  IconShirt,
-  IconAward,
-} from "@tabler/icons-react-native";
+import Svg, {
+  Circle,
+  Defs,
+  Line,
+  LinearGradient,
+  Path,
+  Stop,
+} from "react-native-svg";
 
 interface HighlightItem {
   id: number;
@@ -55,9 +60,18 @@ const RANGE_DATA: Record<
     growth: "+5% Active Wears",
     points: { y0: 110, y1: 105, y2: 95, y3: 70 },
     clothes: {
-      p1: { title: "Floral dress", image: require("@/assets/images/mirror_selfie_girl.png") },
-      p2: { title: "Casual Jeans", image: require("@/assets/images/mirror_selfie_guy.png") },
-      p3: { title: "White Sneakers", image: require("@/assets/images/mirror_selfie_girl.png") },
+      p1: {
+        title: "Floral dress",
+        image: require("@/assets/images/mirror_selfie_girl.png"),
+      },
+      p2: {
+        title: "Casual Jeans",
+        image: require("@/assets/images/mirror_selfie_guy.png"),
+      },
+      p3: {
+        title: "White Sneakers",
+        image: require("@/assets/images/mirror_selfie_girl.png"),
+      },
     },
     list: [
       {
@@ -102,9 +116,18 @@ const RANGE_DATA: Record<
     growth: "+12% Active Wears",
     points: { y0: 110, y1: 100, y2: 80, y3: 52 },
     clothes: {
-      p1: { title: "White Sneakers", image: require("@/assets/images/mirror_selfie_girl.png") },
-      p2: { title: "Black Blazer", image: require("@/assets/images/mirror_selfie_guy.png") },
-      p3: { title: "Casual Jeans", image: require("@/assets/images/mirror_selfie_guy.png") },
+      p1: {
+        title: "White Sneakers",
+        image: require("@/assets/images/mirror_selfie_girl.png"),
+      },
+      p2: {
+        title: "Black Blazer",
+        image: require("@/assets/images/mirror_selfie_guy.png"),
+      },
+      p3: {
+        title: "Casual Jeans",
+        image: require("@/assets/images/mirror_selfie_guy.png"),
+      },
     },
     list: [
       {
@@ -149,9 +172,18 @@ const RANGE_DATA: Record<
     growth: "+18% Active Wears",
     points: { y0: 105, y1: 95, y2: 70, y3: 40 },
     clothes: {
-      p1: { title: "Casual Jeans", image: require("@/assets/images/mirror_selfie_guy.png") },
-      p2: { title: "White Sneakers", image: require("@/assets/images/mirror_selfie_girl.png") },
-      p3: { title: "Floral dress", image: require("@/assets/images/mirror_selfie_girl.png") },
+      p1: {
+        title: "Casual Jeans",
+        image: require("@/assets/images/mirror_selfie_guy.png"),
+      },
+      p2: {
+        title: "White Sneakers",
+        image: require("@/assets/images/mirror_selfie_girl.png"),
+      },
+      p3: {
+        title: "Floral dress",
+        image: require("@/assets/images/mirror_selfie_girl.png"),
+      },
     },
     list: [
       {
@@ -196,9 +228,18 @@ const RANGE_DATA: Record<
     growth: "+32% Active Wears",
     points: { y0: 100, y1: 90, y2: 55, y3: 25 },
     clothes: {
-      p1: { title: "Casual Jeans", image: require("@/assets/images/mirror_selfie_guy.png") },
-      p2: { title: "Floral dress", image: require("@/assets/images/mirror_selfie_girl.png") },
-      p3: { title: "Black Blazer", image: require("@/assets/images/mirror_selfie_guy.png") },
+      p1: {
+        title: "Casual Jeans",
+        image: require("@/assets/images/mirror_selfie_guy.png"),
+      },
+      p2: {
+        title: "Floral dress",
+        image: require("@/assets/images/mirror_selfie_girl.png"),
+      },
+      p3: {
+        title: "Black Blazer",
+        image: require("@/assets/images/mirror_selfie_guy.png"),
+      },
     },
     list: [
       {
@@ -293,7 +334,10 @@ export default function WardrobeHighlightsScreen() {
   const dClosed = `${dPath} L ${x3} ${yBaseline} L ${x0} ${yBaseline} Z`;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }} edges={["top"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+      edges={["top"]}
+    >
       <StatusBar style="dark" />
 
       {/* Header */}
@@ -322,10 +366,23 @@ export default function WardrobeHighlightsScreen() {
         </Pressable>
 
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 20, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27" }}>
+          <Text
+            style={{
+              fontSize: 20,
+              fontFamily: "TikTokSans16pt-Bold",
+              color: "#1D1A27",
+            }}
+          >
             Wardrobe Highlights
           </Text>
-          <Text style={{ fontSize: 11, fontFamily: "TikTokSans16pt-Medium", color: "#9B9BAF", marginTop: 1 }}>
+          <Text
+            style={{
+              fontSize: 11,
+              fontFamily: "TikTokSans16pt-Medium",
+              color: "#9B9BAF",
+              marginTop: 1,
+            }}
+          >
             Interactive clothes highlights log
           </Text>
         </View>
@@ -349,40 +406,109 @@ export default function WardrobeHighlightsScreen() {
         >
           {/* Metadata Block */}
           <View className="mb-2">
-            <Text style={{ fontSize: 12, fontFamily: "TikTokSans16pt-Medium", color: "#7E7C8C" }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "TikTokSans16pt-Medium",
+                color: "#7E7C8C",
+              }}
+            >
               Wardrobe Utilization Rate
             </Text>
-            <Text style={{ fontSize: 22, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27" }}>
+            <Text
+              style={{
+                fontSize: 22,
+                fontFamily: "TikTokSans16pt-Bold",
+                color: "#1D1A27",
+              }}
+            >
               {activeData.growth}
             </Text>
           </View>
 
           {/* SVG Chart area */}
-          <View style={{ position: "relative", width: containerWidth, height: svgHeight, marginLeft: -20 }}>
+          <View
+            style={{
+              position: "relative",
+              width: containerWidth,
+              height: svgHeight,
+              marginLeft: -20,
+            }}
+          >
             <Svg width={containerWidth} height={svgHeight}>
               <Defs>
-                <LinearGradient id="areaGradHighlights" x1="0" y1="0" x2="0" y2="1">
+                <LinearGradient
+                  id="areaGradHighlights"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <Stop offset="0%" stopColor="#CD7C46" stopOpacity={0.22} />
                   <Stop offset="100%" stopColor="#CD7C46" stopOpacity={0.0} />
                 </LinearGradient>
               </Defs>
 
               {/* Dotted helper grid lines */}
-              <Line x1={x0} y1={95} x2={x3} y2={95} stroke="#F0F0F2" strokeWidth={1} strokeDasharray="4,4" />
-              <Line x1={x0} y1={65} x2={x3} y2={65} stroke="#F0F0F2" strokeWidth={1} strokeDasharray="4,4" />
-              <Line x1={x0} y1={30} x2={x3} y2={30} stroke="#F0F0F2" strokeWidth={1} strokeDasharray="4,4" />
+              <Line
+                x1={x0}
+                y1={95}
+                x2={x3}
+                y2={95}
+                stroke="#F0F0F2"
+                strokeWidth={1}
+                strokeDasharray="4,4"
+              />
+              <Line
+                x1={x0}
+                y1={65}
+                x2={x3}
+                y2={65}
+                stroke="#F0F0F2"
+                strokeWidth={1}
+                strokeDasharray="4,4"
+              />
+              <Line
+                x1={x0}
+                y1={30}
+                x2={x3}
+                y2={30}
+                stroke="#F0F0F2"
+                strokeWidth={1}
+                strokeDasharray="4,4"
+              />
 
               {/* Baseline axis */}
-              <Line x1={x0} y1={yBaseline} x2={x3} y2={yBaseline} stroke="#EBEBEB" strokeWidth={1} />
+              <Line
+                x1={x0}
+                y1={yBaseline}
+                x2={x3}
+                y2={yBaseline}
+                stroke="#EBEBEB"
+                strokeWidth={1}
+              />
 
               {/* Closed area gradient */}
               <Path d={dClosed} fill="url(#areaGradHighlights)" />
 
               {/* Curve path */}
-              <Path d={dPath} fill="none" stroke="#CD7C46" strokeWidth={3} strokeLinecap="round" />
+              <Path
+                d={dPath}
+                fill="none"
+                stroke="#CD7C46"
+                strokeWidth={3}
+                strokeLinecap="round"
+              />
 
               {/* Start point */}
-              <Circle cx={x0} cy={y0} r={4} fill="#FFFFFF" stroke="#CD7C46" strokeWidth={1.5} />
+              <Circle
+                cx={x0}
+                cy={y0}
+                r={4}
+                fill="#FFFFFF"
+                stroke="#CD7C46"
+                strokeWidth={1.5}
+              />
             </Svg>
 
             {/* Thumbnail Point 1 */}
@@ -515,7 +641,9 @@ export default function WardrobeHighlightsScreen() {
                   <Text
                     style={{
                       fontSize: 12,
-                      fontFamily: isActive ? "TikTokSans16pt-Bold" : "TikTokSans16pt-Medium",
+                      fontFamily: isActive
+                        ? "TikTokSans16pt-Bold"
+                        : "TikTokSans16pt-Medium",
                       color: isActive ? "#1D1A27" : "#7E7C8C",
                     }}
                   >
@@ -529,26 +657,58 @@ export default function WardrobeHighlightsScreen() {
 
         {/* 📊 Category Utilization Breakdown */}
         <View className="mx-5 mb-6">
-          <Text style={{ fontSize: 16, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27", marginBottom: 12 }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontFamily: "TikTokSans16pt-Bold",
+              color: "#1D1A27",
+              marginBottom: 12,
+            }}
+          >
             Utilization by Category
           </Text>
 
           <View className="bg-white rounded-[20px] border border-[#E9EBF8] p-5">
             {CATEGORIES_PROGRESS.map((cat, i) => (
-              <View key={cat.name} className="mb-4 last:mb-0" style={{ marginBottom: i === CATEGORIES_PROGRESS.length - 1 ? 0 : 16 }}>
+              <View
+                key={cat.name}
+                className="mb-4 last:mb-0"
+                style={{
+                  marginBottom: i === CATEGORIES_PROGRESS.length - 1 ? 0 : 16,
+                }}
+              >
                 <View className="flex-row justify-between mb-1.5">
                   <View className="flex-row items-center gap-2">
                     <IconShirt size={14} color="#7E7C8C" />
-                    <Text style={{ fontSize: 13, fontFamily: "TikTokSans16pt-SemiBold", color: "#1D1A27" }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontFamily: "TikTokSans16pt-SemiBold",
+                        color: "#1D1A27",
+                      }}
+                    >
                       {cat.name}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 12, fontFamily: "TikTokSans16pt-Bold", color: cat.color }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontFamily: "TikTokSans16pt-Bold",
+                      color: cat.color,
+                    }}
+                  >
                     {cat.percentage}% ({cat.count} wears)
                   </Text>
                 </View>
                 {/* Custom styled progress track */}
-                <View style={{ height: 6, backgroundColor: "#F0F0F4", borderRadius: 3, overflow: "hidden" }}>
+                <View
+                  style={{
+                    height: 6,
+                    backgroundColor: "#F0F0F4",
+                    borderRadius: 3,
+                    overflow: "hidden",
+                  }}
+                >
                   <View
                     style={{
                       height: "100%",
@@ -565,7 +725,14 @@ export default function WardrobeHighlightsScreen() {
 
         {/* 👚 Highly Utilized Clothes Detail Cards */}
         <View className="mx-5 mb-6">
-          <Text style={{ fontSize: 16, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27", marginBottom: 12 }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontFamily: "TikTokSans16pt-Bold",
+              color: "#1D1A27",
+              marginBottom: 12,
+            }}
+          >
             Highly Utilized Pieces
           </Text>
 
@@ -604,7 +771,13 @@ export default function WardrobeHighlightsScreen() {
               {/* Specifications block */}
               <View style={{ flex: 1 }}>
                 <View className="flex-row items-center justify-between">
-                  <Text style={{ fontSize: 15, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27" }}>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontFamily: "TikTokSans16pt-Bold",
+                      color: "#1D1A27",
+                    }}
+                  >
                     {item.title}
                   </Text>
                   <View
@@ -615,38 +788,91 @@ export default function WardrobeHighlightsScreen() {
                       borderRadius: 6,
                     }}
                   >
-                    <Text style={{ fontSize: 8, fontFamily: "TikTokSans16pt-Bold", color: "#FFFFFF" }}>
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        fontFamily: "TikTokSans16pt-Bold",
+                        color: "#FFFFFF",
+                      }}
+                    >
                       {item.status}
                     </Text>
                   </View>
                 </View>
 
-                <Text style={{ fontSize: 11, fontFamily: "TikTokSans16pt-Medium", color: "#9B9BAF", marginTop: 2 }}>
-                  Category: <Text style={{ color: "#1D1A27" }}>{item.category}</Text> · Last worn: <Text style={{ color: "#1D1A27" }}>{item.lastWorn}</Text>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "TikTokSans16pt-Medium",
+                    color: "#9B9BAF",
+                    marginTop: 2,
+                  }}
+                >
+                  Category:{" "}
+                  <Text style={{ color: "#1D1A27" }}>{item.category}</Text> ·
+                  Last worn:{" "}
+                  <Text style={{ color: "#1D1A27" }}>{item.lastWorn}</Text>
                 </Text>
 
                 <View className="flex-row items-center gap-4 mt-3 border-t border-[#F0F2FA] pt-2">
                   <View>
-                    <Text style={{ fontSize: 9, fontFamily: "TikTokSans16pt-Medium", color: "#9B9BAF" }}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        fontFamily: "TikTokSans16pt-Medium",
+                        color: "#9B9BAF",
+                      }}
+                    >
                       Wears
                     </Text>
-                    <Text style={{ fontSize: 12, fontFamily: "TikTokSans16pt-Bold", color: "#CD7C46" }}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontFamily: "TikTokSans16pt-Bold",
+                        color: "#CD7C46",
+                      }}
+                    >
                       {item.wears} times
                     </Text>
                   </View>
                   <View>
-                    <Text style={{ fontSize: 9, fontFamily: "TikTokSans16pt-Medium", color: "#9B9BAF" }}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        fontFamily: "TikTokSans16pt-Medium",
+                        color: "#9B9BAF",
+                      }}
+                    >
                       Cost/Wear
                     </Text>
-                    <Text style={{ fontSize: 12, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27" }}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontFamily: "TikTokSans16pt-Bold",
+                        color: "#1D1A27",
+                      }}
+                    >
                       {item.costPerWear}
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 9, fontFamily: "TikTokSans16pt-Medium", color: "#9B9BAF" }}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        fontFamily: "TikTokSans16pt-Medium",
+                        color: "#9B9BAF",
+                      }}
+                    >
                       Styling partner
                     </Text>
-                    <Text style={{ fontSize: 11, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27" }} numberOfLines={1}>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontFamily: "TikTokSans16pt-Bold",
+                        color: "#1D1A27",
+                      }}
+                      numberOfLines={1}
+                    >
                       {item.stylingPartner}
                     </Text>
                   </View>
@@ -658,7 +884,14 @@ export default function WardrobeHighlightsScreen() {
 
         {/* 💡 AI Styling Advice cards */}
         <View className="mx-5 mb-4">
-          <Text style={{ fontSize: 16, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27", marginBottom: 12 }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontFamily: "TikTokSans16pt-Bold",
+              color: "#1D1A27",
+              marginBottom: 12,
+            }}
+          >
             AI Smart Suggestions
           </Text>
 
@@ -677,11 +910,27 @@ export default function WardrobeHighlightsScreen() {
               <IconSparkles size={16} color="#CD7C46" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27" }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontFamily: "TikTokSans16pt-Bold",
+                  color: "#1D1A27",
+                }}
+              >
                 Improve Blazer Utilization
               </Text>
-              <Text style={{ fontSize: 11, fontFamily: "TikTokSans16pt-Medium", color: "#7E7C8C", marginTop: 2, lineHeight: 15 }}>
-                Your Black Blazer is highly utilized! Try pairing it with a simple white tee to double its styling frequency for casual settings.
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: "TikTokSans16pt-Medium",
+                  color: "#7E7C8C",
+                  marginTop: 2,
+                  lineHeight: 15,
+                }}
+              >
+                Your Black Blazer is highly utilized! Try pairing it with a
+                simple white tee to double its styling frequency for casual
+                settings.
               </Text>
             </View>
           </View>
@@ -701,16 +950,30 @@ export default function WardrobeHighlightsScreen() {
               <IconInfoCircle size={16} color="#1D9E75" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontFamily: "TikTokSans16pt-Bold", color: "#1D1A27" }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontFamily: "TikTokSans16pt-Bold",
+                  color: "#1D1A27",
+                }}
+              >
                 Keep Wardrobe Fresh
               </Text>
-              <Text style={{ fontSize: 11, fontFamily: "TikTokSans16pt-Medium", color: "#7E7C8C", marginTop: 2, lineHeight: 15 }}>
-                Only 12% of your wardrobe has been idle in the last 30 days. You are utilizing your clothing items efficiently!
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: "TikTokSans16pt-Medium",
+                  color: "#7E7C8C",
+                  marginTop: 2,
+                  lineHeight: 15,
+                }}
+              >
+                Only 12% of your wardrobe has been idle in the last 30 days. You
+                are utilizing your clothing items efficiently!
               </Text>
             </View>
           </View>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

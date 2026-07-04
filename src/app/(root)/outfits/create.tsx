@@ -159,7 +159,7 @@ export default function CreateOutfitScreen() {
                     }}
                   >
                     <Image
-                      source={{ uri: item.photoUri }}
+                      source={{ uri: item.imageUrl }}
                       style={{ width: "100%", height: "100%" }}
                       resizeMode="cover"
                     />

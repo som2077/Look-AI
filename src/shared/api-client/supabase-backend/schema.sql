@@ -11,6 +11,8 @@ CREATE TABLE user_profiles (
   height INTEGER,
   gender TEXT,
   body_type TEXT,
+  bio TEXT,
+  about TEXT,
   style_preferences TEXT[],
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -153,3 +155,66 @@ USING (auth.jwt() ->> 'sub' = user_id);
 
 CREATE POLICY "insert_own_outfits" ON logged_outfits FOR INSERT
 WITH CHECK (auth.jwt() ->> 'sub' = user_id);
+
+-- =============================================
+-- WARDROBE ITEMS (DIGITAL CLOSET)
+-- =============================================
+DROP TABLE IF EXISTS wardrobe_items;
+CREATE TABLE wardrobe_items (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user_profiles(user_id),
+  custom_name TEXT,
+  brand TEXT,
+  
+  -- Core Visual Attributes
+  category TEXT NOT NULL,
+  sub_category TEXT,
+  primary_color TEXT,
+  secondary_colors TEXT[],
+  pattern TEXT,
+  fabric_guess TEXT,
+  fit TEXT,
+  sleeve_type TEXT,
+  neck_type TEXT,
+  
+  -- Styling Intelligence
+  style TEXT[],
+  season TEXT[],
+  occasion TEXT[],
+  formality_score INTEGER,
+  versatility_tags TEXT[],
+  
+  -- Metadata
+  image_url TEXT,
+  original_image_url TEXT,
+  confidence NUMERIC(3,2),
+  source TEXT,
+  
+  -- Editable/Tracking
+  is_favorite BOOLEAN DEFAULT false,
+  wear_count INTEGER DEFAULT 0,
+  last_worn_date DATE,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE wardrobe_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "select_own_wardrobe" ON wardrobe_items FOR SELECT
+USING (auth.jwt() ->> 'sub' = user_id);
+
+CREATE POLICY "insert_own_wardrobe" ON wardrobe_items FOR INSERT
+WITH CHECK (auth.jwt() ->> 'sub' = user_id);
+
+CREATE POLICY "update_own_wardrobe" ON wardrobe_items FOR UPDATE
+USING (auth.jwt() ->> 'sub' = user_id);
+
+CREATE POLICY "delete_own_wardrobe" ON wardrobe_items FOR DELETE
+USING (auth.jwt() ->> 'sub' = user_id);
+
+-- Auto-update updated_at for wardrobe_items
+DROP TRIGGER IF EXISTS wardrobe_items_updated_at ON wardrobe_items;
+CREATE TRIGGER wardrobe_items_updated_at
+  BEFORE UPDATE ON wardrobe_items
+  FOR EACH ROW EXECUTE FUNCTION update_entitlement_updated_at();

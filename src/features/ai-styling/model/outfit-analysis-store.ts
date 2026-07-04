@@ -1,5 +1,9 @@
+import {
+  uploadToCloudinaryWithBgRemoval,
+  waitForCloudinaryImage,
+} from "@/features/scanning/api/cloudinary-upload";
+import { analyzeClothingFull } from "@/features/scanning/api/gemini-scan";
 import { create } from "zustand";
-import { analyzeClothingImage } from "@/features/scanning/api/gemini-vision";
 
 export interface LastOutfit {
   imageUri: string;
@@ -24,6 +28,7 @@ interface OutfitAnalysisState {
   imageUri: string | null;
   progress: number;
   currentMode: string | null;
+  error: string | null;
   lastOutfits: LastOutfit[];
   startAnalysis: (imageUri: string, mode?: string) => void;
   clearAnalysis: () => void;
@@ -115,6 +120,7 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
     imageUri: null,
     progress: 0,
     currentMode: null,
+    error: null,
     lastOutfits: [],
 
     startAnalysis: (imageUri: string, mode?: string) => {
@@ -127,35 +133,154 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
         _doneTimeout = null;
       }
 
-      set({ isAnalyzing: true, isDone: false, imageUri, progress: 0, currentMode: mode || "scan-cloth" });
+      set({
+        isAnalyzing: true,
+        isDone: false,
+        imageUri,
+        progress: 0,
+        currentMode: mode || "scan-cloth",
+        error: null,
+      });
 
       const currentMode = mode || "scan-cloth";
       let aiData: any = null;
+      let finalImageUri = imageUri;
+      let currentTargetProgress = currentMode === "scan-cloth" ? 25 : 100;
 
-      // Run AI analysis in parallel if it's scan-cloth
+      // Run AI analysis FIRST, and Background Removal ONLY if valid
       if (currentMode === "scan-cloth") {
-        analyzeClothingImage(imageUri).then(data => {
-          // data is guaranteed to be returned because analyzeClothingImage handles fallbacks internally
-          // but just in case it's null:
-          aiData = data || {
-            name: "Unknown Item", category: "top", color: "Unknown", colorHex: "#000", occasion: "Casual", season: "All", matchingColors: [], confidence: 0
-          };
-        }).catch(err => {
-          console.error("AI error in store:", err);
-          aiData = {
-            name: "Unknown Item", category: "top", color: "Unknown", colorHex: "#000", occasion: "Casual", season: "All", matchingColors: [], confidence: 0
-          };
-        });
+        analyzeClothingFull(imageUri)
+          .then((data) => {
+            aiData = data || {
+              subCategory: "Unknown Item",
+              category: "Top",
+              primaryColor: "Unknown",
+              occasion: ["Casual"],
+              season: ["All"],
+              versatilityTags: [],
+              confidence: 0,
+            };
+
+            // Check if AI rejected the image BEFORE uploading to Cloudinary
+            if (aiData?.category === "Full Body") {
+              set({
+                error:
+                  "Please upload a picture of a single clothing item.\nFull body pictures are meant for Fit Check mode.",
+                isAnalyzing: false,
+              });
+              if (_interval) clearInterval(_interval);
+              return; // Stop here, do not upload
+            } else if (aiData?.category === "Not Clothing") {
+              set({
+                error:
+                  "We couldn't detect any clothing in this picture. Please try another image.",
+                isAnalyzing: false,
+              });
+              if (_interval) clearInterval(_interval);
+              return; // Stop here, do not upload
+            }
+
+            currentTargetProgress = 75; // AI finished successfully
+
+            // Image is valid, NOW upload to Cloudinary & Poll
+            return uploadToCloudinaryWithBgRemoval(imageUri).then(
+              (uploadRes) => {
+                return waitForCloudinaryImage(uploadRes.imageUrl).then(
+                  (isReady) => {
+                    if (isReady) {
+                      finalImageUri = uploadRes.imageUrl;
+                      set({ imageUri: finalImageUri });
+                    } else {
+                      finalImageUri = uploadRes.originalImageUrl;
+                      set({ imageUri: finalImageUri });
+                    }
+                    currentTargetProgress = 100; // Cloudinary finished
+                  },
+                );
+              },
+            );
+          })
+          .catch((err) => {
+            console.error("AI/Upload error in store:", err);
+            aiData = {
+              subCategory: "Error Occurred",
+              category: "Top",
+              primaryColor: "Unknown",
+              occasion: ["Casual"],
+              season: ["All"],
+              versatilityTags: [],
+              confidence: 0,
+            };
+            currentTargetProgress = 100; // allow finish on error
+          });
+      } else if (currentMode === "label") {
+        currentTargetProgress = 25; // wait for Gemini
+        // For label mode, we just run Gemini and finish. No background removal.
+        import("@/features/scanning/api/gemini-scan").then(
+          ({ analyzeClothLabel }) => {
+            analyzeClothLabel(imageUri)
+              .then((data) => {
+                aiData = data;
+                if (aiData?.error) {
+                  set({
+                    error: aiData.error,
+                    isAnalyzing: false,
+                  });
+                  if (_interval) clearInterval(_interval);
+                  return;
+                }
+                currentTargetProgress = 100;
+              })
+              .catch((err) => {
+                console.error("Label AI error in store:", err);
+                aiData = { error: "Failed to analyze label" };
+                currentTargetProgress = 100;
+              });
+          },
+        );
+      } else if (currentMode === "fit-check") {
+        currentTargetProgress = 25; // wait for Gemini
+        // For fit check, we evaluate the full picture with person included. No background removal.
+        import("@/features/scanning/api/gemini-scan").then(
+          ({ analyzeFitCheck }) => {
+            analyzeFitCheck(imageUri)
+              .then((data) => {
+                aiData = data;
+                if (aiData?.rating === "Not an Outfit") {
+                  set({
+                    error: aiData.suggestions[0] || "Please upload a valid outfit photo.",
+                    isAnalyzing: false,
+                  });
+                  if (_interval) clearInterval(_interval);
+                  return;
+                }
+                currentTargetProgress = 100;
+              })
+              .catch((err) => {
+                console.error("Fit Check AI error in store:", err);
+                aiData = { error: "Failed to analyze fit check" };
+                currentTargetProgress = 100;
+              });
+          },
+        );
       }
 
       _interval = setInterval(() => {
-        const current = get().progress;
-        // Make it slightly slower if AI is not done yet, but keep it moving
-        const next = Math.min(current + INCREMENT, 100);
+        const state = get();
+        if (state.error) {
+          clearInterval(_interval!);
+          _interval = null;
+          return;
+        }
 
-        if (next >= 100) {
-          // If we reached 100%, wait for AI data if it's scan-cloth
-          if (currentMode === "scan-cloth" && !aiData) {
+        const current = state.progress;
+        // Move towards currentTargetProgress instead of always 100
+        const next = Math.min(current + INCREMENT, currentTargetProgress);
+
+        // Only finalize if we reach 100 AND the target is 100
+        if (next >= 100 && currentTargetProgress >= 100) {
+          // If we reached 100%, wait for AI data if it's scan-cloth or label
+          if ((currentMode === "scan-cloth" || currentMode === "label" || currentMode === "fit-check") && !aiData) {
             // Keep spinning at 99% until data arrives
             set({ progress: 99 });
             return;
@@ -163,35 +288,73 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
 
           clearInterval(_interval!);
           _interval = null;
-          const uri = get().imageUri!;
-          const idx = get().lastOutfits.length % OUTFIT_NAMES.length;
-          
+          const uri = state.imageUri!;
+          const idx = state.lastOutfits.length % OUTFIT_NAMES.length;
+
+          let outfitName = OUTFIT_NAMES[idx];
+          let outfitSubtitle = SUBTITLES[idx];
+          let outfitTags = TAG_SETS[idx];
+          let outfitScore = SCORES[idx];
+
+          if (aiData) {
+            if (currentMode === "scan-cloth") {
+              outfitName = aiData.subCategory || aiData.category;
+              outfitSubtitle = `${aiData.primaryColor} · ${aiData.category}`;
+              outfitTags = [
+                ...(aiData.occasion || []),
+                ...(aiData.season || []),
+                "AI Stylist",
+              ].slice(0, 3);
+              outfitScore = Math.round((aiData.confidence || 0) * 100);
+            } else if (currentMode === "label") {
+              outfitName = "Clothing Label";
+              outfitSubtitle = "Care Instructions";
+              outfitTags = ["Care Label", "Scan"];
+              outfitScore = 100;
+            } else if (currentMode === "fit-check") {
+              outfitName = "Fit Check";
+              outfitSubtitle = aiData.rating || "Good Look";
+              outfitTags = [aiData.occasionMatch || "Casual", "Fit Check"];
+              outfitScore = aiData.fitScore || 75;
+            }
+          }
+
           set({
             progress: 100,
             isDone: true,
             isAnalyzing: false,
             lastOutfits: [
-              ...get().lastOutfits,
+              ...state.lastOutfits,
               {
                 imageUri: uri,
                 time: formatTime(),
-                name: aiData ? aiData.name : OUTFIT_NAMES[idx],
-                subtitle: aiData ? `${aiData.color} · ${aiData.category}` : SUBTITLES[idx],
-                tags: aiData ? [aiData.occasion, aiData.season, "AI Stylist"] : TAG_SETS[idx],
-                score: aiData ? Math.round(aiData.confidence * 100) : SCORES[idx],
+                name: outfitName,
+                subtitle: outfitSubtitle,
+                tags: outfitTags,
+                score: outfitScore,
                 date: formatDate(),
-                occasion: aiData ? aiData.occasion : OCCASIONS[idx],
+                occasion: aiData
+                  ? aiData.occasion?.[0] || "Casual"
+                  : OCCASIONS[idx],
                 weather: WEATHERS[idx % WEATHERS.length],
                 itemCount: ITEMS[idx],
                 mode: currentMode,
-                colorPalette: aiData ? aiData.matchingColors.map((c: any) => c.hex) : COLOR_PALETTES[idx],
+                colorPalette:
+                  aiData && aiData.secondaryColors
+                    ? aiData.secondaryColors
+                    : COLOR_PALETTES[idx],
                 clothingData: aiData,
               },
             ],
           });
 
           _doneTimeout = setTimeout(() => {
-            set({ isDone: false, imageUri: null, progress: 0, currentMode: null });
+            set({
+              isDone: false,
+              imageUri: null,
+              progress: 0,
+              currentMode: null,
+            });
             _doneTimeout = null;
           }, 4000);
         } else {
@@ -236,7 +399,10 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
       set((state) => {
         const outfits = [...state.lastOutfits];
         if (outfits[index]) {
-          outfits[index] = { ...outfits[index], isSaved: !outfits[index].isSaved };
+          outfits[index] = {
+            ...outfits[index],
+            isSaved: !outfits[index].isSaved,
+          };
         }
         return { lastOutfits: outfits };
       }),

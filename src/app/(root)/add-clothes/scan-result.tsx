@@ -1,47 +1,49 @@
-import { FullClothingAnalysis, analyzeClothingFull } from "@/features/scanning/api/gemini-scan"
-import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store"
-import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store"
-import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-native"
-import { useLocalSearchParams, useRouter } from "expo-router"
-import { StatusBar } from "expo-status-bar"
-import React, { useEffect, useRef, useState } from "react"
+import { uploadToCloudinaryWithBgRemoval, waitForCloudinaryImage } from "@/features/scanning/api/cloudinary-upload";
+import { FullClothingAnalysis, analyzeClothingFull } from "@/features/scanning/api/gemini-scan";
+import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
+import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
-} from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type ScanResultParams = {
-  photoUri?: string
-  resultJson?: string
-  mode?: string
-}
+  photoUri?: string;
+  resultJson?: string;
+  mode?: string;
+};
 
 const DEFAULT_RESULT: FullClothingAnalysis = {
-  name: "Clothing Item",
-  category: "top",
-  color: "Unknown",
-  colorHex: "#888888",
-  material: "Unknown",
+  category: "Top",
+  subCategory: "Unknown",
+  primaryColor: "Unknown",
+  secondaryColors: [],
   pattern: "Solid",
+  fabricGuess: "Unknown",
+  fit: "Regular",
   sleeveType: "N/A",
   neckType: "N/A",
-  occasion: "Casual",
-  season: "All",
-  matchingColors: [
-    { name: "Navy Blue", hex: "#1B3A6B" },
-    { name: "Beige", hex: "#F5F0E8" },
-    { name: "Olive", hex: "#6B7A3A" },
-  ],
+  style: ["Casual"],
+  season: ["All-season"],
+  occasion: ["Casual"],
+  formalityScore: 5,
+  versatilityTags: [],
   confidence: 0.75,
-}
+};
 
 function ConfidenceBar({ confidence }: { confidence: number }) {
-  const pct = Math.round(confidence * 100)
+  const pct = Math.round(confidence * 100);
   return (
     <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
       <View
@@ -76,99 +78,161 @@ function ConfidenceBar({ confidence }: { confidence: number }) {
         />
       </View>
     </View>
-  )
+  );
 }
 
 export default function ScanResultScreen() {
-  const router = useRouter()
-  const params = useLocalSearchParams() as ScanResultParams
-  const addItem = useUserWardrobeStore((s) => s.addItem)
-  const hasItem = useUserWardrobeStore((s) => s.hasItem)
-  const addScan = useScanHistoryStore((s) => s.addScan)
+  const router = useRouter();
+  const params = useLocalSearchParams() as ScanResultParams;
+  const addItem = useUserWardrobeStore((s) => s.addItem);
+  const hasItem = useUserWardrobeStore((s) => s.hasItem);
+  const addScan = useScanHistoryStore((s) => s.addScan);
 
-  const [saved, setSaved] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const historyAdded = useRef(false)
-
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadingText, setLoadingText] = useState("Initializing...");
+  const [error, setError] = useState<string | null>(null);
   
-  const [loading, setLoading] = useState(!params.resultJson)
+  const [loading, setLoading] = useState(!params.resultJson);
   const [result, setResult] = useState<FullClothingAnalysis>(() => {
     try {
-      if (!params.resultJson) return DEFAULT_RESULT
-      return JSON.parse(params.resultJson) as FullClothingAnalysis
+      if (!params.resultJson) return DEFAULT_RESULT;
+      return JSON.parse(params.resultJson) as FullClothingAnalysis;
     } catch {
-      return DEFAULT_RESULT
+      return DEFAULT_RESULT;
     }
-  })
+  });
+
+  const [cloudinaryUrl, setCloudinaryUrl] = useState<string | null>(null);
+  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+
+  // Editable fields
+  const [customName, setCustomName] = useState("");
+  const [brand, setBrand] = useState("");
 
   useEffect(() => {
-    if (!params.resultJson && params.photoUri) {
-      analyzeClothingFull(params.photoUri).then((data) => {
-        setResult(data)
-        setLoading(false)
+    const processImage = async () => {
+      if (!params.photoUri) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoadingText("AI is extracting styling details...");
         
-        // Add to history after getting result
+        // 1. Analyze with Gemini on the original local image FIRST
+        const aiData = await analyzeClothingFull(params.photoUri);
+        
+        // Handle Error Rejection
+        if (aiData?.category === "Full Body") {
+          Alert.alert(
+            "Invalid Image",
+            "Please upload a picture of a single clothing item. Full body pictures are meant for Fit Check mode.",
+            [{ text: "OK", onPress: () => router.back() }]
+          );
+          return;
+        } else if (aiData?.category === "Not Clothing") {
+          Alert.alert(
+            "Invalid Image",
+            "We couldn't detect any clothing in this picture. Please try another image.",
+            [{ text: "OK", onPress: () => router.back() }]
+          );
+          return;
+        }
+
+        setLoadingText("Removing background...");
+        // 2. Upload to Cloudinary (returns immediately without polling)
+        const uploadRes = await uploadToCloudinaryWithBgRemoval(params.photoUri);
+        
+        // 3. Poll for background removal
+        const isReady = await waitForCloudinaryImage(uploadRes.imageUrl);
+        let finalImageUri = uploadRes.originalImageUrl;
+        
+        if (isReady) {
+          setCloudinaryUrl(uploadRes.imageUrl);
+          finalImageUri = uploadRes.imageUrl;
+        } else {
+          setCloudinaryUrl(uploadRes.originalImageUrl);
+        }
+
+        setOriginalUrl(uploadRes.originalImageUrl);
+        if (aiData) setResult(aiData);
+        
+        // Default custom name
+        if (aiData) setCustomName(`${aiData.primaryColor} ${aiData.subCategory}`);
+
         addScan({
           type: "cloth",
-          thumbnail: params.photoUri ?? "",
+          thumbnail: finalImageUri,
           date: new Date().toISOString(),
-          result: data as unknown as Record<string, unknown>,
+          result: aiData as unknown as Record<string, unknown>,
           isFavorite: false,
-        })
-      })
-    } else if (params.resultJson) {
-      // Add to history immediately if already have result
-      addScan({
-        type: "cloth",
-        thumbnail: params.photoUri ?? "",
-        date: new Date().toISOString(),
-        result: result as unknown as Record<string, unknown>,
-        isFavorite: false,
-      })
+        });
+
+      } catch (err) {
+        console.error("Failed to process scan:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!params.resultJson && params.photoUri) {
+      processImage();
     }
-  }, [])
-const alreadyInWardrobe = hasItem(result.category, result.color)
+  }, []);
+
+  const alreadyInWardrobe = hasItem(result.category, result.primaryColor);
 
   const handleSave = async () => {
-    if (saved || alreadyInWardrobe) return
-    setSaving(true)
+    if (saved || alreadyInWardrobe) return;
+    setSaving(true);
     addItem({
-      name: result.name,
+      customName,
+      brand,
       category: result.category,
-      color: result.color,
-      colorHex: result.colorHex,
-      photoUri: params.photoUri,
-      occasion: result.occasion,
-      season: result.season,
-      material: result.material,
+      subCategory: result.subCategory,
+      primaryColor: result.primaryColor,
+      secondaryColors: result.secondaryColors,
       pattern: result.pattern,
+      fabricGuess: result.fabricGuess,
+      fit: result.fit,
       sleeveType: result.sleeveType,
       neckType: result.neckType,
-    })
-    setSaving(false)
-    setSaved(true)
-  }
+      style: result.style,
+      season: result.season,
+      occasion: result.occasion,
+      formalityScore: result.formalityScore,
+      versatilityTags: result.versatilityTags,
+      imageUrl: cloudinaryUrl || params.photoUri,
+      originalImageUrl: originalUrl || params.photoUri,
+      confidence: result.confidence,
+      source: "camera",
+      isFavorite: false,
+      wearCount: 0,
+    });
+    setSaving(false);
+    setSaved(true);
+  };
 
   const chips = [
     { label: "Category", value: result.category },
-    { label: "Color", value: result.color },
-    { label: "Material", value: result.material },
+    { label: "Type", value: result.subCategory },
+    { label: "Color", value: result.primaryColor },
+    { label: "Material", value: result.fabricGuess },
     { label: "Pattern", value: result.pattern },
-    { label: "Sleeve", value: result.sleeveType },
-    { label: "Neck", value: result.neckType },
-    { label: "Season", value: result.season },
-    { label: "Occasion", value: result.occasion },
-  ]
+    { label: "Fit", value: result.fit },
+    { label: "Season", value: result.season?.join(", ") },
+    { label: "Formality", value: `${result.formalityScore}/10` },
+  ];
 
-  
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: "#0F0E15", alignItems: "center", justifyContent: "center" }}>
         <StatusBar style="light" />
         <ActivityIndicator size="large" color="#7C6AFF" />
-        <Text style={{ color: "#AAA", marginTop: 16, fontSize: 16, fontWeight: "600" }}>AI is analyzing...</Text>
+        <Text style={{ color: "#AAA", marginTop: 16, fontSize: 16, fontWeight: "600" }}>{loadingText}</Text>
       </View>
-    )
+    );
   }
 
   return (
@@ -199,7 +263,7 @@ const alreadyInWardrobe = hasItem(result.category, result.color)
             <IconArrowLeft size={20} color="#FFFFFF" />
           </Pressable>
           <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "800", flex: 1 }}>
-            Scan Result
+            Wardrobe Item
           </Text>
           <View
             style={{
@@ -216,21 +280,22 @@ const alreadyInWardrobe = hasItem(result.category, result.color)
           >
             <IconSparkles size={12} color="#7C6AFF" />
             <Text style={{ color: "#7C6AFF", fontSize: 11, fontWeight: "700" }}>
-              AI
+              AI Styled
             </Text>
           </View>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           {/* Photo */}
-          {params.photoUri ? (
+          {(cloudinaryUrl || params.photoUri) ? (
             <Image
-              source={{ uri: params.photoUri }}
+              source={{ uri: cloudinaryUrl || params.photoUri }}
               style={{
-                height: 240,
+                height: 300,
                 marginHorizontal: 20,
                 borderRadius: 20,
                 marginBottom: 16,
+                backgroundColor: "#1A1827", 
               }}
               resizeMode="contain"
             />
@@ -275,10 +340,9 @@ const alreadyInWardrobe = hasItem(result.category, result.color)
             </View>
           )}
 
-          {/* Confidence bar */}
           <ConfidenceBar confidence={result.confidence} />
 
-          {/* Item name card */}
+          {/* Editable Fields */}
           <View
             style={{
               marginHorizontal: 16,
@@ -286,17 +350,52 @@ const alreadyInWardrobe = hasItem(result.category, result.color)
               backgroundColor: "#161422",
               borderRadius: 24,
               padding: 20,
+              gap: 16
             }}
           >
-            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 4 }}>
-              Detected Item
-            </Text>
-            <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: "800" }}>
-              {result.name}
-            </Text>
+            <View>
+              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+                Item Name (Editable)
+              </Text>
+              <TextInput
+                value={customName}
+                onChangeText={setCustomName}
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 18,
+                  fontWeight: "800",
+                  backgroundColor: "#2A2840",
+                  borderRadius: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                }}
+                placeholder="E.g. Favorite Blue Shirt"
+                placeholderTextColor="#666"
+              />
+            </View>
+            <View>
+              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+                Brand (Optional)
+              </Text>
+              <TextInput
+                value={brand}
+                onChangeText={setBrand}
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 16,
+                  fontWeight: "500",
+                  backgroundColor: "#2A2840",
+                  borderRadius: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                }}
+                placeholder="E.g. Zara, H&M"
+                placeholderTextColor="#666"
+              />
+            </View>
           </View>
 
-          {/* Chips grid */}
+          {/* Core Visuals */}
           <View
             style={{
               marginHorizontal: 16,
@@ -314,7 +413,7 @@ const alreadyInWardrobe = hasItem(result.category, result.color)
                 marginBottom: 14,
               }}
             >
-              Clothing Details
+              Styling Intelligence
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {chips.map((chip, i) => (
@@ -340,8 +439,8 @@ const alreadyInWardrobe = hasItem(result.category, result.color)
             </View>
           </View>
 
-          {/* Matching Colors */}
-          {result.matchingColors && result.matchingColors.length > 0 && (
+          {/* Versatility Tags */}
+          {result.versatilityTags && result.versatilityTags.length > 0 && (
             <View
               style={{
                 marginHorizontal: 16,
@@ -359,27 +458,12 @@ const alreadyInWardrobe = hasItem(result.category, result.color)
                   marginBottom: 14,
                 }}
               >
-                Matching Colors
+                Versatility
               </Text>
-              <View style={{ flexDirection: "row", gap: 16 }}>
-                {result.matchingColors.slice(0, 3).map((mc, i) => (
-                  <View key={i} style={{ alignItems: "center", gap: 6 }}>
-                    <View
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 24,
-                        backgroundColor: mc.hex,
-                        borderWidth: 2,
-                        borderColor: "#2A2840",
-                      }}
-                    />
-                    <Text style={{ color: "#AAA", fontSize: 10, fontWeight: "600", textAlign: "center" }}>
-                      {mc.hex}
-                    </Text>
-                    <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700", textAlign: "center" }}>
-                      {mc.name}
-                    </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {result.versatilityTags.map((tag, i) => (
+                  <View key={i} style={{ backgroundColor: "#2A2840", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}>
+                    <Text style={{ color: "#DDD", fontSize: 12 }}>{tag}</Text>
                   </View>
                 ))}
               </View>
@@ -431,12 +515,12 @@ const alreadyInWardrobe = hasItem(result.category, result.color)
               }}
             >
               <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
-                Scan Again
+                Scan Another Item
               </Text>
             </Pressable>
           </View>
         </ScrollView>
       </SafeAreaView>
     </View>
-  )
+  );
 }

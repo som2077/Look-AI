@@ -425,16 +425,14 @@ export default function WardrobeScreen() {
     return userItems.map(
       (item): ClothingItem => ({
         id: item.id,
-        name: item.name,
+        name: item.customName || item.subCategory || item.category,
         category: item.category as CategoryId,
-        color: item.color ?? "—",
+        color: item.primaryColor ?? "—",
         bgColor: "#F8F7FC",
-        occasion: item.occasion ?? "Casual",
-        wears: 0,
+        occasion: item.occasion?.[0] ?? "Casual",
+        wears: item.wearCount ?? 0,
         isNew: true,
-        image:
-          (item as any).image ??
-          `https://picsum.photos/seed/${item.id}/300/400`,
+        image: item.imageUrl ?? `https://picsum.photos/seed/${item.id}/300/400`,
       }),
     );
   }, [userItems]);

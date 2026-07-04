@@ -1,31 +1,32 @@
-import { useWardrobeSummary } from "@/features/wardrobe/api/useWardrobeSummary";
-import { useUser } from "@clerk/clerk-expo";
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, AppState, Dimensions, FlatList, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
-import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
-import { HomeHeader } from "@/shared/ui/HomeHeader";
 import { OutfitAnalyzingCard } from "@/features/ai-styling/ui/OutfitAnalyzingCard";
+import { useWardrobeSummary } from "@/features/wardrobe/api/useWardrobeSummary";
 import {
   EmptyStyleBanner,
+  ErrorBanner,
   NotifyBanner,
   RecentlyUploadedHeading,
 } from "@/features/wardrobe/ui/RecentlyUploadedCard";
 import type { RingProgressSegment } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
 import { WardrobeRingSummaryCard } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
+import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+import { HomeHeader } from "@/shared/ui/HomeHeader";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
+import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
+import { useUser } from "@clerk/clerk-expo";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { Animated, AppState, Dimensions, FlatList, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 // import { TrendFeed } from "@/features/social/ui/TrendFeed";
+import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
+import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
+import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
 import { CURRENT_STREAK_DAYS } from "@/shared/config/constants/streak";
-import * as SecureStore from "expo-secure-store";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { LookAIBanner } from "@/shared/ui/LookAIBanner";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
-import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
-import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
-import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
+import * as SecureStore from "expo-secure-store";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -273,6 +274,7 @@ export default function HomeScreen() {
               </View>
 
               <RecentlyUploadedHeading />
+              <ErrorBanner />
               <NotifyBanner />
               <EmptyStyleBanner />
               <UpcomingEvents date={new Date()} showAISuggestion={false} />

@@ -1,6 +1,5 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import {
-  IconBarcode,
   IconBolt,
   IconPhoto,
   IconScan,
@@ -10,7 +9,6 @@ import {
   IconX,
 } from "@tabler/icons-react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import * as NavigationBar from "expo-navigation-bar"; // ✅
 import { useRouter } from "expo-router";
@@ -79,13 +77,11 @@ export default function CameraScreen() {
   const [capturing, setCapturing] = useState(false);
   const [flashOn, setFlashOn] = useState(false);
   const [activeMode, setActiveMode] = useState("scan-cloth");
-  const [hasScanned, setHasScanned] = useState(false);
   const insets = useSafeAreaInsets();
 
   const SCAN_MODES = [
     { id: "scan-cloth", label: "Scan Cloth", icon: IconScan },
-    { id: "barcode", label: "Barcode", icon: IconBarcode },
-    { id: "cloth-label", label: "Cloth Label", icon: IconTag },
+    { id: "label", label: "Cloth Label", icon: IconTag },
     { id: "fit-check", label: "Fit Check", icon: IconShirt },
   ];
 
@@ -99,29 +95,6 @@ export default function CameraScreen() {
       NavigationBar.setBackgroundColorAsync("transparent");
     };
   }, []);
-
-  const handleBarcodeScanned = useCallback(
-    ({ type, data }: { type: string; data: string }) => {
-      if (hasScanned || activeMode !== "barcode") return;
-      setHasScanned(true);
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      // Simulate adding a clothing item from the barcode
-      router.replace({
-        pathname: "/(root)/add-clothes/form",
-        params: { mode: "manual", name: `Barcode: ${data}` },
-      } as any);
-    },
-    [hasScanned, activeMode, router],
-  );
-
-  // Reset scan state when mode changes
-  useEffect(() => {
-    if (activeMode !== "barcode") {
-      setHasScanned(false);
-    }
-  }, [activeMode]);
 
   const goToAnalyzing = useCallback(
     (uri: string) => {
@@ -218,20 +191,6 @@ export default function CameraScreen() {
         facing={facing}
         flash={flashOn ? "on" : "off"}
         enableTorch={flashOn}
-        barcodeScannerSettings={{
-          barcodeTypes: [
-            "qr",
-            "ean13",
-            "ean8",
-            "code128",
-            "code39",
-            "upc_a",
-            "upc_e",
-          ],
-        }}
-        onBarcodeScanned={
-          activeMode === "barcode" ? handleBarcodeScanned : undefined
-        }
       />
 
       {/* Subtle vignette */}
@@ -275,11 +234,11 @@ export default function CameraScreen() {
         {/* Bottom Area (Modes + Controls) */}
         <View style={{ paddingBottom: insets.bottom + 20 }}>
           {/* Scan Modes Row */}
-          <View className="flex-row items-center justify-center px-12 mb-6">
+          <View className="flex-row items-center justify-center px-12 mb-6 ml-10">
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 6, alignItems: "center" }}
+              contentContainerStyle={{ gap: 12, alignItems: "center" }}
             >
               {SCAN_MODES.map((mode) => {
                 const isActive = activeMode === mode.id;
@@ -339,7 +298,7 @@ export default function CameraScreen() {
             <Pressable
               onPress={handleShutter}
               disabled={capturing}
-              className="h-[76px] w-[76px] rounded-full border-[3px] border-white items-center justify-center"
+              className="h-[76px] w-[76px] rounded-full border-[3px] mr-7 border-white items-center justify-center"
             >
               {capturing ? (
                 <ActivityIndicator color="#111" />

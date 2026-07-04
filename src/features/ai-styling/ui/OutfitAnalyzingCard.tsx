@@ -15,6 +15,7 @@ import {
 } from "@/features/ai-styling/model/outfit-analysis-store";
 import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
+import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 
 const SVG_SIZE = 72;
 const STROKE_WIDTH = 4.5;
@@ -257,7 +258,7 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
 const MODE_LABELS: Record<string, string> = {
   "scan-cloth": "Scan Cloths",
   barcode: "Barcode",
-  "cloth-label": "Cloth Label",
+  label: "Cloth Label",
   "fit-check": "Fit Check",
 };
 
@@ -424,12 +425,36 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
             photoUri: outfit.imageUri,
             name: outfit.name,
             category: aiData?.category,
-            color: aiData?.color,
-            colorHex: aiData?.colorHex,
-            occasion: aiData?.occasion,
-            season: aiData?.season,
-            matchingColors: aiData?.matchingColors ? JSON.stringify(aiData.matchingColors) : undefined,
+            color: aiData?.primaryColor,
+            occasion: aiData?.occasion?.[0] || "Casual",
+            season: aiData?.season?.[0] || "All",
           },
+        } as never);
+        removeOutfit(index);
+      } else if (outfit && outfit.mode === "label") {
+        const scanId = useScanHistoryStore.getState().addScan({
+          type: "label",
+          thumbnail: outfit.imageUri,
+          date: new Date().toISOString(),
+          result: outfit.clothingData as Record<string, unknown>,
+          isFavorite: false,
+        });
+        router.push({
+          pathname: "/(root)/add-clothes/label-result",
+          params: { scanId },
+        } as never);
+        removeOutfit(index);
+      } else if (outfit && outfit.mode === "fit-check") {
+        const scanId = useScanHistoryStore.getState().addScan({
+          type: "fit-check",
+          thumbnail: outfit.imageUri,
+          date: new Date().toISOString(),
+          result: outfit.clothingData as Record<string, unknown>,
+          isFavorite: false,
+        });
+        router.push({
+          pathname: "/(root)/add-clothes/fitcheck-result",
+          params: { scanId },
         } as never);
         removeOutfit(index);
       } else {

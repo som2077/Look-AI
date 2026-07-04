@@ -4,6 +4,11 @@ import {
   IconArrowLeft,
   IconCheck,
   IconSparkles,
+  IconUser,
+  IconRuler,
+  IconPalette,
+  IconLayersLinked,
+  IconWand,
 } from "@tabler/icons-react-native"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { StatusBar } from "expo-status-bar"
@@ -19,22 +24,42 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context"
 
 type FitCheckParams = {
-  photoUri?: string
-  resultJson?: string
+  scanId?: string
 }
 
 const DEFAULT_RESULT: FitCheckAnalysis = {
   fitScore: 75,
-  colorHarmony: "Good",
-  occasionMatch: "Casual",
-  layering: "Clean and minimal look",
-  suggestions: [
+  rating: "Good Look",
+  silhouette: {
+    bodyShape: "Unknown",
+    waistDefinition: "Looks balanced",
+    verticalRatio: "50:50",
+    ruleOfThirds: "Good proportion",
+  },
+  fitPrecision: {
+    shoulderFit: "Good",
+    sleeveLength: "Good",
+    trouserBreak: "Slight break",
+    tightness: "Comfortable fit",
+  },
+  colorTheory: {
+    harmonyType: "Neutral",
+    skinToneCompat: "Good match",
+    contrastLevel: "Medium",
+  },
+  styling: {
+    layering: "Simple look",
+    accessoryGaps: "Could add a watch",
+    footwearPairing: "Matches well",
+  },
+  styleCategory: {
+    archetype: "Casual",
+    trendRelevance: "Timeless",
+  },
+  actionableFixes: [
     "Try adding a statement accessory",
     "Consider tucking in your shirt for a more polished look",
-    "Your color combination works well together",
   ],
-  rating: "Good Look",
-  outfitItems: ["Top", "Bottoms", "Footwear"],
 }
 
 function getScoreColor(score: number): string {
@@ -61,65 +86,21 @@ function getRatingEmoji(rating: string): string {
 export default function FitCheckResultScreen() {
   const router = useRouter()
   const params = useLocalSearchParams() as FitCheckParams
+  const scans = useScanHistoryStore((s) => s.scans)
   const addScan = useScanHistoryStore((s) => s.addScan)
-
-  const [saved, setSaved] = useState(false)
-  const historyAdded = useRef(false)
-
   
-  const [loading, setLoading] = useState(!params.resultJson)
-  const [result, setResult] = useState<FitCheckAnalysis>(() => {
-    try {
-      if (!params.resultJson) return DEFAULT_RESULT
-      return JSON.parse(params.resultJson) as FitCheckAnalysis
-    } catch {
-      return DEFAULT_RESULT
-    }
-  })
+  const [saved, setSaved] = useState(false)
+  
+  const scan = scans.find(s => s.id === params.scanId)
+  const result = (scan?.result as unknown as FitCheckAnalysis) || DEFAULT_RESULT
+  const photoUri = scan?.thumbnail
 
-  useEffect(() => {
-    if (!params.resultJson && params.photoUri) {
-      analyzeFitCheck(params.photoUri).then((data) => {
-        setResult(data)
-        setLoading(false)
-        
-        // Add to history after getting result
-        addScan({
-          type: "fit-check",
-          thumbnail: params.photoUri ?? "",
-          date: new Date().toISOString(),
-          result: data as unknown as Record<string, unknown>,
-          isFavorite: false,
-        })
-      })
-    } else if (params.resultJson) {
-      // Add to history immediately if already have result
-      addScan({
-        type: "fit-check",
-        thumbnail: params.photoUri ?? "",
-        date: new Date().toISOString(),
-        result: result as unknown as Record<string, unknown>,
-        isFavorite: false,
-      })
-    }
-  }, [])
-const scoreColor = getScoreColor(result.fitScore)
-  const ratingEmoji = getRatingEmoji(result.rating)
+  const scoreColor = getScoreColor(result?.fitScore || 75)
+  const ratingEmoji = getRatingEmoji(result?.rating || "Good Look")
 
   const handleSave = () => {
     if (saved) return
     setSaved(true)
-  }
-
-  
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: "#0F0E15", alignItems: "center", justifyContent: "center" }}>
-        <StatusBar style="light" />
-        <ActivityIndicator size="large" color="#7C6AFF" />
-        <Text style={{ color: "#AAA", marginTop: 16, fontSize: 16, fontWeight: "600" }}>AI is analyzing...</Text>
-      </View>
-    )
   }
 
   return (
@@ -174,9 +155,9 @@ const scoreColor = getScoreColor(result.fitScore)
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           {/* Photo */}
-          {params.photoUri ? (
+          {photoUri ? (
             <Image
-              source={{ uri: params.photoUri }}
+              source={{ uri: photoUri }}
               style={{
                 height: 300,
                 marginHorizontal: 20,
@@ -277,125 +258,17 @@ const scoreColor = getScoreColor(result.fitScore)
             </View>
           </View>
 
-          {/* Color harmony + occasion chips */}
-          <View
-            style={{
-              marginHorizontal: 16,
-              marginBottom: 16,
-              flexDirection: "row",
-              gap: 10,
-            }}
-          >
+          {/* Stylist's Fixes Section */}
+          {result?.actionableFixes && result.actionableFixes.length > 0 && (
             <View
               style={{
-                flex: 1,
+                marginHorizontal: 16,
+                marginBottom: 16,
                 backgroundColor: "#161422",
-                borderRadius: 18,
-                padding: 16,
-                alignItems: "center",
+                borderRadius: 24,
+                padding: 20,
                 borderWidth: 1,
                 borderColor: "#7C6AFF44",
-              }}
-            >
-              <Text style={{ color: "#888", fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
-                Color Harmony
-              </Text>
-              <Text style={{ color: "#7C6AFF", fontSize: 14, fontWeight: "800" }}>
-                {result.colorHarmony}
-              </Text>
-            </View>
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "#161422",
-                borderRadius: 18,
-                padding: 16,
-                alignItems: "center",
-                borderWidth: 1,
-                borderColor: "#7C6AFF44",
-              }}
-            >
-              <Text style={{ color: "#888", fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
-                Occasion
-              </Text>
-              <Text style={{ color: "#7C6AFF", fontSize: 14, fontWeight: "800" }}>
-                {result.occasionMatch}
-              </Text>
-            </View>
-          </View>
-
-          {/* Layering feedback */}
-          {result.layering && (
-            <View
-              style={{
-                marginHorizontal: 16,
-                marginBottom: 16,
-                backgroundColor: "#161422",
-                borderRadius: 24,
-                padding: 20,
-              }}
-            >
-              <Text style={{ color: "#888", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
-                Layering Feedback
-              </Text>
-              <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "600", lineHeight: 22 }}>
-                {result.layering}
-              </Text>
-            </View>
-          )}
-
-          {/* Detected outfit items */}
-          {result.outfitItems && result.outfitItems.length > 0 && (
-            <View
-              style={{
-                marginHorizontal: 16,
-                marginBottom: 16,
-                backgroundColor: "#161422",
-                borderRadius: 24,
-                padding: 20,
-              }}
-            >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 15,
-                  fontWeight: "700",
-                  marginBottom: 12,
-                }}
-              >
-                Detected Outfit
-              </Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {result.outfitItems.map((item, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      backgroundColor: "#7C6AFF22",
-                      borderRadius: 999,
-                      paddingHorizontal: 14,
-                      paddingVertical: 7,
-                      borderWidth: 1,
-                      borderColor: "#7C6AFF44",
-                    }}
-                  >
-                    <Text style={{ color: "#7C6AFF", fontSize: 13, fontWeight: "700" }}>
-                      {item}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Suggestions */}
-          {result.suggestions && result.suggestions.length > 0 && (
-            <View
-              style={{
-                marginHorizontal: 16,
-                marginBottom: 16,
-                backgroundColor: "#161422",
-                borderRadius: 24,
-                padding: 20,
               }}
             >
               <View
@@ -403,16 +276,16 @@ const scoreColor = getScoreColor(result.fitScore)
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 8,
-                  marginBottom: 14,
+                  marginBottom: 16,
                 }}
               >
-                <IconSparkles size={16} color="#7C6AFF" />
-                <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
-                  Style Suggestions
+                <IconWand size={20} color="#7C6AFF" />
+                <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "700" }}>
+                  Stylist's Fixes
                 </Text>
               </View>
               <View style={{ gap: 12 }}>
-                {result.suggestions.map((suggestion, i) => (
+                {result.actionableFixes.map((fix, i) => (
                   <View
                     key={i}
                     style={{
@@ -429,31 +302,78 @@ const scoreColor = getScoreColor(result.fitScore)
                         backgroundColor: "#7C6AFF22",
                         alignItems: "center",
                         justifyContent: "center",
-                        borderWidth: 1,
-                        borderColor: "#7C6AFF44",
                         flexShrink: 0,
-                        marginTop: 1,
+                        marginTop: 2,
                       }}
                     >
-                      <Text style={{ color: "#7C6AFF", fontSize: 11, fontWeight: "800" }}>
+                      <Text style={{ color: "#7C6AFF", fontSize: 12, fontWeight: "800" }}>
                         {i + 1}
                       </Text>
                     </View>
-                    <Text
-                      style={{
-                        color: "#CCC",
-                        fontSize: 14,
-                        lineHeight: 22,
-                        flex: 1,
-                      }}
-                    >
-                      {suggestion}
+                    <Text style={{ color: "#CCC", fontSize: 14, lineHeight: 22, flex: 1 }}>
+                      {fix}
                     </Text>
                   </View>
                 ))}
               </View>
             </View>
           )}
+
+          {/* Silhouette & Proportion */}
+          <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: "#161422", borderRadius: 24, padding: 20 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <IconUser size={18} color="#10B981" />
+              <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>Silhouette & Proportion</Text>
+            </View>
+            <View style={{ gap: 10 }}>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Body Shape / Fit</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.silhouette?.bodyShape}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Waist Definition</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.silhouette?.waistDefinition}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Vertical Ratio</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.silhouette?.verticalRatio}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Rule of Thirds</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.silhouette?.ruleOfThirds}</Text></View>
+            </View>
+          </View>
+
+          {/* Fit Precision */}
+          <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: "#161422", borderRadius: 24, padding: 20 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <IconRuler size={18} color="#F59E0B" />
+              <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>Fit Precision</Text>
+            </View>
+            <View style={{ gap: 10 }}>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Shoulder Fit</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.fitPrecision?.shoulderFit}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Sleeve Length</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.fitPrecision?.sleeveLength}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Trouser Break</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.fitPrecision?.trouserBreak}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Tightness</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.fitPrecision?.tightness}</Text></View>
+            </View>
+          </View>
+
+          {/* Color Theory */}
+          <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: "#161422", borderRadius: 24, padding: 20 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <IconPalette size={18} color="#EC4899" />
+              <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>Color Theory</Text>
+            </View>
+            <View style={{ gap: 10 }}>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Harmony Type</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.colorTheory?.harmonyType}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Skin Tone Match</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.colorTheory?.skinToneCompat}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Contrast Level</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.colorTheory?.contrastLevel}</Text></View>
+            </View>
+          </View>
+
+          {/* Styling & Trend */}
+          <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: "#161422", borderRadius: 24, padding: 20 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <IconLayersLinked size={18} color="#3B82F6" />
+              <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>Styling Elements & Trend</Text>
+            </View>
+            <View style={{ gap: 10 }}>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Layering</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.styling?.layering}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Accessory Gaps</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.styling?.accessoryGaps}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Footwear</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.styling?.footwearPairing}</Text></View>
+              <View style={{ marginTop: 8, paddingTop: 12, borderTopWidth: 1, borderColor: "#2A2840" }}><Text style={{ color: "#7C6AFF", fontSize: 12, fontWeight: "600" }}>STYLE ARCHETYPE</Text><Text style={{ color: "#EEE", fontSize: 15, fontWeight: "700", marginTop: 2 }}>{result?.styleCategory?.archetype}</Text></View>
+              <View><Text style={{ color: "#888", fontSize: 12 }}>Trend Relevance</Text><Text style={{ color: "#EEE", fontSize: 14, marginTop: 2 }}>{result?.styleCategory?.trendRelevance}</Text></View>
+            </View>
+          </View>
 
           {/* Actions */}
           <View style={{ marginHorizontal: 16, gap: 10 }}>
@@ -487,7 +407,7 @@ const scoreColor = getScoreColor(result.fitScore)
               }}
             >
               <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
-                Check Again
+                Back to Scanner
               </Text>
             </Pressable>
           </View>

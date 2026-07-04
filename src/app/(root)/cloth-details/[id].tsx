@@ -36,7 +36,7 @@ export default function ClothDetailsScreen() {
   );
   const mockItem = getMockWardrobeItemById(id);
 
-  const itemName = userItem?.name ?? mockItem?.name ?? "Unknown item";
+  const itemName = userItem?.customName ?? mockItem?.name ?? "Unknown item";
   const wearCount = mockItem?.wears ?? 0;
   const isWorn = wearCount > 0;
   const categoryName =
@@ -44,8 +44,8 @@ export default function ClothDetailsScreen() {
     userItem?.category ??
     mockItem?.category ??
     "Item";
-  const itemColor = userItem?.color ?? mockItem?.color ?? "—";
-  const itemOccasion = userItem?.occasion ?? mockItem?.occasion ?? "Casual";
+  const itemColor = userItem?.primaryColor ?? mockItem?.color ?? "—";
+  const itemOccasion = userItem?.occasion?.[0] ?? mockItem?.occasion ?? "Casual";
   const bg = mockItem?.bgColor ?? "#F4F4F6";
 
   const MIN_HEIGHT = SCREEN_HEIGHT * 0.45;
@@ -100,9 +100,9 @@ export default function ClothDetailsScreen() {
 
       {/* Full Screen Image/Placeholder */}
       <View style={[styles.imageContainer, { backgroundColor: bg }]}>
-        {userItem?.photoUri ? (
+        {userItem?.imageUrl ? (
           <Image
-            source={{ uri: userItem?.photoUri }}
+            source={{ uri: userItem?.imageUrl }}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />
