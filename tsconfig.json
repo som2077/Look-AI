@@ -19,6 +19,7 @@
     "nativewind-env.d.ts"
   ],
   "exclude": [
-    "src/shared/api-client/supabase-backend"
+    "node_modules",
+    "supabase/functions"
   ]
 }

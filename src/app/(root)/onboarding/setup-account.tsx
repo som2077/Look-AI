@@ -1,11 +1,11 @@
-import { usePostHog } from 'posthog-react-native';
+﻿import { usePostHog } from 'posthog-react-native';
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
-import { useSupabase } from "@/shared/api-client/useSupabase";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 const LOADING_MESSAGES = [

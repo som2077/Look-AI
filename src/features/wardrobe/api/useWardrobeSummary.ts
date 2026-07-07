@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useSupabaseQuery } from "@/shared/api-client/useSupabaseQuery";
+﻿import { useMemo } from "react";
+import { useSupabaseQuery } from "@/shared/supabase/use-supabase-query";
 
 export interface WardrobeSummary {
   readonly periodLabel: string;

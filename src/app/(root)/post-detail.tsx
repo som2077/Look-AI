@@ -26,71 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
-const MOCK_POSTS = [
-  {
-    id: "0",
-    url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
-    likes: 124,
-    comments: 12,
-    time: "3 minutes ago",
-  },
-  {
-    id: "1",
-    url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=800&auto=format&fit=crop",
-    likes: 89,
-    comments: 7,
-    time: "1 hour ago",
-  },
-  {
-    id: "2",
-    url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800&auto=format&fit=crop",
-    likes: 213,
-    comments: 24,
-    time: "5 hours ago",
-  },
-  {
-    id: "3",
-    url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop",
-    likes: 67,
-    comments: 4,
-    time: "1 day ago",
-  },
-  {
-    id: "4",
-    url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop",
-    likes: 301,
-    comments: 45,
-    time: "2 days ago",
-  },
-  {
-    id: "5",
-    url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop",
-    likes: 55,
-    comments: 2,
-    time: "3 days ago",
-  },
-  {
-    id: "6",
-    url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop",
-    likes: 178,
-    comments: 19,
-    time: "4 days ago",
-  },
-  {
-    id: "7",
-    url: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=800&auto=format&fit=crop",
-    likes: 92,
-    comments: 8,
-    time: "5 days ago",
-  },
-  {
-    id: "8",
-    url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=800&auto=format&fit=crop",
-    likes: 145,
-    comments: 17,
-    time: "1 week ago",
-  },
-];
+const MOCK_POSTS: any[] = [];
 
 export default function PostDetailScreen() {
   const router = useRouter();

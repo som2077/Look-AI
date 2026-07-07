@@ -1,6 +1,6 @@
-import { useUser } from "@clerk/clerk-expo";
+﻿import { useUser } from "@clerk/clerk-expo";
 import { useCallback, useEffect, useState } from "react";
-import { useSupabase } from "@/shared/api-client/useSupabase";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 
 export interface Group {
   id: string;

@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+﻿import React, { useCallback } from "react";
 import {
   View,
   Text,
@@ -21,7 +21,7 @@ import {
   XCircle,
   CheckCircle2,
 } from "lucide-react-native";
-import { useBillingStatus } from "@/features/billing/api/hooks";
+import { useBillingStatus } from "@/features/billing/api/use-billing";
 import { useBillingStore } from "@/features/billing/model/store";
 import { FREE_FEATURES } from "@/features/billing/config/constants";
 

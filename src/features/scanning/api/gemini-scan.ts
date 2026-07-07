@@ -21,6 +21,7 @@ export interface BarcodeAnalysis {
   price: string;
   material: string;
   rawText: string;
+  error?: string;
 }
 
 export interface LabelAnalysis {
@@ -36,34 +37,34 @@ export interface LabelAnalysis {
 
 export interface FitCheckAnalysis {
   fitScore: number;
-  rating: string;
+  ratingTitle: string;
+  ratingSubtitle: string;
   silhouette: {
     bodyShape: string;
-    waistDefinition: string;
-    verticalRatio: string;
-    ruleOfThirds: string;
+    waistBalance: string;
+    topRatio: number;
+    bottomRatio: number;
+    explanation: string;
   };
   fitPrecision: {
-    shoulderFit: string;
-    sleeveLength: string;
-    trouserBreak: string;
-    tightness: string;
+    shoulderFit: { status: "Perfect" | "Tight" | "Loose"; text: string };
+    sleeveLength: { status: "Perfect" | "Short" | "Long"; text: string };
+    trouserBreak: { status: "Perfect" | "Short" | "Long"; text: string };
   };
   colorTheory: {
-    harmonyType: string;
-    skinToneCompat: string;
-    contrastLevel: string;
-  };
-  styling: {
-    layering: string;
-    accessoryGaps: string;
-    footwearPairing: string;
+    hexColors: string[];
+    harmony: string;
+    contrastExplanation: string;
   };
   styleCategory: {
     archetype: string;
-    trendRelevance: string;
+    trendScore: number;
   };
-  actionableFixes: string[];
+  actionableFixes: Array<{
+    problem: string;
+    solution: string;
+  }>;
+  error?: string;
 }
 
 // ─── Core Gemini caller ───────────────────────────────────────────────────────
@@ -126,7 +127,11 @@ async function callGeminiVision(
       if (res.status === 429) continue;
       if (!res.ok) continue;
       const data = await res.json();
-      return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+      const candidate = data?.candidates?.[0];
+      if (candidate?.finishReason === "SAFETY") {
+        return JSON.stringify({ error: "SAFETY_VIOLATION" });
+      }
+      return candidate?.content?.parts?.[0]?.text ?? null;
     } catch {
       continue;
     }
@@ -161,6 +166,7 @@ export interface FullClothingAnalysis {
   formalityScore: number;
   versatilityTags: string[];
   confidence: number;
+  error?: string;
 }
 
 // ─── 1. Full Clothing Scan ────────────────────────────────────────────────────
@@ -292,36 +298,32 @@ IMPORTANT: This app is STRICTLY for clothing and fashion. If the image contains 
 Return ONLY a valid JSON:
 {
   "fitScore": number from 0 to 100 (overall outfit score),
-  "rating": "Stylish" | "Good Look" | "Needs Work" | "Try These Tips" | "Not an Outfit",
+  "ratingTitle": "Short title, e.g., 'Good Fit ✨', 'Needs Tweaks', 'Perfect Look'",
+  "ratingSubtitle": "Short subtitle explaining the score briefly",
   "silhouette": {
     "bodyShape": "Rectangle, Hourglass, Triangle, Inverted Triangle, or Oval",
-    "waistDefinition": "high-waist/low-waist balance observation",
-    "verticalRatio": "top:bottom ratio (e.g. 40:60, 50:50)",
-    "ruleOfThirds": "does the outfit visually break at good points?"
+    "waistBalance": "e.g., 'High-Waist Balance', 'Low-Waist Drop'",
+    "topRatio": number (e.g. 42 for a 42:58 ratio),
+    "bottomRatio": number (e.g. 58),
+    "explanation": "Short explanation of this proportion"
   },
   "fitPrecision": {
-    "shoulderFit": "good fit, drop shoulder, too tight/loose",
-    "sleeveLength": "wrist length, short, long",
-    "trouserBreak": "no break, slight break, full break",
-    "tightness": "observation on chest, waist, thigh tightness"
+    "shoulderFit": { "status": "Perfect", "Tight", or "Loose", "text": "Short detail" },
+    "sleeveLength": { "status": "Perfect", "Short", or "Long", "text": "Short detail" },
+    "trouserBreak": { "status": "Perfect", "Short", or "Long", "text": "Short detail" }
   },
   "colorTheory": {
-    "harmonyType": "Complementary, Analogous, Monochrome, Clashing, etc.",
-    "skinToneCompat": "how colors work with estimated skin undertone",
-    "contrastLevel": "high-contrast (bold) vs low-contrast (tonal)"
-  },
-  "styling": {
-    "layering": "assessment of layer structures or lack thereof",
-    "accessoryGaps": "missing accessories (belt, watch, bag) to complete look",
-    "footwearPairing": "how shoes match the outfit formality"
+    "hexColors": ["#RRGGBB", "#RRGGBB", "#RRGGBB"] (extract 2-4 dominant colors from outfit),
+    "harmony": "e.g., 'Analogous Harmony', 'Monochrome'",
+    "contrastExplanation": "Short explanation of contrast level"
   },
   "styleCategory": {
-    "archetype": "Minimalist, Streetwear, Old Money, Y2K, Business Casual, etc.",
-    "trendRelevance": "current trend alignment vs dated"
+    "archetype": "Minimalist, Streetwear, Old Money, etc.",
+    "trendScore": number from 0 to 100 (0=Dated, 100=Trending)
   },
   "actionableFixes": [
-    "Specific replacement suggestion 1 (e.g. swap loose shirt for fitted)",
-    "Specific fix 2 (e.g. add a brown leather belt)"
+    { "problem": "What is wrong (e.g., 'Chest area tight')", "solution": "How to fix it (e.g., 'Size up or try relaxed fit')" },
+    { "problem": "Another issue", "solution": "Another fix" }
   ]
 }
 Be constructive and highly specific. Return only valid JSON. No markdown.`;
@@ -332,36 +334,38 @@ export async function analyzeFitCheck(
   const text = await callGeminiVision(imageUri, FITCHECK_PROMPT);
   return parseJson<FitCheckAnalysis>(text, {
     fitScore: 75,
-    rating: "Good Look",
+    ratingTitle: "Good Look ✨",
+    ratingSubtitle: "A solid outfit with room for minor tweaks.",
     silhouette: {
       bodyShape: "Unknown",
-      waistDefinition: "Looks balanced",
-      verticalRatio: "50:50",
-      ruleOfThirds: "Good proportion",
+      waistBalance: "Standard Balance",
+      topRatio: 50,
+      bottomRatio: 50,
+      explanation: "Balanced proportions.",
     },
     fitPrecision: {
-      shoulderFit: "Good",
-      sleeveLength: "Good",
-      trouserBreak: "Slight break",
-      tightness: "Comfortable fit",
+      shoulderFit: { status: "Perfect", text: "Shoulders fit well" },
+      sleeveLength: { status: "Perfect", text: "Sleeves are correct length" },
+      trouserBreak: { status: "Perfect", text: "Good break length" },
     },
     colorTheory: {
-      harmonyType: "Neutral",
-      skinToneCompat: "Good match",
-      contrastLevel: "Medium",
-    },
-    styling: {
-      layering: "Simple look",
-      accessoryGaps: "Could add a watch",
-      footwearPairing: "Matches well",
+      hexColors: ["#1D1A27", "#F9FAFB", "#E9EBF8"],
+      harmony: "Neutral",
+      contrastExplanation: "Medium contrast tonal look.",
     },
     styleCategory: {
       archetype: "Casual",
-      trendRelevance: "Timeless",
+      trendScore: 70,
     },
     actionableFixes: [
-      "Try adding a statement accessory",
-      "Consider tucking in your shirt for a more polished look",
+      {
+        problem: "Outfit lacks personal touch",
+        solution: "Try adding a statement accessory",
+      },
+      {
+        problem: "Slightly loose silhouette",
+        solution: "Consider tucking in your shirt for a more polished look",
+      },
     ],
   });
 }

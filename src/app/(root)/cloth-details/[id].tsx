@@ -1,4 +1,5 @@
-import { getMockWardrobeItemById } from "@/shared/config/constants/mock-wardrobe-items";
+import { getMockWardrobeItemById } from "@/shared/testing/mock-wardrobe-items";
+
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { IconArrowLeft, IconDots } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";

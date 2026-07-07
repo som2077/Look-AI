@@ -7,6 +7,7 @@ import {
   IconTag,
   IconUser,
   IconX,
+  IconCameraSpark,
 } from "@tabler/icons-react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
@@ -151,28 +152,29 @@ export default function CameraScreen() {
 
   if (!permission.granted) {
     return (
-      <View className="flex-1 bg-[#0c0c0c]">
+      <View className="flex-1 bg-[#000000]">
         <StatusBar style="light" />
         <SafeAreaView className="flex-1 items-center justify-center px-8">
-          <View className="h-16 w-16 rounded-full bg-[#c9a84c]/15 items-center justify-center mb-5">
-            <IconUser size={32} color="#c9a84c" />
+          <View className="h-20 w-20 rounded-full bg-[#FFFFFF] items-center justify-center mb-2">
+            <IconCameraSpark size={35} color="#000000" />
           </View>
           <Text className="text-white text-lg font-bold text-center mb-2">
             Camera access needed
           </Text>
-          <Text className="text-[#888] text-xs text-center mb-6">
-            Look AI needs your camera to capture and log your outfits.
+          <Text className="text-[#888] text-sm text-center mb-4 px-7">
+            We need camera access so AI can scan your clothes and give you
+            instant styling feedback.
           </Text>
           <Pressable
             onPress={requestPermission}
-            className="bg-[#c9a84c] rounded-xl px-6 py-3"
+            className="bg-[#ffffff] rounded-xl px-6 py-3"
           >
             <Text className="text-[#1a1400] font-bold text-sm">
               Grant permission
             </Text>
           </Pressable>
-          <Pressable onPress={handleBack} className="mt-4 py-2">
-            <Text className="text-[#888] text-xs">Cancel</Text>
+          <Pressable onPress={handleBack} className="mt-4 py-2 ">
+            <Text className="text-[#ffffff] text-sm">Cancel</Text>
           </Pressable>
         </SafeAreaView>
       </View>

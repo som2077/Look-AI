@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useErrorStore } from "../ui/ErrorStateView";
-import { useSupabase } from "./useSupabase";
+import { useSupabase } from "./use-supabase";
 
 type QueryBuilder = ReturnType<
   ReturnType<

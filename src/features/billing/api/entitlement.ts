@@ -1,4 +1,4 @@
-/**
+﻿/**
  * entitlement.ts – Supabase-backed entitlement API.
  *
  * All mutations that grant or verify premium access go through the
@@ -11,7 +11,7 @@ import type {
   VerifyPurchaseRequest,
   VerifyPurchaseResponse,
 } from "@/features/billing/model/types";
-import { createSupabaseClient } from "@/shared/api-client/supabase";
+import { createSupabaseClient } from "@/shared/supabase/client";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";

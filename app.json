@@ -87,6 +87,12 @@
         {
           "calendarPermission": "Allow Look AI to access your calendar to suggest contextual outfits."
         }
+      ],
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "development"
+        }
       ]
     ],
     "experiments": {

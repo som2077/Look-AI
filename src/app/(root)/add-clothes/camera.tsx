@@ -175,16 +175,20 @@ export default function AddClothesCameraScreen() {
           break;
 
         case "label":
-          import("@/features/ai-styling/model/outfit-analysis-store").then(({ useOutfitAnalysisStore }) => {
-            useOutfitAnalysisStore.getState().startAnalysis(uri, mode);
-            router.replace("/(root)/(tabs)" as never);
-          });
+          import("@/features/ai-styling/model/outfit-analysis-store").then(
+            ({ useOutfitAnalysisStore }) => {
+              useOutfitAnalysisStore.getState().startAnalysis(uri, mode);
+              router.replace("/(root)/(tabs)" as never);
+            },
+          );
           break;
         case "fit-check":
-          import("@/features/ai-styling/model/outfit-analysis-store").then(({ useOutfitAnalysisStore }) => {
-            useOutfitAnalysisStore.getState().startAnalysis(uri, mode);
-            router.replace("/(root)/(tabs)" as never);
-          });
+          import("@/features/ai-styling/model/outfit-analysis-store").then(
+            ({ useOutfitAnalysisStore }) => {
+              useOutfitAnalysisStore.getState().startAnalysis(uri, mode);
+              router.replace("/(root)/(tabs)" as never);
+            },
+          );
           break;
         default:
           break;

@@ -161,8 +161,16 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
               confidence: 0,
             };
 
-            // Check if AI rejected the image BEFORE uploading to Cloudinary
-            if (aiData?.category === "Full Body") {
+            // Check if AI rejected the image for SAFETY or content BEFORE uploading
+            if (aiData?.error === "SAFETY_VIOLATION") {
+              set({
+                error:
+                  "Image rejected: Contains inappropriate or unsafe content.",
+                isAnalyzing: false,
+              });
+              if (_interval) clearInterval(_interval);
+              return;
+            } else if (aiData?.category === "Full Body") {
               set({
                 error:
                   "Please upload a picture of a single clothing item.\nFull body pictures are meant for Fit Check mode.",
@@ -223,7 +231,9 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
                 aiData = data;
                 if (aiData?.error) {
                   set({
-                    error: aiData.error,
+                    error: aiData.error === "SAFETY_VIOLATION" 
+                      ? "Image rejected: Contains inappropriate or unsafe content." 
+                      : aiData.error,
                     isAnalyzing: false,
                   });
                   if (_interval) clearInterval(_interval);
@@ -246,9 +256,16 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
             analyzeFitCheck(imageUri)
               .then((data) => {
                 aiData = data;
-                if (aiData?.rating === "Not an Outfit") {
+                if (aiData?.error === "SAFETY_VIOLATION") {
                   set({
-                    error: aiData.suggestions[0] || "Please upload a valid outfit photo.",
+                    error: "Image rejected: Contains inappropriate or unsafe content.",
+                    isAnalyzing: false,
+                  });
+                  if (_interval) clearInterval(_interval);
+                  return;
+                } else if (aiData?.rating === "Not an Outfit") {
+                  set({
+                    error: aiData.actionableFixes?.[0] || "Please upload a valid outfit photo.",
                     isAnalyzing: false,
                   });
                   if (_interval) clearInterval(_interval);

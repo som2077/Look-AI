@@ -13,9 +13,9 @@ import {
   LastOutfit,
   useOutfitAnalysisStore,
 } from "@/features/ai-styling/model/outfit-analysis-store";
+import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
-import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 
 const SVG_SIZE = 72;
 const STROKE_WIDTH = 4.5;
@@ -49,12 +49,10 @@ type CardSlide = AnalyzingSlide | CompletedSlide;
 const CompletedCardSlide = React.memo(function CompletedCardSlide({
   outfit,
   outfitIndex,
-  onRemove,
   onViewDetails,
 }: {
   outfit: LastOutfit;
   outfitIndex: number;
-  onRemove: (i: number) => void;
   onViewDetails: (i: number) => void;
 }) {
   return (
@@ -184,13 +182,13 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
     <View style={{ width: CARD_WIDTH }}>
       <View
         className="flex-row rounded-[24px] border border-[#E9EBF8] bg-[##F5F4F9] overflow-hidden h-40"
-        style={{
-          shadowColor: "#000000",
-          shadowOpacity: 0.09,
-          shadowRadius: 16,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 1,
-        }}
+        // style={{
+        //   shadowColor: "#000000",
+        //   shadowOpacity: 0.09,
+        //   shadowRadius: 16,
+        //   shadowOffset: { width: 0, height: 2 },
+        //   elevation: 1,
+        // }}
       >
         <View style={{ width: 120, height: 160 }} className="overflow-hidden">
           <ExpoImage
@@ -266,13 +264,11 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
   mode,
   slides,
   strokeDashoffset,
-  removeOutfit,
   handleViewDetails,
 }: {
   mode: string;
   slides: CardSlide[];
   strokeDashoffset: number;
-  removeOutfit: (index: number) => void;
   handleViewDetails: (index: number) => void;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -320,12 +316,11 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
         <CompletedCardSlide
           outfit={item.outfit}
           outfitIndex={item.outfitIndex}
-          onRemove={removeOutfit}
           onViewDetails={handleViewDetails}
         />
       );
     },
-    [strokeDashoffset, removeOutfit, handleViewDetails],
+    [strokeDashoffset, handleViewDetails],
   );
 
   const safeIndex = Math.min(activeIndex, slides.length - 1);
@@ -494,7 +489,6 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
           mode={mode}
           slides={slides}
           strokeDashoffset={strokeDashoffset}
-          removeOutfit={removeOutfit}
           handleViewDetails={handleViewDetails}
         />
       ))}

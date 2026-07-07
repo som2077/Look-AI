@@ -1,4 +1,4 @@
-import {
+﻿import {
   IconArrowLeft,
   IconBriefcase,
   IconCalendarMonth,
@@ -24,7 +24,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
-import { uploadToCloudinary } from "@/shared/api-client/cloudinary";
+import { uploadToCloudinary } from "@/shared/cloudinary/client";
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

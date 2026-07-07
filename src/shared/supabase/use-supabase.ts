@@ -1,6 +1,6 @@
-import { useAuth } from "@clerk/clerk-expo";
+﻿import { useAuth } from "@clerk/clerk-expo";
 import { useEffect, useRef, useState } from "react";
-import { createSupabaseClient } from "@/shared/api-client/supabase";
+import { createSupabaseClient } from "@/shared/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const useSupabase = () => {

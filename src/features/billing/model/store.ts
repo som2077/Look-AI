@@ -1,4 +1,4 @@
-/**
+﻿/**
  * billing/store.ts – Zustand store that manages the full Google Play Billing
  * lifecycle: connection, purchases, verification, entitlement sync, and restore.
  */
@@ -6,7 +6,7 @@
 import { create } from "zustand";
 import { Platform, Alert } from "react-native";
 import type { Purchase, PurchaseError } from "react-native-iap";
-import { BillingService, mapIAPPurchase } from "../api/BillingService";
+import { BillingService, mapIAPPurchase } from "../api/billing-service";
 import {
   verifyPurchase,
   fetchEntitlement,

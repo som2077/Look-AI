@@ -1,8 +1,8 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
 import { create } from "zustand";
-import { uploadToCloudinary } from "@/shared/api-client/cloudinary";
-import { useSupabase } from "@/shared/api-client/useSupabase";
+import { uploadToCloudinary } from "@/shared/cloudinary/client";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 
 export interface CommunityPost {
   id: string;
@@ -25,98 +25,7 @@ interface CommunityPostsStore {
   setHasFetched: (val: boolean) => void;
 }
 
-const DUMMY_POSTS: CommunityPost[] = [
-  {
-    id: "dummy_1",
-    user_id: "user1",
-    image_url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
-    caption: "Loving this new summer fit! ☀️",
-    likes_count: 124,
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    user_profiles: { nickname: "Sarah", username: "sarah_style" },
-  },
-  {
-    id: "dummy_2",
-    user_id: "user2",
-    image_url: "https://images.unsplash.com/photo-1550614000-4b95d415d1a5?w=800&q=80",
-    caption: "Minimalist street style for the weekend.",
-    likes_count: 89,
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-    user_profiles: { nickname: "Alex", username: "alex_fits" },
-  },
-  {
-    id: "dummy_3",
-    user_id: "user3",
-    image_url: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80",
-    caption: "Cozy knits are back in season.",
-    likes_count: 210,
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    user_profiles: { nickname: "Emily", username: "em_styles" },
-  },
-  {
-    id: "dummy_4",
-    user_id: "user4",
-    image_url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",
-    caption: "Shopping day downtown! 🛍️",
-    likes_count: 345,
-    created_at: new Date(Date.now() - 90000000).toISOString(),
-    user_profiles: { nickname: "Jessica", username: "jess_fashion" },
-  },
-  {
-    id: "dummy_5",
-    user_id: "user5",
-    image_url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=800&q=80",
-    caption: "Vintage vibes today ✨",
-    likes_count: 156,
-    created_at: new Date(Date.now() - 100000000).toISOString(),
-    user_profiles: { nickname: "Mike", username: "mike_vintage" },
-  },
-  {
-    id: "dummy_6",
-    user_id: "user6",
-    image_url: "https://images.unsplash.com/photo-1485230405346-71acb9518d9c?w=800&q=80",
-    caption: "Oversized coats and coffee ☕",
-    likes_count: 420,
-    created_at: new Date(Date.now() - 110000000).toISOString(),
-    user_profiles: { nickname: "Chloe", username: "chloe_daily" },
-  },
-  {
-    id: "dummy_7",
-    user_id: "user7",
-    image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&q=80",
-    caption: "Ready for the evening party 🎉",
-    likes_count: 890,
-    created_at: new Date(Date.now() - 120000000).toISOString(),
-    user_profiles: { nickname: "Liam", username: "liam_looks" },
-  },
-  {
-    id: "dummy_8",
-    user_id: "user8",
-    image_url: "https://images.unsplash.com/photo-1492447166138-50c3889fccb1?w=800&q=80",
-    caption: "Casual Fridays.",
-    likes_count: 234,
-    created_at: new Date(Date.now() - 130000000).toISOString(),
-    user_profiles: { nickname: "Noah", username: "noah_menswear" },
-  },
-  {
-    id: "dummy_9",
-    user_id: "user9",
-    image_url: "https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?w=800&q=80",
-    caption: "Accessories make the outfit 💍",
-    likes_count: 567,
-    created_at: new Date(Date.now() - 140000000).toISOString(),
-    user_profiles: { nickname: "Mia", username: "mia_accessories" },
-  },
-  {
-    id: "dummy_10",
-    user_id: "user10",
-    image_url: "https://images.unsplash.com/photo-1509631179647-0c37cb1100f8?w=800&q=80",
-    caption: "Autumn colors 🍂",
-    likes_count: 312,
-    created_at: new Date(Date.now() - 150000000).toISOString(),
-    user_profiles: { nickname: "Emma", username: "emma_fall" },
-  }
-];
+const DUMMY_POSTS: CommunityPost[] = [];
 
 const usePostsStore = create<CommunityPostsStore>((set) => ({
   posts: DUMMY_POSTS,

@@ -1,28 +1,29 @@
-import "../../global.css";
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
-import { Stack, useRouter, useSegments } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSupabase } from "@/shared/api-client/useSupabase";
+﻿import { BillingService } from "@/features/billing/api/billing-service";
 import {
   OnboardingProvider,
   useOnboardingState,
 } from "@/features/onboarding/model/onboarding-store";
-import { BillingService } from "@/features/billing/api/BillingService";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import * as SecureStore from "expo-secure-store";
-import { memo, useCallback, useEffect, useState } from "react";
-import {
-  useErrorStore,
-  ErrorStateView,
-  AppErrorBoundary,
-} from "@/shared/ui/ErrorStateView";
-import { useFonts } from "expo-font";
 import { FONT_ASSETS } from "@/shared/config/constants/fonts";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import {
+  AppErrorBoundary,
+  ErrorStateView,
+  useErrorStore,
+} from "@/shared/ui/ErrorStateView";
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { useFonts } from "expo-font";
 import * as NavigationBar from "expo-navigation-bar";
+import { Stack, useRouter, useSegments } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { StatusBar } from "expo-status-bar";
 import { PostHogProvider } from "posthog-react-native";
+import { memo, useCallback, useEffect, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { LogLevel, OneSignal } from "react-native-onesignal";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import "../../global.css";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -182,6 +183,16 @@ export default function RootLayout() {
   useEffect(() => {
     NavigationBar.setBackgroundColorAsync("#000000");
     NavigationBar.setButtonStyleAsync("light");
+  }, []);
+
+  // Initialize OneSignal Push Notifications
+  useEffect(() => {
+    const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
+    if (oneSignalAppId) {
+      OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+      OneSignal.initialize(oneSignalAppId);
+      OneSignal.Notifications.requestPermission(true);
+    }
   }, []);
 
   const checkConnectivity = useCallback(async () => {

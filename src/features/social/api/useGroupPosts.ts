@@ -1,7 +1,7 @@
-import { useUser } from "@clerk/clerk-expo";
+﻿import { useUser } from "@clerk/clerk-expo";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSupabase } from "@/shared/api-client/useSupabase";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 
 export interface GroupPost {
   id: string;

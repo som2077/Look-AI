@@ -1,5 +1,5 @@
-import { analyzeClothingImage } from "@/features/scanning/api/gemini-vision";
-import { useAnalysisCompleteNotification } from "@/shared/lib/notificationService";
+﻿import { analyzeClothingImage } from "@/features/scanning/api/gemini-vision";
+import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
