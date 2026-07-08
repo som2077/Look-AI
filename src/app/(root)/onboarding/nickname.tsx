@@ -1,9 +1,12 @@
-import { usePostHog } from 'posthog-react-native';
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useUser } from "@clerk/clerk-expo";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
+import { Text, TextInput, View, ActivityIndicator } from "react-native";
+import { useState } from "react";
 
 const MAX_LENGTH = 15;
 
@@ -11,28 +14,78 @@ export default function NicknameScreen() {
   const posthog = usePostHog();
   const router = useRouter();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
-  const { nickname, setNickname, username, setUsername } = useOnboardingState();
+  const { user } = useUser();
+  const { supabase } = useSupabase();
+  const { nickname, setNickname, username, setUsername, completeOnboarding } =
+    useOnboardingState();
+  const [usernameError, setUsernameError] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
 
-  const handleContinue = () => {
-    posthog?.capture('onboarding_step_completed', { step: 'nickname' });
+  const handleContinue = async () => {
+    posthog?.capture("onboarding_step_completed", { step: "nickname" });
     if (!nickname.trim() || !username.trim()) return;
-    
-    if (fromProfile === "true") {
-      router.back();
-    } else {
-      router.push("/(root)/onboarding/comparison" as any);
+
+    setUsernameError("");
+    setIsChecking(true);
+
+    try {
+      // 1. Check globally if the username is available using RPC (bypasses RLS)
+      const { data: isAvailable, error } = await supabase.rpc(
+        "check_username_available",
+        { check_username: username.trim() }
+      );
+
+      if (error) {
+        console.error("Username check error:", error);
+        setUsernameError("Failed to verify username.");
+        setIsChecking(false);
+        return;
+      }
+
+      let taken = !isAvailable;
+
+      // 2. If it's taken globally, check if it belongs to the current user.
+      // RLS only allows selecting our OWN profile, so if it returns a row here, it's ours.
+      if (taken) {
+        const { data: ownProfile } = await supabase
+          .from("user_profiles")
+          .select("user_id")
+          .eq("username", username.trim())
+          .maybeSingle();
+
+        if (ownProfile) {
+          taken = false; // It's their own, they can keep it
+        }
+      }
+
+      if (taken) {
+        setUsernameError("Username is already taken.");
+        setIsChecking(false);
+        return;
+      }
+
+      if (fromProfile === "true") {
+        if (user) await completeOnboarding(user.id, supabase);
+        router.back();
+      } else {
+        router.push("/(root)/onboarding/comparison" as any);
+      }
+    } catch (e) {
+      console.error(e);
+      setUsernameError("An unexpected error occurred.");
+    } finally {
+      setIsChecking(false);
     }
   };
 
   return (
-    // <SafeAreaView className="flex-1 bg-white">
     <View className="flex-1 px-6 pb-6 pt-2">
       <OnboardingHeader step={7} />
 
       <Text className="text-4xl font-semibold tracking-tight px-3 text-[#1D1A27]">
         Create nickname
       </Text>
-      <Text className="mt-2 px-3 text-xl leading-6 font-regular text-[#5A5566]">
+      <Text className="mt-2 px-3 text-lg font-regular text-[#6B7280]">
         This can be anything you like and can be changed later.
       </Text>
 
@@ -64,7 +117,7 @@ export default function NicknameScreen() {
         <TextInput
           value={username}
           onChangeText={(text) => {
-            // Only allow letters, numbers, and underscores
+            setUsernameError(""); // Clear error when typing
             const filtered = text.replace(/[^a-zA-Z0-9_]/g, "");
             if (filtered.length <= MAX_LENGTH) setUsername(filtered);
           }}
@@ -72,20 +125,33 @@ export default function NicknameScreen() {
           placeholderTextColor="#5A5566"
           maxLength={MAX_LENGTH}
           autoCapitalize="none"
-          className="rounded-xl border bg-[#F3F4F6] border-gray-200 px-5 py-5 text-base font-medium text-[#1D1A27]"
+          className={`rounded-xl border bg-[#F3F4F6] px-5 py-5 text-base font-medium text-[#1D1A27] ${
+            usernameError ? "border-red-500" : "border-gray-200"
+          }`}
         />
-        <Text className="mt-2 text-sm font-regular text-[#5A5566]">
-          {username.length}/{MAX_LENGTH}
-        </Text>
-        <Text className="mt-1 text-xs font-regular text-[#5A5566]">
-          Only letters, numbers, and underscores
-        </Text>
+        <View className="flex-row justify-between items-start mt-2">
+          <View className="flex-1">
+            <Text className="text-xs font-regular text-[#5A5566]">
+              Only letters, numbers, and underscores
+            </Text>
+            {!!usernameError && (
+              <Text className="text-sm font-medium text-red-500 mt-1">
+                {usernameError}
+              </Text>
+            )}
+          </View>
+          <Text className="text-sm font-regular text-[#5A5566]">
+            {username.length}/{MAX_LENGTH}
+          </Text>
+        </View>
       </View>
 
       <View className="mt-auto">
-        <ContinueButton onPress={handleContinue} disabled={!nickname.trim() || !username.trim()} />
+        <ContinueButton
+          onPress={handleContinue}
+          disabled={!nickname.trim() || !username.trim() || isChecking}
+        />
       </View>
     </View>
-    // </SafeAreaView>
   );
 }

@@ -21,12 +21,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
 import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
 import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
-import { CURRENT_STREAK_DAYS } from "@/shared/config/constants/streak";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { LookAIBanner } from "@/shared/ui/LookAIBanner";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
-import * as SecureStore from "expo-secure-store";
+import { useStreakStore } from "@/shared/store/useStreakStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -51,46 +50,19 @@ type CardKey = "wardrobe" | "blank1";
 // Only 2 cards needed — was wastefully creating 100 items
 const CARDS: CardKey[] = ["wardrobe", "blank1"];
 
+type FilterTab = "Days" | "Weeks" | "Months" | "All";
+
 export default function HomeScreen() {
   const { user } = useUser();
-  const { summary } = useWardrobeSummary(user?.id);
+  const [timeframe, setTimeframe] = useState<FilterTab>("Days");
+  const period = timeframe === "Days" ? "daily" : timeframe === "Weeks" ? "weekly" : timeframe === "Months" ? "monthly" : "all";
+  const { summary } = useWardrobeSummary(user?.id, period);
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
   const flatListRef = useRef<FlatList>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const { currentStreak, hasIncrementedToday, dismissIncrement } = useStreakStore();
 
-  React.useEffect(() => {
-    const triggerPopup = async () => {
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        const lastSeen = await SecureStore.getItemAsync(
-          "last_streak_popup_date",
-        );
-
-        if (lastSeen !== today) {
-          setShowStreakPopup(true);
-          await SecureStore.setItemAsync("last_streak_popup_date", today);
-        }
-      } catch (err) {
-        console.warn("Failed to check streak popup date", err);
-      }
-    };
-
-    // Trigger on initial mount (login / fresh start)
-    const timer = setTimeout(triggerPopup, 800);
-
-    // Trigger whenever app is reopened (brought to foreground)
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "active") {
-        setTimeout(triggerPopup, 500);
-      }
-    });
-
-    return () => {
-      clearTimeout(timer);
-      subscription.remove();
-    };
-  }, []);
+  // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)
 
   const ringSegments = useMemo<readonly RingProgressSegment[]>(() => {
     const total = summary.totalWorn; // total wardrobe items
@@ -120,7 +92,7 @@ export default function HomeScreen() {
 
     // Ring 4 (orange) — Streak: always uses real streak data
     const STREAK_GOAL = 30;
-    const streakRatio = clampRatio(CURRENT_STREAK_DAYS / STREAK_GOAL);
+    const streakRatio = clampRatio(currentStreak / STREAK_GOAL);
 
     return [
       { ...RING_SEGMENT_BASE[0], progress: wornRatio },
@@ -128,7 +100,7 @@ export default function HomeScreen() {
       { ...RING_SEGMENT_BASE[2], progress: wearFreqRatio },
       { ...RING_SEGMENT_BASE[3], progress: streakRatio },
     ];
-  }, [summary]);
+  }, [summary, currentStreak]);
 
   const handleMomentumScrollEnd = useCallback((event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -152,11 +124,11 @@ export default function HomeScreen() {
           <>
             <WardrobeRingSummaryCard
               wornPercentage={clampRatio(summary.wornPercentage)}
-              totalWorn={CURRENT_STREAK_DAYS}
+              totalWorn={currentStreak}
               wearCount={summary.wearCount}
-              neverCount={summary.totalWorn}
+              neverCount={summary.totalWorn + summary.neverCount}
               ringSegments={ringSegments}
-              streak={CURRENT_STREAK_DAYS}
+              streak={currentStreak}
               labels={{
                 topLeft: "Usage",
                 bottomLeft: "Streak",
@@ -168,7 +140,7 @@ export default function HomeScreen() {
                 bottomRight: "#1D1A27",
               }}
             />
-            <WardrobeFilterTabs />
+            <WardrobeFilterTabs onChange={setTimeframe} />
             <WardrobeMessageBar />
           </>
         ) : (
@@ -179,7 +151,7 @@ export default function HomeScreen() {
         )}
       </View>
     ),
-    [summary, ringSegments],
+    [summary, ringSegments, currentStreak],
   );
 
   // Header stays in place (translateY counteracts scroll), clamped to HEADER_HEIGHT
@@ -252,22 +224,20 @@ export default function HomeScreen() {
                   flexDirection: "row",
                   justifyContent: "center",
                   alignItems: "center",
-                  marginTop: 14,
-                  marginBottom: 6,
-                  gap: 6,
+                  marginTop: 12,
+                  marginBottom: 4,
+                  gap: 5,
                 }}
               >
                 {[0, 1].map((i) => (
                   <View
                     key={i}
                     style={{
-                      width: i === indicatorIndex ? 16 : 7,
-                      height: 7,
-                      borderRadius: 15,
-                      borderWidth: 0.5,
-                      borderColor: "#1D1A27",
+                      width: i === indicatorIndex ? 18 : 6,
+                      height: 6,
+                      borderRadius: 100,
                       backgroundColor:
-                        i === indicatorIndex ? "#1D1A27" : "#FFFFFF",
+                        i === indicatorIndex ? "#1D1A27" : "#D8D6E3",
                     }}
                   />
                 ))}
@@ -286,9 +256,9 @@ export default function HomeScreen() {
         </SafeAreaView>
       </AppGradientBackground>
       <StreakPopup
-        visible={showStreakPopup}
-        onClose={() => setShowStreakPopup(false)}
-        streakCount={CURRENT_STREAK_DAYS}
+        visible={hasIncrementedToday}
+        onClose={dismissIncrement}
+        streakCount={currentStreak}
       />
     </SwipeTabWrapper>
   );

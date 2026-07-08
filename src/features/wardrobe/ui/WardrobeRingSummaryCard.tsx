@@ -1,8 +1,10 @@
 import { IconFlameFilled } from "@tabler/icons-react-native";
 import type { ReactNode } from "react";
-import React, { useMemo } from "react";
-import { Text, View } from "react-native";
+import React, { useMemo, useEffect, useRef } from "react";
+import { Text, View, Animated } from "react-native";
 import { Circle, Svg } from "react-native-svg";
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const TRACK_COLOR = "#F8F7FC" as const;
 
@@ -61,6 +63,120 @@ const clampProgress = (value: number) => {
   if (value > 1) return 1;
   return value;
 };
+
+import { useFocusEffect } from "expo-router";
+
+const AnimatedRingSegment = ({ segment, center }: { segment: RingProgressSegment & { progress: number }, center: number }) => {
+  const animatedProgress = useRef(new Animated.Value(0)).current;
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reset to 0 when focused to replay the animation
+      animatedProgress.setValue(0);
+      Animated.timing(animatedProgress, {
+        toValue: segment.progress,
+        duration: 1000,
+        useNativeDriver: true,
+      }).start();
+
+      return () => {
+        animatedProgress.stopAnimation();
+      };
+    }, [segment.progress, animatedProgress])
+  );
+
+  const circumference = 2 * Math.PI * segment.radius;
+  const dashArray = `${circumference} ${circumference}`;
+
+  const dashOffset = animatedProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [circumference, 0],
+  });
+
+  const dotRadius = segment.strokeWidth / 2 - 2.5;
+
+  return (
+    <React.Fragment>
+      {/* Track circle */}
+      <Circle
+        cx={center}
+        cy={center}
+        r={segment.radius}
+        stroke={TRACK_COLOR}
+        strokeWidth={segment.strokeWidth}
+        fill="transparent"
+      />
+      {/* Progress arc */}
+      <AnimatedCircle
+        cx={center}
+        cy={center}
+        r={segment.radius}
+        stroke={segment.color}
+        strokeWidth={segment.strokeWidth}
+        strokeLinecap="round"
+        strokeDasharray={dashArray}
+        strokeDashoffset={dashOffset}
+        fill="transparent"
+        transform={`rotate(-90 ${center} ${center})`}
+      />
+    </React.Fragment>
+  );
+};
+
+// Component for the animated dot overlay
+const AnimatedDot = ({ segment, center }: { segment: RingProgressSegment & { progress: number }, center: number }) => {
+  const animatedProgress = useRef(new Animated.Value(0)).current;
+
+  useFocusEffect(
+    React.useCallback(() => {
+      animatedProgress.setValue(0);
+      Animated.timing(animatedProgress, {
+        toValue: segment.progress,
+        duration: 1000,
+        useNativeDriver: true,
+      }).start();
+
+      return () => {
+        animatedProgress.stopAnimation();
+      };
+    }, [segment.progress, animatedProgress])
+  );
+
+  const dotRadius = segment.strokeWidth / 2 - 2;
+
+  if (segment.progress === 0) return null;
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        width: center * 2,
+        height: center * 2,
+        transform: [
+          {
+            rotate: animatedProgress.interpolate({
+              inputRange: [0, 1],
+              outputRange: ["-90deg", "270deg"],
+            }),
+          },
+        ],
+      }}
+    >
+      <View
+        style={{
+          position: "absolute",
+          left: center + segment.radius - dotRadius,
+          top: center - dotRadius,
+          width: dotRadius * 2,
+          height: dotRadius * 2,
+          borderRadius: dotRadius,
+          backgroundColor: "#FFFFFF",
+        }}
+      />
+    </Animated.View>
+  );
+};
+
 
 export function WardrobeRingSummaryCard({
   wornPercentage,
@@ -172,56 +288,18 @@ export function WardrobeRingSummaryCard({
           style={{ position: "relative" }}
         >
           <Svg width={svgSize} height={svgSize}>
-            {sanitizedSegments.map((segment) => {
-              const circumference = 2 * Math.PI * segment.radius;
-              const dashArray = `${circumference} ${circumference}`;
-              const dashOffset = circumference * (1 - segment.progress);
-
-              return (
-                <React.Fragment key={segment.id}>
-                  {/* Track circle */}
-                  <Circle
-                    cx={center}
-                    cy={center}
-                    r={segment.radius}
-                    stroke={TRACK_COLOR}
-                    strokeWidth={segment.strokeWidth}
-                    fill="transparent"
-                  />
-                  {/* Progress arc */}
-                  <Circle
-                    cx={center}
-                    cy={center}
-                    r={segment.radius}
-                    stroke={segment.color}
-                    strokeWidth={segment.strokeWidth}
-                    strokeLinecap="round"
-                    strokeDasharray={dashArray}
-                    strokeDashoffset={dashOffset}
-                    fill="transparent"
-                    transform={`rotate(-90 ${center} ${center})`}
-                  />
-                  {/* Tip circle (hole/shadow effect) */}
-                  {segment.progress > 0 && (
-                    <Circle
-                      cx={
-                        center +
-                        segment.radius *
-                          Math.cos(2 * Math.PI * segment.progress - Math.PI / 2)
-                      }
-                      cy={
-                        center +
-                        segment.radius *
-                          Math.sin(2 * Math.PI * segment.progress - Math.PI / 2)
-                      }
-                      r={segment.strokeWidth / 2 - 2.5}
-                      fill="#FFFFFF"
-                    />
-                  )}
-                </React.Fragment>
-              );
-            })}
+            {sanitizedSegments.map((segment) => (
+              <AnimatedRingSegment key={segment.id} segment={segment} center={center} />
+            ))}
           </Svg>
+          
+          {/* Animated dot overlays for the rings */}
+          <View style={{ position: "absolute", width: svgSize, height: svgSize }}>
+            {sanitizedSegments.map((segment) => (
+              <AnimatedDot key={segment.id} segment={segment} center={center} />
+            ))}
+          </View>
+
           {/* Absolutely centered fire icon */}
           {showStreakIcon && (
             <View

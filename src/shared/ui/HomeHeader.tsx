@@ -1,4 +1,4 @@
-import { CURRENT_STREAK_DAYS } from "@/shared/config/constants/streak";
+import { useStreakStore } from "@/shared/store/useStreakStore";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
@@ -7,22 +7,33 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 export const HomeHeader = React.memo(function HomeHeader() {
   const router = useRouter();
-  const streak = CURRENT_STREAK_DAYS;
+  const { currentStreak } = useStreakStore();
 
   return (
-    <View className="flex-row items-center justify-between ">
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
       <ExpoImage
         source={require("@/assets/images/getStartedLogo.png")}
-        style={{ height: 70, width: 224, marginLeft: -40 }}
+        style={{ height: 56, width: 180, marginLeft: -32 }}
         contentFit="contain"
         cachePolicy="memory-disk"
       />
 
-      <View className="flex-row items-center gap-2">
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {/* Streak pill */}
         <TouchableOpacity
           onPress={() => router.push("/(root)/streak" as never)}
           activeOpacity={0.7}
-          className="flex-row items-center rounded-full border border-[#E2E2EA] bg-[#F8F7FC] px-4 py-[8.5px]"
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            height: 40,
+            borderRadius: 100,
+            borderWidth: 1,
+            borderColor: "#E2E2EA",
+            backgroundColor: "#F8F7FC",
+            paddingHorizontal: 12,
+            gap: 5,
+          }}
         >
           <LottieView
             source={{
@@ -30,23 +41,40 @@ export const HomeHeader = React.memo(function HomeHeader() {
             }}
             autoPlay
             loop
-            style={{ width: 21, height: 21 }}
+            style={{ width: 20, height: 20 }}
           />
-          <Text className="text-[#1D1A27] font-bold text-[15px] ml-1.5">
-            {streak}
+          <Text
+            style={{
+              color: "#1D1A27",
+              fontWeight: "700",
+              fontSize: 14,
+              letterSpacing: -0.2,
+            }}
+          >
+            {currentStreak}
           </Text>
         </TouchableOpacity>
 
+        {/* Calendar icon */}
         <TouchableOpacity
           onPress={() => router.push("/(root)/calendar" as never)}
           activeOpacity={0.7}
-          className="flex-row items-center rounded-full border border-[#E2E2EA] bg-[#F8F7FC] p-[9.9px]"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 100,
+            borderWidth: 1,
+            borderColor: "#E2E2EA",
+            backgroundColor: "#F8F7FC",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           <ExpoImage
             source={{
               uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
             }}
-            style={{ width: 21, height: 21 }}
+            style={{ width: 19, height: 19 }}
             contentFit="contain"
           />
         </TouchableOpacity>

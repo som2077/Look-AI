@@ -17,16 +17,11 @@ export const LookAIBanner = React.memo(function LookAIBanner({
       style={{
         marginTop: 7,
         backgroundColor: "#FFFFFF",
-        borderColor: "#F0F0F5",
+        borderColor: "#EDEDF2",
         borderWidth: 1,
-        borderRadius: 20,
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        shadowColor: "#000",
-        shadowOpacity: 0.04,
-        shadowRadius: 24,
-        shadowOffset: { width: 0, height: 12 },
-        elevation: 1,
+        borderRadius: 14,
+        paddingHorizontal: 18,
+        paddingVertical: 14,
       }}
     >
       {/* Row 1: Outfit Score */}

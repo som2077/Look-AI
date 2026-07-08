@@ -15,6 +15,7 @@ type OnboardingFormData = {
   bio: string;
   about: string;
   stylePreferences: string[];
+  whereDidYouHear: string[];
 };
 
 type OnboardingState = OnboardingFormData & {
@@ -31,6 +32,7 @@ type OnboardingState = OnboardingFormData & {
   setBio: (value: string) => void;
   setAbout: (value: string) => void;
   toggleStyle: (value: string) => void;
+  setWhereDidYouHear: (value: string[]) => void;
   ensureUserSession: (userId: string) => void;
   resetState: () => void;
   completeOnboarding: (
@@ -49,6 +51,7 @@ const createInitialFormState = (): OnboardingFormData => ({
   bio: "",
   about: "",
   stylePreferences: [],
+  whereDidYouHear: [],
 });
 
 const secureStorage = {
@@ -86,6 +89,7 @@ export const useOnboardingState = create<OnboardingState>()(
           if (state.stylePreferences.length >= 5) return state;
           return { stylePreferences: [...state.stylePreferences, style] };
         }),
+      setWhereDidYouHear: (whereDidYouHear) => set({ whereDidYouHear }),
       ensureUserSession: (userId: string) =>
         set((state) => {
           if (state.activeUserId === userId) return {};
@@ -123,6 +127,7 @@ export const useOnboardingState = create<OnboardingState>()(
               bio: state.bio,
               about: state.about,
               style_preferences: state.stylePreferences,
+              where_did_you_hear: state.whereDidYouHear,
             },
             { onConflict: "user_id" },
           );
@@ -138,9 +143,13 @@ export const useOnboardingState = create<OnboardingState>()(
             _completionVersion: get()._completionVersion + 1,
           });
           return true;
-        } catch (e) {
+        } catch (e: any) {
           console.error("Onboarding completion failed:", e);
-          set({ isSaving: false, error: "Failed to save onboarding data" });
+          let errorMessage = "Failed to save onboarding data";
+          if (e.code === '23505' || e.message?.includes('duplicate key')) {
+            errorMessage = "Username is already taken. Please go back and choose another.";
+          }
+          set({ isSaving: false, error: errorMessage });
           return false;
         }
       },

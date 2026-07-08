@@ -23,26 +23,62 @@ export const RecentlyUploadedHeading = React.memo(
 export const NotifyBanner = React.memo(function NotifyBanner() {
   const { isAnalyzing, lastOutfits } = useOutfitAnalysisStore();
   const [isDismissed, setIsDismissed] = React.useState(false);
+  const [timeLeft, setTimeLeft] = React.useState(60);
+  const opacity = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    if (isAnalyzing || lastOutfits.length > 0 || isDismissed) return;
+
+    if (timeLeft > 0) {
+      const timer = setTimeout(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setIsDismissed(true);
+      });
+    }
+  }, [timeLeft, isAnalyzing, lastOutfits.length, isDismissed]);
 
   // Show banner only when no analysis and no completed outfits
   if (isAnalyzing || lastOutfits.length > 0 || isDismissed) return null;
 
   return (
-    <View className="mx-6  mt-2 flex-row  border border-[#E9EBF8]  items-center justify-between bg-[#FFFFFF] rounded-[16px] px-4 py-4 ">
+    <Animated.View
+      style={{ opacity }}
+      className="mx-6 mt-2 flex-row border border-[#E9EBF8] items-center justify-between bg-[#FFFFFF] rounded-[16px] px-4 py-4"
+    >
       <View className="flex-row items-center flex-1 pr-3">
         <IconBell size={24} color="#1D1A27" strokeWidth={1.5} />
         <Text
-          className="ml-3 text-[#1D1A27] font-sans "
+          className="ml-3 text-[#1D1A27] font-sans"
           style={{ fontSize: 12, lineHeight: 18, flex: 1 }}
         >
           You can switch apps or turn off your phone. {"\n"}
           We&apos;ll notify you when the analysis is done.
         </Text>
       </View>
-      <Pressable onPress={() => setIsDismissed(true)} hitSlop={10}>
-        <IconX size={20} color="#1D1A27" strokeWidth={1.8} />
+      <Pressable
+        onPress={() => {
+          Animated.timing(opacity, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => setIsDismissed(true));
+        }}
+        hitSlop={10}
+        style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "#F3F4F6", borderRadius: 12 }}
+      >
+        <Text style={{ fontSize: 13, fontWeight: "600", color: "#4B5563" }}>
+          {timeLeft > 0 ? `${timeLeft}s` : "0s"}
+        </Text>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 });
 

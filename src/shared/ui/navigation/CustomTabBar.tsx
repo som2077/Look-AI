@@ -213,11 +213,15 @@ export function CustomTabBar({
                       source={require("@/assets/icons/home.json")}
                       autoPlay={focused}
                       loop={false}
-                      style={{ width: 28, height: 28 }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        opacity: focused ? 1 : 0.4,
+                      }}
                       colorFilters={[
                         {
                           keypath: "**",
-                          color: focused ? "#000000" : "#000000",
+                          color: focused ? "#000000" : "#9898A6",
                         },
                       ]}
                     />
@@ -238,7 +242,11 @@ export function CustomTabBar({
                       source={require("@/assets/icons/wardrobe.json")}
                       autoPlay={true}
                       loop={false}
-                      style={{ width: 28, height: 28 }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        opacity: focused ? 1 : 0.4,
+                      }}
                       colorFilters={[
                         {
                           keypath: "**",
@@ -263,7 +271,11 @@ export function CustomTabBar({
                       source={require("@/assets/icons/explore.json")}
                       autoPlay={focused}
                       loop={false}
-                      style={{ width: 28, height: 28 }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        opacity: focused ? 1 : 0.4,
+                      }}
                       colorFilters={[
                         {
                           keypath: "**",

@@ -1,4 +1,4 @@
-﻿import { BillingService } from "@/features/billing/api/billing-service";
+import { BillingService } from "@/features/billing/api/billing-service";
 import {
   OnboardingProvider,
   useOnboardingState,

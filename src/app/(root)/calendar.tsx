@@ -1,4 +1,6 @@
-﻿import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Calendar from "expo-calendar";
 import { Image as ExpoImage } from "expo-image";
@@ -21,8 +23,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
-import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
 
 import {
   IconArrowLeft,

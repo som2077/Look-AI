@@ -3,6 +3,8 @@ import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButt
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
 import * as Haptics from "expo-haptics";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import { usePostHog } from "posthog-react-native";
 import React, { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -72,18 +74,21 @@ export default function StylePreferenceScreen() {
   const posthog = usePostHog();
   const router = useRouter();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
-  const { stylePreferences, toggleStyle } = useOnboardingState();
+  const { user } = useUser();
+  const { supabase } = useSupabase();
+  const { stylePreferences, toggleStyle, completeOnboarding } = useOnboardingState();
 
-  const handleContinue = useCallback(() => {
+  const handleContinue = useCallback(async () => {
     posthog?.capture("onboarding_step_completed", { step: "style-preference" });
     if (stylePreferences.length !== 5) return;
 
     if (fromProfile === "true") {
+      if (user) await completeOnboarding(user.id, supabase);
       router.back();
     } else {
       router.push("/(root)/onboarding/full-length-pics");
     }
-  }, [router, stylePreferences, fromProfile]);
+  }, [router, stylePreferences, fromProfile, user, supabase, completeOnboarding]);
 
   return (
     // <SafeAreaView className="flex-1">

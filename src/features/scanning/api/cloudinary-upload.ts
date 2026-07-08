@@ -97,3 +97,47 @@ export async function waitForCloudinaryImage(
   console.warn("Background removal took too long or failed.");
   return false;
 }
+
+export function extractPublicIdFromUrl(url: string): string | null {
+  try {
+    if (!url || !url.includes("cloudinary.com")) return null;
+    const parts = url.split("/");
+    const filename = parts.pop();
+    if (!filename) return null;
+    return filename.split(".")[0];
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
+  if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+    console.warn("Cloudinary credentials are not properly configured");
+    return false;
+  }
+
+  const timestamp = Math.round(new Date().getTime() / 1000).toString();
+  const paramsToSign = `public_id=${publicId}&timestamp=${timestamp}`;
+  const signature = CryptoJS.SHA1(paramsToSign + API_SECRET).toString();
+
+  const formData = new FormData();
+  formData.append("api_key", API_KEY);
+  formData.append("timestamp", timestamp);
+  formData.append("signature", signature);
+  formData.append("public_id", publicId);
+
+  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+    
+    const data = await response.json();
+    return data.result === "ok";
+  } catch (error) {
+    console.error("Error deleting from Cloudinary:", error);
+    return false;
+  }
+}

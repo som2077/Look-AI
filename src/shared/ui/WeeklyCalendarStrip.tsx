@@ -49,42 +49,41 @@ const DayCell = React.memo(function DayCell({
   const handlePress = useCallback(() => onPress(date), [onPress, date]);
   return (
     <Pressable
-      className="items-center"
+      style={{ alignItems: "center" }}
       accessibilityRole="button"
       accessibilityLabel={`Select ${date.toDateString()}`}
       onPress={handlePress}
     >
       <Text
         style={{
-          fontSize: isActive ? 14 : 12,
+          fontSize: 12,
           fontFamily: "TikTokSans16pt-Medium",
           color: isActive ? "#000000" : "#868693",
         }}
       >
         {dayLabel}
       </Text>
+      {/* Fixed 48×48 container — no layout shift on selection */}
       <View
-        className={`mt-2 items-center justify-center rounded-full  ${isActive ? "h-12 w-12" : "h-10 w-10"}`}
-        style={
-          isActive
-            ? {
-                backgroundColor: "#1D1A27",
-                // shadowColor: "#000000",
-                // shadowOpacity: 0.04,
-                // shadowRadius: 3,
-                // shadowOffset: { width: 0, height: 1.5 },
-                // elevation: 2,
-              }
+        style={{
+          marginTop: 6,
+          width: 44,
+          height: 44,
+          borderRadius: 100,
+          alignItems: "center",
+          justifyContent: "center",
+          ...(isActive
+            ? { backgroundColor: "#1D1A27" }
             : {
                 borderWidth: 1,
                 borderColor: "#E9EBF8",
                 backgroundColor: "#F8F9FC",
-              }
-        }
+              }),
+        }}
       >
         <Text
           style={{
-            fontSize: isActive ? 15 : 13,
+            fontSize: 14,
             fontFamily: "TikTokSans16pt-Bold",
             color: isActive ? "#FFFFFF" : "#1D1A27",
           }}
@@ -95,6 +94,7 @@ const DayCell = React.memo(function DayCell({
     </Pressable>
   );
 });
+
 
 export function WeeklyCalendarStrip({
   initialDate,

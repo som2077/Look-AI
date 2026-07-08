@@ -1,17 +1,17 @@
-import { usePostHog } from 'posthog-react-native';
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
+import { useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
+import { useEffect, useState } from "react";
+import { Text, View } from "react-native";
 import Animated, {
+  Easing,
   FadeInDown,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withTiming,
-  Easing,
-  runOnJS,
 } from "react-native-reanimated";
 
 export default function ComparisonScreen() {
@@ -30,7 +30,7 @@ export default function ComparisonScreen() {
     // 1. Animate Left bar (20%) - up to 80px height
     leftHeight.value = withDelay(
       400,
-      withTiming(80, { duration: 800, easing: Easing.out(Easing.cubic) })
+      withTiming(80, { duration: 800, easing: Easing.out(Easing.cubic) }),
     );
 
     // 2. Animate Right bar (1X -> 2X) - up to 180px height
@@ -43,8 +43,8 @@ export default function ComparisonScreen() {
           if (finished) {
             runOnJS(setShowContinue)(true); // Show Continue button after finish
           }
-        }
-      )
+        },
+      ),
     );
 
     // 3. Change 1X to 2X mid-way during right animation
@@ -64,7 +64,7 @@ export default function ComparisonScreen() {
   }));
 
   const handleContinue = () => {
-    posthog?.capture('onboarding_step_completed', { step: 'comparison' });
+    posthog?.capture("onboarding_step_completed", { step: "comparison" });
     router.push("/(root)/onboarding/where-did-you-hear" as any);
   };
 
@@ -72,7 +72,7 @@ export default function ComparisonScreen() {
     <View className="flex-1 px-5 pb-6 pt-2">
       <OnboardingHeader step={8} />
 
-      <Text className="text-[30px] leading-[35px] font-semibold  text-[#1D1A27] mt-2 px-4 text-center">
+      <Text className="text-4xl leading-10 font-semibold tracking-tight text-[#1D1A27] mt-2 px-4 text-center">
         Get ready twice as fast with Look AI vs on your own
       </Text>
 
@@ -82,7 +82,6 @@ export default function ComparisonScreen() {
           className="w-full bg-[#F5F4F8] rounded-[32px] py-10 px-4 items-center"
         >
           <View className="flex-row w-full justify-between items-end h-[280px] px-2 gap-4">
-            
             {/* Left Card - Without Look AI */}
             <View className="flex-1 bg-white rounded-[24px] p-2 h-full">
               <View className="h-[80px] justify-center">
@@ -120,23 +119,20 @@ export default function ComparisonScreen() {
                 </Animated.View>
               </View>
             </View>
-
           </View>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(400).delay(200)}>
-          <Text className="text-center font-regular text-[14px] text-[#6B7280] mt-8">
+          <Text className="text-center font-regular text-lg text-[#6B7280] mt-8">
             Look AI makes your morning easy.
           </Text>
         </Animated.View>
       </View>
 
       <View className="mt-auto pt-4 min-h-[70px]">
-        {showContinue && (
-          <Animated.View entering={FadeInDown.duration(400)}>
-            <ContinueButton onPress={handleContinue} />
-          </Animated.View>
-        )}
+        <Animated.View>
+          <ContinueButton onPress={handleContinue} disabled={!showContinue} />
+        </Animated.View>
       </View>
     </View>
   );

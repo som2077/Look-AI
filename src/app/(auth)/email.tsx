@@ -208,9 +208,11 @@ export default function EmailAuthScreen() {
       }
 
       await setActive({ session: sessionId });
-      router.replace("/(root)/(tabs)");
+      // Navigation is handled by _layout.tsx's auth useEffect:
+      // - New user  → onboardingComplete = false → /(root)/onboarding
+      // - Returning → onboardingComplete = true  → /(root)/(tabs)
     },
-    [router, setActive],
+    [setActive],
   );
 
   useEffect(() => {

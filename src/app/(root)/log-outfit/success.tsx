@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useStreakStore } from "@/shared/store/useStreakStore";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { IconCheck, IconTrendingUp } from "@tabler/icons-react-native";
@@ -10,14 +11,15 @@ interface Stat {
   label: string;
 }
 
-const STATS: Stat[] = [
-  { value: "9", label: "Blue kurta wears" },
-  { value: "5", label: "This week" },
-  { value: "12", label: "Day streak" },
-];
-
 export default function SuccessScreen() {
   const router = useRouter();
+  const { currentStreak } = useStreakStore();
+
+  const STATS: Stat[] = [
+    { value: "9", label: "Blue kurta wears" },
+    { value: "5", label: "This week" },
+    { value: currentStreak.toString(), label: "Day streak" },
+  ];
 
   const goHome = useCallback(() => {
     router.replace("/(root)/(tabs)" as never);

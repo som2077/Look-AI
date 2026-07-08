@@ -33,18 +33,24 @@ export default function PostDetailScreen() {
   const params = useLocalSearchParams();
   const postId = (params.postId as string) || "0";
 
-  const post = MOCK_POSTS.find((p) => p.id === postId) || MOCK_POSTS[0];
+  const post = MOCK_POSTS.find((p) => p.id === postId) || {
+    id: "0",
+    url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
+    likes: 0,
+    comments: 0,
+    time: "Just now",
+  };
 
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likes);
+  const [likeCount, setLikeCount] = useState<number>(post.likes);
   const [menuVisible, setMenuVisible] = useState(false);
 
   const handleLike = () => {
     if (liked) {
-      setLikeCount((c) => c - 1);
+      setLikeCount((c: number) => c - 1);
     } else {
-      setLikeCount((c) => c + 1);
+      setLikeCount((c: number) => c + 1);
     }
     setLiked(!liked);
   };

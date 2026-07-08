@@ -1,6 +1,7 @@
-﻿import { createSupabaseClient } from "@/shared/supabase/client";
+import { createSupabaseClient } from "@/shared/supabase/client";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -23,6 +24,8 @@ export default function FullLengthPicsScreen() {
   const router = useRouter();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { getToken, userId } = useAuth();
+  const { user } = useUser();
+  const { completeOnboarding } = useOnboardingState();
   const [selectedImages, setSelectedImages] = useState<
     ImagePicker.ImagePickerAsset[]
   >([]);
@@ -101,6 +104,7 @@ export default function FullLengthPicsScreen() {
       }
 
       if (fromProfile === "true") {
+        if (user) await completeOnboarding(user.id, supabase);
         router.back();
       } else {
         router.push("/(root)/onboarding/nickname" as any);

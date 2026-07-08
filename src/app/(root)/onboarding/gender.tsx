@@ -1,6 +1,8 @@
 import { usePostHog } from 'posthog-react-native';
 import { useCallback } from "react";
 import { router, useLocalSearchParams } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import { Pressable, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
@@ -28,17 +30,20 @@ const GENDER_OPTIONS = [
 export default function GenderScreen() {
   const posthog = usePostHog();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
-  const { gender, setGender } = useOnboardingState();
-  const handleContinue = useCallback(() => {
+  const { user } = useUser();
+  const { supabase } = useSupabase();
+  const { gender, setGender, completeOnboarding } = useOnboardingState();
+  const handleContinue = useCallback(async () => {
     posthog?.capture('onboarding_step_completed', { step: 'gender' });
     if (!gender) return;
 
     if (fromProfile === "true") {
+      if (user) await completeOnboarding(user.id, supabase);
       router.back();
     } else {
       router.push("/(root)/onboarding/age");
     }
-  }, [gender, fromProfile]);
+  }, [gender, fromProfile, user, supabase, completeOnboarding]);
 
   return (
     <View className="flex-1 mx-7 pb-6 pt-2">

@@ -1,5 +1,7 @@
 import { usePostHog } from 'posthog-react-native';
 import { router, useLocalSearchParams } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import { Text, View } from "react-native";
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { HeightPicker } from "@/features/onboarding/ui/onboarding/HeightPicker";
@@ -9,7 +11,9 @@ import { useOnboardingState } from "@/features/onboarding/model/onboarding-store
 export default function HeightScreen() {
   const posthog = usePostHog();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
-  const { height, setHeight } = useOnboardingState();
+  const { user } = useUser();
+  const { supabase } = useSupabase();
+  const { height, setHeight, completeOnboarding } = useOnboardingState();
   return (
     // <SafeAreaView className="flex-1">
     <View className="flex-1 px-5 pb-6 pt-2">
@@ -22,8 +26,9 @@ export default function HeightScreen() {
       </Text>
       <HeightPicker height={height} onChange={setHeight} />
       <ContinueButton
-        onPress={() => {
+        onPress={async () => {
           if (fromProfile === "true") {
+            if (user) await completeOnboarding(user.id, supabase);
             router.back();
           } else {
             router.push("/(root)/onboarding/body-type");

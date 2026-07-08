@@ -1,6 +1,27 @@
 import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { AppState } from "react-native";
+import { useStreakStore } from "@/shared/store/useStreakStore";
 
 export default function RootLayout() {
+  const updateStreak = useStreakStore((state) => state.updateStreak);
+
+  useEffect(() => {
+    // Initial check on mount
+    updateStreak();
+
+    // Check when returning to foreground
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        updateStreak();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [updateStreak]);
+
   return (
     <Stack
       screenOptions={{

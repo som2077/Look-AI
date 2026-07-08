@@ -1,4 +1,6 @@
 import { usePostHog } from 'posthog-react-native';
+import { useUser } from "@clerk/clerk-expo";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
   BodyTypeCard,
   type BodyTypeOption,
@@ -66,7 +68,9 @@ const femaleBodyTypes: BodyTypeOption[] = [
 
 export default function BodyTypesScreen() {
   const posthog = usePostHog();
-  const { gender, bodyType, setBodyType } = useOnboardingState();
+  const { user } = useUser();
+  const { supabase } = useSupabase();
+  const { gender, bodyType, setBodyType, completeOnboarding } = useOnboardingState();
   const [selectedBodyType, setSelectedBodyType] = useState<string | null>(
     bodyType || null,
   );
@@ -77,11 +81,12 @@ export default function BodyTypesScreen() {
     return gender.toLowerCase() === "female" ? femaleBodyTypes : maleBodyTypes;
   }, [gender]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     posthog?.capture('onboarding_step_completed', { step: 'body-type' });
     if (!selectedBodyType) return;
     setBodyType(selectedBodyType);
     if (fromProfile === "true") {
+      if (user) await completeOnboarding(user.id, supabase);
       router.back();
     } else {
       router.push("/(root)/onboarding/style-preference");

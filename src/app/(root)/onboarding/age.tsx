@@ -1,5 +1,7 @@
 import { usePostHog } from 'posthog-react-native';
 import { router, useLocalSearchParams } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import { Text, View } from "react-native";
 
 import { AgePicker } from "@/features/onboarding/ui/onboarding/AgePicker";
@@ -10,7 +12,9 @@ import { useOnboardingState } from "@/features/onboarding/model/onboarding-store
 export default function AgeScreen() {
   const posthog = usePostHog();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
-  const { age, setAge } = useOnboardingState();
+  const { user } = useUser();
+  const { supabase } = useSupabase();
+  const { age, setAge, completeOnboarding } = useOnboardingState();
 
   return (
     <View className="flex-1 pb-6 mx-auto pt-2">
@@ -23,7 +27,7 @@ export default function AgeScreen() {
       <Text className="px-9 text-left text-4xl  font-semibold tracking-tight text-[#1D1A27]">
         How old are you?
       </Text>
-      <Text className="px-9 mt-2 text-left text-xl font-regular text-[#000000]">
+      <Text className="px-9 mt-2 text-left text-lg font-regular text-[#6B7280]">
         This will be used to calibrate your custom plan
       </Text>
 
@@ -35,8 +39,9 @@ export default function AgeScreen() {
       {/* Continue button pinned to bottom */}
       <View className="px-5">
         <ContinueButton
-          onPress={() => {
+          onPress={async () => {
             if (fromProfile === "true") {
+              if (user) await completeOnboarding(user.id, supabase);
               router.back();
             } else {
               router.push("/(root)/onboarding/height");
