@@ -54,7 +54,7 @@ const FieldRow = ({
         width: 38,
         height: 38,
         borderRadius: 12,
-        backgroundColor: "#F5F3FF",
+        backgroundColor: "#F5F3FF90",
         alignItems: "center",
         justifyContent: "center",
         marginRight: 14,

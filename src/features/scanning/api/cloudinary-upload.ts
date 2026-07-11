@@ -10,6 +10,69 @@ export interface CloudinaryUploadResult {
   publicId: string;
 }
 
+let currentKeyIndex = 0;
+
+/**
+ * Removes background using the remove.bg API and handles multiple keys for fallback.
+ */
+async function removeBackgroundLocal(fileUri: string): Promise<string> {
+  const keysEnv = process.env.EXPO_PUBLIC_REMOVE_BG_API_KEYS?.trim() || "";
+  const keys = keysEnv.split(",").map(k => k.trim()).filter(k => k.length > 0);
+  
+  if (keys.length === 0) {
+    throw new Error("No remove.bg API keys found in EXPO_PUBLIC_REMOVE_BG_API_KEYS");
+  }
+
+  const formData = new FormData();
+  formData.append("image_file", {
+    uri: fileUri,
+    type: "image/jpeg",
+    name: "upload.jpg",
+  } as any);
+  formData.append("size", "auto");
+  formData.append("format", "png");
+  formData.append("response_type", "base64");
+
+  let lastError: any = null;
+
+  while (currentKeyIndex < keys.length) {
+    const key = keys[currentKeyIndex];
+    try {
+      const response = await fetch("https://api.remove.bg/v1.0/removebg", {
+        method: "POST",
+        headers: {
+          "X-Api-Key": key,
+          Accept: "application/json",
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const b64 = data.data.result_b64;
+        return `data:image/png;base64,${b64}`;
+      } else if (response.status === 402 || response.status === 429) {
+        // 402 = Payment Required (Out of credits), 429 = Rate limit
+        console.warn(`Remove.bg key ${currentKeyIndex + 1} failed or exhausted. Trying next key...`);
+        currentKeyIndex++;
+      } else {
+        const errText = await response.text();
+        throw new Error(`Remove.bg API Error (${response.status}): ${errText}`);
+      }
+    } catch (e) {
+      lastError = e;
+      if (e instanceof Error && e.message.includes("Remove.bg API Error")) {
+        throw e; // Stop trying if it's a hard error (not credit related)
+      }
+      // If network error, throw it so the user can retry
+      throw e;
+    }
+  }
+
+  throw new Error("All remove.bg API keys are exhausted or failed. Last error: " + (lastError?.message || "Unknown"));
+}
+
+
 export async function uploadToCloudinaryWithBgRemoval(
   fileUri: string,
 ): Promise<CloudinaryUploadResult> {
@@ -19,22 +82,20 @@ export async function uploadToCloudinaryWithBgRemoval(
     );
   }
 
+  // 1. Remove background locally (fast)
+  const transparentImageUri = await removeBackgroundLocal(fileUri);
+
+  // 2. Upload the transparent image to Cloudinary
   const timestamp = Math.round(new Date().getTime() / 1000).toString();
 
-  const paramsToSign = `background_removal=cloudinary_ai&timestamp=${timestamp}`;
+  const paramsToSign = `timestamp=${timestamp}`;
   const signature = CryptoJS.SHA1(paramsToSign + API_SECRET).toString();
 
   const formData = new FormData();
-  formData.append("file", {
-    uri: fileUri,
-    type: "image/jpeg",
-    name: `upload_${timestamp}.jpg`,
-  } as any);
-
+  formData.append("file", transparentImageUri as any); // Upload the base64 URI directly
   formData.append("api_key", API_KEY);
   formData.append("timestamp", timestamp);
   formData.append("signature", signature);
-  formData.append("background_removal", "cloudinary_ai");
 
   const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
@@ -56,13 +117,9 @@ export async function uploadToCloudinaryWithBgRemoval(
     }
 
     const publicId = data.public_id;
-    const version = data.version;
-
+    const imageUrl = data.secure_url;
     const originalImageUrl = data.secure_url;
-    const imageUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/e_background_removal/v${version}/${publicId}.png`;
 
-    // We won't poll here anymore to allow parallel processing.
-    // The background removal happens asynchronously on Cloudinary.
     return {
       imageUrl,
       originalImageUrl,
@@ -72,30 +129,6 @@ export async function uploadToCloudinaryWithBgRemoval(
     console.error("Error in uploadToCloudinaryWithBgRemoval:", error);
     throw error;
   }
-}
-
-/**
- * Polls the given Cloudinary image URL until it returns a 200 OK status,
- * meaning the asynchronous background removal has completed.
- */
-export async function waitForCloudinaryImage(
-  imageUrl: string,
-  maxAttempts = 15,
-): Promise<boolean> {
-  for (let i = 0; i < maxAttempts; i++) {
-    try {
-      const checkResponse = await fetch(imageUrl, { method: "HEAD" });
-      if (checkResponse.ok || checkResponse.status === 200) {
-        return true;
-      }
-    } catch (e) {
-      // Ignore fetch errors during polling
-    }
-    // Wait 1 second before next poll
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-  console.warn("Background removal took too long or failed.");
-  return false;
 }
 
 export function extractPublicIdFromUrl(url: string): string | null {

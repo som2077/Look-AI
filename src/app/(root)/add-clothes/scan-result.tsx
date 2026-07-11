@@ -1,4 +1,4 @@
-import { uploadToCloudinaryWithBgRemoval, waitForCloudinaryImage } from "@/features/scanning/api/cloudinary-upload";
+import { uploadToCloudinaryWithBgRemoval } from "@/features/scanning/api/cloudinary-upload";
 import { FullClothingAnalysis, analyzeClothingFull } from "@/features/scanning/api/gemini-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
@@ -141,19 +141,11 @@ export default function ScanResultScreen() {
         }
 
         setLoadingText("Removing background...");
-        // 2. Upload to Cloudinary (returns immediately without polling)
+        // 2. Remove background and upload to Cloudinary
         const uploadRes = await uploadToCloudinaryWithBgRemoval(params.photoUri);
         
-        // 3. Poll for background removal
-        const isReady = await waitForCloudinaryImage(uploadRes.imageUrl);
-        let finalImageUri = uploadRes.originalImageUrl;
-        
-        if (isReady) {
-          setCloudinaryUrl(uploadRes.imageUrl);
-          finalImageUri = uploadRes.imageUrl;
-        } else {
-          setCloudinaryUrl(uploadRes.originalImageUrl);
-        }
+        const finalImageUri = uploadRes.imageUrl;
+        setCloudinaryUrl(uploadRes.imageUrl);
 
         setOriginalUrl(uploadRes.originalImageUrl);
         if (aiData) setResult(aiData);

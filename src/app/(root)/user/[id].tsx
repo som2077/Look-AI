@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useUser } from "@clerk/clerk-expo";
 import {
   ArrowDownLeft,
   ArrowDownRight,
@@ -17,6 +18,7 @@ export default function PublicUserProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { posts } = useCommunityPosts();
+  const { user } = useUser();
 
   const userPosts = useMemo(() => {
     return posts.filter((p) => p.user_id === id);
@@ -94,10 +96,12 @@ export default function PublicUserProfileScreen() {
               <Image
                 source={{
                   uri:
-                    (userInfo as any).avatar_url ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      userInfo.nickname || "User",
-                    )}&background=random&size=128`,
+                    ((userInfo as any).user_id === user?.id && user?.imageUrl)
+                      ? user.imageUrl
+                      : (userInfo as any).avatar_url ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          userInfo.nickname || "User",
+                        )}&background=random&size=128`,
                 }}
                 style={{
                   width: 88,

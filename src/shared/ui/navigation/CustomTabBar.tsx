@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/clerk-expo";
 import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 import {
   IconCompass,
@@ -116,6 +117,7 @@ export function CustomTabBar({
 }: MaterialTopTabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user } = useUser();
   const [menuVisible, setMenuVisible] = useState(false);
   const isTabBarVisible = useUIStore((state) => state.isTabBarVisible);
   const translateY = useRef(new Animated.Value(0)).current;
@@ -171,13 +173,13 @@ export function CustomTabBar({
               backgroundColor: "#FFFFFF",
               borderWidth: 1,
               borderColor: "#E5E5EA",
-              shadowColor: "#E5E5EA",
-              // shadowOffset: {
-              //   width: 0,
-              //   height: 12,
-              // },
-              // shadowOpacity: 0.04,
-              // shadowRadius: 3.84,
+              shadowColor: "#00000080",
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.04,
+              shadowRadius: 3.84,
               elevation: 2,
               paddingHorizontal: 8,
               paddingVertical: 7,
@@ -301,20 +303,24 @@ export function CustomTabBar({
                         {
                           height: 28,
                           width: 28,
-                          borderRadius: 14,
+                          borderRadius: 34,
                           overflow: "hidden",
                           alignItems: "center",
                           justifyContent: "center",
                         },
                         {
-                          borderWidth: 14,
-                          borderColor: focused ? "#5ECFC2" : "#C8C8D0",
+                          borderWidth: 1.5,
+                          borderColor: focused ? "#5ECFC290" : "#5ECFC290",
                         },
                       ]}
                     >
                       <ExpoImage
-                        source={require("@/assets/images/kribb.png")}
-                        style={{ height: 28, width: 28, borderRadius: 14 }}
+                        source={
+                          user?.imageUrl
+                            ? { uri: user.imageUrl }
+                            : require("@/assets/images/kribb.png")
+                        }
+                        style={{ height: 24, width: 24, borderRadius: 12 }}
                         contentFit="cover"
                         cachePolicy="memory-disk"
                       />
@@ -355,6 +361,18 @@ export function CustomTabBar({
               backgroundColor: "#1A1827",
               alignItems: "center",
               justifyContent: "center",
+              borderColor: "#E5E5EA",
+              shadowColor: "#00000080",
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.04,
+              shadowRadius: 3.84,
+              elevation: 3,
+              paddingHorizontal: 8,
+              paddingVertical: 7,
+              // height: 65,
             }}
           >
             <IconPlus size={30} color="#FFFFFF" strokeWidth={2.5} />

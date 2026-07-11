@@ -14,6 +14,8 @@ export interface CommunityPost {
   user_profiles?: {
     nickname: string;
     username: string;
+    user_id?: string;
+    avatar_url?: string;
   };
 }
 
@@ -58,13 +60,17 @@ export function useCommunityPosts() {
         .select(
           `
           *,
-          user_profiles:user_id (
+          user_profiles (
             nickname,
-            username
-          )
+            username,
+            user_id,
+            avatar_url
+          ),
+          post_reactions(user_id, reaction_type)
         `,
         )
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
       if (error) throw error;
 
@@ -112,18 +118,24 @@ export function useCommunityPosts() {
       setHasFetched(true);
     }
 
+    let timeoutId: any;
+
     const subscription = supabase
       .channel("public:community_posts")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "community_posts" },
         () => {
-          fetchPosts(); // Refresh posts when likes_count changes or new post is added
+          if (timeoutId) clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            fetchPosts(); // Refresh posts safely after bursts
+          }, 2000);
         },
       )
       .subscribe();
 
     return () => {
+      if (timeoutId) clearTimeout(timeoutId);
       supabase.removeChannel(subscription);
     };
   }, [supabase, isInitializing, userId, hasFetched]);
@@ -180,6 +192,27 @@ export function useCommunityPosts() {
     }
   };
 
+  const toggleReaction = async (postId: string, reactionType: string | null) => {
+    if (!userId || !supabase) return;
+    try {
+      if (reactionType === null) {
+        const { error } = await supabase
+          .from("post_reactions")
+          .delete()
+          .match({ post_id: postId, user_id: userId });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("post_reactions")
+          .upsert({ post_id: postId, user_id: userId, reaction_type: reactionType }, { onConflict: 'post_id,user_id' });
+        if (error) throw error;
+      }
+      await fetchPosts();
+    } catch (err) {
+      console.error("Error toggling reaction:", err);
+    }
+  };
+
   const createPost = async (imageUri: string, caption: string) => {
     setUploading(true);
     const newPost: CommunityPost = {
@@ -192,6 +225,7 @@ export function useCommunityPosts() {
       user_profiles: {
         nickname: "You",
         username: "you",
+        user_id: userId || undefined,
       },
     };
 
@@ -214,10 +248,12 @@ export function useCommunityPosts() {
         return true;
       }
 
-      const cloudinaryUrl = await uploadToCloudinary(imageUri);
-
-      if (!cloudinaryUrl) {
-        throw new Error("Image upload failed. Please try again.");
+      let cloudinaryUrl = null;
+      if (imageUri) {
+        cloudinaryUrl = await uploadToCloudinary(imageUri);
+        if (!cloudinaryUrl) {
+          throw new Error("Image upload failed. Please try again.");
+        }
       }
 
       const { error } = await supabase.from("community_posts").insert({
@@ -229,6 +265,7 @@ export function useCommunityPosts() {
       if (error) throw error;
 
       removeOptimisticPosts();
+      await fetchPosts(); // Explicitly fetch posts so we don't rely solely on Realtime being enabled
       return true;
     } catch (err) {
       console.error("Error creating post:", err);
@@ -248,6 +285,7 @@ export function useCommunityPosts() {
     uploading,
     createPost,
     toggleLike,
+    toggleReaction,
     refetch: fetchPosts,
   };
 }

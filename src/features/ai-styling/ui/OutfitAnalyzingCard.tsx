@@ -229,7 +229,7 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
               className="absolute text-white font-bold"
               style={{ fontSize: 13 }}
             >
-              {Math.round(progress)}%
+              {`${Math.round(progress)}%`}
             </Text>
           </View>
         </View>
@@ -379,9 +379,15 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
     currentMode,
     lastOutfits,
     removeOutfit,
+    cleanupDaily,
   } = useOutfitAnalysisStore();
 
   const prevIsDoneRef = useRef(false);
+
+  // Check for 3 AM cleanup on mount
+  useEffect(() => {
+    cleanupDaily();
+  }, [cleanupDaily]);
 
   // Play chime when analysis finishes
   useEffect(() => {
@@ -425,7 +431,6 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
             season: aiData?.season?.[0] || "All",
           },
         } as never);
-        removeOutfit(index);
       } else if (outfit && outfit.mode === "label") {
         const scanId = useScanHistoryStore.getState().addScan({
           type: "label",
@@ -438,7 +443,6 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
           pathname: "/(root)/add-clothes/label-result",
           params: { scanId },
         } as never);
-        removeOutfit(index);
       } else if (outfit && outfit.mode === "fit-check") {
         const scanId = useScanHistoryStore.getState().addScan({
           type: "fit-check",
@@ -451,7 +455,6 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
           pathname: "/(root)/add-clothes/fitcheck-result",
           params: { scanId },
         } as never);
-        removeOutfit(index);
       } else {
         router.push(`/(root)/outfit-log-detail?index=${index}` as never);
       }

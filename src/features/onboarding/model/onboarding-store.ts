@@ -38,6 +38,7 @@ type OnboardingState = OnboardingFormData & {
   completeOnboarding: (
     userId: string,
     supabase: SupabaseClient,
+    avatarUrl?: string
   ) => Promise<boolean>;
 };
 
@@ -110,7 +111,7 @@ export const useOnboardingState = create<OnboardingState>()(
           error: null,
           _completionVersion: 0,
         }),
-      completeOnboarding: async (userId: string, supabase: SupabaseClient) => {
+      completeOnboarding: async (userId: string, supabase: SupabaseClient, avatarUrl?: string) => {
         set({ isSaving: true, error: null });
         try {
           const state = get();
@@ -128,6 +129,7 @@ export const useOnboardingState = create<OnboardingState>()(
               about: state.about,
               style_preferences: state.stylePreferences,
               where_did_you_hear: state.whereDidYouHear,
+              avatar_url: avatarUrl,
             },
             { onConflict: "user_id" },
           );

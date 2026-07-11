@@ -127,7 +127,7 @@ export function AddActionMenu({
                   className="w-[48%] h-[240px] rounded-[35px] bg-[#ffffff] mb-4 overflow-hidden"
                 >
                   <View className="flex-1 pt-3 pb-6 px-3 items-center">
-                    {card.chipText && (
+                    {!!card.chipText && (
                       <View className="bg-[#F1EFFF] px-3 py-[6px] rounded-full mb-3">
                         <Text className="text-[#594EE6] text-[11px] font-bold tracking-wide">
                           {card.chipText}

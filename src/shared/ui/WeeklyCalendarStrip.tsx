@@ -1,3 +1,4 @@
+import { useStreakStore } from "@/shared/store/useStreakStore";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -38,6 +39,7 @@ interface DayCellProps {
   dayLabel: string;
   isActive: boolean;
   onPress: (date: Date) => void;
+  streakStatus: "streak" | "missed" | "future";
 }
 
 const DayCell = React.memo(function DayCell({
@@ -45,8 +47,16 @@ const DayCell = React.memo(function DayCell({
   dayLabel,
   isActive,
   onPress,
+  streakStatus,
 }: DayCellProps) {
   const handlePress = useCallback(() => onPress(date), [onPress, date]);
+
+  let borderColor = "#E9EBF8";
+  if (streakStatus === "future") borderColor = "#000000";
+  else if (streakStatus === "streak")
+    borderColor = "#22c55e"; // green-500
+  else if (streakStatus === "missed") borderColor = "#ef4444"; // red-500
+
   return (
     <Pressable
       style={{ alignItems: "center" }}
@@ -57,7 +67,7 @@ const DayCell = React.memo(function DayCell({
       <Text
         style={{
           fontSize: 12,
-          fontFamily: "TikTokSans16pt-Medium",
+          fontFamily: "TikTokSans16pt-Bold",
           color: isActive ? "#000000" : "#868693",
         }}
       >
@@ -76,8 +86,9 @@ const DayCell = React.memo(function DayCell({
             ? { backgroundColor: "#1D1A27" }
             : {
                 borderWidth: 1,
-                borderColor: "#E9EBF8",
-                backgroundColor: "#F8F9FC",
+                borderStyle: "dashed",
+                borderColor,
+                backgroundColor: "#FFFFFF",
               }),
         }}
       >
@@ -88,13 +99,12 @@ const DayCell = React.memo(function DayCell({
             color: isActive ? "#FFFFFF" : "#1D1A27",
           }}
         >
-          {date.getDate()}
+          {String(date.getDate()).padStart(2, "0")}
         </Text>
       </View>
     </Pressable>
   );
 });
-
 
 export function WeeklyCalendarStrip({
   initialDate,
@@ -103,6 +113,8 @@ export function WeeklyCalendarStrip({
   const [selectedDate, setSelectedDate] = useState<Date>(
     initialDate ?? new Date(),
   );
+
+  const currentStreak = useStreakStore((state) => state.currentStreak);
 
   const weekDates = useMemo(() => {
     const startOfWeek = getStartOfWeek(selectedDate);
@@ -121,18 +133,42 @@ export function WeeklyCalendarStrip({
     [onDateChange],
   );
 
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
   return (
     <View className="px-[5px] py-1">
       <View className="flex-row items-center justify-between">
-        {weekDates.map((date, index) => (
-          <DayCell
-            key={date.toISOString()}
-            date={date}
-            dayLabel={DAY_LABELS[index]}
-            isActive={isSameDay(date, selectedDate)}
-            onPress={handleSelectDate}
-          />
-        ))}
+        {weekDates.map((date, index) => {
+          const dateAtMidnight = new Date(date);
+          dateAtMidnight.setHours(0, 0, 0, 0);
+
+          const diffTime = dateAtMidnight.getTime() - today.getTime();
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+          let streakStatus: "streak" | "missed" | "future";
+          if (diffDays > 0) {
+            streakStatus = "future";
+          } else if (-diffDays < currentStreak) {
+            streakStatus = "streak";
+          } else {
+            streakStatus = "missed";
+          }
+
+          return (
+            <DayCell
+              key={date.toISOString()}
+              date={date}
+              dayLabel={DAY_LABELS[index]}
+              isActive={isSameDay(date, selectedDate)}
+              onPress={handleSelectDate}
+              streakStatus={streakStatus}
+            />
+          );
+        })}
       </View>
     </View>
   );

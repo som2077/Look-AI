@@ -121,15 +121,13 @@ export function UpcomingEvents({
                 fontWeight: "500",
               }}
             >
-              {new Date(event.startDate).toLocaleTimeString([], {
+              {`${new Date(event.startDate).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
-              })}{" "}
-              -{" "}
-              {new Date(event.endDate).toLocaleTimeString([], {
+              })} - ${new Date(event.endDate).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
-              })}
+              })}`}
             </Text>
           </View>
 

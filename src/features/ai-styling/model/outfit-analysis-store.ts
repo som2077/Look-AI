@@ -1,9 +1,10 @@
 import {
   uploadToCloudinaryWithBgRemoval,
-  waitForCloudinaryImage,
 } from "@/features/scanning/api/cloudinary-upload";
 import { analyzeClothingFull } from "@/features/scanning/api/gemini-scan";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface LastOutfit {
   imageUri: string;
@@ -36,6 +37,8 @@ interface OutfitAnalysisState {
   updateOutfit: (index: number, updates: Partial<LastOutfit>) => void;
   clearAllOutfits: () => void;
   toggleSaved: (index: number) => void;
+  cleanupDaily: () => void;
+  lastClearedTimestamp?: number;
 }
 
 let _interval: ReturnType<typeof setInterval> | null = null;
@@ -113,8 +116,9 @@ const COLOR_PALETTES = [
   ["#4299E1", "#FFFFFF", "#F7FAFC"], // Effortless Everyday
 ];
 
-export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
-  (set, get) => ({
+export const useOutfitAnalysisStore = create<OutfitAnalysisState>()(
+  persist(
+    (set, get) => ({
     isAnalyzing: false,
     isDone: false,
     imageUri: null,
@@ -190,22 +194,13 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
 
             currentTargetProgress = 75; // AI finished successfully
 
-            // Image is valid, NOW upload to Cloudinary & Poll
+            // Image is valid, NOW remove bg and upload to Cloudinary
             return uploadToCloudinaryWithBgRemoval(imageUri).then(
               (uploadRes) => {
-                return waitForCloudinaryImage(uploadRes.imageUrl).then(
-                  (isReady) => {
-                    if (isReady) {
-                      finalImageUri = uploadRes.imageUrl;
-                      set({ imageUri: finalImageUri });
-                    } else {
-                      finalImageUri = uploadRes.originalImageUrl;
-                      set({ imageUri: finalImageUri });
-                    }
-                    currentTargetProgress = 100; // Cloudinary finished
-                  },
-                );
-              },
+                finalImageUri = uploadRes.imageUrl;
+                set({ imageUri: finalImageUri });
+                currentTargetProgress = 100; // Cloudinary finished
+              }
             );
           })
           .catch((err) => {
@@ -412,6 +407,28 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
       set({ lastOutfits: [] });
     },
 
+    cleanupDaily: () => {
+      const state = get();
+      const now = new Date();
+      const current3AM = new Date(now);
+      current3AM.setHours(3, 0, 0, 0);
+
+      // If now is before 3 AM today, the active 3 AM boundary was yesterday.
+      // Otherwise, the active 3 AM boundary is today at 3 AM.
+      const active3AM =
+        now.getTime() < current3AM.getTime()
+          ? current3AM.getTime() - 24 * 60 * 60 * 1000
+          : current3AM.getTime();
+
+      // If we haven't cleared since the most recent 3 AM boundary, clear now
+      if (
+        !state.lastClearedTimestamp ||
+        state.lastClearedTimestamp < active3AM
+      ) {
+        set({ lastOutfits: [], lastClearedTimestamp: Date.now() });
+      }
+    },
+
     toggleSaved: (index: number) =>
       set((state) => {
         const outfits = [...state.lastOutfits];
@@ -423,5 +440,14 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>(
         }
         return { lastOutfits: outfits };
       }),
-  }),
+    }),
+    {
+      name: "outfit-analysis-store",
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        lastOutfits: state.lastOutfits,
+        lastClearedTimestamp: state.lastClearedTimestamp,
+      }),
+    },
+  ),
 );

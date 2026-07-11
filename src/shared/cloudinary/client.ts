@@ -1,6 +1,8 @@
+import CryptoJS from "crypto-js";
+
 /**
- * Uploads an image to Cloudinary using unsigned upload.
- * Make sure to set EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME and EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+ * Uploads an image to Cloudinary using signed upload.
+ * Make sure to set EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME, EXPO_PUBLIC_CLOUDINARY_API_KEY, and EXPO_PUBLIC_CLOUDINARY_API_SECRET
  * in your .env file.
  */
 export const uploadToCloudinary = async (
@@ -8,13 +10,26 @@ export const uploadToCloudinary = async (
   folder?: string,
 ): Promise<string | null> => {
   try {
-    const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
+    const apiKey = process.env.EXPO_PUBLIC_CLOUDINARY_API_KEY?.trim();
+    const apiSecret = process.env.EXPO_PUBLIC_CLOUDINARY_API_SECRET?.trim();
 
-    if (!cloudName || !uploadPreset) {
+    if (!cloudName || !apiKey || !apiSecret) {
       console.warn("Cloudinary configuration missing in .env file.");
       return null;
     }
+
+    const timestamp = Math.round(new Date().getTime() / 1000).toString();
+    
+    // Construct params to sign (must be alphabetical)
+    let paramsToSign = "";
+    if (folder) {
+      paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
+    } else {
+      paramsToSign = `timestamp=${timestamp}`;
+    }
+
+    const signature = CryptoJS.SHA1(paramsToSign + apiSecret).toString();
 
     const fileName = localUri.split("/").pop() || "image.jpg";
     const fileExt = (fileName.split(".").pop() || "jpg").toLowerCase();
@@ -26,7 +41,9 @@ export const uploadToCloudinary = async (
       name: fileName,
       type: mimeType,
     } as any);
-    data.append("upload_preset", uploadPreset);
+    data.append("api_key", apiKey);
+    data.append("timestamp", timestamp);
+    data.append("signature", signature);
     if (folder) {
       data.append("folder", folder);
     }
@@ -36,6 +53,10 @@ export const uploadToCloudinary = async (
       {
         method: "POST",
         body: data,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "multipart/form-data",
+        },
       },
     );
 

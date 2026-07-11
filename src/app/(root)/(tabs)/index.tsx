@@ -15,9 +15,8 @@ import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { useUser } from "@clerk/clerk-expo";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, AppState, Dimensions, FlatList, View } from "react-native";
+import { Animated, Dimensions, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-// import { TrendFeed } from "@/features/social/ui/TrendFeed";
 import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
 import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
 import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
@@ -58,7 +57,7 @@ export default function HomeScreen() {
   const period = timeframe === "Days" ? "daily" : timeframe === "Weeks" ? "weekly" : timeframe === "Months" ? "monthly" : "all";
   const { summary } = useWardrobeSummary(user?.id, period);
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
-  const flatListRef = useRef<FlatList>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
   const { currentStreak, hasIncrementedToday, dismissIncrement } = useStreakStore();
 
@@ -194,14 +193,13 @@ export default function HomeScreen() {
               }}
             >
               <HomeHeader />
-              <WeeklyCalendarStrip />
+              <WeeklyCalendarStrip onDateChange={setSelectedDate} />
             </Animated.View>
 
             {/* Scrollable content — scrolls over the header */}
             <View style={{ zIndex: 1, position: "relative" }}>
               {/* FlatList full-width — pagingEnabled snaps correctly */}
               <FlatList
-                ref={flatListRef}
                 data={CARDS}
                 keyExtractor={(item, index) => `${item}-${index}`}
                 renderItem={renderCard}
@@ -247,10 +245,9 @@ export default function HomeScreen() {
               <ErrorBanner />
               <NotifyBanner />
               <EmptyStyleBanner />
-              <UpcomingEvents date={new Date()} showAISuggestion={false} />
               <OutfitAnalyzingCard />
+              <UpcomingEvents date={selectedDate} showAISuggestion={false} />
               <AddClothesCTA />
-              {/* <TrendFeed /> */}
             </View>
           </Animated.ScrollView>
         </SafeAreaView>

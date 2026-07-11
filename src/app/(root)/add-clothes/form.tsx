@@ -2,17 +2,20 @@ import { ScanningOverlay } from "@/features/scanning/ui/ScanningOverlay";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import {
   IconArrowLeft,
-  IconCamera,
   IconChevronDown,
   IconPhoto,
-  IconSparkles,
+  IconShare,
+  IconStar,
+  IconStarFilled,
+  IconTrash,
   IconX,
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
   Modal,
@@ -36,8 +39,20 @@ type CategoryId =
   | "footwear"
   | "accessory";
 
-type Occasion = "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym";
-type Season = "All" | "Summer" | "Winter" | "Monsoon" | "Spring";
+type Occasion =
+  | "Daily"
+  | "Work"
+  | "Date"
+  | "Formal"
+  | "Travel"
+  | "Home"
+  | "Party"
+  | "Sport"
+  | "Special"
+  | "School"
+  | "Beach"
+  | "Etc";
+type Season = "Spring" | "Summer" | "Fall" | "Winter";
 
 interface MatchingColor {
   name: string;
@@ -54,8 +69,58 @@ const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "accessory", label: "Accessory" },
 ];
 
-const OCCASIONS: Occasion[] = ["Casual", "Office", "Party", "Wedding", "Date", "Gym"];
-const SEASONS: Season[] = ["All", "Summer", "Winter", "Monsoon", "Spring"];
+const OCCASIONS: Occasion[] = [
+  "Daily",
+  "Work",
+  "Date",
+  "Formal",
+  "Travel",
+  "Home",
+  "Party",
+  "Sport",
+  "Special",
+  "School",
+  "Beach",
+  "Etc",
+];
+const SEASONS: Season[] = ["Spring", "Summer", "Fall", "Winter"];
+
+const COLOR_OPTIONS = [
+  { name: "White", hex: "#FFFFFF" },
+  { name: "Ivory", hex: "#FFFFF0" },
+  { name: "Beige", hex: "#F5F5DC" },
+  { name: "Light-Gray", hex: "#D3D3D3" },
+  { name: "Dark-Gray", hex: "#A9A9A9" },
+  { name: "Black", hex: "#000000" },
+  { name: "Light-Yellow", hex: "#FFFFE0" },
+  { name: "Yellow", hex: "#FFFF00" },
+  { name: "Turmeric", hex: "#FFC300" },
+  { name: "Orange", hex: "#FFA500" },
+  { name: "Coral", hex: "#FF7F50" },
+  { name: "Red", hex: "#FF0000" },
+  { name: "Pink", hex: "#FFC0CB" },
+  { name: "Hot-Pink", hex: "#FF69B4" },
+  { name: "Light-Green", hex: "#90EE90" },
+  { name: "Green", hex: "#008000" },
+  { name: "Olive", hex: "#808000" },
+  { name: "Dark-Olive", hex: "#556B2F" },
+  { name: "Teal", hex: "#008080" },
+  { name: "Khaki", hex: "#F0E68C" },
+  { name: "Cyan", hex: "#00FFFF" },
+  { name: "Sky-Blue", hex: "#87CEEB" },
+  { name: "Blue", hex: "#0000FF" },
+  { name: "Navy", hex: "#000080" },
+  { name: "Lavender", hex: "#E6E6FA" },
+  { name: "Purple", hex: "#800080" },
+  { name: "Burgundy", hex: "#800020" },
+  { name: "Camel", hex: "#C19A6B" },
+  { name: "Brown", hex: "#A52A2A" },
+  { name: "Dark-Brown", hex: "#654321" },
+  { name: "Magenta", hex: "#FF00FF" },
+  { name: "Gold", hex: "#FFD700" },
+  { name: "Silver", hex: "#C0C0C0" },
+  { name: "Colorful", hex: "colorful" },
+];
 
 type FormParams = {
   mode?: string;
@@ -149,29 +214,42 @@ export default function AddClothesFormScreen() {
   const [color, setColor] = useState(params.color ?? "");
   const [colorHex, setColorHex] = useState(params.colorHex ?? "");
   const [occasion, setOccasion] = useState<Occasion>(
-    (params.occasion as Occasion) ?? "Casual"
+    (params.occasion as Occasion) ?? "Daily",
   );
   const [season, setSeason] = useState<Season>(
-    (params.season as Season) ?? "All"
+    (params.season as Season) ?? "Spring",
   );
   const [matchingColors] = useState<MatchingColor[]>(initialMatchingColors);
   const [localPhotoUri, setLocalPhotoUri] = useState(params.photoUri ?? "");
   const [notes, setNotes] = useState("");
   const [showScanOverlay, setShowScanOverlay] = useState(
-    params.isScanning === "true"
+    params.isScanning === "true",
   );
 
   // Bottom sheet state
   const [activeSheet, setActiveSheet] = useState<
-    "category" | "occasion" | "season" | null
+    | "category"
+    | "occasion"
+    | "season"
+    | "rating"
+    | "color"
+    | "notes"
+    | "menu"
+    | null
   >(null);
+
+  const [rating, setRating] = useState<number>(0);
 
   const panY = useRef(new Animated.Value(400)).current;
 
   const openSheet = (sheet: typeof activeSheet) => {
     setActiveSheet(sheet);
     panY.setValue(400);
-    Animated.spring(panY, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
+    Animated.spring(panY, {
+      toValue: 0,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
   };
 
   const closeSheet = useCallback(() => {
@@ -194,7 +272,7 @@ export default function AddClothesFormScreen() {
         else
           Animated.spring(panY, { toValue: 0, useNativeDriver: true }).start();
       },
-    })
+    }),
   ).current;
 
   const handlePickPhoto = useCallback(async () => {
@@ -218,10 +296,7 @@ export default function AddClothesFormScreen() {
       imageUrl: localPhotoUri || undefined,
       occasion: occasion ? [occasion] : undefined,
     });
-    router.replace({
-      pathname: "/(root)/add-clothes/success",
-      params: { photoUri: localPhotoUri, name: name || "Untitled item", category },
-    } as never);
+    router.replace("/(root)/(tabs)/wardrobe" as never);
   }, [router, name, category, color, occasion, localPhotoUri, addItem]);
 
   const handleRetake = useCallback(() => {
@@ -241,31 +316,15 @@ export default function AddClothesFormScreen() {
             justifyContent: "space-between",
             paddingHorizontal: 20,
             paddingVertical: 14,
-            borderBottomWidth: 1,
-            borderBottomColor: "#F3F4F6",
           }}
         >
-          <Pressable
-            onPress={() => router.canGoBack() && router.back()}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: "#F3F4F6",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <IconArrowLeft size={18} color="#1D1A27" strokeWidth={2.5} />
+          <Pressable onPress={() => router.canGoBack() && router.back()}>
+            <IconArrowLeft size={24} color="#1D1A27" strokeWidth={2} />
           </Pressable>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: "#111827" }}>
-            {isScanned ? "Confirm details" : "Add manually"}
+          <Text style={{ fontSize: 17, fontWeight: "600", color: "#1D1A27" }}>
+            Item Details
           </Text>
-          <Pressable onPress={handleConfirm}>
-            <Text style={{ fontSize: 15, fontWeight: "700", color: "#7C6AFF" }}>
-              Save
-            </Text>
-          </Pressable>
+          <View style={{ width: 24 }} /> {/* Empty view for balance */}
         </View>
 
         <ScrollView
@@ -275,28 +334,39 @@ export default function AddClothesFormScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* ── Photo Section ── */}
-          <View style={{ marginHorizontal: 20, marginTop: 20, marginBottom: 8 }}>
+          <View
+            style={{
+              marginHorizontal: 40,
+              marginTop: 20,
+              marginBottom: 8,
+              alignItems: "center",
+            }}
+          >
             <View
               style={{
+                width: 280,
+                height: 280,
                 borderRadius: 24,
                 overflow: "hidden",
-                height: 260,
                 backgroundColor: "#F8F7FC",
-                borderWidth: 1,
-                borderColor: "#E9E9F0",
               }}
             >
               {localPhotoUri ? (
                 <ExpoImage
                   source={{ uri: localPhotoUri }}
                   style={{ width: "100%", height: "100%" }}
-                  contentFit="cover"
+                  contentFit="contain"
                   cachePolicy="memory"
                 />
               ) : (
                 <Pressable
                   onPress={handlePickPhoto}
-                  style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 8 }}
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
                 >
                   <IconPhoto size={32} color="#C4C4CC" />
                   <Text style={{ color: "#C4C4CC", fontSize: 13 }}>
@@ -304,257 +374,253 @@ export default function AddClothesFormScreen() {
                   </Text>
                 </Pressable>
               )}
-
-              {/* AI badge */}
-              {isScanned && (
-                <View
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    left: 12,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 5,
-                    backgroundColor: "rgba(124,106,255,0.92)",
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 999,
-                  }}
-                >
-                  <IconSparkles size={11} color="#fff" strokeWidth={2.5} />
-                  <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>
-                    AI Prefilled
-                  </Text>
-                </View>
-              )}
-
-              {/* Change photo button */}
-              {localPhotoUri && (
-                <Pressable
-                  onPress={handlePickPhoto}
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    backgroundColor: "rgba(255,255,255,0.92)",
-                    borderRadius: 999,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 5,
-                    borderWidth: 1,
-                    borderColor: "#E5E7EB",
-                  }}
-                >
-                  <IconPhoto size={11} color="#374151" />
-                  <Text style={{ fontSize: 11, color: "#374151", fontWeight: "600" }}>
-                    Change
-                  </Text>
-                </Pressable>
-              )}
+              {/* )} */}
             </View>
-
-            {/* Action buttons below photo */}
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
-              {isScanned && (
-                <Pressable
-                  onPress={handleRetake}
-                  style={{
-                    flex: 1,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 7,
-                    paddingVertical: 12,
-                    borderRadius: 14,
-                    borderWidth: 1.5,
-                    borderColor: "#E5E7EB",
-                    backgroundColor: "#FAFAFA",
-                  }}
-                >
-                  <IconCamera size={16} color="#6B7280" strokeWidth={2} />
-                  <Text style={{ fontSize: 14, color: "#6B7280", fontWeight: "600" }}>
-                    Retake / Rescan
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-
-            {isScanned && (
-              <Text
-                style={{
-                  color: "#9CA3AF",
-                  fontSize: 12,
-                  marginTop: 10,
-                  lineHeight: 18,
-                }}
-              >
-                ✨ We&apos;ve prefilled what AI detected. Tap any field to edit before saving.
-              </Text>
-            )}
           </View>
 
-          {/* ── Fields ── */}
-          <View style={{ paddingHorizontal: 20, paddingTop: 20, gap: 24 }}>
-            {/* Item name */}
-            <View>
-              <SectionLabel text="Item Name" />
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="e.g. Navy Blue Denim Jacket"
-                placeholderTextColor="#D1D5DB"
-                style={{
-                  backgroundColor: "#F9FAFB",
-                  borderWidth: 1,
-                  borderColor: "#E5E7EB",
-                  borderRadius: 14,
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
-                  fontSize: 15,
-                  color: "#111827",
-                  fontWeight: "500",
-                }}
-              />
-            </View>
 
-            {/* Category picker */}
-            <View>
-              <SectionLabel text="Category" />
-              <Pressable
-                onPress={() => openSheet("category")}
-                style={{
-                  backgroundColor: "#F9FAFB",
-                  borderWidth: 1,
-                  borderColor: "#E5E7EB",
-                  borderRadius: 14,
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
+
+          {/* ── Fields ── */}
+          <View style={{ paddingHorizontal: 20, paddingTop: 30, gap: 24 }}>
+            {/* Item name (invisible in target, but maybe we keep it as a row?) */}
+            {/* The target UI just shows My Rating, Season, Occasion, Category, Color */}
+
+            {/* My Rating */}
+            <Pressable
+              onPress={() => openSheet("rating")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
               >
-                <Text style={{ fontSize: 15, color: "#111827", fontWeight: "500" }}>
-                  {CATEGORIES.find((c) => c.id === category)?.label ?? category}
+                My Rating
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                {rating > 0 ? (
+                  <View style={{ flexDirection: "row", gap: 2 }}>
+                    {[...Array(rating)].map((_, i) => (
+                      <IconStarFilled key={i} size={16} color="#EAB308" />
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: 15, color: "#D1D5DB" }}>
+                    Give a rating
+                  </Text>
+                )}
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
+
+            {/* Season */}
+            <Pressable
+              onPress={() => openSheet("season")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+              >
+                Season
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Text
+                  style={{ fontSize: 15, color: "#374151", fontWeight: "500" }}
+                >
+                  {season}
                 </Text>
-                <IconChevronDown size={18} color="#9CA3AF" />
-              </Pressable>
-            </View>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
+
+            {/* Occasion */}
+            <Pressable
+              onPress={() => openSheet("occasion")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+              >
+                Occasion
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Text
+                  style={{ fontSize: 15, color: "#374151", fontWeight: "500" }}
+                >
+                  {occasion}
+                </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
+
+            {/* Category */}
+            <Pressable
+              onPress={() => openSheet("category")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+              >
+                Category
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Text
+                  style={{ fontSize: 15, color: "#374151", fontWeight: "500" }}
+                >
+                  {category === "top"
+                    ? "Tops > Shirt"
+                    : (CATEGORIES.find((c) => c.id === category)?.label ??
+                      category)}
+                </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
 
             {/* Color */}
-            <View>
-              <SectionLabel text="Color" />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Pressable
+              onPress={() => openSheet("color")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+              >
+                Color
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
                 {colorHex ? (
                   <View
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: colorHex,
-                      borderWidth: 2,
-                      borderColor: "#E5E7EB",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
                     }}
-                  />
-                ) : null}
-                <TextInput
-                  value={color}
-                  onChangeText={setColor}
-                  placeholder="e.g. Navy Blue"
-                  placeholderTextColor="#D1D5DB"
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#F9FAFB",
-                    borderWidth: 1,
-                    borderColor: "#E5E7EB",
-                    borderRadius: 14,
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    fontSize: 15,
-                    color: "#111827",
-                    fontWeight: "500",
-                  }}
-                />
-              </View>
-            </View>
-
-            {/* Occasion */}
-            <View>
-              <SectionLabel text="Occasion" />
-              <ChipSelector options={OCCASIONS} value={occasion} onChange={setOccasion} />
-            </View>
-
-            {/* Season */}
-            <View>
-              <SectionLabel text="Season" />
-              <ChipSelector options={SEASONS} value={season} onChange={setSeason} />
-            </View>
-
-            {/* Matching Colors (AI suggestion) */}
-            {matchingColors.length > 0 && (
-              <View>
-                <SectionLabel text="AI Suggested Matching Colors" />
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  {matchingColors.map((mc) => (
-                    <View key={mc.hex} style={{ alignItems: "center", gap: 6 }}>
+                  >
+                    {colorHex === "colorful" ? (
+                      <LinearGradient
+                        colors={[
+                          "#FF0000",
+                          "#FFFF00",
+                          "#00FF00",
+                          "#00FFFF",
+                          "#0000FF",
+                          "#FF00FF",
+                        ]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{ width: 16, height: 16, borderRadius: 8 }}
+                      />
+                    ) : (
                       <View
                         style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 22,
-                          backgroundColor: mc.hex,
-                          borderWidth: 2,
+                          width: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          backgroundColor: colorHex,
+                          borderWidth: 1,
                           borderColor: "#E5E7EB",
-                          shadowColor: mc.hex,
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.3,
-                          shadowRadius: 6,
-                          elevation: 3,
                         }}
                       />
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          color: "#6B7280",
-                          fontWeight: "600",
-                          maxWidth: 54,
-                          textAlign: "center",
-                        }}
-                      >
-                        {mc.name}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
+                    )}
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        color: "#374151",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {color}
+                    </Text>
+                  </View>
+                ) : (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: 8,
+                        backgroundColor: "#EAB308",
+                      }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        color: "#374151",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Yellow
+                    </Text>
+                  </View>
+                )}
+                <IconChevronDown size={18} color="#D1D5DB" />
               </View>
-            )}
+            </Pressable>
 
             {/* Notes */}
-            <View>
-              <SectionLabel text="Notes (optional)" />
-              <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="e.g. Gifted by mom, hand wash only"
-                placeholderTextColor="#D1D5DB"
-                multiline
-                numberOfLines={3}
-                style={{
-                  backgroundColor: "#F9FAFB",
-                  borderWidth: 1,
-                  borderColor: "#E5E7EB",
-                  borderRadius: 14,
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
-                  fontSize: 14,
-                  color: "#111827",
-                  textAlignVertical: "top",
-                  minHeight: 80,
-                }}
-              />
-            </View>
+            <Pressable
+              onPress={() => openSheet("notes")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+              >
+                Notes
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#374151",
+                    fontWeight: "500",
+                    maxWidth: 150,
+                  }}
+                  numberOfLines={1}
+                >
+                  {notes || "Add notes"}
+                </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
           </View>
         </ScrollView>
 
@@ -598,7 +664,11 @@ export default function AddClothesFormScreen() {
           statusBarTranslucent
         >
           <Pressable
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              justifyContent: "flex-end",
+            }}
             onPress={closeSheet}
           >
             <Animated.View
@@ -628,13 +698,34 @@ export default function AddClothesFormScreen() {
                     }}
                   />
 
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                    <Text style={{ fontSize: 17, fontWeight: "700", color: "#111827" }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 20,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 17,
+                        fontWeight: "700",
+                        color: "#111827",
+                      }}
+                    >
                       {activeSheet === "category"
                         ? "Select Category"
                         : activeSheet === "occasion"
-                        ? "Select Occasion"
-                        : "Select Season"}
+                          ? "Select Occasion"
+                          : activeSheet === "season"
+                            ? "Select Season"
+                            : activeSheet === "rating"
+                              ? "My Rating"
+                              : activeSheet === "color"
+                                ? "Select Color"
+                                : activeSheet === "menu"
+                                  ? "Options"
+                                  : "Notes"}
                     </Text>
                     <Pressable onPress={closeSheet}>
                       <IconX size={22} color="#9CA3AF" />
@@ -642,32 +733,289 @@ export default function AddClothesFormScreen() {
                   </View>
 
                   {/* Options */}
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                  <View
+                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}
+                  >
+                    {activeSheet === "menu" && (
+                      <View style={{ width: "100%", gap: 8 }}>
+                        <Pressable
+                          onPress={closeSheet}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 12,
+                            paddingVertical: 14,
+                            paddingHorizontal: 16,
+                            backgroundColor: "#F9FAFB",
+                            borderRadius: 16,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 20,
+                              backgroundColor: "#fff",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              shadowColor: "#000",
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.05,
+                              shadowRadius: 2,
+                              elevation: 1,
+                            }}
+                          >
+                            <IconShare size={20} color="#1D1A27" />
+                          </View>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              fontWeight: "600",
+                              color: "#1D1A27",
+                            }}
+                          >
+                            Share
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={closeSheet}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 12,
+                            paddingVertical: 14,
+                            paddingHorizontal: 16,
+                            backgroundColor: "#FEF2F2",
+                            borderRadius: 16,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 20,
+                              backgroundColor: "#fff",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              shadowColor: "#EF4444",
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.1,
+                              shadowRadius: 2,
+                              elevation: 1,
+                            }}
+                          >
+                            <IconTrash size={20} color="#EF4444" />
+                          </View>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              fontWeight: "600",
+                              color: "#EF4444",
+                            }}
+                          >
+                            Delete Item
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
+
+                    {activeSheet === "rating" && (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          gap: 12,
+                          justifyContent: "center",
+                          width: "100%",
+                          paddingVertical: 10,
+                        }}
+                      >
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Pressable
+                            key={star}
+                            onPress={() => {
+                              setRating(star);
+                              closeSheet();
+                            }}
+                          >
+                            {rating >= star ? (
+                              <IconStarFilled size={36} color="#C4C4CC" />
+                            ) : (
+                              <IconStar size={36} color="#E5E7EB" />
+                            )}
+                          </Pressable>
+                        ))}
+                      </View>
+                    )}
+
                     {activeSheet === "category" &&
                       CATEGORIES.map((c) => (
                         <Pressable
                           key={c.id}
-                          onPress={() => { setCategory(c.id); closeSheet(); }}
+                          onPress={() => {
+                            setCategory(c.id);
+                            closeSheet();
+                          }}
                           style={{
                             paddingHorizontal: 18,
                             paddingVertical: 10,
                             borderRadius: 999,
-                            backgroundColor: category === c.id ? "#1D1A27" : "#F3F4F6",
+                            backgroundColor:
+                              category === c.id ? "#fff" : "#fff",
                             borderWidth: 1,
-                            borderColor: category === c.id ? "#1D1A27" : "#E5E7EB",
+                            borderColor: category === c.id ? "#000" : "#E5E7EB",
                           }}
                         >
                           <Text
                             style={{
-                              color: category === c.id ? "#fff" : "#374151",
+                              color: category === c.id ? "#000" : "#6B7280",
                               fontSize: 14,
-                              fontWeight: "600",
+                              fontWeight: "500",
                             }}
                           >
                             {c.label}
                           </Text>
                         </Pressable>
                       ))}
+
+                    {activeSheet === "season" &&
+                      SEASONS.map((s) => (
+                        <Pressable
+                          key={s}
+                          onPress={() => {
+                            setSeason(s);
+                            closeSheet();
+                          }}
+                          style={{
+                            paddingHorizontal: 18,
+                            paddingVertical: 10,
+                            borderRadius: 999,
+                            backgroundColor: season === s ? "#fff" : "#fff",
+                            borderWidth: 1,
+                            borderColor: season === s ? "#000" : "#E5E7EB",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: season === s ? "#000" : "#6B7280",
+                              fontSize: 14,
+                              fontWeight: "500",
+                            }}
+                          >
+                            {s}
+                          </Text>
+                        </Pressable>
+                      ))}
+
+                    {activeSheet === "occasion" &&
+                      OCCASIONS.map((o) => (
+                        <Pressable
+                          key={o}
+                          onPress={() => {
+                            setOccasion(o);
+                            closeSheet();
+                          }}
+                          style={{
+                            paddingHorizontal: 18,
+                            paddingVertical: 10,
+                            borderRadius: 999,
+                            backgroundColor: occasion === o ? "#fff" : "#fff",
+                            borderWidth: 1,
+                            borderColor: occasion === o ? "#000" : "#E5E7EB",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: occasion === o ? "#000" : "#6B7280",
+                              fontSize: 14,
+                              fontWeight: "500",
+                            }}
+                          >
+                            {o}
+                          </Text>
+                        </Pressable>
+                      ))}
+
+                    {activeSheet === "color" &&
+                      COLOR_OPTIONS.map((c) => (
+                        <Pressable
+                          key={c.name}
+                          onPress={() => {
+                            setColor(c.name);
+                            setColorHex(c.hex);
+                            closeSheet();
+                          }}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 8,
+                            paddingHorizontal: 14,
+                            paddingVertical: 8,
+                            borderRadius: 999,
+                            backgroundColor: color === c.name ? "#fff" : "#fff",
+                            borderWidth: 1,
+                            borderColor: color === c.name ? "#000" : "#E5E7EB",
+                          }}
+                        >
+                          {c.hex === "colorful" ? (
+                            <LinearGradient
+                              colors={[
+                                "#FF0000",
+                                "#FFFF00",
+                                "#00FF00",
+                                "#00FFFF",
+                                "#0000FF",
+                                "#FF00FF",
+                              ]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={{ width: 16, height: 16, borderRadius: 8 }}
+                            />
+                          ) : (
+                            <View
+                              style={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: 8,
+                                backgroundColor: c.hex,
+                                borderWidth: 1,
+                                borderColor: "#E5E7EB",
+                              }}
+                            />
+                          )}
+                          <Text
+                            style={{
+                              color: color === c.name ? "#000" : "#6B7280",
+                              fontSize: 14,
+                              fontWeight: "500",
+                            }}
+                          >
+                            {c.name}
+                          </Text>
+                        </Pressable>
+                      ))}
+
+                    {activeSheet === "notes" && (
+                      <View style={{ width: "100%", height: 150 }}>
+                        <TextInput
+                          value={notes}
+                          onChangeText={setNotes}
+                          placeholder="Add notes..."
+                          placeholderTextColor="#9CA3AF"
+                          multiline
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            borderWidth: 1,
+                            borderColor: "#E5E7EB",
+                            borderRadius: 12,
+                            padding: 16,
+                            fontSize: 15,
+                            color: "#1F2937",
+                            textAlignVertical: "top",
+                          }}
+                        />
+                      </View>
+                    )}
                   </View>
                 </View>
               </Pressable>

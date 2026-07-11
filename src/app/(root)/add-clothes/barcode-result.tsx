@@ -242,7 +242,7 @@ const handleSave = () => {
               padding: 20,
             }}
           >
-            {result.brand && result.brand !== "Unknown" && (
+            {!!result.brand && result.brand !== "Unknown" && (
               <View
                 style={{
                   alignSelf: "flex-start",

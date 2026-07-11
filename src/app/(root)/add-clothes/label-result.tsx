@@ -170,7 +170,7 @@ export default function LabelResultScreen() {
           </View>
 
           {/* Composition */}
-          {result.fabricComposition && result.fabricComposition !== "Not detected" && (
+          {!!result.fabricComposition && result.fabricComposition !== "Not detected" && (
             <View style={{ marginHorizontal: 20, backgroundColor: "#FFFFFF", borderRadius: 20, padding: 18, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: "#E9EBF8" }}>
               <Text style={{ color: "#1D1A27", fontSize: 14, fontWeight: "700", marginBottom: 6 }}>Composition</Text>
               <Text style={{ color: "#4B5563", fontSize: 13 }}>Details: <Text style={{ fontWeight: "700", color: "#1D1A27" }}>{result.fabricComposition}</Text></Text>

@@ -1,5 +1,5 @@
-import { MaterialTopTabs } from "@/shared/ui/navigation/MaterialTopTabs";
 import { CustomTabBar } from "@/shared/ui/navigation/CustomTabBar";
+import { MaterialTopTabs } from "@/shared/ui/navigation/MaterialTopTabs";
 
 const renderTabBar = (props: any) => <CustomTabBar {...props} />;
 

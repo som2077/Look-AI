@@ -1,1051 +1,577 @@
-import { IconBell, IconBookmark } from "@tabler/icons-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
+// import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
+import {
+  IconBell,
+  IconMoodPlus,
+  IconPlus,
+  IconSend,
+  IconX,
+} from "@tabler/icons-react-native";
+import { ResizeMode, Video } from "expo-av";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Download, ImagePlus, Share2, X } from "lucide-react-native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
-  Dimensions,
+  ActivityIndicator,
   Image,
-  Modal,
-  PanResponder,
-  Pressable,
+  Keyboard,
+  Platform,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import ImageCropPicker from "react-native-image-crop-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
-import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
-import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
-import { Group, useGroups } from "@/features/social/api/useGroups";
-import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { useUser } from "@clerk/clerk-expo";
 
-// Removed mock COMMUNITY_POSTS data to show real community posts only
+const USER_COLORS = ["#000000", "#BA0017", "#403193", "#34787D", "#2900BF"];
 
-// Removed ALL_GROUPS, using useSocialStore instead
+function getUserColor(userId: string) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+}
 
-// ─── Add Post Modal ────────────────────────────────────────────────────────────
+function timeAgoHelper(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-function AddPostModal({
-  visible,
-  onClose,
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+// ─── Post Card ────────────────────────────────────────────────────────────────
+function PostCard({
+  post,
+  toggleReaction,
 }: {
-  visible: boolean;
-  onClose: () => void;
+  post: any;
+  toggleReaction: (postId: string, reactionType: string | null) => void;
 }) {
-  const [caption, setCaption] = useState("");
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const { createPost, uploading } = useCommunityPosts();
-
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
-
-  const panY = useRef(
-    new Animated.Value(Dimensions.get("window").height),
-  ).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { user } = useUser();
+  const [showReactions, setShowReactions] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<number>(4 / 3);
 
   useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(panY, {
-          toValue: 0,
-          useNativeDriver: true,
-          bounciness: 4,
-        }),
-      ]).start();
-    } else {
-      panY.setValue(Dimensions.get("window").height);
-      fadeAnim.setValue(0);
+    if (post.image_url) {
+      Image.getSize(
+        post.image_url,
+        (width, height) => {
+          if (width && height) setAspectRatio(width / height);
+        },
+        () => {
+          setAspectRatio(4 / 3);
+        },
+      );
     }
-  }, [visible]);
+  }, [post.image_url]);
 
-  const handleClose = () => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(panY, {
-        toValue: Dimensions.get("window").height,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onClose();
-    });
-  };
+  const reactions = post.post_reactions || [];
+  const myReactionObj = reactions.find((r: any) => r.user_id === user?.id);
+  const myReaction = myReactionObj?.reaction_type || null;
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: (_, gestureState) =>
-        gestureState.dy > 10 &&
-        Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
-      onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 10,
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          panY.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
-          handleClose();
-        } else {
-          Animated.spring(panY, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 4,
-          }).start();
-        }
-      },
-    }),
-  ).current;
+  const reactionCounts: Record<string, number> = {};
+  reactions.forEach((r: any) => {
+    reactionCounts[r.reaction_type] =
+      (reactionCounts[r.reaction_type] || 0) + 1;
+  });
+  const uniqueReactions = Object.keys(reactionCounts);
 
-  const handleShare = async () => {
-    if (!imageUri) {
-      alert("Please select an image first!");
-      return;
-    }
-    try {
-      await createPost(imageUri, caption);
-      setCaption("");
-      setImageUri(null);
-      handleClose();
-    } catch (_error) {
-      alert("Failed to share post. Please try again.");
-    }
-  };
+  const timeAgo = post.created_at ? timeAgoHelper(post.created_at) : "Just now";
+  const isCurrentUser =
+    post.user_id === user?.id || post.user_profiles?.user_id === user?.id;
+  const avatarUrl =
+    isCurrentUser && user?.imageUrl
+      ? user.imageUrl
+      : post.user_profiles?.avatar_url ||
+        "https://api.dicebear.com/7.x/avataaars/png?seed=" + post.user_id;
 
   return (
-    <Modal
-      visible={visible}
-      animationType="none"
-      transparent={true}
-      onRequestClose={handleClose}
+    <View
+      style={{
+        paddingVertical: 5,
+      }}
     >
+      {/* Header: Avatar + Info */}
       <View
-        style={{
-          flex: 1,
-          justifyContent: "flex-end",
-        }}
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
-        <Animated.View
-          style={[
-            {
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.5)",
-            },
-            { opacity: fadeAnim },
-          ]}
-        >
-          <Pressable style={{ flex: 1 }} onPress={handleClose} />
-        </Animated.View>
-        <Animated.View
-          {...panResponder.panHandlers}
+        <Image
+          source={{ uri: avatarUrl }}
           style={{
-            backgroundColor: "#FFFFFF",
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            maxHeight: "90%",
-            transform: [{ translateY: panY }],
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            marginRight: 8,
+          }}
+        />
+        <View style={{ flex: 1 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 13,
+              fontWeight: "700",
+              color: getUserColor(post.user_id || "User"),
+            }}
+          >
+            {post.user_profiles?.nickname ||
+              post.user_profiles?.username ||
+              "User"}
+          </Text>
+          <Text style={{ fontSize: 11, color: "#00000080", marginTop: 1 }}>
+            {timeAgo}
+          </Text>
+        </View>
+      </View>
+
+      {/* Content */}
+      {post.caption ? (
+        <Text
+          style={{
+            fontSize: 13,
+            color: "#1D1A27",
+            lineHeight: 22,
+            marginLeft: 10,
+            // marginRight: 20,
+            marginBottom: post.image_url ? 12 : 8,
           }}
         >
+          {post.caption}
+        </Text>
+      ) : null}
+
+      {/* Image */}
+      {post.image_url ? (
+        <Image
+          source={{ uri: post.image_url }}
+          style={{
+            width: "100%",
+            aspectRatio: aspectRatio,
+            borderRadius: 12,
+            marginBottom: 8,
+          }}
+          resizeMode="cover"
+        />
+      ) : null}
+
+      {/* Reactions */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          alignItems: "center",
+          gap: 8,
+          paddingVertical: 4,
+          paddingHorizontal: 10,
+        }}
+        style={{ marginTop: -5, marginBottom: 7 }}
+      >
+        {uniqueReactions.slice(0, 5).map((emoji) => (
+          <TouchableOpacity
+            key={emoji}
+            onPress={() => {
+              if (myReaction === emoji) {
+                toggleReaction(post.id, null);
+              } else {
+                toggleReaction(post.id, emoji);
+              }
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: myReaction === emoji ? "#E0F2FE" : "#F3F4F6",
+              borderColor: myReaction === emoji ? "#38BDF890" : "transparent",
+              borderWidth: 1,
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: 16,
+            }}
+          >
+            <Text style={{ fontSize: 14 }}>{emoji}</Text>
+            <Text
+              style={{
+                fontSize: 13,
+                color: myReaction === emoji ? "#0284C7" : "#4B5563",
+                fontWeight: "600",
+                marginLeft: 6,
+              }}
+            >
+              {reactionCounts[emoji]}
+            </Text>
+          </TouchableOpacity>
+        ))}
+
+        {!myReaction && (
+          <TouchableOpacity
+            onPress={() => setShowReactions(!showReactions)}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: "#F3F4F6",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <IconMoodPlus size={18} color="#6B7280" />
+          </TouchableOpacity>
+        )}
+      </ScrollView>
+
+      {/* Inline Reaction Picker */}
+      {showReactions && (
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 6,
+            paddingBottom: 8,
+          }}
+        >
+          {["👍", "👎", "😂", "😡", "🔥"].map((emoji) => (
+            <TouchableOpacity
+              key={emoji}
+              onPress={() => {
+                if (myReaction === emoji) {
+                  toggleReaction(post.id, null);
+                } else {
+                  toggleReaction(post.id, emoji);
+                }
+                setShowReactions(false);
+              }}
+              style={{
+                width: 32,
+                height: 32,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#F9FAFB",
+                borderRadius: 16,
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>{emoji}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ─── Feed Tab ────────────────────────────────────────────────────────────────
+
+function FeedTab() {
+  const router = useRouter();
+  const { posts, loading, uploading, createPost, toggleReaction, refetch } =
+    useCommunityPosts();
+  const [inputText, setInputText] = useState("");
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const inputRef = useRef<TextInput>(null);
+  const [isComposing, setIsComposing] = useState(false);
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    // Track exact keyboard height to push UI up on Edge-to-Edge Android devices
+    const showSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => setKeyboardHeight(e.endCoordinates.height),
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKeyboardHeight(0),
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (keyboardHeight === 0 && !inputText.trim() && !imageUri) {
+      setIsComposing(false);
+    }
+  }, [keyboardHeight, inputText, imageUri]);
+
+  const pickImage = async () => {
+    try {
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        cropping: true,
+        freeStyleCropEnabled: true,
+      });
+      if (result && result.path) {
+        const validUri = result.path.startsWith("file://")
+          ? result.path
+          : `file://${result.path}`;
+        setImageUri(validUri);
+      }
+    } catch (e) {
+      console.log("Image picker error:", e);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!inputText.trim() && !imageUri) return;
+    const success = await createPost(imageUri || "", inputText.trim());
+    if (success) {
+      setInputText("");
+      setImageUri(null);
+      setIsComposing(false);
+      Keyboard.dismiss();
+    }
+  };
+
+  const leftColumn: any[] = [];
+  const rightColumn: any[] = [];
+
+  posts.forEach((post, index) => {
+    if (index % 2 === 0) leftColumn.push(post);
+    else rightColumn.push(post);
+  });
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        paddingBottom: keyboardHeight > 0 ? keyboardHeight : 90,
+      }}
+    >
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+          paddingHorizontal: 16,
+          // paddingTop: 20,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "800",
+            color: "#1D1A27",
+          }}
+        >
+          Explore here
+        </Text>
+        <View style={{ flexDirection: "row", gap: 16 }}>
+          <TouchableOpacity
+            onPress={() => router.push("/(root)/notifications")}
+          >
+            <IconBell size={24} color="#1D1A27" />
+            {/* Notification Badge */}
+            <View
+              style={{
+                position: "absolute",
+                top: 2,
+                right: 2,
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: "#FF3B30",
+                borderWidth: 1,
+                borderColor: "#FFF",
+              }}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setIsComposing(true);
+              setTimeout(() => inputRef.current?.focus(), 100);
+            }}
+          >
+            <IconPlus size={24} color="#1D1A27" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingBottom: 40,
+        }}
+      >
+        {loading ? (
           <View
             style={{
-              width: 40,
-              height: 4,
-              backgroundColor: "#E5E7EB",
-              borderRadius: 2,
-              alignSelf: "center",
-              marginTop: 12,
-              marginBottom: 8,
+              alignItems: "center",
+              marginTop: 200,
+              justifyContent: "center",
             }}
-          />
-          {/* Top Header */}
+          >
+            <Video
+              source={require("../../../../assets/loading.webm")}
+              style={{ width: 250, height: 220 }}
+              shouldPlay
+              isLooping
+              isMuted
+              resizeMode={ResizeMode.CONTAIN}
+            />
+          </View>
+        ) : posts.length === 0 ? (
+          <Text
+            style={{ textAlign: "center", marginTop: 40, color: "#9CA3AF" }}
+          >
+            No posts yet. Be the first to share something!
+          </Text>
+        ) : (
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 1, gap: 12 }}>
+              {leftColumn.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  toggleReaction={toggleReaction}
+                />
+              ))}
+            </View>
+            <View style={{ flex: 1, gap: 12 }}>
+              {rightColumn.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  toggleReaction={toggleReaction}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Input Bar */}
+      {isComposing && (
+        <View
+          style={{
+            backgroundColor: "#FFFFFF",
+            borderTopWidth: 1,
+            borderTopColor: "#F3F4F6",
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+          }}
+        >
+          {imageUri && (
+            <View
+              style={{
+                marginBottom: 12,
+                position: "relative",
+                alignSelf: "flex-start",
+              }}
+            >
+              <Image
+                source={{ uri: imageUri }}
+                style={{ width: 80, height: 80, borderRadius: 8 }}
+              />
+              <TouchableOpacity
+                onPress={() => setImageUri(null)}
+                style={{
+                  position: "absolute",
+                  top: -8,
+                  right: -8,
+                  backgroundColor: "#FF3B30",
+                  borderRadius: 12,
+                  width: 24,
+                  height: 24,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconX size={14} color="#FFFfff" />
+              </TouchableOpacity>
+            </View>
+          )}
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
-              justifyContent: "space-between",
-              paddingHorizontal: 20,
-              paddingTop: 24,
-              paddingBottom: 16,
+              gap: 12,
+              marginBottom: 23,
             }}
           >
-            <TouchableOpacity onPress={handleClose} style={{ padding: 4 }}>
-              <X size={24} color="#1D1A27" />
-            </TouchableOpacity>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: "#1D1A27" }}>
-              New Post
-            </Text>
-            <TouchableOpacity
-              onPress={handleShare}
-              disabled={uploading}
-              style={{
-                backgroundColor: uploading ? "#E5E7EB" : "#4C36F5",
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 24,
-                shadowColor: "#4C36F5",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: uploading ? 0 : 0.3,
-                shadowRadius: 8,
-                elevation: uploading ? 0 : 4,
-              }}
-            >
-              <Text
-                style={{
-                  color: uploading ? "#9CA3AF" : "#FFFFFF",
-                  fontWeight: "700",
-                  fontSize: 14,
-                }}
-              >
-                {uploading ? "Sharing" : "Post"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
-          >
-            {/* Image Picker Area */}
             <TouchableOpacity
               onPress={pickImage}
               style={{
-                width: "100%",
-                height: 200,
-                backgroundColor: "#F9FAFB",
-                borderRadius: 24,
-                alignItems: "center",
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: "#000000",
                 justifyContent: "center",
-                marginBottom: 24,
-                borderWidth: imageUri ? 0 : 2,
-                borderColor: "#E5E7EB",
-                borderStyle: "dashed",
-                overflow: "hidden",
+                alignItems: "center",
               }}
             >
-              {imageUri ? (
-                <Image
-                  source={{ uri: imageUri }}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={{ alignItems: "center" }}>
-                  <View
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 32,
-                      backgroundColor: "#EEF2FF",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: 16,
-                    }}
-                  >
-                    <ImagePlus size={32} color="#4C36F5" strokeWidth={1.5} />
-                  </View>
-                  <Text
-                    style={{
-                      fontSize: 17,
-                      color: "#1D1A27",
-                      fontWeight: "700",
-                      marginBottom: 6,
-                    }}
-                  >
-                    Upload a photo
-                  </Text>
-                  <Text style={{ fontSize: 14, color: "#6B7280" }}>
-                    Show off your latest outfit
-                  </Text>
-                </View>
-              )}
+              <IconPlus size={20} color="#FFFFFF" />
             </TouchableOpacity>
 
-            {/* Caption Input Area */}
-            <View
+            <TextInput
+              ref={inputRef}
+              placeholder="Type a message..."
+              placeholderTextColor="#9CA3AF"
+              value={inputText}
+              onChangeText={setInputText}
               style={{
-                backgroundColor: "#F9FAFB",
+                flex: 1,
+                height: 40,
+                backgroundColor: "#F3F4F6",
                 borderRadius: 20,
-                padding: 16,
+                paddingHorizontal: 16,
+                fontSize: 14,
+                color: "#1D1A27",
               }}
-            >
-              <TextInput
-                placeholder="Write a caption for your look..."
-                placeholderTextColor="#9CA3AF"
-                multiline
-                value={caption}
-                onChangeText={setCaption}
-                style={{
-                  fontSize: 16,
-                  color: "#1D1A27",
-                  minHeight: 100,
-                  textAlignVertical: "top",
-                }}
-              />
-            </View>
-          </ScrollView>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-}
+            />
 
-// ─── Post Details Modal ──────────────────────────────────────────────────────
-
-function PostDetailsModal({
-  post,
-  visible,
-  onClose,
-}: {
-  post: any;
-  visible: boolean;
-  onClose: () => void;
-}) {
-  const router = useRouter();
-  const panY = useRef(
-    new Animated.Value(Dimensions.get("window").height),
-  ).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible && post) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(panY, {
-          toValue: 0,
-          useNativeDriver: true,
-          bounciness: 4,
-        }),
-      ]).start();
-    } else {
-      panY.setValue(Dimensions.get("window").height);
-      fadeAnim.setValue(0);
-    }
-  }, [visible, post]);
-
-  const handleClose = () => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(panY, {
-        toValue: Dimensions.get("window").height,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onClose();
-    });
-  };
-
-  const scrollY = useRef(0);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        // Steal the gesture from ScrollView if pulling down from the top
-        return (
-          scrollY.current <= 0 && gestureState.dy > 10 && gestureState.vy > 0
-        );
-      },
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return (
-          scrollY.current <= 0 && gestureState.dy > 10 && gestureState.vy > 0
-        );
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          panY.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
-          handleClose();
-        } else {
-          Animated.spring(panY, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 4,
-          }).start();
-        }
-      },
-    }),
-  ).current;
-
-  return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="none"
-      onRequestClose={handleClose}
-      statusBarTranslucent={true}
-    >
-      <View style={{ flex: 1, justifyContent: "flex-end" }}>
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            opacity: fadeAnim,
-          }}
-        >
-          <Pressable style={{ flex: 1 }} onPress={handleClose} />
-        </Animated.View>
-
-        <Animated.View
-          {...panResponder.panHandlers}
-          style={{
-            backgroundColor: "#ffffff",
-            borderTopLeftRadius: 45,
-            borderTopRightRadius: 45,
-            paddingTop: 12,
-            maxHeight: "90%",
-            transform: [{ translateY: panY }],
-          }}
-        >
-          {/* Drag Handle */}
-          <View style={{ alignItems: "center", marginBottom: 16 }}>
-            <View
+            <TouchableOpacity
+              onPress={handleSend}
+              disabled={uploading}
               style={{
                 width: 40,
-                height: 5,
-                borderRadius: 3,
-                backgroundColor: "#E0E0E0",
-              }}
-            />
-          </View>
-
-          {post && (
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 40 }}
-              scrollEventThrottle={16}
-              onScroll={(e) => {
-                scrollY.current = e.nativeEvent.contentOffset.y;
-              }}
-              bounces={false}
-            >
-              <View style={{ paddingHorizontal: 23 }}>
-                <Image
-                  source={{
-                    uri: post.image_url || post.image,
-                  }}
-                  style={{
-                    width: "100%",
-                    height: 500,
-                    borderRadius: 35,
-                  }}
-                  resizeMode="cover"
-                />
-              </View>
-              <View style={{ padding: 24 }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 16,
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={() => {
-                      onClose();
-                      router.push(`/(root)/user/${post.user_id}` as never);
-                    }}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 12,
-                    }}
-                  >
-                    <Image
-                      source={{
-                        uri:
-                          post.user_profiles?.avatar_url ||
-                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            post.user_profiles?.nickname || post.user || "User",
-                          )}&background=random`,
-                      }}
-                      style={{ width: 44, height: 44, borderRadius: 22 }}
-                    />
-                    <View>
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          fontWeight: "700",
-                          color: "#1D1A27",
-                        }}
-                      >
-                        {post.user_profiles?.nickname ||
-                          post.user ||
-                          "Style Explorer"}
-                      </Text>
-                      {post.user_profiles?.username ? (
-                        <Text
-                          style={{
-                            fontSize: 13,
-                            color: "#6B7280",
-                            marginTop: 2,
-                          }}
-                        >
-                          @{post.user_profiles.username}
-                        </Text>
-                      ) : null}
-                    </View>
-                  </TouchableOpacity>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "600",
-                        color: "#E11D48",
-                      }}
-                    >
-                      ♥
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "600",
-                        color: "#1D1A27",
-                      }}
-                    >
-                      {post.likes_count || post.likes || 0}
-                    </Text>
-                  </View>
-                </View>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: "#4B5563",
-                    lineHeight: 24,
-                    marginBottom: 24,
-                  }}
-                >
-                  {post.caption}
-                </Text>
-
-                {/* Action Buttons */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-around",
-                    marginTop: 10,
-                  }}
-                >
-                  <TouchableOpacity style={{ alignItems: "center", gap: 8 }}>
-                    <View
-                      style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 25,
-                        backgroundColor: "#F3F4F6",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <IconBookmark size={24} color="#1D1A27" />
-                    </View>
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "600",
-                        color: "#4B5563",
-                      }}
-                    >
-                      Save
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ alignItems: "center", gap: 8 }}>
-                    <View
-                      style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 25,
-                        backgroundColor: "#F3F4F6",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Share2 size={24} color="#1D1A27" />
-                    </View>
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "600",
-                        color: "#4B5563",
-                      }}
-                    >
-                      Share
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ alignItems: "center", gap: 8 }}>
-                    <View
-                      style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 25,
-                        backgroundColor: "#F3F4F6",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Download size={24} color="#1D1A27" />
-                    </View>
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "600",
-                        color: "#4B5563",
-                      }}
-                    >
-                      Download
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </ScrollView>
-          )}
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-}
-
-const CommunityPostCard = ({
-  post,
-  index,
-  onCardPress,
-}: {
-  post: any;
-  index: number;
-  onCardPress: () => void;
-}) => {
-  // Array of dynamic heights for a balanced staggered Pinterest look
-  const heights = [280, 220, 240, 310, 300, 250];
-  const dynamicHeight = heights[index % heights.length];
-
-  return (
-    <View style={{ marginBottom: 10 }}>
-      <Pressable
-        onPress={onCardPress}
-        style={{
-          borderRadius: 20,
-          overflow: "hidden",
-          backgroundColor: "#F0EEF8",
-        }}
-      >
-        <Image
-          source={{ uri: post.image_url || post.image }}
-          style={{ width: "100%", height: dynamicHeight }}
-          resizeMode="cover"
-        />
-      </Pressable>
-    </View>
-  );
-};
-
-// ─── For You Tab ───────────────────────────────────────────────────────────────
-
-function ForYouTab() {
-  const router = useRouter();
-  const { onScroll } = useScrollToHideTabBar();
-  const [selectedPostOptions, setSelectedPostOptions] = useState<any>(null);
-
-  const { posts: communityPosts } = useCommunityPosts();
-  const displayPosts = communityPosts;
-
-  return (
-    <ScrollView
-      onScroll={onScroll}
-      scrollEventThrottle={16}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: "50%" }}
-    >
-      {/* Community Looks */}
-      <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
-        {displayPosts.length === 0 ? (
-          <View
-            style={{
-              padding: 24,
-              alignItems: "center",
-              backgroundColor: "#F5F5F7",
-              borderRadius: 20,
-            }}
-          >
-            <Text style={{ fontSize: 32, marginBottom: 8 }}>✨</Text>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: "600",
-                color: "#1D1A27",
-                marginBottom: 4,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor:
+                  inputText.trim() || imageUri ? "#1D1A27" : "#000000",
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
-              No looks shared yet
-            </Text>
-            <Text
-              style={{ fontSize: 13, color: "#6B7280", textAlign: "center" }}
-            >
-              Be the first to share your style with the community!
-            </Text>
-          </View>
-        ) : (
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <View style={{ flex: 1 }}>
-              {displayPosts
-                .map((p: any, i: number) => ({ ...p, originalIndex: i }))
-                .filter((_: any, i: number) => i % 2 === 0)
-                .map((post: any) => (
-                  <CommunityPostCard
-                    key={post.id}
-                    post={post}
-                    index={post.originalIndex}
-                    onCardPress={() => setSelectedPostOptions(post)}
-                  />
-                ))}
-            </View>
-            <View style={{ flex: 1 }}>
-              {displayPosts
-                .map((p: any, i: number) => ({ ...p, originalIndex: i }))
-                .filter((_: any, i: number) => i % 2 !== 0)
-                .map((post: any) => (
-                  <CommunityPostCard
-                    key={post.id}
-                    post={post}
-                    index={post.originalIndex}
-                    onCardPress={() => setSelectedPostOptions(post)}
-                  />
-                ))}
-            </View>
-          </View>
-        )}
-      </View>
-
-      <PostDetailsModal
-        visible={!!selectedPostOptions}
-        post={selectedPostOptions}
-        onClose={() => setSelectedPostOptions(null)}
-      />
-    </ScrollView>
-  );
-}
-
-// ─── Group Card ────────────────────────────────────────────────────────────────
-
-function GroupCard({
-  group,
-  joined,
-  onJoin,
-  onPress,
-}: {
-  group: Group;
-  joined: boolean;
-  onJoin: () => void;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        backgroundColor: "#fff",
-        borderRadius: 20,
-        padding: 14,
-        marginBottom: 12,
-        flexDirection: "row",
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOpacity: 0.06,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 3,
-      }}
-    >
-      {/* Group Avatar */}
-      <Image
-        source={{ uri: group.image }}
-        style={{ width: 52, height: 52, borderRadius: 26, marginRight: 12 }}
-      />
-
-      {/* Info */}
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 15, fontWeight: "700", color: "#1D1A27" }}>
-          {group.name}
-        </Text>
-        <Text style={{ fontSize: 12, color: "#6B7280", marginTop: 1 }}>
-          {(group.members_count || 0).toLocaleString()} members
-        </Text>
-        <Text
-          style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}
-          numberOfLines={2}
-        >
-          {group.description}
-        </Text>
-      </View>
-
-      {/* Member Avatars + Join */}
-      <View style={{ alignItems: "center", marginLeft: 8 }}>
-        <View style={{ flexDirection: "row", marginBottom: 8 }}>
-          {(group.avatars || []).map((av, idx) => (
-            <Image
-              key={idx}
-              source={{ uri: av }}
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                borderWidth: 1.5,
-                borderColor: "#fff",
-                marginLeft: idx === 0 ? 0 : -7,
-              }}
-            />
-          ))}
-        </View>
-        {joined ? (
-          <View
-            style={{
-              backgroundColor: "#E8F5E9",
-              borderRadius: 20,
-              paddingHorizontal: 14,
-              // paddingVertical: 6,
-              //  paddingHorizontal: 14,
-              paddingVertical: 7,
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: "700", color: "#2E7D32" }}>
-              Joined
-            </Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              onJoin();
-            }}
-            style={{
-              backgroundColor: "#1D1A27",
-              borderRadius: 25,
-              paddingHorizontal: 14,
-              paddingVertical: 7,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <Text style={{ fontSize: 12, color: "#fff", fontWeight: "700" }}>
-              Join
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </Pressable>
-  );
-}
-
-// ─── Groups Tab ────────────────────────────────────────────────────────────────
-
-function GroupsTab({ onGroupPress }: { onGroupPress: (group: Group) => void }) {
-  const router = useRouter();
-  const { groups, joinedGroupIds, joinGroup, leaveGroup, loading } =
-    useGroups();
-
-  const handleJoin = useCallback(
-    (id: string) => {
-      if (joinedGroupIds.includes(id)) {
-        leaveGroup(id);
-      } else {
-        joinGroup(id);
-      }
-    },
-    [joinedGroupIds, joinGroup, leaveGroup],
-  );
-
-  if (loading) {
-    return (
-      <Text style={{ padding: 20, textAlign: "center", color: "#6B7280" }}>
-        Loading groups...
-      </Text>
-    );
-  }
-
-  const joinedGroups = groups.filter((g) => joinedGroupIds.includes(g.id));
-  const discoverGroups = groups.filter((g) => !joinedGroupIds.includes(g.id));
-
-  return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{
-        paddingHorizontal: 16,
-        paddingTop: 20,
-        paddingBottom: 100,
-      }}
-    >
-      {/* Your Groups */}
-      {joinedGroups.length > 0 && (
-        <>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 14,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 22,
-                fontWeight: "800",
-                color: "#1D1A27",
-              }}
-            >
-              Your Groups
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(root)/notifications")}
-              style={{ position: "relative", padding: 4 }}
-            >
-              <IconBell size={24} color="#1D1A27" />
-              <View
-                style={{
-                  position: "absolute",
-                  top: 4,
-                  right: 6,
-                  width: 9,
-                  height: 9,
-                  borderRadius: 4.5,
-                  backgroundColor: "#FF3B30",
-                  borderWidth: 1.5,
-                  borderColor: "#F5F5F7",
-                }}
-              />
+              {uploading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <IconSend size={18} color="#FFFFFF" />
+              )}
             </TouchableOpacity>
           </View>
-          {joinedGroups.map((g) => (
-            <GroupCard
-              key={g.id}
-              group={g}
-              joined
-              onJoin={() => handleJoin(g.id)}
-              onPress={() => onGroupPress(g)}
-            />
-          ))}
-          <View style={{ height: 8 }} />
-        </>
+        </View>
       )}
-
-      {/* Discover Groups */}
-      {discoverGroups.length > 0 && (
-        <>
-          <Text
-            style={{
-              fontSize: 22,
-              fontWeight: "800",
-              color: "#1D1A27",
-              marginBottom: 14,
-            }}
-          >
-            Explore More
-          </Text>
-          {discoverGroups.map((g) => (
-            <GroupCard
-              key={g.id}
-              group={g}
-              joined={false}
-              onJoin={() => handleJoin(g.id)}
-              onPress={() => onGroupPress(g)}
-            />
-          ))}
-        </>
-      )}
-    </ScrollView>
+    </View>
   );
 }
 
 // ─── Explore Screen ────────────────────────────────────────────────────────────
 
 export default function ExploreScreen() {
-  const router = useRouter();
-  const [showAddPost, setShowAddPost] = useState(false);
-
-  const handleGroupPress = useCallback(
-    (group: Group) => {
-      router.push({
-        pathname: "/(root)/(social)/group-detail" as any,
-        params: { id: group.id, name: group.name, image: group.image },
-      });
-    },
-    [router],
-  );
-
   return (
     <SwipeTabWrapper tabIndex={2}>
-      <AppGradientBackground>
-        <StatusBar style="dark" />
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-          {/* ── Header removed ── */}
-
-          {/* Thin divider */}
-          <View
-          // style={{
-          //   height: 1,
-          //   backgroundColor: "rgba(0,0,0,0.06)",
-          //   marginHorizontal: 0,
-          // }}
-          />
-
-          {/* ── Tab Content ── */}
-          <GroupsTab onGroupPress={handleGroupPress} />
-        </SafeAreaView>
-
-        <AddPostModal
-          visible={showAddPost}
-          onClose={() => setShowAddPost(false)}
-        />
-      </AppGradientBackground>
+      {/* <AppGradientBackground> */}
+      <StatusBar style="dark" />
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+        edges={["top"]}
+      >
+        <FeedTab />
+      </SafeAreaView>
+      {/* </AppGradientBackground> */}
     </SwipeTabWrapper>
   );
 }

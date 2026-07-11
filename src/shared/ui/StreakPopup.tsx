@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
+import { IconFlameFilled, IconFlameOff } from "@tabler/icons-react-native";
 import LottieView from "lottie-react-native";
 import React from "react";
-import { Animated, Image, Modal, Pressable, Text, View } from "react-native";
+import { Animated, Modal, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface StreakPopupProps {
@@ -32,7 +32,7 @@ export function StreakPopup({
 
   // Determine current day of week (0 = Sunday)
   const currentDay = new Date().getDay();
-  const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fr", "Sat"];
 
   if (!visible) return null;
 
@@ -45,25 +45,10 @@ export function StreakPopup({
     >
       <View className="flex-1 bg-black/60 justify-center p-4">
         <Animated.View
-          className="bg-white rounded-3xl flex-1 max-h-[600px] overflow-hidden shadow-xl"
+          className="bg-white rounded-[42px] flex-1 max-h-[500px] overflow-hidden shadow-xl"
           style={{ opacity: fadeAnim }}
         >
           <SafeAreaView className="flex-1 px-6 py-4 justify-between">
-            {/* Top Bar */}
-            <View className="flex-row justify-between items-center">
-              <View className="flex-row items-center">
-                <Image
-                  source={require("@/assets/images/getStartedLogo.png")}
-                  className="w-24 h-20"
-                  resizeMode="contain"
-                />
-              </View>
-              <View className="bg-gray-100 flex-row items-center px-3 py-1.5 rounded-full">
-                <Text className="text-base mr-1">🔥</Text>
-                <Text className="font-bold text-black">{streakCount}</Text>
-              </View>
-            </View>
-
             {/* Main Content */}
             <View className="items-center justify-center flex-1">
               {/* Giant Flame Graphic */}
@@ -73,7 +58,7 @@ export function StreakPopup({
                   height: 200,
                   alignItems: "center",
                   justifyContent: "flex-end",
-                  marginBottom: 24,
+                  // marginBottom: 2,
                 }}
               >
                 <LottieView
@@ -116,29 +101,39 @@ export function StreakPopup({
                   {weekDays.map((day, i) => (
                     <Text
                       key={i}
-                      className={`text-center font-semibold text-base w-8 ${i === currentDay ? "text-[#E2833F]" : "text-gray-500"}`}
+                      className={`text-center font-bold text-sm w-8 ${i === currentDay ? "text-[#E2833F]" : "text-gray-500"}`}
                     >
                       {day}
                     </Text>
                   ))}
                 </View>
                 <View className="flex-row justify-between w-full px-2">
-                  {weekDays.map((_, i) => (
-                    <View key={i} className="items-center w-8">
-                      {i === currentDay ? (
-                        <View className="w-8 h-8 rounded-full bg-[#E2833F] items-center justify-center">
-                          <Ionicons name="checkmark" size={18} color="white" />
-                        </View>
-                      ) : (
-                        <View className="w-8 h-8 rounded-full bg-gray-100" />
-                      )}
-                    </View>
-                  ))}
+                  {weekDays.map((_, i) => {
+                    const isFuture = i > currentDay;
+                    const isStreak = !isFuture && currentDay - i < streakCount;
+                    const isToday = i === currentDay;
+
+                    return (
+                      <View key={i} className="items-center w-8">
+                        {isFuture ? (
+                          <View className="w-8 h-8 rounded-full bg-gray-100" />
+                        ) : isStreak ? (
+                          <View className="w-8 h-8 rounded-full bg-[#FFF0E5] items-center justify-center">
+                            <IconFlameFilled size={18} color="#E2833F" />
+                          </View>
+                        ) : (
+                          <View className="w-8 h-8 rounded-full bg-gray-200 items-center justify-center">
+                            <IconFlameOff size={18} color="black" />
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })}
                 </View>
               </View>
 
               {/* Motivational Text */}
-              <Text className="text-center text-gray-500 text-base font-medium px-4 leading-6">
+              <Text className="text-center text-gray-500 text-base font-medium px-3 leading-6">
                 You&apos;re on fire! Every day matters for hitting your goal!
               </Text>
             </View>

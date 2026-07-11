@@ -1,10 +1,13 @@
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
+import {
+  deleteFromCloudinary,
+  extractPublicIdFromUrl,
+} from "@/features/scanning/api/cloudinary-upload";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { useSupabase } from "@/shared/supabase/use-supabase";
-import { deleteFromCloudinary, extractPublicIdFromUrl } from "@/features/scanning/api/cloudinary-upload";
 import {
   IconBell,
   IconChevronRight,
@@ -12,7 +15,6 @@ import {
   IconMail,
   IconNotes,
   IconShield,
-  IconSparklesFilled,
   IconSpeakerphone,
   IconUser,
   IconUserMinus,
@@ -41,8 +43,9 @@ const SectionTitle = ({ title }: { title: string }) => (
       fontSize: 16,
       fontWeight: "500",
       color: "#1D1D1D",
-      marginBottom: 12,
+      marginBottom: 9,
       marginTop: 24,
+      marginLeft: 10,
     }}
   >
     {title}
@@ -68,7 +71,7 @@ const CardContainer = ({
         shadowOpacity: 0.06,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 2 },
-        elevation: 1,
+        // elevation: 2,
       },
       style,
     ]}
@@ -112,7 +115,7 @@ const ListItem = ({
       <View
         style={{
           height: 1,
-          backgroundColor: "#E5E7EB",
+          backgroundColor: "#E5E7EB90",
           marginHorizontal: 16,
         }}
       />
@@ -150,7 +153,7 @@ const CustomSwitch = ({
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.04,
           shadowRadius: 2,
-          elevation: 2,
+          // elevation: 2,
         }}
       />
     </Pressable>
@@ -181,7 +184,7 @@ const ProfileScreenUI = ({
           fontSize: 28,
           fontWeight: "700",
           color: "#1D1A27",
-          marginBottom: 16,
+          marginBottom: 10,
           marginLeft: 9,
         }}
       >
@@ -192,7 +195,7 @@ const ProfileScreenUI = ({
       <CardContainer
         style={{
           padding: 16,
-          marginBottom: 8,
+          marginBottom: 10,
           flexDirection: "row",
           alignItems: "center",
           borderRadius: 24,
@@ -236,29 +239,13 @@ const ProfileScreenUI = ({
       </CardContainer>
 
       {/* Unlock Pro Card */}
-      <CardContainer style={{ padding: 10, borderRadius: 30 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 14,
-            marginLeft: 6,
-            marginTop: 8,
-          }}
-        >
-          <IconSparklesFilled size={24} color="#1D1A27" />
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#1D1A27" }}>
-            Unlock Pro
-          </Text>
-        </View>
-
+      <CardContainer>
         <Pressable
           onPress={() => router.push("/(root)/subscription" as never)}
           style={{
             width: "100%",
             height: 150,
-            borderRadius: 22,
+            borderRadius: 20,
             overflow: "hidden",
             position: "relative",
             // marginBottom: 10,
@@ -329,13 +316,13 @@ const ProfileScreenUI = ({
         <SectionTitle title="Account" />
         <CardContainer>
           <ListItem
-            icon={<IconUser size={18} color="#1D1D1D" />}
+            icon={<IconUser size={18} color="#00000090" />}
             title="Personal details"
             onPress={() => router.push("/(root)/personal-details" as never)}
           />
 
           <ListItem
-            icon={<IconBell size={18} color="#1D1D1D" />}
+            icon={<IconBell size={18} color="#00000090" />}
             title="Notification"
             hasBorder={false}
             rightElement={
@@ -351,12 +338,12 @@ const ProfileScreenUI = ({
         <SectionTitle title="Support & Legal" />
         <CardContainer>
           <ListItem
-            icon={<IconSpeakerphone size={18} color="#1D1D1D" />}
+            icon={<IconSpeakerphone size={18} color="#00000090" />}
             title="Request a feature"
             onPress={() => Linking.openURL("https://tally.so/r/9qx7e1")}
           />
           <ListItem
-            icon={<IconMail size={18} color="#1D1D1D" />}
+            icon={<IconMail size={18} color="#00000090" />}
             title="Support Email"
             onPress={() =>
               Linking.openURL(
@@ -365,12 +352,12 @@ const ProfileScreenUI = ({
             }
           />
           <ListItem
-            icon={<IconNotes size={18} color="#1D1D1D" />}
+            icon={<IconNotes size={18} color="#00000090" />}
             title="Terms and Conditions"
             onPress={() => router.push("/(root)/terms" as never)}
           />
           <ListItem
-            icon={<IconShield size={18} color="#1D1D1D" />}
+            icon={<IconShield size={18} color="#00000090" />}
             title="Privacy policy"
             onPress={() => router.push("/(root)/privacy" as never)}
             hasBorder={false}
@@ -385,7 +372,7 @@ const ProfileScreenUI = ({
               isDeletingAccount ? (
                 <ActivityIndicator size="small" color="#1D1D1D" />
               ) : (
-                <IconUserMinus size={18} color="#1D1D1D" />
+                <IconUserMinus size={18} color="#00000090" />
               )
             }
             title="Delete account"
@@ -396,7 +383,7 @@ const ProfileScreenUI = ({
               isLoggingOut ? (
                 <ActivityIndicator size="small" color="#1D1D1D" />
               ) : (
-                <IconLogout size={18} color="#1D1D1D" />
+                <IconLogout size={18} color="#00000090" />
               )
             }
             title="Logout"
@@ -447,11 +434,23 @@ export default function ProfileScreen() {
 
               // 1. Collect all Cloudinary URLs from database
               const cloudinaryUrls: string[] = [];
-              const { data: outfits } = await supabase.from("outfits").select("image_url").eq("user_id", user.id);
-              const { data: posts } = await supabase.from("community_posts").select("image_url").eq("user_id", user.id);
-              
-              if (outfits) outfits.forEach((o: any) => o.image_url && cloudinaryUrls.push(o.image_url));
-              if (posts) posts.forEach((p: any) => p.image_url && cloudinaryUrls.push(p.image_url));
+              const { data: outfits } = await supabase
+                .from("outfits")
+                .select("image_url")
+                .eq("user_id", user.id);
+              const { data: posts } = await supabase
+                .from("community_posts")
+                .select("image_url")
+                .eq("user_id", user.id);
+
+              if (outfits)
+                outfits.forEach(
+                  (o: any) => o.image_url && cloudinaryUrls.push(o.image_url),
+                );
+              if (posts)
+                posts.forEach(
+                  (p: any) => p.image_url && cloudinaryUrls.push(p.image_url),
+                );
 
               // 2. Delete from Cloudinary
               for (const url of cloudinaryUrls) {
@@ -460,18 +459,27 @@ export default function ProfileScreen() {
               }
 
               // 3. Delete Supabase Storage bucket files (full-length-pics)
-              const { data: files } = await supabase.storage.from("full-length-pics").list(user.id);
+              const { data: files } = await supabase.storage
+                .from("full-length-pics")
+                .list(user.id);
               if (files && files.length > 0) {
-                const filePaths = files.map((file: any) => `${user.id}/${file.name}`);
-                await supabase.storage.from("full-length-pics").remove(filePaths);
+                const filePaths = files.map(
+                  (file: any) => `${user.id}/${file.name}`,
+                );
+                await supabase.storage
+                  .from("full-length-pics")
+                  .remove(filePaths);
               }
 
               // 4. Delete user data from Supabase (user_profiles etc)
-              await supabase.from("user_profiles").delete().eq("user_id", user.id);
-              
+              await supabase
+                .from("user_profiles")
+                .delete()
+                .eq("user_id", user.id);
+
               // 5. Delete user from Clerk
               await user.delete();
-              
+
               // Clerk will automatically handle the session termination and redirect
             } catch (error: any) {
               Alert.alert("Error", error.message || "Failed to delete account");

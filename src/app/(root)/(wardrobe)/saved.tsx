@@ -25,10 +25,9 @@ export default function SavedScreen() {
   const { outfits, removeSavedItem } = useSavedStore();
   const [isManaging, setIsManaging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState("Barcode");
+  const [activeCategory, setActiveCategory] = useState("Fit check");
 
   const filteredOutfits = useMemo(() => {
-    if (activeCategory === "Barcode") return outfits;
 
     return outfits.filter((outfit) => {
       const tags = outfit.tags?.map((tag) => tag.toLowerCase()) ?? [];
@@ -140,7 +139,7 @@ export default function SavedScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 8 }}
           >
-            {["Barcode", "Cloth label", "Post", "AI outfit"].map((cat) => (
+            {["Fit check", "Virtual try on", "Cloth label", "AI outfit"].map((cat) => (
               <Pressable
                 key={cat}
                 onPress={() => setActiveCategory(cat)}
@@ -199,7 +198,7 @@ export default function SavedScreen() {
           >
             <IconX size={32} color="#FFFFFF" />
           </Pressable>
-          {selectedImage && (
+          {!!selectedImage && (
             <ExpoImage
               source={{ uri: selectedImage }}
               style={{ width: "100%", height: "80%" }}

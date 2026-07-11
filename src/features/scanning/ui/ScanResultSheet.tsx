@@ -44,7 +44,7 @@ export function ScanResultSheet({
         marginBottom: 16,
       }}
     >
-      {badge && (
+      {!!badge && (
         <View
           style={{
             alignSelf: "flex-start",
@@ -76,7 +76,7 @@ export function ScanResultSheet({
         {title}
       </Text>
 
-      {subtitle && (
+      {!!subtitle && (
         <Text style={{ color: "#888", fontSize: 13, marginBottom: 14 }}>
           {subtitle}
         </Text>

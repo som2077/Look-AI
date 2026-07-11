@@ -527,7 +527,7 @@ export default function CalendarScreen() {
                             overflow: "hidden",
                           }}
                         >
-                          {hasOutfit && outfitData?.imageUri && (
+                          {hasOutfit && !!outfitData?.imageUri && (
                             <ExpoImage
                               source={{ uri: outfitData.imageUri }}
                               style={{

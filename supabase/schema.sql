@@ -14,6 +14,7 @@ CREATE TABLE user_profiles (
   bio TEXT,
   about TEXT,
   style_preferences TEXT[],
+  avatar_url TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -31,6 +32,27 @@ USING (auth.jwt() ->> 'sub' = user_id);
 -- Sirf apna data update kar sake
 CREATE POLICY "update_own" ON user_profiles FOR UPDATE
 USING (auth.jwt() ->> 'sub' = user_id);
+
+-- =============================================
+-- POST REACTIONS
+-- =============================================
+DROP TABLE IF EXISTS post_reactions;
+
+CREATE TABLE post_reactions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id UUID NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES user_profiles(user_id),
+  reaction_type TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(post_id, user_id)
+);
+
+ALTER TABLE post_reactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "select_all_reactions" ON post_reactions FOR SELECT USING (true);
+CREATE POLICY "insert_own_reaction" ON post_reactions FOR INSERT WITH CHECK (auth.jwt() ->> 'sub' = user_id);
+CREATE POLICY "update_own_reaction" ON post_reactions FOR UPDATE USING (auth.jwt() ->> 'sub' = user_id);
+CREATE POLICY "delete_own_reaction" ON post_reactions FOR DELETE USING (auth.jwt() ->> 'sub' = user_id);
 
 -- =============================================
 -- GOOGLE PLAY BILLING TABLES

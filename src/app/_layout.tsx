@@ -10,7 +10,7 @@ import {
   ErrorStateView,
   useErrorStore,
 } from "@/shared/ui/ErrorStateView";
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useFonts } from "expo-font";
@@ -33,6 +33,7 @@ if (!publishableKey) {
 
 const RootNavigator = memo(function RootNavigator() {
   const { isSignedIn, isLoaded, userId } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
   const segments = useSegments();
   const segmentKey = segments.join("/");
@@ -133,6 +134,16 @@ const RootNavigator = memo(function RootNavigator() {
   ]);
 
   useEffect(() => {
+    if (user?.imageUrl && supabase && userId) {
+      supabase.from("user_profiles")
+        .update({ avatar_url: user.imageUrl })
+        .eq("user_id", userId)
+        .is("avatar_url", null)
+        .then(() => {}); // Silent sync
+    }
+  }, [user?.imageUrl, supabase, userId]);
+
+  useEffect(() => {
     if (!isLoaded) return;
 
     const inAuth = segments[0] === "(auth)";
@@ -198,7 +209,7 @@ export default function RootLayout() {
   const checkConnectivity = useCallback(async () => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const targetUrl =
         process.env.EXPO_PUBLIC_SUPABASE_URL || "https://google.com";
@@ -216,8 +227,12 @@ export default function RootLayout() {
         setOffline(false);
         setServerError(false);
       }
-    } catch (err) {
-      console.warn("Connectivity check failed:", err);
+    } catch (err: any) {
+      if (err.name === "AbortError") {
+        console.warn("Connectivity check: timeout reached");
+      } else {
+        console.warn("Connectivity check failed:", err);
+      }
       setOffline(true);
     }
   }, [setOffline, setServerError]);

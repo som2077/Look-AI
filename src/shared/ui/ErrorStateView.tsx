@@ -2,8 +2,8 @@ import {
   IconAlertTriangle,
   IconRefresh,
   IconServer,
-  IconWifiOff,
 } from "@tabler/icons-react-native";
+import { ResizeMode, Video } from "expo-av";
 import { StatusBar } from "expo-status-bar";
 import React, { Component, ReactNode, useCallback, useState } from "react";
 import {
@@ -77,7 +77,7 @@ export function ErrorStateView({ onRetry }: { onRetry: () => Promise<void> }) {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "#F8F7FC",
+        backgroundColor: "#FFFFFF",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 99999,
@@ -89,37 +89,44 @@ export function ErrorStateView({ onRetry }: { onRetry: () => Promise<void> }) {
       <View
         style={{
           width: "100%",
-          backgroundColor: "#FFFFFF",
-          borderRadius: 28,
-          borderWidth: 1,
-          borderColor: "#E2E2EA",
+          // backgroundColor: "#FFFFFF",
+          // borderRadius: 28,
+          // borderWidth: 1,
+          // borderColor: "#E2E2EA",
           padding: 24,
           alignItems: "center",
-          shadowColor: "#000",
-          shadowOpacity: 0.03,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 3,
+          // shadowColor: "#000",
+          // shadowOpacity: 0.03,
+          // shadowRadius: 10,
+          // shadowOffset: { width: 0, height: 4 },
+          // elevation: 3,
         }}
       >
         {/* Rounded Icon Box */}
-        <View
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 32,
-            backgroundColor: isOffline ? "#EAE8FF" : "#FFF0F0",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 20,
-          }}
-        >
-          {isOffline ? (
-            <IconWifiOff size={28} color="#4C36F5" />
-          ) : (
+        {isOffline ? (
+          <Video
+            source={require("../../../assets/network.webm")}
+            style={{ width: 140, height: 140, marginBottom: 20 }}
+            resizeMode={ResizeMode.CONTAIN}
+            shouldPlay
+            isLooping
+            isMuted
+          />
+        ) : (
+          <View
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+              backgroundColor: "#FFF0F0",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 20,
+            }}
+          >
             <IconServer size={28} color="#EF4444" />
-          )}
-        </View>
+          </View>
+        )}
 
         {/* Text descriptions */}
         <Text

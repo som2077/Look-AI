@@ -30,7 +30,7 @@ export default function SetupAccountScreen() {
     if (isInitializing || !user?.id) return;
     setHasAttempted(true);
     
-    const success = await completeOnboarding(user.id, supabase);
+    const success = await completeOnboarding(user.id, supabase, user.imageUrl);
     if (success) {
       router.replace("/(root)/(tabs)" as never);
     }
