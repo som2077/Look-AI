@@ -21,20 +21,16 @@ export interface CommunityPost {
 
 interface CommunityPostsStore {
   posts: CommunityPost[];
-  hasFetched: boolean;
   setPosts: (posts: CommunityPost[]) => void;
   addPost: (post: CommunityPost) => void;
-  setHasFetched: (val: boolean) => void;
 }
 
 const DUMMY_POSTS: CommunityPost[] = [];
 
 const usePostsStore = create<CommunityPostsStore>((set) => ({
   posts: DUMMY_POSTS,
-  hasFetched: false,
   setPosts: (posts) => set({ posts }),
-  addPost: (post) => set((state) => ({ posts: [post, ...state.posts] })),
-  setHasFetched: (val) => set({ hasFetched: val }),
+  addPost: (post) => set((state) => ({ posts: [...state.posts, post] })),
 }));
 
 const removeOptimisticPosts = () => {
@@ -44,8 +40,7 @@ const removeOptimisticPosts = () => {
 };
 
 export function useCommunityPosts() {
-  const { posts, setPosts, addPost, hasFetched, setHasFetched } =
-    usePostsStore();
+  const { posts, setPosts, addPost } = usePostsStore();
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -67,14 +62,14 @@ export function useCommunityPosts() {
             avatar_url
           ),
           post_reactions(user_id, reaction_type)
-        `,
+        `
         )
         .order("created_at", { ascending: false })
         .limit(50);
 
       if (error) throw error;
 
-      const backendPosts = (data ?? []) as any[];
+      const backendPosts = (data ?? []).reverse() as any[];
       const localMockPosts = usePostsStore
         .getState()
         .posts.filter((p) => p.id.includes("0."));
@@ -113,10 +108,7 @@ export function useCommunityPosts() {
   useEffect(() => {
     if (isInitializing || !supabase) return;
 
-    if (!hasFetched) {
-      fetchPosts();
-      setHasFetched(true);
-    }
+    fetchPosts();
 
     let timeoutId: any;
 
@@ -138,7 +130,7 @@ export function useCommunityPosts() {
       if (timeoutId) clearTimeout(timeoutId);
       supabase.removeChannel(subscription);
     };
-  }, [supabase, isInitializing, userId, hasFetched]);
+  }, [supabase, isInitializing, userId]);
 
   const toggleLike = async (postId: string) => {
     if (!userId) throw new Error("You must be logged in to like.");

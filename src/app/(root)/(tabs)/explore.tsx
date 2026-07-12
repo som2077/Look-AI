@@ -1,6 +1,7 @@
 import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
+
 import {
   IconBell,
   IconMoodPlus,
@@ -101,7 +102,7 @@ function PostCard({
   return (
     <View
       style={{
-        paddingVertical: 5,
+        paddingVertical: 3,
       }}
     >
       {/* Header: Avatar + Info */}
@@ -111,17 +112,18 @@ function PostCard({
         <Image
           source={{ uri: avatarUrl }}
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
+            width: 35,
+            height: 35,
+            borderRadius: 44,
             marginRight: 8,
+            marginLeft: 8,
           }}
         />
         <View style={{ flex: 1 }}>
           <Text
             numberOfLines={1}
             style={{
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: "700",
               color: getUserColor(post.user_id || "User"),
             }}
@@ -178,7 +180,7 @@ function PostCard({
         }}
         style={{ marginTop: -5, marginBottom: 7 }}
       >
-        {uniqueReactions.slice(0, 5).map((emoji) => (
+        {uniqueReactions.slice(0, 3).map((emoji) => (
           <TouchableOpacity
             key={emoji}
             onPress={() => {
@@ -265,6 +267,9 @@ function PostCard({
           ))}
         </View>
       )}
+
+      {/* Divider Line */}
+      <View style={{ height: 1, backgroundColor: "#E5E7EB50", marginTop: 8 }} />
     </View>
   );
 }
@@ -278,6 +283,7 @@ function FeedTab() {
   const [inputText, setInputText] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const [isComposing, setIsComposing] = useState(false);
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -332,13 +338,26 @@ function FeedTab() {
     }
   };
 
+  // ✂️ PONYTAIL: Pure JS Masonry. No native dependencies (@shopify/flash-list).
+  // Approximates heights: images are tall (~250), text only is short (~100 + text length).
+  // Perfectly balances columns with zero native crashing.
   const leftColumn: any[] = [];
   const rightColumn: any[] = [];
+  let leftHeight = 0;
+  let rightHeight = 0;
 
-  posts.forEach((post, index) => {
-    if (index % 2 === 0) leftColumn.push(post);
-    else rightColumn.push(post);
+  posts.forEach((post) => {
+    const estHeight = post.image_url ? 250 : 100 + (post.caption?.length || 0);
+    if (leftHeight <= rightHeight) {
+      leftColumn.push(post);
+      leftHeight += estHeight;
+    } else {
+      rightColumn.push(post);
+      rightHeight += estHeight;
+    }
   });
+
+  const previousPostsLength = useRef(posts.length);
 
   return (
     <View
@@ -399,6 +418,13 @@ function FeedTab() {
       </View>
 
       <ScrollView
+        ref={scrollRef as any}
+        onContentSizeChange={() => {
+          if (posts.length !== previousPostsLength.current) {
+            scrollRef.current?.scrollToEnd({ animated: true });
+            previousPostsLength.current = posts.length;
+          }
+        }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: 16,
@@ -421,6 +447,16 @@ function FeedTab() {
               isMuted
               resizeMode={ResizeMode.CONTAIN}
             />
+            <Text
+              style={{
+                marginTop: -30,
+                fontSize: 16,
+                fontWeight: "600",
+                color: "#1D1A27",
+              }}
+            >
+              Processing...
+            </Text>
           </View>
         ) : posts.length === 0 ? (
           <Text

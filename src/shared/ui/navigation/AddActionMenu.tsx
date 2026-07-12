@@ -29,8 +29,8 @@ interface ActionCard {
 const ACTION_CARDS: ActionCard[] = [
   {
     id: "log-outfit",
-    title: "Camera / Scan",
-    subtitle: "Log outfit, Add cloths",
+    title: "Scan & Add",
+    subtitle: "Point, snap, and it's in your wardrobe",
     icon: IconCamera,
     route: "/(root)/log-outfit/camera",
     color: "#5ECFC2",
@@ -38,8 +38,8 @@ const ACTION_CARDS: ActionCard[] = [
   },
   {
     id: "ai-outfit",
-    title: "AI Outfit",
-    subtitle: "Generate my mood",
+    title: "Virtual Try-On",
+    subtitle: "See it on you, before you wear it",
     icon: IconSparkles,
     route: "/(root)/outfit",
     color: "#A78BFA",
@@ -134,30 +134,30 @@ export function AddActionMenu({
                         </Text>
                       </View>
                     )}
-                    <View className="flex-1 w-full rounded-full items-center justify-center overflow-hidden">
+                    <View className="flex-1 w-full items-center justify-center">
                       {card.id === "log-outfit" ? (
                         <Image
                           source={require("@/assets/action-menu/one.png")}
-                          className="w-[120%] h-[120%]"
+                          className="w-full h-full"
                           resizeMode="contain"
                         />
                       ) : card.id === "add-cloths" ? (
                         <Image
                           source={require("@/assets/action-menu/two.png")}
-                          className="w-[120%] h-[120%]"
+                          className="w-full h-full"
                           resizeMode="contain"
                         />
                       ) : card.id === "ai-outfit" ? (
                         <Image
                           source={require("@/assets/action-menu/three.png")}
-                          className="w-[120%] h-[120%]"
-                          resizeMode="cover"
+                          className="w-full h-full"
+                          resizeMode="contain"
                         />
                       ) : card.id === "style-score" ? (
                         <Image
                           source={require("@/assets/action-menu/four.png")}
-                          className="w-[120%] h-[120%]"
-                          resizeMode="center"
+                          className="w-full h-full"
+                          resizeMode="contain"
                         />
                       ) : (
                         <IconComponent

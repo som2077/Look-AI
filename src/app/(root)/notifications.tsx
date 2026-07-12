@@ -1,4 +1,5 @@
-import { IconArrowLeft, IconBell } from "@tabler/icons-react-native";
+import { IconArrowLeft } from "@tabler/icons-react-native";
+import { ResizeMode, Video } from "expo-av";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -9,7 +10,7 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#FAFAFA" }}
+      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
       edges={["top", "bottom"]}
     >
       {/* Header */}
@@ -17,13 +18,13 @@ export default function NotificationsScreen() {
         style={{
           flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: 20,
-          paddingVertical: 16,
+          justifyContent: "center",
+          // paddingVertical: 1,
         }}
       >
         <TouchableOpacity
           onPress={() => router.back()}
-          style={{ marginRight: 16 }}
+          style={{ position: "absolute", left: 20, zIndex: 10 }}
         >
           <IconArrowLeft size={24} color="#000000" />
         </TouchableOpacity>
@@ -38,25 +39,19 @@ export default function NotificationsScreen() {
           flex: 1,
           alignItems: "center",
           justifyContent: "center",
-          paddingHorizontal: 40,
+          paddingHorizontal: 50,
+          marginTop: -200,
         }}
       >
-        {/* Bell Icon Circle */}
-        <View
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: "#F8F7FC",
-            borderWidth: 0.3,
-            borderColor: "#E2E2EA",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 7,
-          }}
-        >
-          <IconBell size={32} color="#000000" />
-        </View>
+        {/* Video Animation */}
+        <Video
+          source={require("../../../assets/notification.webm")}
+          style={{ width: 250, height: 250 }}
+          shouldPlay
+          isLooping
+          isMuted
+          resizeMode={ResizeMode.CONTAIN}
+        />
 
         {/* Title */}
         <Text
@@ -66,6 +61,7 @@ export default function NotificationsScreen() {
             color: "#000000",
             marginBottom: 7,
             textAlign: "center",
+            marginTop: -30,
           }}
         >
           No notifications yet!

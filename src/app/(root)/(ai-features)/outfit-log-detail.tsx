@@ -158,7 +158,8 @@ export default function OutfitLogDetailScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ index: string }>();
   const outfitIndex = parseInt(params.index ?? "0", 10);
-  const { lastOutfits, removeOutfit, toggleSaved, updateOutfit } = useOutfitAnalysisStore();
+  const { lastOutfits, removeOutfit, toggleSaved, updateOutfit } =
+    useOutfitAnalysisStore();
   const { addSavedItem, removeSavedItem } = useSavedStore();
   const outfit = lastOutfits[outfitIndex];
 
@@ -345,14 +346,29 @@ export default function OutfitLogDetailScreen() {
             {isEditing ? (
               <>
                 <TextInput
-                  style={[styles.heroTitle, { borderBottomWidth: 1, borderColor: "#E2E2EA", paddingBottom: 4, marginBottom: 8 }]}
+                  style={[
+                    styles.heroTitle,
+                    {
+                      borderBottomWidth: 1,
+                      borderColor: "#E2E2EA",
+                      paddingBottom: 4,
+                      marginBottom: 8,
+                    },
+                  ]}
                   value={editName}
                   onChangeText={setEditName}
                   placeholder="Outfit Name"
                   placeholderTextColor="#9B9BAF"
                 />
                 <TextInput
-                  style={[styles.heroSubtitle, { borderBottomWidth: 1, borderColor: "#E2E2EA", paddingBottom: 4 }]}
+                  style={[
+                    styles.heroSubtitle,
+                    {
+                      borderBottomWidth: 1,
+                      borderColor: "#E2E2EA",
+                      paddingBottom: 4,
+                    },
+                  ]}
                   value={editSubtitle}
                   onChangeText={setEditSubtitle}
                   placeholder="Subtitle (e.g. Jacket · Jeans)"

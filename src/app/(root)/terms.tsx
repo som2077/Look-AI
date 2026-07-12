@@ -42,7 +42,7 @@ export default function TermsScreen() {
                 fontSize: 22,
                 fontWeight: "bold",
                 color: "#1D1D1D",
-                marginTop: 16,
+                // marginTop: 16,
                 marginBottom: 8,
               },
               heading2: {
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
     backgroundColor: "#FFFFFF",

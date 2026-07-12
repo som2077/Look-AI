@@ -1,4 +1,5 @@
-import { BillingService } from "@/features/billing/api/billing-service";
+
+import { useRevenueCat } from "@/features/payments/useRevenueCat";
 import {
   OnboardingProvider,
   useOnboardingState,
@@ -46,6 +47,9 @@ const RootNavigator = memo(function RootNavigator() {
   );
   const resetOnboardingState = useOnboardingState((s) => s.resetState);
   const { supabase, isInitializing: isSupabaseInitializing } = useSupabase();
+
+  // Initialize RevenueCat
+  useRevenueCat();
 
   const loadOnboardingStatus = useCallback(
     async (uid: string, client: SupabaseClient) => {
@@ -246,7 +250,6 @@ export default function RootLayout() {
 
     return () => {
       clearInterval(interval);
-      void BillingService.disconnect();
     };
   }, [checkConnectivity]);
 

@@ -6,7 +6,7 @@
     "owner": "your-eas-account-username",
     "description": "AI-powered outfit recommendations based on your wardrobe, body type, weather, and occasion.",
     "orientation": "portrait",
-    "icon": "./assets/android/icon-1024.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "look-ai",
     "userInterfaceStyle": "automatic",
     "primaryColor": "#6366f1",
@@ -73,12 +73,6 @@
       "expo-web-browser",
       "expo-font",
       "expo-secure-store",
-      [
-        "react-native-iap",
-        {
-          "paymentProvider": "Play Store"
-        }
-      ],
       "expo-audio",
       "@react-native-community/datetimepicker",
       "expo-localization",

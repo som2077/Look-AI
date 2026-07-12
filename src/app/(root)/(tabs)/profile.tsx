@@ -181,8 +181,8 @@ const ProfileScreenUI = ({
     <View style={{ paddingHorizontal: 20, paddingBottom: 116 }}>
       <Text
         style={{
-          fontSize: 28,
-          fontWeight: "700",
+          fontSize: 24,
+          fontWeight: "800",
           color: "#1D1A27",
           marginBottom: 10,
           marginLeft: 9,
