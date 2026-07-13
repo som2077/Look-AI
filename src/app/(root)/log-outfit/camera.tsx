@@ -1,13 +1,12 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import {
   IconBolt,
+  IconCameraSpark,
   IconPhoto,
   IconScan,
   IconShirt,
   IconTag,
-  IconUser,
   IconX,
-  IconCameraSpark,
 } from "@tabler/icons-react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
@@ -84,6 +83,7 @@ export default function CameraScreen() {
     { id: "scan-cloth", label: "Scan Cloth", icon: IconScan },
     { id: "label", label: "Cloth Label", icon: IconTag },
     { id: "fit-check", label: "Fit Check", icon: IconShirt },
+    { id: "gallery", label: "Library", icon: IconPhoto },
   ];
 
   // ✅ Camera screen pe navigation bar black, wapas jaane pe restore
@@ -236,7 +236,7 @@ export default function CameraScreen() {
         {/* Bottom Area (Modes + Controls) */}
         <View style={{ paddingBottom: insets.bottom + 20 }}>
           {/* Scan Modes Row */}
-          <View className="flex-row items-center justify-center px-12 mb-6 ml-10">
+          <View className="flex-row items-center justify-center px-10 mb-6">
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -248,7 +248,13 @@ export default function CameraScreen() {
                 return (
                   <Pressable
                     key={mode.id}
-                    onPress={() => setActiveMode(mode.id)}
+                    onPress={() => {
+                      if (mode.id === "gallery") {
+                        handlePickGallery();
+                      } else {
+                        setActiveMode(mode.id);
+                      }
+                    }}
                     style={{
                       backgroundColor: isActive ? "#FFFFFF" : "rgba(0,0,0,0.5)",
                       borderRadius: 16,
@@ -284,40 +290,28 @@ export default function CameraScreen() {
           </View>
 
           {/* Bottom Controls Row */}
-          <View className="flex-row items-center justify-between px-8">
+          <View className="flex-row items-center justify-center px-8 relative h-[76px]">
             <Pressable
-              onPress={handlePickGallery}
-              className="items-center justify-center"
+              onPress={() => setFlashOn((f) => !f)}
+              className="absolute left-10 h-12 w-12 items-center justify-center bg-[#1D1A27] rounded-full"
             >
-              <View className="h-12 w-12 items-center justify-center rounded-xl bg-black/40 mb-1 border border-white/20">
-                <IconPhoto size={22} color="#FFFFFF" strokeWidth={1.5} />
-              </View>
-              <Text className="text-white/80 text-[10px] font-medium">
-                From Gallery
-              </Text>
+              <IconBolt
+                size={22}
+                color={flashOn ? "#c9a84c" : "#ffffff"}
+                strokeWidth={1.5}
+              />
             </Pressable>
 
             <Pressable
               onPress={handleShutter}
               disabled={capturing}
-              className="h-[76px] w-[76px] rounded-full border-[3px] mr-7 border-white items-center justify-center"
+              className="h-[76px] w-[76px] rounded-full border-[4px] border-[#313131] items-center justify-center"
             >
               {capturing ? (
                 <ActivityIndicator color="#111" />
               ) : (
                 <View className="h-[62px] w-[62px] rounded-full bg-white" />
               )}
-            </Pressable>
-
-            <Pressable
-              onPress={() => setFlashOn((f) => !f)}
-              className="h-10 w-10 items-center justify-center bg-black/40 rounded-full border border-white/20"
-            >
-              <IconBolt
-                size={20}
-                color={flashOn ? "#c9a84c" : "#ffffff"}
-                strokeWidth={1.5}
-              />
             </Pressable>
           </View>
         </View>

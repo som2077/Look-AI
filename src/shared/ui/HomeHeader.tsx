@@ -10,7 +10,13 @@ export const HomeHeader = React.memo(function HomeHeader() {
   const { currentStreak } = useStreakStore();
 
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
       <ExpoImage
         source={require("@/assets/images/getStartedLogo.png")}
         style={{ height: 56, width: 180, marginLeft: -32 }}

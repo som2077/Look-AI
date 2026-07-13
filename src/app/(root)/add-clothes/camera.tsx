@@ -61,7 +61,7 @@ const MODES: ModeConfig[] = [
   },
   {
     id: "gallery",
-    label: "Gallery",
+    label: "Library",
     Icon: IconPhoto,
     hint: "Pick from your gallery",
     frameStyle: "square",
@@ -504,37 +504,29 @@ export default function AddClothesCameraScreen() {
           style={{
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: "center",
             paddingHorizontal: 40,
             paddingBottom: 48,
             paddingTop: 8,
+            position: "relative",
+            height: 76,
           }}
         >
-          {/* Gallery shortcut */}
-          <Pressable onPress={handleGallery} style={{ alignItems: "center" }}>
-            <View
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.3)",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 4,
-              }}
-            >
-              <IconPhoto size={22} color="#FFFFFF" />
-            </View>
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.7)",
-                fontSize: 10,
-                fontWeight: "500",
-              }}
-            >
-              Gallery
-            </Text>
+          {/* Flash / Toggle */}
+          <Pressable
+            onPress={toggleFacing}
+            style={{
+              position: "absolute",
+              left: 40,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: "#1D1A27",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <IconBolt size={22} color="#FFFFFF" />
           </Pressable>
 
           {/* Shutter */}
@@ -546,7 +538,7 @@ export default function AddClothesCameraScreen() {
               height: 76,
               borderRadius: 38,
               borderWidth: 4,
-              borderColor: "#FFFFFF",
+              borderColor: "#313131",
               alignItems: "center",
               justifyContent: "center",
               opacity: capturing ? 0.6 : 1,
@@ -564,21 +556,6 @@ export default function AddClothesCameraScreen() {
                 }}
               />
             )}
-          </Pressable>
-
-          {/* Flip */}
-          <Pressable
-            onPress={toggleFacing}
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <IconBolt size={20} color="#FFFFFF" />
           </Pressable>
         </View>
       </SafeAreaView>

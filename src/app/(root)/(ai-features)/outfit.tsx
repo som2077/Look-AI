@@ -203,7 +203,7 @@ export default function OutfitScreen() {
                     onPress={() => pickImage(setPersonImage)}
                     style={{
                       width: "100%",
-                      aspectRatio: 1,
+                      aspectRatio: 3 / 4,
                       backgroundColor: "#FFFFFF",
                       borderRadius: 24,
                       borderWidth: 1,
@@ -239,7 +239,7 @@ export default function OutfitScreen() {
                     ) : (
                       <Video
                         source={require("../../../../assets/yourImage.webm")}
-                        style={{ width: "100%", height: "100%" }}
+                        style={{ width: "100%", height: "80%" }}
                         resizeMode={ResizeMode.COVER}
                         shouldPlay
                         isMuted
@@ -264,7 +264,7 @@ export default function OutfitScreen() {
                     onPress={() => pickImage(setOutfitImage)}
                     style={{
                       width: "100%",
-                      aspectRatio: 1,
+                      aspectRatio: 3 / 4,
                       backgroundColor: "#FFFFFF",
                       borderRadius: 24,
                       borderWidth: 1,
@@ -300,7 +300,7 @@ export default function OutfitScreen() {
                     ) : (
                       <Video
                         source={require("../../../../assets/outfitImage.webm")}
-                        style={{ width: "100%", height: "100%" }}
+                        style={{ width: "100%", height: "80%" }}
                         resizeMode={ResizeMode.COVER}
                         shouldPlay
                         isMuted
@@ -354,31 +354,29 @@ export default function OutfitScreen() {
                 </View>
               </Pressable>
 
-              {/* Final Result Placeholder */}
+              {/* Final Result Placeholder */} 
               <View
                 style={{
                   marginTop: 10,
                   width: "100%",
-                  height: 460,
+                  aspectRatio: 3 / 4,
                   backgroundColor: "#FFFFFF",
                   borderRadius: 24,
                   borderWidth: 1,
                   borderColor: "#E2E2EA",
-                  // borderStyle: "dashed",
                   alignItems: "center",
                   justifyContent: "center",
+                  overflow: "hidden",
                 }}
               >
                 <Video
                   source={require("../../../../assets/final.webm")}
                   style={{
-                    width: "70%",
-                    height: "70%",
-                    position: "absolute",
-                    borderRadius: 22,
-                    marginTop: -40,
+                    width: 350,
+                    height: 350,
+                    marginBottom: 16,
                   }}
-                  resizeMode={ResizeMode.COVER}
+                  resizeMode={ResizeMode.CONTAIN}
                   shouldPlay
                   isMuted
                   isLooping
@@ -386,11 +384,11 @@ export default function OutfitScreen() {
 
                 <Text
                   style={{
-                    marginTop: 280,
-                    fontSize: 13,
-                    color: "#00000090",
+                    fontSize: 14,
+                    color: "#9B9BAF",
                     textAlign: "center",
                     paddingHorizontal: 32,
+                    lineHeight: 22,
                   }}
                 >
                   Your merged try-on image will appear here after generation.
