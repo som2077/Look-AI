@@ -15,13 +15,13 @@ export const LookAIBanner = React.memo(function LookAIBanner({
   return (
     <View
       style={{
-        marginTop: 7,
+        marginTop: 5,
         backgroundColor: "#FFFFFF",
         borderColor: "#EDEDF2",
-        borderWidth: 1,
-        borderRadius: 14,
-        paddingHorizontal: 18,
-        paddingVertical: 14,
+        borderWidth: 0.7,
+        borderRadius: 24,
+        paddingHorizontal: 24,
+        paddingVertical: 25,
       }}
     >
       {/* Row 1: Outfit Score */}

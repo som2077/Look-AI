@@ -41,15 +41,21 @@ export function WardrobeFilterTabs({ onChange }: WardrobeFilterTabsProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#F8F7FC",
-    padding: 3,
-    marginTop: 8,
-    borderRadius: 14,
+    backgroundColor: "#F8F7FC70",
+    padding: 2,
+    borderRadius: 18,
+    shadowColor: "#FFFFFF10",
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
+    borderColor: "#E9EBF8",
+    borderWidth: 0.5,
   },
   tab: {
     flex: 1,
     paddingVertical: 9.5,
-    borderRadius: 11,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -71,3 +77,9 @@ const styles = StyleSheet.create({
     color: "#1C1C1E",
   },
 });
+
+// shadowColor: "#FFFFFF10",
+//         shadowOpacity: 0.02,
+//         shadowRadius: 10,
+//         shadowOffset: { width: 0, height: 4 },
+//         elevation: 10,

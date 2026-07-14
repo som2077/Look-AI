@@ -1,9 +1,8 @@
-
-import { useRevenueCat } from "@/features/payments/useRevenueCat";
 import {
   OnboardingProvider,
   useOnboardingState,
 } from "@/features/onboarding/model/onboarding-store";
+import { useRevenueCat } from "@/features/payments/useRevenueCat";
 import { FONT_ASSETS } from "@/shared/config/constants/fonts";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
@@ -16,10 +15,10 @@ import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useFonts } from "expo-font";
 import * as NavigationBar from "expo-navigation-bar";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments, usePathname } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { PostHogProvider } from "posthog-react-native";
+import { PostHogProvider, usePostHog } from "posthog-react-native";
 import { memo, useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LogLevel, OneSignal } from "react-native-onesignal";
@@ -37,6 +36,8 @@ const RootNavigator = memo(function RootNavigator() {
   const { user } = useUser();
   const router = useRouter();
   const segments = useSegments();
+  const pathname = usePathname();
+  const posthog = usePostHog();
   const segmentKey = segments.join("/");
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(
     null,
@@ -50,6 +51,13 @@ const RootNavigator = memo(function RootNavigator() {
 
   // Initialize RevenueCat
   useRevenueCat();
+
+  // PostHog screen tracking
+  useEffect(() => {
+    if (pathname) {
+      posthog?.screen(pathname);
+    }
+  }, [pathname, posthog]);
 
   const loadOnboardingStatus = useCallback(
     async (uid: string, client: SupabaseClient) => {
@@ -89,6 +97,15 @@ const RootNavigator = memo(function RootNavigator() {
     },
     [],
   );
+
+  // PostHog User Identification
+  useEffect(() => {
+    if (userId) {
+      posthog?.identify(userId);
+    } else {
+      posthog?.reset();
+    }
+  }, [userId, posthog]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -139,7 +156,8 @@ const RootNavigator = memo(function RootNavigator() {
 
   useEffect(() => {
     if (user?.imageUrl && supabase && userId) {
-      supabase.from("user_profiles")
+      supabase
+        .from("user_profiles")
         .update({ avatar_url: user.imageUrl })
         .eq("user_id", userId)
         .is("avatar_url", null)
@@ -262,6 +280,7 @@ export default function RootLayout() {
     <GestureHandlerRootView className="flex-1">
       <PostHogProvider
         apiKey="phc_o2qT8hofFXzTgfyCLkDXw7CLoCeiq2g3zprd5jF3MWok"
+        //      phc_o2qT8hofFXzTgfyCLkDXw7CLoCeiq2g3zprd5jF3MWok
         options={{ host: "https://us.i.posthog.com" }}
       >
         <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>

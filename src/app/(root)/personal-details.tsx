@@ -45,7 +45,7 @@ const FieldRow = ({
       alignItems: "center",
       paddingVertical: 16,
       paddingHorizontal: 20,
-      borderBottomWidth: 1,
+      borderBottomWidth: 0.5,
       borderBottomColor: "#F3F4F6",
     }}
   >
@@ -248,7 +248,7 @@ export default function PersonalDetailsScreen() {
             <Text
               style={{
                 fontSize: 12,
-                color: "#9CA3AF",
+                color: "#000000",
                 textAlign: "center",
                 marginTop: 20,
                 paddingHorizontal: 32,

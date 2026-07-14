@@ -7,6 +7,7 @@ import {
   IconCircleCheck,
   IconCircleX,
   IconAlertCircle,
+  IconDotsVertical,
 } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -18,12 +19,15 @@ import {
   Text,
   View,
   StyleSheet,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, G } from "react-native-svg";
+import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 
 type FitCheckParams = {
   scanId?: string;
+  outfitIndex?: string;
 };
 
 const DEFAULT_RESULT: FitCheckAnalysis = {
@@ -81,8 +85,11 @@ const GlassCard = ({ children, className = "" }: { children: React.ReactNode; cl
 
 export default function FitCheckResultScreen() {
   const router = useRouter();
+  const [showMenu, setShowMenu] = useState(false);
   const params = useLocalSearchParams() as FitCheckParams;
   const scans = useScanHistoryStore((s) => s.scans);
+  const removeScan = useScanHistoryStore((s) => s.removeScan);
+  const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
   
   const scan = scans.find((s) => s.id === params.scanId);
   const result = (scan?.result as unknown as FitCheckAnalysis) || DEFAULT_RESULT;
@@ -113,8 +120,60 @@ export default function FitCheckResultScreen() {
           <Text className="text-[#111827] font-bold tracking-widest text-[13px]">
             FIT CHECK RESULT
           </Text>
-          <View className="w-10 h-10" />
+          <Pressable
+            onPress={() => setShowMenu(true)}
+            className="w-10 h-10 rounded-full bg-white/70 items-center justify-center border border-white/50"
+            style={{ shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 10 }}
+          >
+            <IconDotsVertical size={22} color="#111827" />
+          </Pressable>
         </View>
+
+        {/* Dropdown Menu Modal */}
+        {showMenu && (
+          <Modal transparent visible animationType="fade" onRequestClose={() => setShowMenu(false)}>
+            <Pressable style={{ flex: 1 }} onPress={() => setShowMenu(false)}>
+              <View style={{
+                position: "absolute",
+                top: 60,
+                right: 20,
+                backgroundColor: "#fff",
+                borderRadius: 12,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+                minWidth: 140,
+                paddingVertical: 4,
+                borderWidth: 1,
+                borderColor: "#F3F4F6",
+              }}>
+                <Pressable
+                  style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.replace("/(root)/(tabs)" as never);
+                  }}
+                >
+                  <Text style={{ fontSize: 15, color: "#1D1A27", fontWeight: "500" }}>Save</Text>
+                </Pressable>
+                <View style={{ height: 1, backgroundColor: "#F3F4F6" }} />
+                <Pressable
+                  style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+                  onPress={() => {
+                    setShowMenu(false);
+                    if (params.scanId) removeScan(params.scanId);
+                    if (params.outfitIndex) removeOutfit(parseInt(params.outfitIndex));
+                    router.replace("/(root)/(tabs)" as never);
+                  }}
+                >
+                  <Text style={{ fontSize: 15, color: "#EF4444", fontWeight: "500" }}>Delete</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Modal>
+        )}
 
         <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
           {/* Main Photo Card */}

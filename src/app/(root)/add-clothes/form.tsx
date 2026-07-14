@@ -9,6 +9,7 @@ import {
   IconStarFilled,
   IconTrash,
   IconX,
+  IconDotsVertical,
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -27,6 +28,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -133,6 +135,7 @@ type FormParams = {
   season?: string;
   matchingColors?: string;
   isScanning?: string;
+  outfitIndex?: string;
 };
 
 // ─── Small helper: Section label ─────────────────────────────────────────────
@@ -194,7 +197,9 @@ function ChipSelector<T extends string>({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function AddClothesFormScreen() {
   const router = useRouter();
+  const [showMenu, setShowMenu] = useState(false);
   const params = useLocalSearchParams() as FormParams;
+  const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
 
   const isScanned = params.mode === "scanned";
   const isManual = params.mode === "manual";
@@ -324,8 +329,51 @@ export default function AddClothesFormScreen() {
           <Text style={{ fontSize: 17, fontWeight: "600", color: "#1D1A27" }}>
             Item Details
           </Text>
-          <View style={{ width: 24 }} /> {/* Empty view for balance */}
+          {params.outfitIndex ? (
+            <Pressable
+              onPress={() => setShowMenu(true)}
+            >
+              <IconDotsVertical size={24} color="#1D1A27" />
+            </Pressable>
+          ) : (
+            <View style={{ width: 24 }} />
+          )}
         </View>
+
+        {/* Dropdown Menu Modal */}
+        {showMenu && (
+          <Modal transparent visible animationType="fade" onRequestClose={() => setShowMenu(false)}>
+            <Pressable style={{ flex: 1 }} onPress={() => setShowMenu(false)}>
+              <View style={{
+                position: "absolute",
+                top: 60,
+                right: 20,
+                backgroundColor: "#fff",
+                borderRadius: 12,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+                minWidth: 140,
+                paddingVertical: 4,
+                borderWidth: 1,
+                borderColor: "#F3F4F6",
+              }}>
+                <Pressable
+                  style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+                  onPress={() => {
+                    setShowMenu(false);
+                    removeOutfit(parseInt(params.outfitIndex as string));
+                    router.replace("/(root)/(tabs)" as never);
+                  }}
+                >
+                  <Text style={{ fontSize: 15, color: "#EF4444", fontWeight: "500" }}>Delete</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Modal>
+        )}
 
         <ScrollView
           style={{ flex: 1 }}

@@ -60,15 +60,15 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
       style={{ width: CARD_WIDTH }}
       onPress={() => onViewDetails(outfitIndex)}
     >
-      <View className="flex-row rounded-[23px] border border-[#E9EBF8] bg-[#ffffff] overflow-hidden h-40">
+      <View className="flex-row rounded-[24px] border-[0.5px] border-[#E9EBF8] bg-[#ffffff] overflow-hidden h-40">
         <View
           className="justify-center items-center"
-          style={{ width: 120, height: 160, backgroundColor: "#FFFFFF" }}
+          style={{ width: 135, height: 170, backgroundColor: "#FFFFFF" }}
         >
           <ExpoImage
             source={{ uri: outfit.imageUri }}
-            style={{ width: 120, height: 160 }}
-            contentFit="contain"
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
             cachePolicy="memory"
           />
         </View>
@@ -181,7 +181,7 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
   return (
     <View style={{ width: CARD_WIDTH }}>
       <View
-        className="flex-row rounded-[24px] border border-[#E9EBF8] bg-[##F5F4F9] overflow-hidden h-40"
+        className="flex-row rounded-[24px] border-[0.5px] border-[#E9EBF8] bg-[#FFFFFF] overflow-hidden h-40"
         // style={{
         //   shadowColor: "#000000",
         //   shadowOpacity: 0.09,
@@ -190,11 +190,11 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
         //   elevation: 1,
         // }}
       >
-        <View style={{ width: 120, height: 160 }} className="overflow-hidden">
+        <View style={{ width: 135, height: 160 }} className="overflow-hidden">
           <ExpoImage
             source={{ uri: imageUri }}
-            style={{ width: 120, height: 160 }}
-            contentFit="contain"
+            style={{ width: "100%", height: 160 }}
+            contentFit="cover"
             blurRadius={5}
             cachePolicy="memory"
           />
@@ -241,9 +241,9 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
           >
             Analyzing cloth...
           </Text>
-          <View className="h-[9px] rounded-full bg-[#ffffff] w-4/5 mb-[7px]" />
-          <View className="h-[9px] rounded-full bg-[#ffffff] w-3/5 mb-[7px]" />
-          <View className="h-[9px] rounded-full bg-[#ffffff] w-2/5 mb-[10px]" />
+          <View className="h-[9px] rounded-full bg-[#EDEDF260] w-4/5 mb-[7px]" />
+          <View className="h-[9px] rounded-full bg-[#EDEDF260] w-3/5 mb-[7px]" />
+          <View className="h-[9px] rounded-full bg-[#EDEDF260] w-2/5 mb-[10px]" />
           <Text className="text-[#000000] font-sans" style={{ fontSize: 11 }}>
             {"We'll notify you when done!"}
           </Text>
@@ -326,14 +326,7 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
   const safeIndex = Math.min(activeIndex, slides.length - 1);
 
   return (
-    <View className="mb-6">
-      <Text
-        className="text-[#1D1A27] font-bold text-lg mb-1 ml-5 px-5"
-        style={{ fontFamily: "TikTokSans16pt-Bold" }}
-      >
-        {MODE_LABELS[mode] || "Scanned Items"}
-      </Text>
-
+    <View className="mb-2">
       <FlatList
         ref={flatListRef}
         data={slides}
@@ -378,7 +371,6 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
     progress,
     currentMode,
     lastOutfits,
-    removeOutfit,
     cleanupDaily,
   } = useOutfitAnalysisStore();
 
@@ -429,6 +421,7 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
             color: aiData?.primaryColor,
             occasion: aiData?.occasion?.[0] || "Casual",
             season: aiData?.season?.[0] || "All",
+            outfitIndex: index.toString(),
           },
         } as never);
       } else if (outfit && outfit.mode === "label") {
@@ -441,7 +434,7 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
         });
         router.push({
           pathname: "/(root)/add-clothes/label-result",
-          params: { scanId },
+          params: { scanId, outfitIndex: index.toString() },
         } as never);
       } else if (outfit && outfit.mode === "fit-check") {
         const scanId = useScanHistoryStore.getState().addScan({
@@ -453,13 +446,13 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
         });
         router.push({
           pathname: "/(root)/add-clothes/fitcheck-result",
-          params: { scanId },
+          params: { scanId, outfitIndex: index.toString() },
         } as never);
       } else {
         router.push(`/(root)/outfit-log-detail?index=${index}` as never);
       }
     },
-    [router, lastOutfits, removeOutfit],
+    [router, lastOutfits],
   );
 
   const groupedSlides = useMemo(() => {

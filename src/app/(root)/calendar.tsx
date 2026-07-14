@@ -23,6 +23,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
 
 import {
   IconArrowLeft,
@@ -174,6 +175,32 @@ export default function CalendarScreen() {
     };
   }, [viewYear, viewMonth, supabase]);
 
+  const plannedOutfits = useUserOutfitsStore((state) => state.outfits);
+
+  const combinedOutfitsData = useMemo(() => {
+    const combined = { ...loggedOutfitsData };
+    plannedOutfits.forEach((outfit) => {
+      if (outfit.scheduledDate) {
+        // Find if date exists in combined, otherwise format it
+        // The calendar uses JS Date(dateStr).toDateString() keys
+        const parts = outfit.scheduledDate.split("-");
+        // Create date at noon to avoid timezone shift issues
+        const dateKey = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12).toDateString();
+        combined[dateKey] = {
+          title: outfit.name || "Plan your outfit",
+          description: outfit.notes || "",
+          wornTime: outfit.scheduledTime || "Anytime",
+          itemsWorn: outfit.items?.length + " items",
+          itemCount: outfit.items?.length || 0,
+          score: 0,
+          imageUri: outfit.imageUri,
+          isPlanned: true,
+        };
+      }
+    });
+    return combined;
+  }, [loggedOutfitsData, plannedOutfits]);
+
   useEffect(() => {
     (async () => {
       const { status } = await Calendar.requestCalendarPermissionsAsync();
@@ -263,8 +290,8 @@ export default function CalendarScreen() {
   );
 
   const selectedLog = useMemo(() => {
-    return loggedOutfitsData[selected.toDateString()];
-  }, [selected, loggedOutfitsData]);
+    return combinedOutfitsData[selected.toDateString()];
+  }, [selected, combinedOutfitsData]);
 
   const selectedDayEvents = useMemo(() => {
     return deviceEvents.filter((e) =>
@@ -473,7 +500,7 @@ export default function CalendarScreen() {
                       const isToday = isSameDay(date, today);
                       const isCurrentMonth = date.getMonth() === viewMonth;
                       const hasOutfit =
-                        !!loggedOutfitsData[date.toDateString()];
+                        !!combinedOutfitsData[date.toDateString()];
 
                       const isPastOrToday =
                         new Date(
@@ -488,7 +515,7 @@ export default function CalendarScreen() {
                         ).getTime();
                       const isMissingOutfit = isPastOrToday && !hasOutfit;
 
-                      const outfitData = loggedOutfitsData[date.toDateString()];
+                      const outfitData = combinedOutfitsData[date.toDateString()];
 
                       const dayEvents = deviceEvents.filter((e) =>
                         isSameDay(new Date(e.startDate), date),
@@ -592,7 +619,98 @@ export default function CalendarScreen() {
                 zIndex: 10,
               }}
             >
-              {selectedLog ? (
+              {selectedLog?.isPlanned ? (
+                <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                  {/* Left Column Time indicator */}
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "800",
+                      color: "#171421",
+                      width: 60,
+                      marginRight: 10,
+                      marginTop: 6,
+                    }}
+                  >
+                    {selectedLog.wornTime.split(" ")[0]}
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontWeight: "600",
+                        color: "#9B9BAF",
+                      }}
+                    >
+                      {" "}
+                      {selectedLog.wornTime.split(" ")[1] || ""}
+                    </Text>
+                  </Text>
+                  
+                  {/* Right Cards Stack */}
+                  <View style={{ flex: 1, gap: 12 }}>
+                    <View
+                      style={{
+                        backgroundColor: "#FFFFFF",
+                        borderRadius: 22,
+                        borderWidth: 1,
+                        borderColor: "#E2E2EA",
+                        padding: 16,
+                        shadowColor: "#000",
+                        shadowOpacity: 0.01,
+                        shadowRadius: 3,
+                        shadowOffset: { width: 0, height: 1 },
+                      }}
+                    >
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                        {selectedLog.imageUri ? (
+                          <ExpoImage
+                            source={{ uri: selectedLog.imageUri }}
+                            style={{
+                              width: 50,
+                              height: 65,
+                              borderRadius: 10,
+                              backgroundColor: "#F3F4F6",
+                            }}
+                            contentFit="cover"
+                          />
+                        ) : (
+                          <View
+                            style={{
+                              width: 50,
+                              height: 65,
+                              borderRadius: 10,
+                              backgroundColor: "#E5E7EB",
+                            }}
+                          />
+                        )}
+                        <View style={{ flex: 1, justifyContent: "center" }}>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              fontWeight: "700",
+                              color: "#1D1A27",
+                              marginBottom: 4,
+                            }}
+                          >
+                            {selectedLog.title}
+                          </Text>
+                          {!!selectedLog.description && (
+                            <Text
+                              style={{
+                                fontSize: 13,
+                                color: "#6B7280",
+                                lineHeight: 18,
+                              }}
+                              numberOfLines={2}
+                            >
+                              {selectedLog.description}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ) : selectedLog ? (
                 <View
                   style={{ flexDirection: "row", alignItems: "flex-start" }}
                 >
@@ -837,9 +955,7 @@ export default function CalendarScreen() {
                         marginBottom: 10,
                       }}
                     >
-                      {selected.getTime() > today.getTime()
-                        ? "Plan your outfit"
-                        : "No outfit logged"}
+                      Plan your outfit
                     </Text>
                     <Text
                       style={{
@@ -850,17 +966,14 @@ export default function CalendarScreen() {
                         marginBottom: 16,
                       }}
                     >
-                      {selected.getTime() > today.getTime()
-                        ? "Get ahead of your schedule. Plan what you'll wear!"
-                        : "Tap the '+' icon above to log what you wore today."}
+                      Get ahead of your schedule. Plan what you'll wear!
                     </Text>
 
-                    {selected.getTime() > today.getTime() && (
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() =>
-                          router.push("/(root)/log-outfit/camera" as never)
-                        }
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() =>
+                        router.push("/(root)/log-outfit/camera" as never)
+                      }
                         style={{
                           backgroundColor: "#4C36F5",
                           paddingHorizontal: 20,
@@ -871,18 +984,17 @@ export default function CalendarScreen() {
                           gap: 6,
                         }}
                       >
-                        <IconPlus size={16} color="#FFFFFF" strokeWidth={2.5} />
-                        <Text
-                          style={{
-                            color: "#FFFFFF",
-                            fontWeight: "700",
-                            fontSize: 13,
-                          }}
-                        >
-                          Plan Future Outfit
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                      <IconPlus size={16} color="#FFFFFF" strokeWidth={2.5} />
+                      <Text
+                        style={{
+                          color: "#FFFFFF",
+                          fontWeight: "700",
+                          fontSize: 14,
+                        }}
+                      >
+                        Plan Future Outfit
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               )}

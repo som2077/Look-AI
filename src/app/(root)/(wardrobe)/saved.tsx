@@ -1,3 +1,7 @@
+import {
+  SavedOutfit,
+  useSavedStore,
+} from "@/features/wardrobe/model/saved-store";
 import { IconChevronLeft, IconMinus, IconX } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
@@ -13,7 +17,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SavedOutfit, useSavedStore } from "@/features/wardrobe/model/saved-store";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const NUM_COLUMNS = 3;
@@ -28,7 +31,6 @@ export default function SavedScreen() {
   const [activeCategory, setActiveCategory] = useState("Fit check");
 
   const filteredOutfits = useMemo(() => {
-
     return outfits.filter((outfit) => {
       const tags = outfit.tags?.map((tag) => tag.toLowerCase()) ?? [];
       const categoryLabel = activeCategory.toLowerCase();
@@ -139,29 +141,31 @@ export default function SavedScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 8 }}
           >
-            {["Fit check", "Virtual try on", "Cloth label", "AI outfit"].map((cat) => (
-              <Pressable
-                key={cat}
-                onPress={() => setActiveCategory(cat)}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  backgroundColor:
-                    activeCategory === cat ? "#1D1A27" : "#F4F4F6",
-                }}
-              >
-                <Text
+            {["Fit check", "Virtual try on", "Cloth label", "AI outfit"].map(
+              (cat) => (
+                <Pressable
+                  key={cat}
+                  onPress={() => setActiveCategory(cat)}
                   style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: activeCategory === cat ? "#FFFFFF" : "#6B7280",
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor:
+                      activeCategory === cat ? "#1D1A27" : "#F4F4F6",
                   }}
                 >
-                  {cat}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: activeCategory === cat ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {cat}
+                  </Text>
+                </Pressable>
+              ),
+            )}
           </ScrollView>
         </View>
 

@@ -40,6 +40,7 @@ export default function AgeScreen() {
       <View className="px-5">
         <ContinueButton
           onPress={async () => {
+            posthog?.capture("onboarding_step_completed", { step: "age" });
             if (fromProfile === "true") {
               if (user) await completeOnboarding(user.id, supabase);
               router.back();

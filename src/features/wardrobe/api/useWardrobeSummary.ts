@@ -1,25 +1,14 @@
-﻿import { useMemo } from "react";
-import { useSupabaseQuery } from "@/shared/supabase/use-supabase-query";
+import { useMemo } from "react";
+import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
 
 export interface WardrobeSummary {
   readonly periodLabel: string;
   readonly wornPercentage: number;
-  readonly totalWorn: number;
-  readonly wearCount: number;
-  readonly neverCount: number;
+  readonly totalWorn: number; // Represents total wardrobe items
+  readonly wearCount: number; // Total wear instances
+  readonly neverCount: number; // Items never worn
 }
-
-interface WardrobeSummaryRow extends Record<string, unknown> {
-  readonly user_id: string;
-  readonly period?: string | null;
-  readonly period_label?: string | null;
-  readonly worn_percentage?: number | null;
-  readonly total_worn?: number | null;
-  readonly wear_count?: number | null;
-  readonly never_count?: number | null;
-}
-
-const TABLE_NAME = "wardrobe_summary" as const;
 
 export const DEFAULT_WARDROBE_SUMMARY: WardrobeSummary = {
   periodLabel: "Weekly",
@@ -33,52 +22,75 @@ export const useWardrobeSummary = (
   userId?: string | null,
   period: string = "weekly",
 ) => {
-  const hasUserId = Boolean(userId);
-
-  const { data, loading, error } = useSupabaseQuery<WardrobeSummaryRow>(
-    TABLE_NAME,
-    {
-      select:
-        "user_id, period, period_label, worn_percentage, total_worn, wear_count, never_count",
-      enabled: hasUserId,
-      cacheKeySuffix: hasUserId ? `${userId}:${period}` : undefined,
-      apply: (query) => {
-        if (!userId) {
-          return query;
-        }
-
-        return query.eq("user_id", userId).eq("period", period).limit(1);
-      },
-    },
-  );
+  const wardrobeItems = useUserWardrobeStore((state) => state.items);
+  const outfits = useUserOutfitsStore((state) => state.outfits);
 
   const summary = useMemo<WardrobeSummary>(() => {
-    if (!hasUserId) {
-      return DEFAULT_WARDROBE_SUMMARY;
+    const totalItems = wardrobeItems.length;
+    
+    // Filter outfits based on period
+    const now = new Date();
+    const startTime = new Date();
+    
+    switch (period) {
+      case "daily":
+        startTime.setHours(0, 0, 0, 0);
+        break;
+      case "weekly":
+        startTime.setDate(now.getDate() - 7);
+        break;
+      case "monthly":
+        startTime.setDate(now.getDate() - 30);
+        break;
+      case "all":
+      default:
+        startTime.setTime(0); // Beginning of time
+        break;
     }
 
-    const row = data[0];
+    // Only count outfits that occurred in the past/today and within the timeframe
+    const validOutfits = outfits.filter((outfit) => {
+      // If it's scheduled for the future, we don't count it towards past stats yet
+      if (outfit.scheduledDate) {
+        const parts = outfit.scheduledDate.split("-");
+        const outfitDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        outfitDate.setHours(23, 59, 59, 999);
+        if (outfitDate.getTime() > now.getTime()) return false;
+        return outfitDate.getTime() >= startTime.getTime();
+      }
+      // Fallback to createdAt for outfits without scheduledDate
+      return outfit.createdAt >= startTime.getTime() && outfit.createdAt <= now.getTime();
+    });
 
-    if (!row) {
-      return {
-        ...DEFAULT_WARDROBE_SUMMARY,
-        periodLabel: formatPeriodLabel(period),
-      };
-    }
+    const wornItemIds = new Set<string>();
+    let totalWearInstances = 0;
+
+    validOutfits.forEach((outfit) => {
+      if (outfit.items && Array.isArray(outfit.items)) {
+        outfit.items.forEach((itemId) => {
+          wornItemIds.add(itemId);
+          totalWearInstances++;
+        });
+      }
+    });
+
+    const uniqueWornCount = wornItemIds.size;
+    const neverCount = Math.max(0, totalItems - uniqueWornCount);
+    const wornPercentage = totalItems > 0 ? uniqueWornCount / totalItems : 0;
 
     return {
-      periodLabel: row.period_label ?? formatPeriodLabel(row.period ?? period),
-      wornPercentage: normalizeRatio(row.worn_percentage),
-      totalWorn: coerceNonNegative(row.total_worn),
-      wearCount: coerceNonNegative(row.wear_count),
-      neverCount: coerceNonNegative(row.never_count),
+      periodLabel: formatPeriodLabel(period),
+      wornPercentage,
+      totalWorn: totalItems, // Using totalWorn for totalItems to maintain compatibility
+      wearCount: totalWearInstances,
+      neverCount: neverCount,
     };
-  }, [data, hasUserId, period]);
+  }, [wardrobeItems, outfits, period]);
 
   return {
     summary,
-    loading: hasUserId ? loading : false,
-    error: hasUserId ? error : null,
+    loading: false, // Local calculation is instant
+    error: null,
   };
 };
 
@@ -86,37 +98,17 @@ const formatPeriodLabel = (value?: string | null): string => {
   if (!value) return "This period";
 
   switch (value.toLowerCase()) {
+    case "daily":
+      return "Daily";
     case "weekly":
       return "Weekly";
     case "monthly":
       return "Monthly";
     case "yearly":
       return "Yearly";
+    case "all":
+      return "All Time";
     default:
       return value.charAt(0).toUpperCase() + value.slice(1);
   }
-};
-
-const normalizeRatio = (value?: number | null): number => {
-  if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
-    return 0;
-  }
-
-  if (value <= 1) {
-    return value;
-  }
-
-  if (value <= 100) {
-    return value / 100;
-  }
-
-  return 1;
-};
-
-const coerceNonNegative = (value?: number | null): number => {
-  if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
-    return 0;
-  }
-
-  return Math.max(0, Math.floor(value));
 };

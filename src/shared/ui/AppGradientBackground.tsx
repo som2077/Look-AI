@@ -3,7 +3,7 @@ import React, { ReactNode } from "react";
 import { View } from "react-native";
 
 const GRADIENT_COLORS = ["#F3D1C360", "#ABB9C750", "#FFFFFF"] as const;
-const GRADIENT_LOCATIONS = [0.01, 0.1, 0.5] as const;
+const GRADIENT_LOCATIONS = [0.01, 0.1, 0.3] as const;
 const GRADIENT_START = { x: 2.4, y: 0.35 };
 const GRADIENT_END = { x: 0.8, y: 1.8 };
 

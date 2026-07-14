@@ -330,7 +330,7 @@ export default function StreakScreen() {
                       fontFamily: "TikTokSans16pt-Medium",
                       fontSize: 13,
                       color: T.inkMuted,
-                      marginTop: 18,
+                      marginTop: 23,
                     }}
                   >
                     Longest streak

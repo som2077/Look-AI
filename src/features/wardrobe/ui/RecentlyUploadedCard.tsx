@@ -23,27 +23,7 @@ export const RecentlyUploadedHeading = React.memo(
 export const NotifyBanner = React.memo(function NotifyBanner() {
   const { isAnalyzing, lastOutfits } = useOutfitAnalysisStore();
   const [isDismissed, setIsDismissed] = React.useState(false);
-  const [timeLeft, setTimeLeft] = React.useState(60);
   const opacity = React.useRef(new Animated.Value(1)).current;
-
-  React.useEffect(() => {
-    if (isAnalyzing || lastOutfits.length > 0 || isDismissed) return;
-
-    if (timeLeft > 0) {
-      const timer = setTimeout(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
-        setIsDismissed(true);
-      });
-    }
-  }, [timeLeft, isAnalyzing, lastOutfits.length, isDismissed]);
 
   // Show banner only when no analysis and no completed outfits
   if (isAnalyzing || lastOutfits.length > 0 || isDismissed) return null;
@@ -51,7 +31,7 @@ export const NotifyBanner = React.memo(function NotifyBanner() {
   return (
     <Animated.View
       style={{ opacity }}
-      className="mx-6 mt-2 flex-row border border-[#E9EBF8] items-center justify-between bg-[#FFFFFF] rounded-[16px] px-4 py-4"
+      className="mx-6 mt-2 flex-row border-[0.4px] border-[#E9EBF8] items-center justify-between bg-[#FFFFFF] rounded-[16px] px-4 py-4"
     >
       <View className="flex-row items-center flex-1 pr-3">
         <IconBell size={24} color="#1D1A27" strokeWidth={1.5} />
@@ -72,11 +52,9 @@ export const NotifyBanner = React.memo(function NotifyBanner() {
           }).start(() => setIsDismissed(true));
         }}
         hitSlop={10}
-        style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "#F3F4F6", borderRadius: 12 }}
+        style={{ padding: 4, backgroundColor: "#F3F4F670", borderRadius: 12 }}
       >
-        <Text style={{ fontSize: 13, fontWeight: "600", color: "#4B5563" }}>
-          {timeLeft > 0 ? `${timeLeft}s` : "0s"}
-        </Text>
+        <IconX size={16} color="#4B5563" strokeWidth={2} />
       </Pressable>
     </Animated.View>
   );
@@ -85,36 +63,15 @@ export const NotifyBanner = React.memo(function NotifyBanner() {
 export const ErrorBanner = React.memo(function ErrorBanner() {
   const { error } = useOutfitAnalysisStore();
   const [isDismissed, setIsDismissed] = React.useState(false);
-  const [timeLeft, setTimeLeft] = React.useState(3);
   const opacity = React.useRef(new Animated.Value(1)).current;
 
   // Reset state when error changes
   React.useEffect(() => {
     if (error) {
       setIsDismissed(false);
-      setTimeLeft(5);
       opacity.setValue(1);
     }
-  }, [error]);
-
-  React.useEffect(() => {
-    if (!error || isDismissed) return;
-
-    if (timeLeft > 0) {
-      const timer = setTimeout(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
-        setIsDismissed(true);
-      });
-    }
-  }, [timeLeft, error, isDismissed]);
+  }, [error, opacity]);
 
   if (!error || isDismissed) return null;
 
@@ -143,9 +100,7 @@ export const ErrorBanner = React.memo(function ErrorBanner() {
         hitSlop={10}
         style={{ padding: 4, backgroundColor: "#FEE2E2", borderRadius: 20 }}
       >
-        <Text style={{ fontSize: 12, fontWeight: "700", color: "#991B1B" }}>
-          {timeLeft > 0 ? `${timeLeft}s` : "0s"}
-        </Text>
+        <IconX size={16} color="#991B1B" strokeWidth={2} />
       </Pressable>
     </Animated.View>
   );
@@ -158,7 +113,7 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
   if (isAnalyzing || lastOutfits.length > 0) return null;
 
   return (
-    <View className="mx-6 mt-3  items-center justify-center bg-[#F8F7FC] border border-[#E9EBF8] rounded-[24px] px-4 py-6">
+    <View className="mx-6 mt-3  items-center justify-center bg-[#F8F7FC80] border-[0.5px] border-[#E9EBF8] rounded-[24px] px-4 py-6">
       <View
         style={{
           flexDirection: "row",
@@ -174,11 +129,11 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
           style={{
             width: 60,
             height: 60,
-            borderRadius: 38,
-            borderWidth: 1,
+            borderRadius: 60,
+            borderWidth: 5,
             borderColor: "#FFFFFF",
             overflow: "hidden",
-            backgroundColor: "#F3F4F6",
+            backgroundColor: "#F8F7FC80",
           }}
         >
           <ExpoImage
@@ -194,11 +149,11 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
           style={{
             width: 60,
             height: 60,
-            borderRadius: 38,
-            borderWidth: 1,
+            borderRadius: 60,
+            borderWidth: 5,
             borderColor: "#FFFFFF",
             overflow: "hidden",
-            backgroundColor: "#F3F4F6",
+            backgroundColor: "#F8F7FC80",
             marginLeft: -30,
           }}
         >
@@ -214,11 +169,11 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
           style={{
             width: 60,
             height: 60,
-            borderRadius: 38,
-            borderWidth: 1,
+            borderRadius: 60,
+            borderWidth: 5,
             borderColor: "#FFFFFF",
             overflow: "hidden",
-            backgroundColor: "#F3F4F6",
+            backgroundColor: "#F8F7FC80",
             marginLeft: -30,
           }}
         >
@@ -231,7 +186,7 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
         </View>
       </View>
       <Text
-        className="text-[#313131] mt-1 text-center font-TikTokSans16pt-Medium"
+        className="text-[#00000090] mt-1 text-center font-TikTokSans16pt-Medium"
         style={{ fontSize: 12, lineHeight: 20 }}
       >
         Tap + add you first style look of the day

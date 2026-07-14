@@ -140,7 +140,7 @@ export function WeeklyCalendarStrip({
   }, []);
 
   return (
-    <View className="px-[5px] py-1">
+    <View className="px-[5px] py-1 mt-3">
       <View className="flex-row items-center justify-between">
         {weekDates.map((date, index) => {
           const dateAtMidnight = new Date(date);

@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 
 export function AddClothesCTA() {
   return (
-    <View className="mt-2 p-5 items-center justify-center relative  mx-6 mb-8">
+    <View className="mt-2 p-5 items-center  justify-center relative  mx-6 mb-8">
       <Text
         style={{
           fontSize: 17,

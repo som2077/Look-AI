@@ -1,4 +1,5 @@
 import { OutfitAnalyzingCard } from "@/features/ai-styling/ui/OutfitAnalyzingCard";
+import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
 import { useWardrobeSummary } from "@/features/wardrobe/api/useWardrobeSummary";
 import {
   EmptyStyleBanner,
@@ -6,10 +7,18 @@ import {
   NotifyBanner,
   RecentlyUploadedHeading,
 } from "@/features/wardrobe/ui/RecentlyUploadedCard";
+import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
+import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
 import type { RingProgressSegment } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
 import { WardrobeRingSummaryCard } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
+import { useStreakStore } from "@/shared/store/useStreakStore";
+import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { HomeHeader } from "@/shared/ui/HomeHeader";
+import { LookAIBanner } from "@/shared/ui/LookAIBanner";
+import { PlannedOutfitBanner } from "@/shared/ui/PlannedOutfitBanner";
+import { StreakPopup } from "@/shared/ui/StreakPopup";
+import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
@@ -17,14 +26,6 @@ import { useUser } from "@clerk/clerk-expo";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
-import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
-import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
-import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
-import { LookAIBanner } from "@/shared/ui/LookAIBanner";
-import { StreakPopup } from "@/shared/ui/StreakPopup";
-import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
-import { useStreakStore } from "@/shared/store/useStreakStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -54,12 +55,20 @@ type FilterTab = "Days" | "Weeks" | "Months" | "All";
 export default function HomeScreen() {
   const { user } = useUser();
   const [timeframe, setTimeframe] = useState<FilterTab>("Days");
-  const period = timeframe === "Days" ? "daily" : timeframe === "Weeks" ? "weekly" : timeframe === "Months" ? "monthly" : "all";
+  const period =
+    timeframe === "Days"
+      ? "daily"
+      : timeframe === "Weeks"
+        ? "weekly"
+        : timeframe === "Months"
+          ? "monthly"
+          : "all";
   const { summary } = useWardrobeSummary(user?.id, period);
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
   const [selectedDate, setSelectedDate] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
-  const { currentStreak, hasIncrementedToday, dismissIncrement } = useStreakStore();
+  const { currentStreak, hasIncrementedToday, dismissIncrement } =
+    useStreakStore();
 
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)
 
@@ -67,27 +76,15 @@ export default function HomeScreen() {
     const total = summary.totalWorn; // total wardrobe items
     const hasData = total > 0;
 
-    // ── Fallback progress when no wardrobe data yet ──
-    const FALLBACK = {
-      wornRatio: 0.2, // 20% — gentle placeholder for worn %
-      neverRatio: 0.45, // 45% — placeholder for never worn
-      wearFreqRatio: 0.1, // 10% — placeholder for avg wears
-    } as const;
-
     // Ring 1 (orange) — Worn %: what % of wardrobe has been worn at least once
-    const wornRatio = hasData
-      ? clampRatio(summary.wornPercentage)
-      : FALLBACK.wornRatio;
+    const wornRatio = hasData ? summary.wornPercentage : 0;
 
     // Ring 2 (pink) — Never worn ratio: neverCount / total
-    const neverRatio = hasData
-      ? clampRatio(summary.neverCount / total)
-      : FALLBACK.neverRatio;
+    const neverRatio = hasData ? summary.neverCount / total : 0;
 
     // Ring 3 (blue) — Wear frequency: wearCount / total (avg wears per item)
-    const wearFreqRatio = hasData
-      ? clampRatio(summary.wearCount / total)
-      : FALLBACK.wearFreqRatio;
+    // Cap at 1 (100%) for visualization if they wore items more times than total items
+    const wearFreqRatio = hasData ? Math.min(1, summary.wearCount / total) : 0;
 
     // Ring 4 (orange) — Streak: always uses real streak data
     const STREAK_GOAL = 30;
@@ -139,8 +136,25 @@ export default function HomeScreen() {
                 bottomRight: "#1D1A27",
               }}
             />
-            <WardrobeFilterTabs onChange={setTimeframe} />
-            <WardrobeMessageBar />
+            <View
+              style={{
+                borderWidth: 0.7,
+                borderColor: "#E9EBF8",
+                backgroundColor: "#FFFFFF",
+                borderRadius: 24,
+                padding: 8,
+                marginTop: 5,
+                shadowColor: "#FFFFFF",
+                shadowOpacity: 0.02,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 10,
+                // padddingBottom:1
+              }}
+            >
+              <WardrobeFilterTabs onChange={setTimeframe} />
+              <WardrobeMessageBar />
+            </View>
           </>
         ) : (
           <>
@@ -246,6 +260,7 @@ export default function HomeScreen() {
               <NotifyBanner />
               <EmptyStyleBanner />
               <OutfitAnalyzingCard />
+              <PlannedOutfitBanner date={selectedDate} />
               <UpcomingEvents date={selectedDate} showAISuggestion={false} />
               <AddClothesCTA />
             </View>

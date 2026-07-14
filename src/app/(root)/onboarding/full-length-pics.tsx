@@ -103,6 +103,7 @@ export default function FullLengthPicsScreen() {
         }
       }
 
+      posthog?.capture("onboarding_step_completed", { step: "full-length-pics" });
       if (fromProfile === "true") {
         if (user) await completeOnboarding(user.id, supabase);
         router.back();
@@ -120,6 +121,7 @@ export default function FullLengthPicsScreen() {
 
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    posthog?.capture("onboarding_step_completed", { step: "full-length-pics" });
     if (fromProfile === "true") {
       router.back();
     } else {

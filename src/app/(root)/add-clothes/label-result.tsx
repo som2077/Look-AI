@@ -6,6 +6,7 @@ import {
   IconWashMachine,
   IconWind,
   IconX,
+  IconDotsVertical,
 } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -16,13 +17,16 @@ import {
   ScrollView,
   Text,
   View,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 
 type LabelResultParams = {
   photoUri?: string;
   resultJson?: string;
   scanId?: string;
+  outfitIndex?: string;
 };
 
 const DEFAULT_RESULT: LabelAnalysis = {
@@ -38,9 +42,12 @@ const DEFAULT_RESULT: LabelAnalysis = {
 
 export default function LabelResultScreen() {
   const router = useRouter();
+  const [showMenu, setShowMenu] = useState(false);
   const params = useLocalSearchParams() as LabelResultParams;
   const addScan = useScanHistoryStore((s) => s.addScan);
+  const removeScan = useScanHistoryStore((s) => s.removeScan);
   const scans = useScanHistoryStore((s) => s.scans);
+  const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
 
   const scanData = params.scanId ? scans.find(s => s.id === params.scanId) : null;
   const photoUri = scanData?.thumbnail || params.photoUri;
@@ -87,12 +94,59 @@ export default function LabelResultScreen() {
           </Text>
           
           <Pressable 
-            onPress={() => router.replace("/(root)/(tabs)" as never)} 
-            style={{ width: 60, alignItems: "flex-end" }}
+            onPress={() => setShowMenu(true)} 
+            style={{ width: 60, alignItems: "flex-end", paddingVertical: 4 }}
           >
-            <Text style={{ fontSize: 16, fontWeight: "600", color: "#7C6AFF" }}>Save</Text>
+            <IconDotsVertical size={24} color="#1D1A27" />
           </Pressable>
         </View>
+
+        {/* Dropdown Menu Modal */}
+        {showMenu && (
+          <Modal transparent visible animationType="fade" onRequestClose={() => setShowMenu(false)}>
+            <Pressable style={{ flex: 1 }} onPress={() => setShowMenu(false)}>
+              <View style={{
+                position: "absolute",
+                top: 60,
+                right: 20,
+                backgroundColor: "#fff",
+                borderRadius: 12,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+                minWidth: 140,
+                paddingVertical: 4,
+                borderWidth: 1,
+                borderColor: "#F3F4F6",
+              }}>
+                <Pressable
+                  style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.replace("/(root)/(tabs)" as never);
+                  }}
+                >
+                  <Text style={{ fontSize: 15, color: "#1D1A27", fontWeight: "500" }}>Save</Text>
+                </Pressable>
+                <View style={{ height: 1, backgroundColor: "#F3F4F6" }} />
+                <Pressable
+                  style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+                  onPress={() => {
+                    setShowMenu(false);
+                    if (params.scanId) removeScan(params.scanId);
+                    if (params.outfitIndex) removeOutfit(parseInt(params.outfitIndex));
+                    router.replace("/(root)/(tabs)" as never);
+                  }}
+                >
+                  <Text style={{ fontSize: 15, color: "#EF4444", fontWeight: "500" }}>Delete</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Modal>
+        )}
+
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}>
           {/* Photo */}
           {photoUri && (

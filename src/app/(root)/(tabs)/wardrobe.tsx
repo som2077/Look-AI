@@ -127,10 +127,12 @@ const SORT_OPTIONS: { label: string; value: SortId }[] = [
 ];
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const NUM_COLUMNS = 3;
 const GRID_GAP = 8;
 const GRID_PADDING = 16;
 const CONTENT_WIDTH = SCREEN_WIDTH - GRID_PADDING * 2;
-const ITEM_WIDTH = (CONTENT_WIDTH - GRID_GAP) / 2 - 0.1;
+const ITEM_WIDTH =
+  (CONTENT_WIDTH - GRID_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS - 0.01;
 const ITEM_HEIGHT = ITEM_WIDTH;
 
 // Bento Card
@@ -150,17 +152,9 @@ const BentoCard = React.memo(function BentoCard({
       style={{
         width,
         height,
-        borderRadius: 23,
+        borderRadius: 12,
         overflow: "hidden",
         backgroundColor: "#FFFFFF",
-        borderWidth: 1,
-        borderColor: "#F0EEF8",
-        marginTop: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.03,
-        shadowRadius: 8,
-        elevation: 1,
       }}
     >
       {item.image ? (
@@ -170,7 +164,7 @@ const BentoCard = React.memo(function BentoCard({
           contentFit="contain"
         />
       ) : (
-        <View style={{ flex: 1, backgroundColor: "#FFFFFF" }} />
+        <View style={{ flex: 1, backgroundColor: "#F3F4F6" }} />
       )}
     </Pressable>
   );

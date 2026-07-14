@@ -28,6 +28,7 @@ import {
   Image,
   ImageBackground,
   Linking,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -66,7 +67,7 @@ const CardContainer = ({
         borderRadius: 20,
         overflow: "hidden",
         borderColor: "#E5E7EB",
-        borderWidth: 0.9,
+        borderWidth: 0.4,
         shadowColor: "#000",
         shadowOpacity: 0.06,
         shadowRadius: 10,
@@ -115,7 +116,7 @@ const ListItem = ({
       <View
         style={{
           height: 1,
-          backgroundColor: "#E5E7EB90",
+          backgroundColor: "#E5E7EB60",
           marginHorizontal: 16,
         }}
       />
@@ -159,6 +160,198 @@ const CustomSwitch = ({
     </Pressable>
   );
 };
+
+const DeleteAccountModal = ({
+  visible,
+  onClose,
+  onConfirm,
+  isDeleting,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+}) => (
+  <Modal visible={visible} transparent animationType="fade">
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 24,
+      }}
+    >
+      <View
+        style={{
+          backgroundColor: "#fffFFF",
+          borderRadius: 24,
+          padding: 23,
+          width: "100%",
+          maxWidth: 450,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "800",
+            color: "#1D1A27",
+            marginBottom: 12,
+          }}
+        >
+          Delete Account?
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: "#4B5563",
+            lineHeight: 22,
+            marginBottom: 24,
+          }}
+        >
+          Are you sure you want to delete your account and data permanently?
+          {"\n\n"}
+          This action cannot be undone. Your profile, wardrobe, saved outfits,
+          preferences, and all associated data will be permanently removed.
+        </Text>
+        <View style={{ flexDirection: "row", gap: 12 }}>
+          <Pressable
+            onPress={onClose}
+            disabled={isDeleting}
+            style={{
+              flex: 1,
+              paddingVertical: 14,
+              borderRadius: 16,
+              backgroundColor: "#F3F4F6",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: "700", color: "#4B5563" }}>
+              Cancel
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={onConfirm}
+            disabled={isDeleting}
+            style={{
+              flex: 1,
+              paddingVertical: 14,
+              borderRadius: 16,
+              backgroundColor: "#EF4444",
+              alignItems: "center",
+              opacity: isDeleting ? 0.7 : 1,
+            }}
+          >
+            {isDeleting ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text
+                style={{ fontSize: 15, fontWeight: "700", color: "#FFFFFF" }}
+              >
+                Delete
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  </Modal>
+);
+
+const LogoutModal = ({
+  visible,
+  onClose,
+  onConfirm,
+  isLoggingOut,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoggingOut: boolean;
+}) => (
+  <Modal visible={visible} transparent animationType="fade">
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 24,
+      }}
+    >
+      <View
+        style={{
+          backgroundColor: "#ffffff",
+          borderRadius: 24,
+          padding: 23,
+          width: "100%",
+          maxWidth: 450,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "800",
+            color: "#1D1A27",
+            marginBottom: 12,
+          }}
+        >
+          Logout?
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: "#4B5563",
+            lineHeight: 22,
+            marginBottom: 24,
+          }}
+        >
+          Are you sure you want to log out of your account? You will need to log
+          back in to access your saved outfits and preferences.
+        </Text>
+        <View style={{ flexDirection: "row", gap: 12 }}>
+          <Pressable
+            onPress={onClose}
+            disabled={isLoggingOut}
+            style={{
+              flex: 1,
+              paddingVertical: 14,
+              borderRadius: 16,
+              backgroundColor: "#F3F4F6",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: "700", color: "#4B5563" }}>
+              Cancel
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={onConfirm}
+            disabled={isLoggingOut}
+            style={{
+              flex: 1,
+              paddingVertical: 14,
+              borderRadius: 16,
+              backgroundColor: "#1D1A27",
+              alignItems: "center",
+              opacity: isLoggingOut ? 0.7 : 1,
+            }}
+          >
+            {isLoggingOut ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text
+                style={{ fontSize: 15, fontWeight: "700", color: "#FFFFFF" }}
+              >
+                Logout
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  </Modal>
+);
 
 // ─── Profile Screen UI ─────────────────────────────────────────────────────────
 
@@ -406,90 +599,78 @@ export default function ProfileScreen() {
   const { supabase } = useSupabase();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  const onLogoutPress = async () => {
+  const onLogoutPress = () => setShowLogoutModal(true);
+
+  const confirmLogout = async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
       await signOut();
     } finally {
       setIsLoggingOut(false);
+      setShowLogoutModal(false);
     }
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      "Delete Account?",
-      "Are you sure you want to delete your account and data permanently? This action cannot be undone. If you have any active subscription, please cancel it first. You need to login again to compete this process.\n\nNote: Deleting account will not reset your credits, we give only 3 free credits per device. See credit packs if you need more credits",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Confirm",
-          style: "destructive",
-          onPress: async () => {
-            if (!user) return;
-            try {
-              setIsDeletingAccount(true);
+  const handleDeleteAccount = () => setShowDeleteModal(true);
 
-              // 1. Collect all Cloudinary URLs from database
-              const cloudinaryUrls: string[] = [];
-              const { data: outfits } = await supabase
-                .from("outfits")
-                .select("image_url")
-                .eq("user_id", user.id);
-              const { data: posts } = await supabase
-                .from("community_posts")
-                .select("image_url")
-                .eq("user_id", user.id);
+  const confirmDeleteAccount = async () => {
+    if (!user) return;
+    try {
+      setIsDeletingAccount(true);
 
-              if (outfits)
-                outfits.forEach(
-                  (o: any) => o.image_url && cloudinaryUrls.push(o.image_url),
-                );
-              if (posts)
-                posts.forEach(
-                  (p: any) => p.image_url && cloudinaryUrls.push(p.image_url),
-                );
+      // 1. Collect all Cloudinary URLs from database
+      const cloudinaryUrls: string[] = [];
+      const { data: outfits } = await supabase
+        .from("outfits")
+        .select("image_url")
+        .eq("user_id", user.id);
+      const { data: posts } = await supabase
+        .from("community_posts")
+        .select("image_url")
+        .eq("user_id", user.id);
 
-              // 2. Delete from Cloudinary
-              for (const url of cloudinaryUrls) {
-                const publicId = extractPublicIdFromUrl(url);
-                if (publicId) await deleteFromCloudinary(publicId);
-              }
+      if (outfits)
+        outfits.forEach(
+          (o: any) => o.image_url && cloudinaryUrls.push(o.image_url),
+        );
+      if (posts)
+        posts.forEach(
+          (p: any) => p.image_url && cloudinaryUrls.push(p.image_url),
+        );
 
-              // 3. Delete Supabase Storage bucket files (full-length-pics)
-              const { data: files } = await supabase.storage
-                .from("full-length-pics")
-                .list(user.id);
-              if (files && files.length > 0) {
-                const filePaths = files.map(
-                  (file: any) => `${user.id}/${file.name}`,
-                );
-                await supabase.storage
-                  .from("full-length-pics")
-                  .remove(filePaths);
-              }
+      // 2. Delete from Cloudinary
+      for (const url of cloudinaryUrls) {
+        const publicId = extractPublicIdFromUrl(url);
+        if (publicId) await deleteFromCloudinary(publicId);
+      }
 
-              // 4. Delete user data from Supabase (user_profiles etc)
-              await supabase
-                .from("user_profiles")
-                .delete()
-                .eq("user_id", user.id);
+      // 3. Delete Supabase Storage bucket files (full-length-pics)
+      const { data: files } = await supabase.storage
+        .from("full-length-pics")
+        .list(user.id);
+      if (files && files.length > 0) {
+        const filePaths = files.map((file: any) => `${user.id}/${file.name}`);
+        await supabase.storage.from("full-length-pics").remove(filePaths);
+      }
 
-              // 5. Delete user from Clerk
-              await user.delete();
+      // 4. Delete user data from Supabase (user_profiles etc)
+      await supabase.from("user_profiles").delete().eq("user_id", user.id);
 
-              // Clerk will automatically handle the session termination and redirect
-            } catch (error: any) {
-              Alert.alert("Error", error.message || "Failed to delete account");
-            } finally {
-              setIsDeletingAccount(false);
-            }
-          },
-        },
-      ],
-    );
+      // 5. Delete user from Clerk
+      await user.delete();
+
+      // Clerk will automatically handle the session termination and redirect
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to delete account");
+    } finally {
+      setIsDeletingAccount(false);
+      setShowDeleteModal(false);
+    }
   };
 
   return (
@@ -513,6 +694,18 @@ export default function ProfileScreen() {
               onLogoutPress={onLogoutPress}
             />
           </ScrollView>
+          <DeleteAccountModal
+            visible={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            onConfirm={confirmDeleteAccount}
+            isDeleting={isDeletingAccount}
+          />
+          <LogoutModal
+            visible={showLogoutModal}
+            onClose={() => setShowLogoutModal(false)}
+            onConfirm={confirmLogout}
+            isLoggingOut={isLoggingOut}
+          />
         </SafeAreaView>
       </AppGradientBackground>
     </SwipeTabWrapper>

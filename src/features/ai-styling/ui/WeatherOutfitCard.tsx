@@ -327,15 +327,15 @@ export const WeatherOutfitCard = React.memo(function WeatherOutfitCard() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  outerWrapper: { marginTop: 7 },
+  outerWrapper: { marginTop: 13 },
 
   card: {
     backgroundColor: "#FFFFFF",
     borderColor: "#F0F0F5",
-    borderWidth: 1,
+    borderWidth: 0.7,
     borderRadius: 24,
     padding: 25,
-    shadowColor: "#000",
+    shadowColor: "#FFFFFF",
     shadowOpacity: 0.04,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },

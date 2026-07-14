@@ -32,6 +32,7 @@ export default function SetupAccountScreen() {
     
     const success = await completeOnboarding(user.id, supabase, user.imageUrl);
     if (success) {
+      posthog?.capture("onboarding_completed");
       router.replace("/(root)/(tabs)" as never);
     }
   };

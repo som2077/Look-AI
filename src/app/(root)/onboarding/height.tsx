@@ -27,6 +27,7 @@ export default function HeightScreen() {
       <HeightPicker height={height} onChange={setHeight} />
       <ContinueButton
         onPress={async () => {
+          posthog?.capture("onboarding_step_completed", { step: "height" });
           if (fromProfile === "true") {
             if (user) await completeOnboarding(user.id, supabase);
             router.back();

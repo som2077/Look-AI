@@ -4,25 +4,19 @@ import {
   IconAlignCenter,
   IconAlignLeft,
   IconAlignRight,
-  IconArrowsDiagonal,
   IconChevronDown,
-  IconChevronRight,
   IconChevronUp,
   IconEye,
   IconEyeOff,
   IconFlipHorizontal,
-  IconFlipVertical,
-  IconLayoutBoardSplit,
   IconLetterT,
-  IconMoodSmile,
-  IconPhoto,
-  IconTrash,
   IconX,
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { captureRef } from "react-native-view-shot";
 import {
   Animated,
   Dimensions,
@@ -33,10 +27,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { CanvasImageItem } from "../../components/canvas/CanvasImageItem";
+import { CanvasTextItem } from "../../components/canvas/CanvasTextItem";
+import { CanvasItemData } from "../../components/canvas/types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -101,6 +97,21 @@ const FILTER_CHIPS: { label: string; value: CategoryId | "all" }[] = [
   { label: "Formal", value: "formal" },
   { label: "Casual", value: "casual" },
   { label: "Sportswear", value: "sportswear" },
+];
+// Category tabs (plain text strip below toolbar)
+const CATEGORY_TABS: { label: string; value: CategoryId | "all" }[] = [
+  { label: "Tops", value: "top" },
+  { label: "Dresses", value: "dress" },
+  { label: "Pants", value: "trousers" },
+  { label: "Outerwear", value: "outerwear" },
+  { label: "Shoes", value: "footwear" },
+  { label: "Bags", value: "bags" },
+  { label: "Ethnic", value: "ethnic" },
+  { label: "Accessories", value: "accessory" },
+  { label: "Activewear", value: "activewear" },
+  { label: "Hoodies", value: "hoodies" },
+  { label: "Jackets", value: "jackets" },
+  { label: "Formal", value: "formal" },
 ];
 
 const SORT_OPTIONS: { label: string; value: SortId }[] = [
@@ -204,6 +215,8 @@ function BottomSheet({
   );
 }
 
+// Canvas items extracted to components/canvas
+
 export default function CreateOutfitScreen() {
   const router = useRouter();
   const { itemId } = useLocalSearchParams<{ itemId: string }>();
@@ -222,34 +235,53 @@ export default function CreateOutfitScreen() {
   const [tempSort, setTempSort] = useState<SortId>("recently_added");
 
   // Canvas Interactions
-  const pan = useRef(new Animated.ValueXY()).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const [flipValue, setFlipValue] = useState(1);
+  const [canvasItems, setCanvasItems] = useState<CanvasItemData[]>([]);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialItem && canvasItems.length === 0) {
+      const initialId = `${initialItem.id}-initial`;
+      setCanvasItems([
+        {
+          id: initialId,
+          type: "image",
+          image: initialItem.imageUrl ?? "",
+          flipValue: 1,
+          zIndex: 1,
+        },
+      ]);
+      setActiveItemId(initialId);
+    }
+  }, [initialItem]);
+
   const [isVisible, setIsVisible] = useState(true);
   const [isFocused, setIsFocused] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
   const [ratio, setRatio] = useState<"3:4" | "1:1">("3:4");
+  const viewRef = useRef<any>(null);
 
-  // Text Feature State
-  const [bottomSheetMode, setBottomSheetMode] = useState<"wardrobe" | "text">(
-    "wardrobe",
-  );
-  const [textValue, setTextValue] = useState("");
-  const [textColor, setTextColor] = useState("#000000");
-  const [textFontWeight, setTextFontWeight] = useState<"400" | "700">("700");
-  const [textAlign, setTextAlign] = useState<"left" | "center" | "right">(
-    "center",
-  );
-  const [isTextFocused, setIsTextFocused] = useState(false);
-  const [isTextActive, setIsTextActive] = useState(false);
-  const [textFlipValue, setTextFlipValue] = useState(1);
-  const textInputRef = useRef<TextInput>(null);
+  const captureAndNavigate = async () => {
+    setIsFocused(false);
+    // Wait for the blue active borders to hide before taking snapshot
+    setTimeout(async () => {
+      try {
+        const uri = await captureRef(viewRef, {
+          format: "png",
+          quality: 1,
+        });
+        
+        const itemIds = canvasItems.map(i => i.id).join(',');
+        router.push({
+          pathname: "/plan-outfit",
+          params: { imageUri: uri, itemIds, ratio }
+        });
+      } catch (e) {
+        console.error("Capture failed", e);
+      }
+    }, 100);
+  };
 
-  // Text Canvas Interactions
-  const textPan = useRef(new Animated.ValueXY()).current;
-  const textScaleAnim = useRef(new Animated.Value(1)).current;
-  const textRotateAnim = useRef(new Animated.Value(0)).current;
+  // Text Canvas Interactions (Removed single text state)
 
   // Bottom Sheet Interactions
   const { width: screenW, height: screenH } = Dimensions.get("window");
@@ -309,153 +341,57 @@ export default function CreateOutfitScreen() {
     }),
   ).current;
 
-  const BOUND_X = 100;
-  const BOUND_Y = 150;
-
-  const panResponderItem = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        pan.extractOffset();
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        const currentX = (pan.x as any)._offset + gestureState.dx;
-        const currentY = (pan.y as any)._offset + gestureState.dy;
-
-        const boundedX = Math.max(-BOUND_X, Math.min(currentX, BOUND_X));
-        const boundedY = Math.max(-BOUND_Y, Math.min(currentY, BOUND_Y));
-
-        pan.setValue({
-          x: boundedX - (pan.x as any)._offset,
-          y: boundedY - (pan.y as any)._offset,
-        });
-      },
-      onPanResponderRelease: () => {
-        pan.flattenOffset();
-      },
-    }),
-  ).current;
-
-  const panResponderResize = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        scaleAnim.extractOffset();
-        rotateAnim.extractOffset();
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        const initialX = 100; // Half width of item
-        const initialY = 125; // Half height of item
-
-        const currentX = initialX + gestureState.dx;
-        const currentY = initialY + gestureState.dy;
-
-        // Scale
-        const initialDist = Math.sqrt(
-          initialX * initialX + initialY * initialY,
-        );
-        const currentDist = Math.sqrt(
-          currentX * currentX + currentY * currentY,
-        );
-        const scaleFactor = currentDist / initialDist;
-
-        const baseScale = (scaleAnim as any)._offset || 1;
-        const targetScale = baseScale * scaleFactor;
-        const clampedScale = Math.max(0.3, Math.min(targetScale, 5));
-
-        scaleAnim.setValue(clampedScale - baseScale);
-
-        // Rotation
-        const initialAngle = Math.atan2(initialY, initialX);
-        const currentAngle = Math.atan2(currentY, currentX);
-        const angleDiff = (currentAngle - initialAngle) * (180 / Math.PI);
-        rotateAnim.setValue(angleDiff);
-      },
-      onPanResponderRelease: () => {
-        scaleAnim.flattenOffset();
-        rotateAnim.flattenOffset();
-      },
-    }),
-  ).current;
+  const [bottomSheetMode, setBottomSheetMode] = useState<"wardrobe" | "text">(
+    "wardrobe",
+  );
 
   const handleFlip = () => {
-    setFlipValue((prev) => (prev === 1 ? -1 : 1));
+    if (activeItemId) {
+      setCanvasItems((prev) =>
+        prev.map((item) =>
+          item.id === activeItemId
+            ? { ...item, flipValue: item.flipValue === 1 ? -1 : 1 }
+            : item,
+        ),
+      );
+    }
   };
 
-  // Interpolations
-  const interpolatedRotate = rotateAnim.interpolate({
-    inputRange: [-360, 360],
-    outputRange: ["-360deg", "360deg"],
-  });
+  // Handlers for canvas items
+  const handleFocus = (id: string) => {
+    setActiveItemId(id);
+    setIsFocused(true);
+    const activeItem = canvasItems.find((i) => i.id === id);
+    if (activeItem?.type === "text") {
+      setBottomSheetMode("text");
+    } else {
+      setBottomSheetMode("wardrobe");
+    }
+  };
 
-  const textPanResponderItem = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        return Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
-      },
-      onPanResponderGrant: () => {
-        textPan.extractOffset();
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        const currentX = (textPan.x as any)._offset + gestureState.dx;
-        const currentY = (textPan.y as any)._offset + gestureState.dy;
+  const handleDelete = (id: string) => {
+    setCanvasItems((prev) => prev.filter((item) => item.id !== id));
+    if (activeItemId === id) setActiveItemId(null);
+  };
 
-        textPan.setValue({
-          x: currentX - (textPan.x as any)._offset,
-          y: currentY - (textPan.y as any)._offset,
-        });
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        textPan.flattenOffset();
-      },
-    }),
-  ).current;
+  const handleTextChange = (id: string, text: string) => {
+    setCanvasItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, text } : item)),
+    );
+  };
 
-  const textPanResponderResize = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        textScaleAnim.extractOffset();
-        textRotateAnim.extractOffset();
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        const initialX = 50;
-        const initialY = 20;
+  const updateActiveItem = (updates: Partial<CanvasItemData>) => {
+    if (activeItemId) {
+      setCanvasItems((prev) =>
+        prev.map((item) =>
+          item.id === activeItemId ? { ...item, ...updates } : item,
+        ),
+      );
+    }
+  };
 
-        const currentX = initialX + gestureState.dx;
-        const currentY = initialY + gestureState.dy;
-
-        const initialDist = Math.sqrt(
-          initialX * initialX + initialY * initialY,
-        );
-        const currentDist = Math.sqrt(
-          currentX * currentX + currentY * currentY,
-        );
-        const scaleFactor = currentDist / initialDist;
-
-        const baseScale = (textScaleAnim as any)._offset || 1;
-        const targetScale = baseScale * scaleFactor;
-        const clampedScale = Math.max(0.3, Math.min(targetScale, 5));
-
-        textScaleAnim.setValue(clampedScale - baseScale);
-
-        const initialAngle = Math.atan2(initialY, initialX);
-        const currentAngle = Math.atan2(currentY, currentX);
-        const angleDiff = (currentAngle - initialAngle) * (180 / Math.PI);
-        textRotateAnim.setValue(angleDiff);
-      },
-      onPanResponderRelease: () => {
-        textScaleAnim.flattenOffset();
-        textRotateAnim.flattenOffset();
-      },
-    }),
-  ).current;
-
-  const textInterpolatedRotate = textRotateAnim.interpolate({
-    inputRange: [-360, 360],
-    outputRange: ["-360deg", "360deg"],
-  });
+  const activeItem = canvasItems.find((i) => i.id === activeItemId);
+  const isTextActive = activeItem?.type === "text";
 
   const displayItems = useMemo(
     () =>
@@ -522,7 +458,7 @@ export default function CreateOutfitScreen() {
                 <IconEye size={18} color="#1D1A27" />
               )}
             </Pressable>
-            <Pressable style={styles.nextButton}>
+            <Pressable style={styles.nextButton} onPress={captureAndNavigate}>
               <Text style={styles.nextButtonText}>Next</Text>
             </Pressable>
           </View>
@@ -584,278 +520,102 @@ export default function CreateOutfitScreen() {
               position: "relative",
             }}
           >
-            {/* Canvas — overflow:hidden clips the image at edges */}
-            <Pressable
-              style={[styles.canvas, { aspectRatio: undefined, flex: 1 }]}
-              onPress={() => {
+            <View
+              ref={viewRef}
+              style={{ flex: 1 }}
+              collapsable={false}
+            >
+              <Pressable
+                style={[styles.canvas, { aspectRatio: undefined, flex: 1 }]}
+                onPress={() => {
                 Keyboard.dismiss();
                 setIsFocused(false);
-                setIsTextFocused(false);
                 setBottomSheetMode("wardrobe");
-                if (textValue.trim() === "") {
-                  setIsTextActive(false);
+
+                // If the active item is text and empty, delete it when tapping outside
+                if (activeItem?.type === "text" && !activeItem.text?.trim()) {
+                  handleDelete(activeItem.id);
                 }
               }}
             >
-              {isVisible && (
-                <Animated.View
-                  style={[
-                    styles.canvasItemWrapper,
-                    {
-                      transform: [
-                        { translateX: pan.x },
-                        { translateY: pan.y },
-                        { scale: scaleAnim },
-                        { rotate: interpolatedRotate },
-                      ],
-                    },
-                  ]}
-                >
-                  <View style={styles.boundingWrapper}>
-                    <View
-                      {...panResponderItem.panHandlers}
-                      style={{ flex: 1 }}
-                      onTouchEnd={() => {
-                        setIsFocused(true);
-                        setIsTextFocused(false);
-                      }}
-                    >
-                      <ExpoImage
-                        source={{
-                          uri:
-                            initialItem?.imageUrl ??
-                            "https://picsum.photos/seed/shirt/400/500",
-                        }}
-                        style={[
-                          styles.canvasItemImage,
-                          { transform: [{ scaleX: flipValue }] },
-                        ]}
-                        contentFit="contain"
-                      />
-                      {isFocused && (
-                        <View style={styles.boundingBox} pointerEvents="none" />
-                      )}
-                    </View>
-                  </View>
-                </Animated.View>
-              )}
-
-              {/* Text Object on Canvas */}
-              {isTextActive && (
-                <Animated.View
-                  style={[
-                    styles.canvasTextWrapper,
-                    {
-                      transform: [
-                        { translateX: textPan.x },
-                        { translateY: textPan.y },
-                        { scale: textScaleAnim },
-                        { rotate: textInterpolatedRotate },
-                      ],
-                    },
-                  ]}
-                >
-                  <View
-                    {...textPanResponderItem.panHandlers}
-                    style={{ position: "relative" }}
-                  >
-                    <TextInput
-                      ref={textInputRef}
-                      value={textValue}
-                      onChangeText={setTextValue}
-                      pointerEvents="auto"
-                      onFocus={() => {
-                        setIsTextFocused(true);
-                        setIsFocused(false);
-                        setBottomSheetMode("text");
-                      }}
-                      multiline
-                      placeholder=""
-                      style={{
-                        fontSize: 24,
-                        color: textColor,
-                        fontWeight: textFontWeight,
-                        textAlign: textAlign,
-                        padding: 8,
-                        minWidth: 10,
-                        transform: [{ scaleX: textFlipValue }],
-                      }}
+              {canvasItems.map((item) => {
+                if (item.type === "text") {
+                  return (
+                    <CanvasTextItem
+                      key={item.id}
+                      item={item}
+                      isActive={activeItemId === item.id && isFocused}
+                      isPreview={isPreview}
+                      onFocus={handleFocus}
+                      onDelete={handleDelete}
+                      onTextChange={handleTextChange}
                     />
-                  </View>
-                </Animated.View>
-              )}
-
-              {/* Floating Toolbar inside canvas */}
-              {!isPreview && (
-                <View style={styles.floatingToolbar}>
-                  <Pressable
-                    style={[
-                      styles.toolbarIcon,
-                      bottomSheetMode === "text" && {
-                        backgroundColor: "#f3f4f6",
-                        borderRadius: 8,
-                        padding: 4,
-                      },
-                    ]}
-                    onPress={() => {
-                      if (bottomSheetMode === "text") {
-                        setBottomSheetMode("wardrobe");
-                      } else {
-                        setBottomSheetMode("text");
-                        setIsTextActive(true);
-                        setIsTextFocused(true);
-                        setIsFocused(false);
-                        setTimeout(() => textInputRef.current?.focus(), 250);
-                        if (sheetOffset.current === 0) {
-                          sheetOffset.current = downPositionRef.current;
-                          Animated.spring(sheetY, {
-                            toValue: downPositionRef.current,
-                            useNativeDriver: false,
-                          }).start();
-                        }
-                      }
-                    }}
-                  >
-                    <IconLetterT size={22} color="#4B5563" />
-                  </Pressable>
-                  <Pressable style={styles.toolbarIcon} onPress={handleFlip}>
-                    <IconFlipVertical size={22} color="#4B5563" />
-                  </Pressable>
-                </View>
-              )}
+                  );
+                } else {
+                  return (
+                    <CanvasImageItem
+                      key={item.id}
+                      item={item}
+                      isActive={activeItemId === item.id && isFocused}
+                      isPreview={isPreview}
+                      onFocus={handleFocus}
+                      onDelete={handleDelete}
+                    />
+                  );
+                }
+              })}
             </Pressable>
-
-            {/* Controls overlay — same transform but OUTSIDE canvas so not clipped */}
-            <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-              {/* Image Controls Overlay */}
-              {isVisible && isFocused && !isPreview && (
-                <View
-                  style={[
-                    StyleSheet.absoluteFill,
-                    { alignItems: "center", justifyContent: "center" },
-                  ]}
-                  pointerEvents="box-none"
-                >
-                  <Animated.View
-                    pointerEvents="box-none"
-                    style={[
-                      styles.canvasItemWrapper,
-                      {
-                        transform: [
-                          { translateX: pan.x },
-                          { translateY: pan.y },
-                          { scale: scaleAnim },
-                          { rotate: interpolatedRotate },
-                        ],
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[styles.boundingWrapper]}
-                      pointerEvents="box-none"
-                    >
-                      <Pressable
-                        onPress={() => setIsVisible(false)}
-                        style={[
-                          styles.controlBadge,
-                          { top: -14, right: -14, zIndex: 10 },
-                        ]}
-                      >
-                        <IconTrash size={14} color="#1D1A27" />
-                      </Pressable>
-                      <View
-                        {...panResponderResize.panHandlers}
-                        style={[
-                          styles.controlBadge,
-                          { bottom: -14, right: -14, zIndex: 10 },
-                        ]}
-                      >
-                        <IconArrowsDiagonal size={14} color="#1D1A27" />
-                      </View>
-                    </View>
-                  </Animated.View>
-                </View>
-              )}
-
-              {/* Text Controls Overlay */}
-              {isTextActive &&
-                textValue !== "" &&
-                isTextFocused &&
-                !isPreview && (
-                  <View
-                    style={[
-                      StyleSheet.absoluteFill,
-                      { alignItems: "center", justifyContent: "center" },
-                    ]}
-                    pointerEvents="box-none"
-                  >
-                    <Animated.View
-                      pointerEvents="box-none"
-                      style={[
-                        styles.canvasTextWrapper,
-                        {
-                          transform: [
-                            { translateX: textPan.x },
-                            { translateY: textPan.y },
-                            { scale: textScaleAnim },
-                            { rotate: textInterpolatedRotate },
-                          ],
-                        },
-                      ]}
-                    >
-                      <View
-                        style={{ position: "relative" }}
-                        pointerEvents="box-none"
-                      >
-                        <TextInput
-                          value={textValue}
-                          multiline
-                          style={{
-                            fontSize: 24,
-                            color: "transparent",
-                            opacity: 0,
-                            fontWeight: textFontWeight,
-                            textAlign: textAlign,
-                            padding: 8,
-                            minWidth: 10,
-                            transform: [{ scaleX: textFlipValue }],
-                          }}
-                          editable={false}
-                          pointerEvents="none"
-                        />
-
-                        {/* Bounding Box on Overlay for perfect alignment */}
-                        <View style={styles.boundingBox} pointerEvents="none" />
-
-                        {/* Top Right: Trash */}
-                        <Pressable
-                          onPress={() => {
-                            setTextValue("");
-                            setIsTextActive(false);
-                          }}
-                          style={[
-                            styles.controlBadge,
-                            { top: -14, right: -14, zIndex: 10 },
-                          ]}
-                        >
-                          <IconTrash size={14} color="#1D1A27" />
-                        </Pressable>
-
-                        {/* Bottom Right: Resize */}
-                        <View
-                          {...textPanResponderResize.panHandlers}
-                          style={[
-                            styles.controlBadge,
-                            { bottom: -14, right: -14, zIndex: 10 },
-                          ]}
-                        >
-                          <IconArrowsDiagonal size={14} color="#1D1A27" />
-                        </View>
-                      </View>
-                    </Animated.View>
-                  </View>
-                )}
             </View>
+
+            {/* Floating Toolbar (now outside canvas, hidden in preview) */}
+            {!isPreview && (
+              <View
+                style={[
+                  styles.floatingToolbar,
+                  { left: "50%", transform: [{ translateX: -48 }] },
+                ]}
+              >
+                <Pressable
+                  style={styles.toolbarIcon}
+                  onPress={() => {
+                    if (bottomSheetMode === "text" && isFocused) {
+                      setBottomSheetMode("wardrobe");
+                    } else {
+                      const newId = `text-${Date.now()}`;
+                      setCanvasItems((prev) => [
+                        ...prev,
+                        {
+                          id: newId,
+                          type: "text",
+                          text: "",
+                          color: "#000000",
+                          fontWeight: "700",
+                          align: "center",
+                          flipValue: 1,
+                          zIndex: prev.length + 1,
+                        },
+                      ]);
+                      setActiveItemId(newId);
+                      setIsFocused(true);
+                      setBottomSheetMode("text");
+
+                      if (sheetOffset.current === 0) {
+                        sheetOffset.current = downPositionRef.current;
+                        Animated.spring(sheetY, {
+                          toValue: downPositionRef.current,
+                          useNativeDriver: false,
+                        }).start();
+                      }
+                    }
+                  }}
+                >
+                  <IconLetterT size={22} color="#4B5563" />
+                </Pressable>
+                <Pressable style={styles.toolbarIcon} onPress={handleFlip}>
+                  <IconFlipHorizontal size={22} color="#4B5563" />
+                </Pressable>
+              </View>
+            )}
           </View>
         </View>
 
@@ -990,6 +750,41 @@ export default function CreateOutfitScreen() {
                   </ScrollView>
                 </View>
 
+                {/* Category Tabs Strip (plain text) */}
+                <View style={{ paddingBottom: 12 }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{
+                      paddingHorizontal: 16,
+                      gap: 20,
+                      alignItems: "center",
+                    }}
+                  >
+                    {CATEGORY_TABS.map((tab) => {
+                      const isActive = activeCategory === tab.value;
+                      return (
+                        <Pressable
+                          key={tab.value}
+                          onPress={() =>
+                            setActiveCategory(isActive ? "all" : tab.value)
+                          }
+                        >
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              fontWeight: isActive ? "700" : "400",
+                              color: isActive ? "#1D1A27" : "#9B9BAF",
+                            }}
+                          >
+                            {tab.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+
                 <View style={styles.divider} />
 
                 {/* Clothes Grid */}
@@ -999,7 +794,24 @@ export default function CreateOutfitScreen() {
                 >
                   <View style={styles.grid}>
                     {filteredItems.map((item: any) => (
-                      <View key={item.id} style={styles.gridItem}>
+                      <Pressable
+                        key={item.id}
+                        style={styles.gridItem}
+                        onPress={() => {
+                          const newItemId = `${item.id}-${Date.now()}`;
+                          setCanvasItems((prev) => [
+                            ...prev,
+                            {
+                              id: newItemId,
+                              type: "image",
+                              image: item.image ?? "",
+                              flipValue: 1,
+                              zIndex: prev.length + 1,
+                            },
+                          ]);
+                          setActiveItemId(newItemId);
+                        }}
+                      >
                         <View style={styles.gridImageContainer}>
                           <ExpoImage
                             source={{ uri: item.image }}
@@ -1009,7 +821,7 @@ export default function CreateOutfitScreen() {
                         </View>
                         <Text style={styles.gridBrandText}>{item.brand}</Text>
                         <Text style={styles.gridDateText}>{item.date}</Text>
-                      </View>
+                      </Pressable>
                     ))}
                   </View>
                 </ScrollView>
@@ -1053,15 +865,16 @@ export default function CreateOutfitScreen() {
                     ].map((c) => (
                       <Pressable
                         key={c}
-                        onPress={() => setTextColor(c)}
+                        onPress={() => updateActiveItem({ color: c })}
                         style={{
                           width: 38,
                           height: 38,
                           borderRadius: 12,
                           backgroundColor: c,
-                          borderWidth: textColor === c ? 2 : 1,
+                          borderWidth:
+                            (activeItem?.color ?? "#000000") === c ? 2 : 1,
                           borderColor:
-                            textColor === c
+                            (activeItem?.color ?? "#000000") === c
                               ? c === "#000000"
                                 ? "#4B5563"
                                 : "#1D1A27"
@@ -1070,16 +883,17 @@ export default function CreateOutfitScreen() {
                           justifyContent: "center",
                         }}
                       >
-                        {textColor === c && c === "#FFFFFF" && (
-                          <View
-                            style={{
-                              width: 14,
-                              height: 14,
-                              borderRadius: 7,
-                              backgroundColor: "#1D1A27",
-                            }}
-                          />
-                        )}
+                        {(activeItem?.color ?? "#000000") === c &&
+                          c === "#FFFFFF" && (
+                            <View
+                              style={{
+                                width: 14,
+                                height: 14,
+                                borderRadius: 7,
+                                backgroundColor: "#1D1A27",
+                              }}
+                            />
+                          )}
                       </Pressable>
                     ))}
                   </ScrollView>
@@ -1100,24 +914,38 @@ export default function CreateOutfitScreen() {
                         Font
                       </Text>
                       <View style={{ flexDirection: "row", gap: 16 }}>
-                        <Pressable onPress={() => setTextFontWeight("400")}>
+                        <Pressable
+                          onPress={() =>
+                            updateActiveItem({ fontWeight: "400" })
+                          }
+                        >
                           <Text
                             style={{
                               fontSize: 18,
                               fontWeight: "400",
-                              opacity: textFontWeight === "400" ? 1 : 0.4,
+                              opacity:
+                                (activeItem?.fontWeight ?? "700") === "400"
+                                  ? 1
+                                  : 0.4,
                               color: "#1D1A27",
                             }}
                           >
                             Aa
                           </Text>
                         </Pressable>
-                        <Pressable onPress={() => setTextFontWeight("700")}>
+                        <Pressable
+                          onPress={() =>
+                            updateActiveItem({ fontWeight: "700" })
+                          }
+                        >
                           <Text
                             style={{
                               fontSize: 18,
                               fontWeight: "700",
-                              opacity: textFontWeight === "700" ? 1 : 0.4,
+                              opacity:
+                                (activeItem?.fontWeight ?? "700") === "700"
+                                  ? 1
+                                  : 0.4,
                               color: "#1D1A27",
                             }}
                           >
@@ -1140,7 +968,7 @@ export default function CreateOutfitScreen() {
                       </Text>
                       <View style={{ flexDirection: "row", gap: 12 }}>
                         <Pressable
-                          onPress={() => setTextAlign("left")}
+                          onPress={() => updateActiveItem({ align: "left" })}
                           style={{
                             width: 40,
                             height: 40,
@@ -1148,37 +976,23 @@ export default function CreateOutfitScreen() {
                             alignItems: "center",
                             justifyContent: "center",
                             backgroundColor:
-                              textAlign === "left" ? "#1D1A27" : "#F3F4F6",
+                              (activeItem?.align ?? "center") === "left"
+                                ? "#1D1A27"
+                                : "#F3F4F6",
                           }}
                         >
                           <IconAlignLeft
                             size={20}
-                            color={textAlign === "left" ? "#FFFFFF" : "#4B5563"}
-                            strokeWidth={2}
-                          />
-                        </Pressable>
-                        <Pressable
-                          onPress={() => setTextAlign("center")}
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 12,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor:
-                              textAlign === "center" ? "#1D1A27" : "#F3F4F6",
-                          }}
-                        >
-                          <IconAlignCenter
-                            size={20}
                             color={
-                              textAlign === "center" ? "#FFFFFF" : "#4B5563"
+                              (activeItem?.align ?? "center") === "left"
+                                ? "#FFFFFF"
+                                : "#4B5563"
                             }
                             strokeWidth={2}
                           />
                         </Pressable>
                         <Pressable
-                          onPress={() => setTextAlign("right")}
+                          onPress={() => updateActiveItem({ align: "center" })}
                           style={{
                             width: 40,
                             height: 40,
@@ -1186,13 +1000,41 @@ export default function CreateOutfitScreen() {
                             alignItems: "center",
                             justifyContent: "center",
                             backgroundColor:
-                              textAlign === "right" ? "#1D1A27" : "#F3F4F6",
+                              (activeItem?.align ?? "center") === "center"
+                                ? "#1D1A27"
+                                : "#F3F4F6",
+                          }}
+                        >
+                          <IconAlignCenter
+                            size={20}
+                            color={
+                              (activeItem?.align ?? "center") === "center"
+                                ? "#FFFFFF"
+                                : "#4B5563"
+                            }
+                            strokeWidth={2}
+                          />
+                        </Pressable>
+                        <Pressable
+                          onPress={() => updateActiveItem({ align: "right" })}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor:
+                              (activeItem?.align ?? "center") === "right"
+                                ? "#1D1A27"
+                                : "#F3F4F6",
                           }}
                         >
                           <IconAlignRight
                             size={20}
                             color={
-                              textAlign === "right" ? "#FFFFFF" : "#4B5563"
+                              (activeItem?.align ?? "center") === "right"
+                                ? "#FFFFFF"
+                                : "#4B5563"
                             }
                             strokeWidth={2}
                           />
@@ -1205,28 +1047,47 @@ export default function CreateOutfitScreen() {
             )}
           </Animated.View>
         ) : (
-          // Preview Mode Pill Toolbar
+          // Preview Mode Pill Toolbar (Clean T/Flip Toolbar)
           <View style={styles.pillToolbarWrapper}>
             <View style={styles.pillToolbar}>
-              <Pressable style={styles.pillIconBtn}>
-                <IconLayoutBoardSplit
-                  size={22}
-                  color="#1D1A27"
-                  strokeWidth={1.5}
-                />
+              <Pressable
+                style={styles.toolbarIcon}
+                onPress={() => {
+                  if (bottomSheetMode === "text" && isFocused) {
+                    setBottomSheetMode("wardrobe");
+                  } else {
+                    const newId = `text-${Date.now()}`;
+                    setCanvasItems((prev) => [
+                      ...prev,
+                      {
+                        id: newId,
+                        type: "text",
+                        text: "",
+                        color: "#000000",
+                        fontWeight: "700",
+                        align: "center",
+                        flipValue: 1,
+                        zIndex: prev.length + 1,
+                      },
+                    ]);
+                    setActiveItemId(newId);
+                    setIsFocused(true);
+                    setBottomSheetMode("text");
+
+                    if (sheetOffset.current === 0) {
+                      sheetOffset.current = downPositionRef.current;
+                      Animated.spring(sheetY, {
+                        toValue: downPositionRef.current,
+                        useNativeDriver: false,
+                      }).start();
+                    }
+                  }
+                }}
+              >
+                <IconLetterT size={22} color="#4B5563" />
               </Pressable>
-              <Pressable style={styles.pillIconBtn}>
-                <IconPhoto size={22} color="#1D1A27" strokeWidth={1.5} />
-              </Pressable>
-              <Pressable style={styles.pillIconBtn}>
-                <IconLetterT size={22} color="#1D1A27" strokeWidth={1.5} />
-              </Pressable>
-              <Pressable style={styles.pillIconBtn}>
-                <IconMoodSmile size={22} color="#1D1A27" strokeWidth={1.5} />
-              </Pressable>
-              <View style={styles.pillDivider} />
-              <Pressable style={styles.pillIconBtn}>
-                <IconChevronRight size={22} color="#1D1A27" strokeWidth={1.5} />
+              <Pressable style={styles.toolbarIcon} onPress={handleFlip}>
+                <IconFlipHorizontal size={22} color="#4B5563" />
               </Pressable>
             </View>
           </View>

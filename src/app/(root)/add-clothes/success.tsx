@@ -1,15 +1,16 @@
-import React, { useCallback } from "react";
-import { Pressable, Text, View } from "react-native";
-import { Image as ExpoImage } from "expo-image";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   IconCheck,
-  IconMesh,
   IconHanger2,
+  IconMesh,
   IconPlus,
 } from "@tabler/icons-react-native";
+import { Image as ExpoImage } from "expo-image";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { usePostHog } from "posthog-react-native";
+import React, { useCallback, useEffect } from "react";
+import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type SuccessParams = {
   photoUri?: string;
@@ -20,6 +21,11 @@ type SuccessParams = {
 export default function AddClothesSuccessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams() as SuccessParams;
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    posthog?.capture("cloth_added", { category: params.category || "Item" });
+  }, []);
 
   const goHome = useCallback(() => {
     router.replace("/(root)/(tabs)" as never);
@@ -43,9 +49,7 @@ export default function AddClothesSuccessScreen() {
       <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
         <View className="flex-1 px-5 pt-10 items-center bg-white">
           {/* Success ring */}
-          <View
-            className="h-[88px] w-[88px] rounded-full bg-[#10B981] items-center justify-center mb-6 shadow-lg shadow-[#10B981]/20"
-          >
+          <View className="h-[88px] w-[88px] rounded-full bg-[#10B981] items-center justify-center mb-6 shadow-lg shadow-[#10B981]/20">
             <IconCheck size={44} color="#ffffff" strokeWidth={3} />
           </View>
 
@@ -74,7 +78,10 @@ export default function AddClothesSuccessScreen() {
               )}
             </View>
             <View className="flex-1">
-              <Text className="text-[#1D1A27] text-sm font-bold" numberOfLines={1}>
+              <Text
+                className="text-[#1D1A27] text-sm font-bold"
+                numberOfLines={1}
+              >
                 {itemName}
               </Text>
               <Text className="text-[#6B7280] text-[11px] mt-0.5 capitalize font-medium">
@@ -119,7 +126,9 @@ export default function AddClothesSuccessScreen() {
               </Text>
             </Pressable>
             <Pressable onPress={goHome} className="py-2 items-center">
-              <Text className="text-[#6B7280] text-xs font-semibold">Back to home</Text>
+              <Text className="text-[#6B7280] text-xs font-semibold">
+                Back to home
+              </Text>
             </Pressable>
           </View>
         </View>

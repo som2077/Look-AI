@@ -1,12 +1,14 @@
 import { IconFlameFilled } from "@tabler/icons-react-native";
 import type { ReactNode } from "react";
-import React, { useMemo, useEffect, useRef } from "react";
-import { Text, View, Animated } from "react-native";
+import React, { useMemo, useRef } from "react";
+import { Animated, Text, View } from "react-native";
 import { Circle, Svg } from "react-native-svg";
+
+import { useFocusEffect } from "expo-router";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const TRACK_COLOR = "#F8F7FC" as const;
+const TRACK_COLOR = "#F8F7FC90" as const;
 
 export interface RingProgressSegment {
   readonly id: string;
@@ -64,9 +66,13 @@ const clampProgress = (value: number) => {
   return value;
 };
 
-import { useFocusEffect } from "expo-router";
-
-const AnimatedRingSegment = ({ segment, center }: { segment: RingProgressSegment & { progress: number }, center: number }) => {
+const AnimatedRingSegment = ({
+  segment,
+  center,
+}: {
+  segment: RingProgressSegment & { progress: number };
+  center: number;
+}) => {
   const animatedProgress = useRef(new Animated.Value(0)).current;
 
   useFocusEffect(
@@ -82,7 +88,7 @@ const AnimatedRingSegment = ({ segment, center }: { segment: RingProgressSegment
       return () => {
         animatedProgress.stopAnimation();
       };
-    }, [segment.progress, animatedProgress])
+    }, [segment.progress, animatedProgress]),
   );
 
   const circumference = 2 * Math.PI * segment.radius;
@@ -124,7 +130,13 @@ const AnimatedRingSegment = ({ segment, center }: { segment: RingProgressSegment
 };
 
 // Component for the animated dot overlay
-const AnimatedDot = ({ segment, center }: { segment: RingProgressSegment & { progress: number }, center: number }) => {
+const AnimatedDot = ({
+  segment,
+  center,
+}: {
+  segment: RingProgressSegment & { progress: number };
+  center: number;
+}) => {
   const animatedProgress = useRef(new Animated.Value(0)).current;
 
   useFocusEffect(
@@ -139,7 +151,7 @@ const AnimatedDot = ({ segment, center }: { segment: RingProgressSegment & { pro
       return () => {
         animatedProgress.stopAnimation();
       };
-    }, [segment.progress, animatedProgress])
+    }, [segment.progress, animatedProgress]),
   );
 
   const dotRadius = segment.strokeWidth / 2 - 2;
@@ -176,7 +188,6 @@ const AnimatedDot = ({ segment, center }: { segment: RingProgressSegment & { pro
     </Animated.View>
   );
 };
-
 
 export function WardrobeRingSummaryCard({
   wornPercentage,
@@ -226,13 +237,13 @@ export function WardrobeRingSummaryCard({
 
   return (
     <View
-      className="mt-2 bg-[#ffffff] border border-[#E9EBF8] rounded-[24px] py-4 px-3"
+      className="mt-4 bg-[#ffffff] border-[0.5px]  border-[#E9EBF8]  rounded-[24px] py-4 px-3"
       style={{
-        shadowColor: "#000",
+        shadowColor: "#FFFFFF10",
         shadowOpacity: 0.02,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
-        elevation: 1,
+        elevation: 10,
       }}
     >
       <View className="flex-row items-center justify-between gap-3">
@@ -289,12 +300,18 @@ export function WardrobeRingSummaryCard({
         >
           <Svg width={svgSize} height={svgSize}>
             {sanitizedSegments.map((segment) => (
-              <AnimatedRingSegment key={segment.id} segment={segment} center={center} />
+              <AnimatedRingSegment
+                key={segment.id}
+                segment={segment}
+                center={center}
+              />
             ))}
           </Svg>
-          
+
           {/* Animated dot overlays for the rings */}
-          <View style={{ position: "absolute", width: svgSize, height: svgSize }}>
+          <View
+            style={{ position: "absolute", width: svgSize, height: svgSize }}
+          >
             {sanitizedSegments.map((segment) => (
               <AnimatedDot key={segment.id} segment={segment} center={center} />
             ))}
@@ -311,7 +328,7 @@ export function WardrobeRingSummaryCard({
                 height: 80,
               }}
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full  bg-[#F8F7FC]">
+              <View className="h-10 w-10 items-center justify-center rounded-full  bg-[#F8F7FC80]">
                 <IconFlameFilled size={20} color="#1D1A27" />
               </View>
             </View>
