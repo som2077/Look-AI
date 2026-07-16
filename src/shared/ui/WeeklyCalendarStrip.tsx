@@ -77,15 +77,15 @@ const DayCell = React.memo(function DayCell({
       <View
         style={{
           marginTop: 6,
-          width: 44,
-          height: 44,
+          width: 40,
+          height: 40,
           borderRadius: 100,
           alignItems: "center",
           justifyContent: "center",
           ...(isActive
             ? { backgroundColor: "#1D1A27" }
             : {
-                borderWidth: 1,
+                borderWidth: 1.4,
                 borderStyle: "dashed",
                 borderColor,
                 backgroundColor: "#FFFFFF",

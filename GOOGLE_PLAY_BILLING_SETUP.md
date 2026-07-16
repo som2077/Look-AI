@@ -2,11 +2,11 @@
 
 ## 1. Prerequisites
 
-| Requirement | Detail |
-|---|---|
-| Google Play Developer account | play.google.com/console |
+| Requirement                            | Detail                                                       |
+| -------------------------------------- | ------------------------------------------------------------ |
+| Google Play Developer account          | play.google.com/console                                      |
 | App uploaded as Internal Testing track | At least one APK/AAB required before products can be created |
-| Google Cloud service account | For server-side token verification |
+| Google Cloud service account           | For server-side token verification                           |
 
 ---
 
@@ -21,6 +21,7 @@ npx expo run:android
 ```
 
 `app.json` plugin already configured:
+
 ```json
 ["react-native-iap", { "paymentProvider": "Play Store" }]
 ```
@@ -35,14 +36,15 @@ Go to: **Play Console → (your app) → Monetize → Products → Subscriptions
 
 Create 4 subscriptions with these **exact Product IDs**:
 
-| Product ID | Name | Price (INR) | Period |
-|---|---|---|---|
-| `lookai_pro_monthly` | Pro Monthly | ₹299 | 1 month |
-| `lookai_pro_yearly` | Pro Yearly | ₹2,499 | 1 year |
-| `lookai_premium_monthly` | Premium Monthly | ₹699 | 1 month |
-| `lookai_premium_yearly` | Premium Yearly | ₹5,999 | 1 year |
+| Product ID               | Name            | Price (INR) | Period  |
+| ------------------------ | --------------- | ----------- | ------- |
+| `lookai_pro_monthly`     | Pro Monthly     | ₹299        | 1 month |
+| `lookai_pro_yearly`      | Pro Yearly      | ₹2,499      | 1 year  |
+| `lookai_premium_monthly` | Premium Monthly | ₹699        | 1 month |
+| `lookai_premium_yearly`  | Premium Yearly  | ₹5,999      | 1 year  |
 
 ### 3.2 Per-product setup steps
+
 1. Click **Create subscription**
 2. Set the **Product ID** exactly as above
 3. Add a **name** and **description** (shown on Play Store)
@@ -57,6 +59,7 @@ Create 4 subscriptions with these **exact Product IDs**:
 ## 4. Google Cloud – Service Account for Server Verification
 
 ### 4.1 Create a service account
+
 1. Open [Google Cloud Console](https://console.cloud.google.com)
 2. Select your project (same as linked to Play Console)
 3. Go to **IAM & Admin → Service Accounts → Create Service Account**
@@ -64,10 +67,12 @@ Create 4 subscriptions with these **exact Product IDs**:
 5. Skip role assignment at this step → **Done**
 
 ### 4.2 Create and download JSON key
+
 1. Click the service account → **Keys → Add Key → JSON**
 2. Download the JSON file — **keep it secret, never commit to git**
 
 ### 4.3 Link to Play Console
+
 1. In Play Console → **Setup → API access**
 2. Click **Link to Google Cloud project** (choose the same project)
 3. Under **Service accounts**, find `play-billing-verifier` → **Grant access**
@@ -80,6 +85,7 @@ Create 4 subscriptions with these **exact Product IDs**:
 ### 5.1 Run the database schema
 
 In Supabase Dashboard → **SQL Editor**, run the full contents of:
+
 ```
 supabase/schema.sql
 ```
@@ -116,6 +122,7 @@ Note the deployed URLs — you'll need `billing-webhook` URL for RTDN.
 RTDN keeps your server in sync when subscriptions renew, cancel, or expire.
 
 ### 6.1 Create a Cloud Pub/Sub topic
+
 1. Go to [Google Cloud Pub/Sub](https://console.cloud.google.com/cloudpubsub)
 2. **Create topic** → name it `play-billing-notifications`
 3. Create a **Push subscription** pointing to your Edge Function URL:
@@ -125,6 +132,7 @@ RTDN keeps your server in sync when subscriptions renew, cancel, or expire.
 4. Under **Authentication**, enable **Enable authentication** and set a bearer token matching `RTDN_BEARER_TOKEN`
 
 ### 6.2 Link in Play Console
+
 1. **Play Console → Monetize → Real-time developer notifications**
 2. Enter the Pub/Sub topic path:
    ```
@@ -154,6 +162,7 @@ eas build --platform android --profile preview
 ## 8. Environment Variables Checklist
 
 ### Client (`.env`)
+
 ```
 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
 EXPO_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
@@ -161,6 +170,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 
 ### Server (Supabase secrets only — never in .env)
+
 ```
 GOOGLE_PLAY_PACKAGE_NAME
 GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
@@ -169,6 +179,7 @@ RTDN_BEARER_TOKEN
 ```
 
 ### Remove these (old — already deleted)
+
 ```
 EXPO_PUBLIC_RAZORPAY_*
 EXPO_PUBLIC_STRIPE_*
@@ -198,18 +209,18 @@ EXPO_PUBLIC_PAYMENTS_API_BASE_URL
 
 ## 10. Testing Checklist
 
-| Test | Expected |
-|---|---|
-| Open subscription screen | Plans load from Play Store |
-| Tap "Pro Monthly" on internal test device | Google Play sheet appears |
-| Complete purchase | `verify-purchase` called, entitlement saved, premium badge shown |
-| Close app, reopen | `refreshEntitlement` restores premium state from Supabase |
-| Tap "Restore Purchases" on second device | Entitlement restored |
-| Tap active plan badge | Navigate to Manage Subscription screen |
-| Tap "Manage on Google Play" | Opens play.google.com/store/account/subscriptions |
-| Cancel subscription in Google Play | RTDN fires, `billing-webhook` sets status to `cancelled` |
-| Subscription expires | RTDN fires, status → `expired`, tier → `free` |
-| Grace period scenario | Banner visible, `daysUntilGraceEnd` counted down correctly |
+| Test                                      | Expected                                                         |
+| ----------------------------------------- | ---------------------------------------------------------------- |
+| Open subscription screen                  | Plans load from Play Store                                       |
+| Tap "Pro Monthly" on internal test device | Google Play sheet appears                                        |
+| Complete purchase                         | `verify-purchase` called, entitlement saved, premium badge shown |
+| Close app, reopen                         | `refreshEntitlement` restores premium state from Supabase        |
+| Tap "Restore Purchases" on second device  | Entitlement restored                                             |
+| Tap active plan badge                     | Navigate to Manage Subscription screen                           |
+| Tap "Manage on Google Play"               | Opens play.google.com/store/account/subscriptions                |
+| Cancel subscription in Google Play        | RTDN fires, `billing-webhook` sets status to `cancelled`         |
+| Subscription expires                      | RTDN fires, status → `expired`, tier → `free`                    |
+| Grace period scenario                     | Banner visible, `daysUntilGraceEnd` counted down correctly       |
 
 ---
 

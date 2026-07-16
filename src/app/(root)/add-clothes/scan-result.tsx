@@ -4,6 +4,8 @@ import { useScanHistoryStore } from "@/features/scanning/model/scan-history-stor
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
+import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -22,6 +24,8 @@ type ScanResultParams = {
   photoUri?: string;
   resultJson?: string;
   mode?: string;
+  outfitIndex?: string;
+  remainingUris?: string;
 };
 
 const DEFAULT_RESULT: FullClothingAnalysis = {
@@ -34,8 +38,7 @@ const DEFAULT_RESULT: FullClothingAnalysis = {
   fit: "Regular",
   sleeveType: "N/A",
   neckType: "N/A",
-  style: ["Casual"],
-  season: ["All-season"],
+  season: ["All Season"],
   occasion: ["Casual"],
   formalityScore: 5,
   versatilityTags: [],
@@ -84,8 +87,10 @@ function ConfidenceBar({ confidence }: { confidence: number }) {
 export default function ScanResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams() as ScanResultParams;
+  const { canAddWardrobe, handleLimitReached } = usePremiumLimits();
   const addItem = useUserWardrobeStore((s) => s.addItem);
   const hasItem = useUserWardrobeStore((s) => s.hasItem);
+  const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
   const addScan = useScanHistoryStore((s) => s.addScan);
 
   const [saved, setSaved] = useState(false);
@@ -94,6 +99,17 @@ export default function ScanResultScreen() {
   const [error, setError] = useState<string | null>(null);
   
   const [loading, setLoading] = useState(!params.resultJson);
+  const [photoUri, setPhotoUri] = useState(params.photoUri);
+  const [remainingUris, setRemainingUris] = useState<string[]>(() => {
+    try {
+      return params.remainingUris ? JSON.parse(params.remainingUris) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const totalItems = 1 + (params.remainingUris ? (() => { try { return JSON.parse(params.remainingUris).length; } catch { return 0; } })() : 0);
+  const currentIndex = totalItems - remainingUris.length;
   const [result, setResult] = useState<FullClothingAnalysis>(() => {
     try {
       if (!params.resultJson) return DEFAULT_RESULT;
@@ -112,16 +128,36 @@ export default function ScanResultScreen() {
 
   useEffect(() => {
     const processImage = async () => {
-      if (!params.photoUri) {
+      if (!photoUri) {
         setLoading(false);
         return;
       }
-      
+
       try {
-        setLoadingText("AI is extracting styling details...");
+        setLoading(true);
         
-        // 1. Analyze with Gemini on the original local image FIRST
-        const aiData = await analyzeClothingFull(params.photoUri);
+        let aiImageUri = photoUri;
+        let finalImageUri = photoUri;
+
+        try {
+          setLoadingText("Removing background...");
+          // 1. Remove background and upload to Cloudinary FIRST
+          const uploadRes = await uploadToCloudinaryWithBgRemoval(photoUri);
+          
+          finalImageUri = uploadRes.imageUrl;
+          aiImageUri = uploadRes.imageUrl;
+          
+          setCloudinaryUrl(uploadRes.imageUrl);
+          setOriginalUrl(uploadRes.originalImageUrl);
+        } catch (bgError) {
+          console.warn("Background removal failed, falling back to original image:", bgError);
+          // If bg removal fails, we proceed with the original image
+          aiImageUri = photoUri;
+          setOriginalUrl(photoUri);
+        }
+        setLoadingText("AI is extracting styling details...");
+        // 2. Analyze with Gemini on the background-removed image (or fallback)
+        const aiData = await analyzeClothingFull(aiImageUri);
         
         // Handle Error Rejection
         if (aiData?.category === "Full Body") {
@@ -140,24 +176,16 @@ export default function ScanResultScreen() {
           return;
         }
 
-        setLoadingText("Removing background...");
-        // 2. Remove background and upload to Cloudinary
-        const uploadRes = await uploadToCloudinaryWithBgRemoval(params.photoUri);
-        
-        const finalImageUri = uploadRes.imageUrl;
-        setCloudinaryUrl(uploadRes.imageUrl);
-
-        setOriginalUrl(uploadRes.originalImageUrl);
-        if (aiData) setResult(aiData);
-        
-        // Default custom name
-        if (aiData) setCustomName(`${aiData.primaryColor} ${aiData.subCategory}`);
+        if (aiData) {
+          setResult(aiData);
+          setCustomName(`${aiData.primaryColor} ${aiData.subCategory}`);
+        }
 
         addScan({
           type: "cloth",
           thumbnail: finalImageUri,
           date: new Date().toISOString(),
-          result: aiData as unknown as Record<string, unknown>,
+          result: (aiData || DEFAULT_RESULT) as unknown as Record<string, unknown>,
           isFavorite: false,
         });
 
@@ -168,15 +196,35 @@ export default function ScanResultScreen() {
       }
     };
 
-    if (!params.resultJson && params.photoUri) {
+    if (!params.resultJson && photoUri) {
       processImage();
     }
-  }, []);
+  }, [photoUri]);
+
+  const advanceToNext = () => {
+    if (remainingUris.length > 0) {
+      const nextUri = remainingUris[0];
+      setRemainingUris(remainingUris.slice(1));
+      setSaved(false);
+      setResult(DEFAULT_RESULT);
+      setCloudinaryUrl(null);
+      setOriginalUrl(null);
+      setCustomName("");
+      setBrand("");
+      setPhotoUri(nextUri); // triggers useEffect
+    } else {
+      router.back();
+    }
+  };
 
   const alreadyInWardrobe = hasItem(result.category, result.primaryColor);
 
   const handleSave = async () => {
     if (saved || alreadyInWardrobe) return;
+    if (!canAddWardrobe) {
+      handleLimitReached("wardrobe");
+      return;
+    }
     setSaving(true);
     addItem({
       customName,
@@ -190,20 +238,30 @@ export default function ScanResultScreen() {
       fit: result.fit,
       sleeveType: result.sleeveType,
       neckType: result.neckType,
-      style: result.style,
       season: result.season,
       occasion: result.occasion,
       formalityScore: result.formalityScore,
       versatilityTags: result.versatilityTags,
-      imageUrl: cloudinaryUrl || params.photoUri,
-      originalImageUrl: originalUrl || params.photoUri,
+      careInstructions: result.careInstructions,
+      notes: result.notes,
+      colorHex: result.colorHex,
+      imageUrl: cloudinaryUrl || photoUri,
+      originalImageUrl: originalUrl || photoUri,
       confidence: result.confidence,
       source: "camera",
       isFavorite: false,
       wearCount: 0,
     });
+    if (params.outfitIndex !== undefined) {
+      removeOutfit(parseInt(params.outfitIndex, 10));
+    }
     setSaving(false);
-    setSaved(true);
+    
+    if (remainingUris.length > 0) {
+      advanceToNext();
+    } else {
+      setSaved(true);
+    }
   };
 
   const chips = [
@@ -214,7 +272,10 @@ export default function ScanResultScreen() {
     { label: "Pattern", value: result.pattern },
     { label: "Fit", value: result.fit },
     { label: "Season", value: result.season?.join(", ") },
+    { label: "Occasion", value: result.occasion?.join(", ") },
     { label: "Formality", value: `${result.formalityScore}/10` },
+    { label: "Care", value: result.careInstructions },
+    { label: "Notes", value: result.notes },
   ];
 
   if (loading) {
@@ -242,7 +303,7 @@ export default function ScanResultScreen() {
           }}
         >
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => advanceToNext()}
             style={{
               width: 40,
               height: 40,
@@ -254,9 +315,16 @@ export default function ScanResultScreen() {
           >
             <IconArrowLeft size={20} color="#FFFFFF" />
           </Pressable>
-          <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "800", flex: 1 }}>
-            Wardrobe Item
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "800" }}>
+              Wardrobe Item
+            </Text>
+            {totalItems > 1 && (
+              <Text style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
+                Item {currentIndex} of {totalItems}
+              </Text>
+            )}
+          </View>
           <View
             style={{
               flexDirection: "row",

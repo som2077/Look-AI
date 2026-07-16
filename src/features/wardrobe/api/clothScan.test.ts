@@ -1,0 +1,61 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { saveClothToWardrobe } from './saveClothToWardrobe';
+import { SupabaseClient } from '@supabase/supabase-js';
+
+describe('saveClothToWardrobe', () => {
+  let mockSupabase: any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSupabase = {
+      from: vi.fn(() => ({
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn()
+          }))
+        }))
+      }))
+    };
+  });
+
+  it('should successfully save cloth item', async () => {
+    // Setup mock return
+    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'item-123' }, error: null });
+    const mockSelect = vi.fn(() => ({ single: mockSingle }));
+    const mockInsert = vi.fn(() => ({ select: mockSelect }));
+    mockSupabase.from.mockReturnValue({ insert: mockInsert });
+
+    const analysisResult = {
+      success: true,
+      original_url: 'https://fake-url.com/orig.jpg',
+      bg_removed_url: 'https://fake-url.com/bg.png',
+      form_fields: {
+        season: 'Summer',
+        category: 'Top',
+        color: 'Red',
+      },
+      raw_gemini_vision: {},
+      raw_gemini_flash: {}
+    };
+
+    const result = await saveClothToWardrobe(mockSupabase as SupabaseClient, analysisResult, 'camera', 'user-1');
+
+    expect(result.success).toBe(true);
+    expect(result.itemId).toBe('item-123');
+    expect(mockSupabase.from).toHaveBeenCalledWith('wardrobe_items');
+    expect(mockInsert).toHaveBeenCalled();
+  });
+
+  it('should handle API failure correctly', async () => {
+    const analysisResult = {
+      success: false,
+      error: 'API Rate limited'
+    };
+
+    const result = await saveClothToWardrobe(mockSupabase as SupabaseClient, analysisResult, 'camera', 'user-1');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('API Rate limited');
+    expect(mockSupabase.from).not.toHaveBeenCalled();
+  });
+});

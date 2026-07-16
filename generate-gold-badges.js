@@ -1,7 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const badgeDir = path.join(__dirname, "assets", "badge");
+// __dirname may be undefined in some environments (ESM). Use process.cwd() for robustness.
+const badgeDir = path.join(process.cwd(), "assets", "badge");
 
 // Colors mapping: Gray -> Gold
 const colorMap = {

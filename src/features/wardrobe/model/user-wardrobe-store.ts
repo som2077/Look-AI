@@ -18,6 +18,9 @@ export type UserClothingItem = {
   fit?: string;
   sleeveType?: string;
   neckType?: string;
+  careInstructions?: string;
+  notes?: string;
+  colorHex?: string;
 
   // Styling Intelligence
   style?: string[];
@@ -36,6 +39,7 @@ export type UserClothingItem = {
   isFavorite?: boolean;
   wearCount?: number;
   lastWornDate?: string;
+  rating?: number;
 
   createdAt: string;
 };

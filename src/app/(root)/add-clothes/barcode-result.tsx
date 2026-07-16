@@ -1,6 +1,7 @@
 import { BarcodeAnalysis, analyzeBarcodeImage } from "@/features/scanning/api/gemini-scan"
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store"
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store"
+import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits"
 import {
   IconArrowLeft,
   IconBarcode,
@@ -70,6 +71,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default function BarcodeResultScreen() {
   const router = useRouter()
+  const { canAddWardrobe, handleLimitReached } = usePremiumLimits()
   const params = useLocalSearchParams() as BarcodeResultParams
   const addItem = useUserWardrobeStore((s) => s.addItem)
   const addScan = useScanHistoryStore((s) => s.addScan)
@@ -117,6 +119,10 @@ export default function BarcodeResultScreen() {
   }, [])
 const handleSave = () => {
     if (saved) return
+    if (!canAddWardrobe) {
+      handleLimitReached("wardrobe")
+      return
+    }
     addItem({
       customName: result.itemName || "Clothing Item",
       category: "top",

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type SavedItemType = "outfit" | "clothes" | "inspo";
+export type SavedItemType = "outfit" | "clothes" | "inspo" | "label";
 
 export interface SavedOutfit {
   id: string;

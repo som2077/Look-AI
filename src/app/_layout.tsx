@@ -2,7 +2,7 @@ import {
   OnboardingProvider,
   useOnboardingState,
 } from "@/features/onboarding/model/onboarding-store";
-import { useRevenueCat } from "@/features/payments/useRevenueCat";
+import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { FONT_ASSETS } from "@/shared/config/constants/fonts";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
@@ -237,12 +237,13 @@ export default function RootLayout() {
         process.env.EXPO_PUBLIC_SUPABASE_URL || "https://google.com";
       const response = await fetch(targetUrl, {
         method: "HEAD",
+        mode: "no-cors",
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
-      if (response.status >= 500) {
+      if (response.type !== "opaque" && response.status >= 500) {
         setServerError(true);
         setOffline(false);
       } else {

@@ -153,6 +153,7 @@ export default function FitCheckResultScreen() {
                   style={{ paddingVertical: 12, paddingHorizontal: 16 }}
                   onPress={() => {
                     setShowMenu(false);
+                    if (params.outfitIndex) removeOutfit(parseInt(params.outfitIndex));
                     router.replace("/(root)/(tabs)" as never);
                   }}
                 >

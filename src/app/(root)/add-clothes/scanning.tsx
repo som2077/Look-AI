@@ -1,4 +1,4 @@
-﻿import { analyzeClothingImage } from "@/features/scanning/api/gemini-vision";
+import { analyzeClothingImage } from "@/features/scanning/api/gemini-vision";
 import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -121,6 +121,9 @@ export default function AddClothesScanningScreen() {
               occasion: result?.occasion ?? "Casual",
               season: result?.season ?? "All",
               matchingColors: JSON.stringify(result?.matchingColors ?? []),
+              brand: result?.brand ?? "",
+              careInstructions: result?.careInstructions ?? "",
+              notes: result?.notes ?? "",
             },
           } as never);
         }, 500);

@@ -1,1 +1,1 @@
-export { default } from "@/features/payments/PaywallScreen";
+export { default } from "@/features/payments/ui/PaywallScreen";

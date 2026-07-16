@@ -1,4 +1,4 @@
-import { IconFlameFilled } from "@tabler/icons-react-native";
+import { Image } from "expo-image";
 import type { ReactNode } from "react";
 import React, { useMemo, useRef } from "react";
 import { Animated, Text, View } from "react-native";
@@ -103,6 +103,24 @@ const AnimatedRingSegment = ({
 
   return (
     <React.Fragment>
+      {/* Track circle outer border */}
+      <Circle
+        cx={center}
+        cy={center}
+        r={segment.radius + segment.strokeWidth / 2}
+        stroke="#A4A4A410"
+        strokeWidth={0.5}
+        fill="transparent"
+      />
+      {/* Track circle inner border */}
+      <Circle
+        cx={center}
+        cy={center}
+        r={segment.radius - segment.strokeWidth / 2}
+        stroke="#A4A4A410"
+        strokeWidth={0.5}
+        fill="transparent"
+      />
       {/* Track circle */}
       <Circle
         cx={center}
@@ -154,9 +172,8 @@ const AnimatedDot = ({
     }, [segment.progress, animatedProgress]),
   );
 
-  const dotRadius = segment.strokeWidth / 2 - 2;
-
-  if (segment.progress === 0) return null;
+  const capRadius = segment.strokeWidth / 2;
+  const innerDotRadius = capRadius - 2.5;
 
   return (
     <Animated.View
@@ -177,14 +194,30 @@ const AnimatedDot = ({
       <View
         style={{
           position: "absolute",
-          left: center + segment.radius - dotRadius,
-          top: center - dotRadius,
-          width: dotRadius * 2,
-          height: dotRadius * 2,
-          borderRadius: dotRadius,
-          backgroundColor: "#FFFFFF",
+          left: center + segment.radius - capRadius,
+          top: center - capRadius,
+          width: capRadius * 2,
+          height: capRadius * 2,
+          borderRadius: capRadius,
+          backgroundColor: segment.color,
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: "#000",
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          shadowOffset: { width: 0, height: 1 },
+          elevation: 2,
         }}
-      />
+      >
+        <View
+          style={{
+            width: innerDotRadius * 2,
+            height: innerDotRadius * 2,
+            borderRadius: innerDotRadius,
+            backgroundColor: "#FFFFFF",
+          }}
+        />
+      </View>
     </Animated.View>
   );
 };
@@ -237,13 +270,19 @@ export function WardrobeRingSummaryCard({
 
   return (
     <View
-      className="mt-4 bg-[#ffffff] border-[0.5px]  border-[#E9EBF8]  rounded-[24px] py-4 px-3"
       style={{
-        shadowColor: "#FFFFFF10",
+        marginTop: 16,
+        backgroundColor: "#ffffff",
+        borderWidth: 0.7,
+        borderColor: "#E9EBF8",
+        borderRadius: 24,
+        paddingVertical: 16,
+        paddingHorizontal: 12,
+        shadowColor: "#FFFFFF",
         shadowOpacity: 0.02,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
-        elevation: 10,
+        elevation: 3,
       }}
     >
       <View className="flex-row items-center justify-between gap-3">
@@ -329,7 +368,11 @@ export function WardrobeRingSummaryCard({
               }}
             >
               <View className="h-10 w-10 items-center justify-center rounded-full  bg-[#F8F7FC80]">
-                <IconFlameFilled size={20} color="#1D1A27" />
+                <Image 
+                  source={require("../../../../assets/fire_x.avif")} 
+                  style={{ width: 24, height: 24 }} 
+                  contentFit="contain"
+                />
               </View>
             </View>
           )}

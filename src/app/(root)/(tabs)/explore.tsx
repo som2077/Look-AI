@@ -1,5 +1,5 @@
 import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
-import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+// import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 
 import {
@@ -599,12 +599,15 @@ function FeedTab() {
 export default function ExploreScreen() {
   return (
     <SwipeTabWrapper tabIndex={2}>
-      <AppGradientBackground>
-        <StatusBar style="dark" />
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-          <FeedTab />
-        </SafeAreaView>
-      </AppGradientBackground>
+      {/* <AppGradientBackground> */}
+      <StatusBar style="dark" />
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "white" }}
+        edges={["top"]}
+      >
+        <FeedTab />
+      </SafeAreaView>
+      {/* </AppGradientBackground> */}
     </SwipeTabWrapper>
   );
 }

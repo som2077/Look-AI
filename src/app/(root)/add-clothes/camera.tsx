@@ -10,6 +10,7 @@ import {
 import { CameraView, useCameraPermissions, type CameraType } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useRef, useState } from "react";
 import {
@@ -157,27 +158,35 @@ export default function AddClothesCameraScreen() {
   const cameraRef = useRef<CameraView | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>("back");
+  const [flash, setFlash] = useState<boolean>(false);
+  const { canAddWardrobe, canAddClothLabel, canAddFitCheck, handleLimitReached } = usePremiumLimits();
   const [capturing, setCapturing] = useState(false);
   const [activeMode, setActiveMode] = useState<ScanMode>("scan-cloth");
 
+  // Handle permission check
+  if (!permission) return <View style={{ flex: 1, backgroundColor: "#0F0E15" }} />;
+  
   const currentMode = MODES.find((m) => m.id === activeMode) ?? MODES[0];
 
   // ── Navigation helpers ──────────────────────────────────────────────────────
 
   const navigateToResult = useCallback(
-    (uri: string, mode: ScanMode) => {
+    (uri: string | string[], mode: ScanMode) => {
+      const firstUri = Array.isArray(uri) ? uri[0] : uri;
+      const remainingUris = Array.isArray(uri) && uri.length > 1 ? JSON.stringify(uri.slice(1)) : undefined;
+
       switch (mode) {
         case "scan-cloth":
           router.push({
             pathname: "/(root)/add-clothes/scan-result",
-            params: { photoUri: uri, mode: "cloth" },
+            params: { photoUri: firstUri, remainingUris, mode: "cloth" },
           } as never);
           break;
 
         case "label":
           import("@/features/ai-styling/model/outfit-analysis-store").then(
             ({ useOutfitAnalysisStore }) => {
-              useOutfitAnalysisStore.getState().startAnalysis(uri, mode);
+              useOutfitAnalysisStore.getState().startAnalysis(firstUri, mode);
               router.replace("/(root)/(tabs)" as never);
             },
           );
@@ -185,7 +194,7 @@ export default function AddClothesCameraScreen() {
         case "fit-check":
           import("@/features/ai-styling/model/outfit-analysis-store").then(
             ({ useOutfitAnalysisStore }) => {
-              useOutfitAnalysisStore.getState().startAnalysis(uri, mode);
+              useOutfitAnalysisStore.getState().startAnalysis(firstUri, mode);
               router.replace("/(root)/(tabs)" as never);
             },
           );
@@ -205,15 +214,36 @@ export default function AddClothesCameraScreen() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.85,
         allowsEditing: false,
+        allowsMultipleSelection: true,
       });
-      if (!result.canceled && result.assets[0]?.uri) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        if (!canAddWardrobe) {
+          handleLimitReached("wardrobe");
+          return;
+        }
         // Fallback to "scan-cloth" if gallery mode is selected from carousel
-        navigateToResult(result.assets[0].uri, "scan-cloth");
+        const uris = result.assets.map(a => a.uri);
+        navigateToResult(uris, "scan-cloth");
       }
       return;
     }
 
     if (!cameraRef.current || capturing) return;
+
+    // Check limits before capturing
+    if (activeMode === "scan-cloth" && !canAddWardrobe) {
+      handleLimitReached("wardrobe");
+      return;
+    }
+    if (activeMode === "label" && !canAddClothLabel) {
+      handleLimitReached("cloth_label");
+      return;
+    }
+    if (activeMode === "fit-check" && !canAddFitCheck) {
+      handleLimitReached("fit_check");
+      return;
+    }
+
     try {
       setCapturing(true);
       const photo = await cameraRef.current.takePictureAsync({
@@ -235,11 +265,25 @@ export default function AddClothesCameraScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
       allowsEditing: false,
+      allowsMultipleSelection: true,
     });
-    if (!result.canceled && result.assets[0]?.uri) {
-      navigateToResult(result.assets[0].uri, activeMode);
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (activeMode === "scan-cloth" && !canAddWardrobe) {
+        handleLimitReached("wardrobe");
+        return;
+      }
+      if (activeMode === "label" && !canAddClothLabel) {
+        handleLimitReached("cloth_label");
+        return;
+      }
+      if (activeMode === "fit-check" && !canAddFitCheck) {
+        handleLimitReached("fit_check");
+        return;
+      }
+      const uris = result.assets.map(a => a.uri);
+      navigateToResult(uris, activeMode);
     }
-  }, [activeMode, navigateToResult]);
+  }, [activeMode, navigateToResult, canAddWardrobe, canAddClothLabel, canAddFitCheck, handleLimitReached]);
 
   // ── Mode change ─────────────────────────────────────────────────────────────
 
@@ -252,10 +296,12 @@ export default function AddClothesCameraScreen() {
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           quality: 0.85,
           allowsEditing: false,
+          allowsMultipleSelection: true,
         }).then((result) => {
-          if (!result.canceled && result.assets[0]?.uri) {
+          if (!result.canceled && result.assets && result.assets.length > 0) {
             // Use previous active mode for routing (default to scan-cloth if just switched)
-            navigateToResult(result.assets[0].uri, "scan-cloth");
+            const uris = result.assets.map(a => a.uri);
+            navigateToResult(uris, "scan-cloth");
           }
         });
       }

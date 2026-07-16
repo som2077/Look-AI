@@ -21,8 +21,10 @@ import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
+  KeyboardAvoidingView,
   Modal,
   PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -34,28 +36,60 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type CategoryId =
-  | "top"
-  | "dress"
-  | "bottoms"
-  | "ethnic"
-  | "outerwear"
-  | "footwear"
-  | "accessory";
+  | "T-Shirt"
+  | "Polo Shirt"
+  | "Shirt"
+  | "Blouse"
+  | "Crop Top"
+  | "Tank Top"
+  | "Hoodie"
+  | "Sweatshirt"
+  | "Sweater"
+  | "Cardigan"
+  | "Jacket"
+  | "Blazer"
+  | "Coat"
+  | "Jeans"
+  | "Trousers"
+  | "Chinos"
+  | "Cargo Pants"
+  | "Joggers"
+  | "Shorts"
+  | "Leggings"
+  | "Skirt"
+  | "Dress"
+  | "Jumpsuit"
+  | "Romper"
+  | "Suit"
+  | "Tracksuit"
+  | "Co-ord Set"
+  | "Activewear"
+  | "Swimwear"
+  | "Loungewear";
 
 type Occasion =
-  | "Daily"
-  | "Work"
-  | "Date"
+  | "Casual"
+  | "Smart Casual"
+  | "Business Casual"
   | "Formal"
-  | "Travel"
-  | "Home"
+  | "Office"
+  | "College"
   | "Party"
-  | "Sport"
-  | "Special"
-  | "School"
+  | "Wedding"
+  | "Festive"
+  | "Traditional"
+  | "Date Night"
+  | "Travel"
   | "Beach"
-  | "Etc";
-type Season = "Spring" | "Summer" | "Fall" | "Winter";
+  | "Gym"
+  | "Sports"
+  | "Outdoor"
+  | "Lounge"
+  | "Sleepwear"
+  | "Interview"
+  | "All Occasion";
+type Season =
+  "Spring" | "Summer" | "Autumn" | "Winter" | "Monsoon" | "All Season";
 
 interface MatchingColor {
   name: string;
@@ -63,30 +97,68 @@ interface MatchingColor {
 }
 
 const CATEGORIES: { id: CategoryId; label: string }[] = [
-  { id: "top", label: "Top" },
-  { id: "bottoms", label: "Bottoms" },
-  { id: "dress", label: "Dress" },
-  { id: "ethnic", label: "Ethnic" },
-  { id: "outerwear", label: "Outerwear" },
-  { id: "footwear", label: "Footwear" },
-  { id: "accessory", label: "Accessory" },
+  { id: "T-Shirt", label: "T-Shirt" },
+  { id: "Polo Shirt", label: "Polo Shirt" },
+  { id: "Shirt", label: "Shirt" },
+  { id: "Blouse", label: "Blouse" },
+  { id: "Crop Top", label: "Crop Top" },
+  { id: "Tank Top", label: "Tank Top" },
+  { id: "Hoodie", label: "Hoodie" },
+  { id: "Sweatshirt", label: "Sweatshirt" },
+  { id: "Sweater", label: "Sweater" },
+  { id: "Cardigan", label: "Cardigan" },
+  { id: "Jacket", label: "Jacket" },
+  { id: "Blazer", label: "Blazer" },
+  { id: "Coat", label: "Coat" },
+  { id: "Jeans", label: "Jeans" },
+  { id: "Trousers", label: "Trousers" },
+  { id: "Chinos", label: "Chinos" },
+  { id: "Cargo Pants", label: "Cargo Pants" },
+  { id: "Joggers", label: "Joggers" },
+  { id: "Shorts", label: "Shorts" },
+  { id: "Leggings", label: "Leggings" },
+  { id: "Skirt", label: "Skirt" },
+  { id: "Dress", label: "Dress" },
+  { id: "Jumpsuit", label: "Jumpsuit" },
+  { id: "Romper", label: "Romper" },
+  { id: "Suit", label: "Suit" },
+  { id: "Tracksuit", label: "Tracksuit" },
+  { id: "Co-ord Set", label: "Co-ord Set" },
+  { id: "Activewear", label: "Activewear" },
+  { id: "Swimwear", label: "Swimwear" },
+  { id: "Loungewear", label: "Loungewear" },
 ];
 
 const OCCASIONS: Occasion[] = [
-  "Daily",
-  "Work",
-  "Date",
+  "Casual",
+  "Smart Casual",
+  "Business Casual",
   "Formal",
-  "Travel",
-  "Home",
+  "Office",
+  "College",
   "Party",
-  "Sport",
-  "Special",
-  "School",
+  "Wedding",
+  "Festive",
+  "Traditional",
+  "Date Night",
+  "Travel",
   "Beach",
-  "Etc",
+  "Gym",
+  "Sports",
+  "Outdoor",
+  "Lounge",
+  "Sleepwear",
+  "Interview",
+  "All Occasion",
 ];
-const SEASONS: Season[] = ["Spring", "Summer", "Fall", "Winter"];
+const SEASONS: Season[] = [
+  "Spring",
+  "Summer",
+  "Autumn",
+  "Winter",
+  "Monsoon",
+  "All Season",
+];
 
 const COLOR_OPTIONS = [
   { name: "White", hex: "#FFFFFF" },
@@ -211,21 +283,42 @@ export default function ClothDetailsScreen() {
   const initialCategory = userItem?.category ?? mockItem?.category ?? "top";
   const initialColor = userItem?.primaryColor ?? mockItem?.color ?? "";
   const initialOccasion =
-    userItem?.occasion?.[0] ?? mockItem?.occasion ?? "Daily";
+    userItem?.occasion?.[0] ?? mockItem?.occasion ?? "Casual";
   const initialImageUrl = userItem?.imageUrl ?? "";
 
   // Form state — pre-filled by AI when scanned
   const [name, setName] = useState(initialName);
   const [category, setCategory] = useState<string>(initialCategory);
   const [color, setColor] = useState(initialColor);
-  const [colorHex, setColorHex] = useState(mockItem?.bgColor ?? "");
-  const [occasion, setOccasion] = useState<Occasion>(
-    (initialOccasion as Occasion) ?? "Daily",
+  // Auto-resolve colorHex from COLOR_OPTIONS if not explicitly set
+  const resolvedHex = (() => {
+    const explicit = userItem?.colorHex ?? mockItem?.bgColor ?? "";
+    if (explicit) return explicit;
+    // Lookup from COLOR_OPTIONS by primaryColor name
+    const match = COLOR_OPTIONS.find(
+      (c) => c.name.toLowerCase() === initialColor.toLowerCase(),
+    );
+    return match?.hex ?? "";
+  })();
+  const [colorHex, setColorHex] = useState(resolvedHex);
+  const [occasions, setOccasions] = useState<Occasion[]>(
+    userItem?.occasion
+      ? (userItem.occasion as Occasion[])
+      : [initialOccasion as Occasion],
   );
-  const [season, setSeason] = useState<Season>("Spring");
+  const [seasons, setSeasons] = useState<Season[]>(
+    userItem?.season
+      ? (userItem.season as Season[])
+      : [(userItem?.season?.[0] as Season) ?? "All Season"],
+  );
   const [matchingColors] = useState<MatchingColor[]>([]);
   const [localPhotoUri, setLocalPhotoUri] = useState(initialImageUrl);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(userItem?.notes ?? "");
+  const [brand, setBrand] = useState(userItem?.brand ?? "");
+  const [styleTag, setStyleTag] = useState(userItem?.style?.join(", ") ?? "");
+  const [careInstructions, setCareInstructions] = useState(
+    userItem?.careInstructions ?? "",
+  );
 
   // Bottom sheet state
   const [activeSheet, setActiveSheet] = useState<
@@ -235,6 +328,8 @@ export default function ClothDetailsScreen() {
     | "rating"
     | "color"
     | "notes"
+    | "brand"
+    | "care"
     | "menu"
     | null
   >(null);
@@ -283,9 +378,14 @@ export default function ClothDetailsScreen() {
       updateItem(userItem.id, {
         customName: name,
         category,
+        brand,
+        careInstructions,
+        notes,
         primaryColor: color,
+        colorHex,
         imageUrl: localPhotoUri,
-        occasion: occasion ? [occasion] : undefined,
+        season: seasons.length > 0 ? seasons : undefined,
+        occasion: occasions.length > 0 ? occasions : undefined,
       });
     }
     router.back();
@@ -293,8 +393,13 @@ export default function ClothDetailsScreen() {
     router,
     name,
     category,
+    brand,
+    careInstructions,
+    notes,
     color,
-    occasion,
+    colorHex,
+    occasions,
+    seasons,
     localPhotoUri,
     updateItem,
     userItem,
@@ -357,8 +462,8 @@ export default function ClothDetailsScreen() {
             <View
               style={{
                 position: "absolute",
-                top: 50,
-                right: 20,
+                top: 100,
+                right: 30,
                 backgroundColor: "#FFFFFF",
                 borderRadius: 12,
                 paddingVertical: 8,
@@ -601,7 +706,7 @@ export default function ClothDetailsScreen() {
                       fontWeight: "500",
                     }}
                   >
-                    {season}
+                    {seasons.join(", ")}
                   </Text>
                   <IconChevronDown size={18} color="#D1D5DB" />
                 </View>
@@ -631,7 +736,7 @@ export default function ClothDetailsScreen() {
                       fontWeight: "500",
                     }}
                   >
-                    {occasion}
+                    {occasions.join(", ")}
                   </Text>
                   <IconChevronDown size={18} color="#D1D5DB" />
                 </View>
@@ -731,7 +836,7 @@ export default function ClothDetailsScreen() {
                         {color}
                       </Text>
                     </View>
-                  ) : (
+                  ) : color ? (
                     <View
                       style={{
                         flexDirection: "row",
@@ -744,7 +849,13 @@ export default function ClothDetailsScreen() {
                           width: 16,
                           height: 16,
                           borderRadius: 8,
-                          backgroundColor: "#EAB308",
+                          backgroundColor:
+                            COLOR_OPTIONS.find(
+                              (c) =>
+                                c.name.toLowerCase() === color.toLowerCase(),
+                            )?.hex ?? "#D1D5DB",
+                          borderWidth: 1,
+                          borderColor: "#E5E7EB",
                         }}
                       />
                       <Text
@@ -754,10 +865,76 @@ export default function ClothDetailsScreen() {
                           fontWeight: "500",
                         }}
                       >
-                        Yellow
+                        {color}
                       </Text>
                     </View>
+                  ) : (
+                    <Text style={{ fontSize: 15, color: "#D1D5DB" }}>
+                      Select color
+                    </Text>
                   )}
+                  <IconChevronDown size={18} color="#D1D5DB" />
+                </View>
+              </Pressable>
+
+              {/* Brand / Designer */}
+              <Pressable
+                onPress={() => openSheet("brand")}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+                >
+                  Brand / Designer
+                </Text>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: brand ? "#000" : "#D1D5DB",
+                      maxWidth: 150,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {brand ? brand : "Add brand"}
+                  </Text>
+                  <IconChevronDown size={18} color="#D1D5DB" />
+                </View>
+              </Pressable>
+
+              {/* Care Instructions */}
+              <Pressable
+                onPress={() => openSheet("care")}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+                >
+                  Care Instructions
+                </Text>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: careInstructions ? "#000" : "#D1D5DB",
+                      maxWidth: 150,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {careInstructions ? careInstructions : "Add care info"}
+                  </Text>
                   <IconChevronDown size={18} color="#D1D5DB" />
                 </View>
               </Pressable>
@@ -884,279 +1061,355 @@ export default function ClothDetailsScreen() {
           onRequestClose={closeSheet}
           statusBarTranslucent
         >
-          <Pressable
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              justifyContent: "flex-end",
-            }}
-            onPress={closeSheet}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
           >
-            <Animated.View
-              {...panResponder.panHandlers}
-              style={{ transform: [{ translateY: panY }] }}
+            <Pressable
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,0.4)",
+                justifyContent: "flex-end",
+              }}
+              onPress={closeSheet}
             >
-              <Pressable onPress={() => {}}>
-                <View
-                  style={{
-                    backgroundColor: "#fff",
-                    borderTopLeftRadius: 28,
-                    borderTopRightRadius: 28,
-                    paddingTop: 12,
-                    paddingBottom: 40,
-                    paddingHorizontal: 20,
-                  }}
-                >
-                  {/* Handle */}
+              <Animated.View
+                {...panResponder.panHandlers}
+                style={{ transform: [{ translateY: panY }] }}
+              >
+                <Pressable onPress={() => {}}>
                   <View
                     style={{
-                      width: 40,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: "#E5E7EB",
-                      alignSelf: "center",
-                      marginBottom: 20,
-                    }}
-                  />
-
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: 20,
+                      backgroundColor: "#fff",
+                      borderTopLeftRadius: 28,
+                      borderTopRightRadius: 28,
+                      paddingTop: 12,
+                      paddingBottom: 40,
+                      paddingHorizontal: 20,
                     }}
                   >
-                    <Text
+                    {/* Handle */}
+                    <View
                       style={{
-                        fontSize: 17,
-                        fontWeight: "700",
-                        color: "#111827",
+                        width: 40,
+                        height: 4,
+                        borderRadius: 2,
+                        backgroundColor: "#E5E7EB",
+                        alignSelf: "center",
+                        marginBottom: 20,
+                      }}
+                    />
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 20,
                       }}
                     >
-                      {activeSheet === "category"
-                        ? "Select Category"
-                        : activeSheet === "occasion"
-                          ? "Select Occasion"
-                          : activeSheet === "season"
-                            ? "Select Season"
-                            : activeSheet === "rating"
-                              ? "My Rating"
-                              : activeSheet === "color"
-                                ? "Select Color"
-                                : "Notes"}
-                    </Text>
-                    <Pressable onPress={closeSheet}>
-                      <IconX size={22} color="#9CA3AF" />
-                    </Pressable>
-                  </View>
-
-                  {/* Options */}
-                  <View
-                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}
-                  >
-                    {activeSheet === "rating" && (
-                      <View
+                      <Text
                         style={{
-                          flexDirection: "row",
-                          gap: 12,
-                          justifyContent: "center",
-                          width: "100%",
-                          paddingVertical: 10,
+                          fontSize: 17,
+                          fontWeight: "700",
+                          color: "#111827",
                         }}
                       >
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Pressable
-                            key={star}
-                            onPress={() => {
-                              setRating(star);
-                              closeSheet();
-                            }}
-                          >
-                            {rating >= star ? (
-                              <IconStarFilled size={36} color="#C4C4CC" />
-                            ) : (
-                              <IconStar size={36} color="#E5E7EB" />
-                            )}
-                          </Pressable>
-                        ))}
-                      </View>
-                    )}
+                        {activeSheet === "category"
+                          ? "Select Category"
+                          : activeSheet === "occasion"
+                            ? "Select Occasion"
+                            : activeSheet === "season"
+                              ? "Select Season"
+                              : activeSheet === "rating"
+                                ? "My Rating"
+                                : activeSheet === "color"
+                                  ? "Select Color"
+                                  : "Notes"}
+                      </Text>
+                      <Pressable onPress={closeSheet}>
+                        <IconX size={22} color="#9CA3AF" />
+                      </Pressable>
+                    </View>
 
-                    {activeSheet === "category" &&
-                      CATEGORIES.map((c) => (
-                        <Pressable
-                          key={c.id}
-                          onPress={() => {
-                            setCategory(c.id);
-                            closeSheet();
-                          }}
-                          style={{
-                            paddingHorizontal: 18,
-                            paddingVertical: 10,
-                            borderRadius: 999,
-                            backgroundColor:
-                              category === c.id ? "#fff" : "#fff",
-                            borderWidth: 1,
-                            borderColor: category === c.id ? "#000" : "#E5E7EB",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: category === c.id ? "#000" : "#6B7280",
-                              fontSize: 14,
-                              fontWeight: "500",
-                            }}
-                          >
-                            {c.label}
-                          </Text>
-                        </Pressable>
-                      ))}
-
-                    {activeSheet === "season" &&
-                      SEASONS.map((s) => (
-                        <Pressable
-                          key={s}
-                          onPress={() => {
-                            setSeason(s);
-                            closeSheet();
-                          }}
-                          style={{
-                            paddingHorizontal: 18,
-                            paddingVertical: 10,
-                            borderRadius: 999,
-                            backgroundColor: season === s ? "#fff" : "#fff",
-                            borderWidth: 1,
-                            borderColor: season === s ? "#000" : "#E5E7EB",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: season === s ? "#000" : "#6B7280",
-                              fontSize: 14,
-                              fontWeight: "500",
-                            }}
-                          >
-                            {s}
-                          </Text>
-                        </Pressable>
-                      ))}
-
-                    {activeSheet === "occasion" &&
-                      OCCASIONS.map((o) => (
-                        <Pressable
-                          key={o}
-                          onPress={() => {
-                            setOccasion(o);
-                            closeSheet();
-                          }}
-                          style={{
-                            paddingHorizontal: 18,
-                            paddingVertical: 10,
-                            borderRadius: 999,
-                            backgroundColor: occasion === o ? "#fff" : "#fff",
-                            borderWidth: 1,
-                            borderColor: occasion === o ? "#000" : "#E5E7EB",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              color: occasion === o ? "#000" : "#6B7280",
-                              fontSize: 14,
-                              fontWeight: "500",
-                            }}
-                          >
-                            {o}
-                          </Text>
-                        </Pressable>
-                      ))}
-
-                    {activeSheet === "color" &&
-                      COLOR_OPTIONS.map((c) => (
-                        <Pressable
-                          key={c.name}
-                          onPress={() => {
-                            setColor(c.name);
-                            setColorHex(c.hex);
-                            closeSheet();
-                          }}
+                    {/* Options */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        gap: 10,
+                      }}
+                    >
+                      {activeSheet === "rating" && (
+                        <View
                           style={{
                             flexDirection: "row",
-                            alignItems: "center",
-                            gap: 8,
-                            paddingHorizontal: 14,
-                            paddingVertical: 8,
-                            borderRadius: 999,
-                            backgroundColor: color === c.name ? "#fff" : "#fff",
-                            borderWidth: 1,
-                            borderColor: color === c.name ? "#000" : "#E5E7EB",
+                            gap: 12,
+                            justifyContent: "center",
+                            width: "100%",
+                            paddingVertical: 10,
                           }}
                         >
-                          {c.hex === "colorful" ? (
-                            <LinearGradient
-                              colors={[
-                                "#FF0000",
-                                "#FFFF00",
-                                "#00FF00",
-                                "#00FFFF",
-                                "#0000FF",
-                                "#FF00FF",
-                              ]}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 1 }}
-                              style={{ width: 16, height: 16, borderRadius: 8 }}
-                            />
-                          ) : (
-                            <View
-                              style={{
-                                width: 16,
-                                height: 16,
-                                borderRadius: 8,
-                                backgroundColor: c.hex,
-                                borderWidth: 1,
-                                borderColor: "#E5E7EB",
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Pressable
+                              key={star}
+                              onPress={() => {
+                                setRating(star);
+                                closeSheet();
                               }}
-                            />
-                          )}
-                          <Text
+                            >
+                              {rating >= star ? (
+                                <IconStarFilled size={36} color="#C4C4CC" />
+                              ) : (
+                                <IconStar size={36} color="#E5E7EB" />
+                              )}
+                            </Pressable>
+                          ))}
+                        </View>
+                      )}
+
+                      {activeSheet === "category" &&
+                        CATEGORIES.map((c) => (
+                          <Pressable
+                            key={c.id}
+                            onPress={() => {
+                              setCategory(c.id);
+                              closeSheet();
+                            }}
                             style={{
-                              color: color === c.name ? "#000" : "#6B7280",
-                              fontSize: 14,
-                              fontWeight: "500",
+                              paddingHorizontal: 18,
+                              paddingVertical: 10,
+                              borderRadius: 999,
+                              backgroundColor:
+                                category === c.id ? "#fff" : "#fff",
+                              borderWidth: 1,
+                              borderColor:
+                                category === c.id ? "#000" : "#E5E7EB",
                             }}
                           >
-                            {c.name}
-                          </Text>
-                        </Pressable>
-                      ))}
+                            <Text
+                              style={{
+                                color: category === c.id ? "#000" : "#6B7280",
+                                fontSize: 14,
+                                fontWeight: "500",
+                              }}
+                            >
+                              {c.label}
+                            </Text>
+                          </Pressable>
+                        ))}
 
-                    {activeSheet === "notes" && (
-                      <View style={{ width: "100%", height: 150 }}>
-                        <TextInput
-                          value={notes}
-                          onChangeText={setNotes}
-                          placeholder="Add notes..."
-                          placeholderTextColor="#9CA3AF"
-                          multiline
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            borderWidth: 1,
-                            borderColor: "#E5E7EB",
-                            borderRadius: 12,
-                            padding: 16,
-                            fontSize: 15,
-                            color: "#1F2937",
-                            textAlignVertical: "top",
-                          }}
-                        />
-                      </View>
-                    )}
+                      {activeSheet === "season" &&
+                        SEASONS.map((s) => {
+                          const isSelected = seasons.includes(s);
+                          return (
+                            <Pressable
+                              key={s}
+                              onPress={() => {
+                                if (isSelected) {
+                                  setSeasons(seasons.filter((x) => x !== s));
+                                } else {
+                                  if (seasons.length < 2)
+                                    setSeasons([...seasons, s]);
+                                }
+                              }}
+                              style={{
+                                paddingHorizontal: 18,
+                                paddingVertical: 10,
+                                borderRadius: 999,
+                                backgroundColor: isSelected
+                                  ? "#1D1A27"
+                                  : "#fff",
+                                borderWidth: 1,
+                                borderColor: isSelected ? "#1D1A27" : "#E5E7EB",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color: isSelected ? "#fff" : "#6B7280",
+                                  fontSize: 14,
+                                  fontWeight: "500",
+                                }}
+                              >
+                                {s}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+
+                      {activeSheet === "occasion" &&
+                        OCCASIONS.map((o) => {
+                          const isSelected = occasions.includes(o);
+                          return (
+                            <Pressable
+                              key={o}
+                              onPress={() => {
+                                if (isSelected) {
+                                  setOccasions(
+                                    occasions.filter((x) => x !== o),
+                                  );
+                                } else {
+                                  if (occasions.length < 3)
+                                    setOccasions([...occasions, o]);
+                                }
+                              }}
+                              style={{
+                                paddingHorizontal: 18,
+                                paddingVertical: 10,
+                                borderRadius: 999,
+                                backgroundColor: isSelected
+                                  ? "#1D1A27"
+                                  : "#fff",
+                                borderWidth: 1,
+                                borderColor: isSelected ? "#1D1A27" : "#E5E7EB",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color: isSelected ? "#fff" : "#6B7280",
+                                  fontSize: 14,
+                                  fontWeight: "500",
+                                }}
+                              >
+                                {o}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+
+                      {activeSheet === "color" &&
+                        COLOR_OPTIONS.map((c) => (
+                          <Pressable
+                            key={c.name}
+                            onPress={() => {
+                              setColor(c.name);
+                              setColorHex(c.hex);
+                              closeSheet();
+                            }}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 8,
+                              paddingHorizontal: 14,
+                              paddingVertical: 8,
+                              borderRadius: 999,
+                              backgroundColor:
+                                color === c.name ? "#fff" : "#fff",
+                              borderWidth: 1,
+                              borderColor:
+                                color === c.name ? "#000" : "#E5E7EB",
+                            }}
+                          >
+                            {c.hex === "colorful" ? (
+                              <LinearGradient
+                                colors={[
+                                  "#FF0000",
+                                  "#FFFF00",
+                                  "#00FF00",
+                                  "#00FFFF",
+                                  "#0000FF",
+                                  "#FF00FF",
+                                ]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: 8,
+                                }}
+                              />
+                            ) : (
+                              <View
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: 8,
+                                  backgroundColor: c.hex,
+                                  borderWidth: 1,
+                                  borderColor: "#E5E7EB",
+                                }}
+                              />
+                            )}
+                            <Text
+                              style={{
+                                color: color === c.name ? "#000" : "#6B7280",
+                                fontSize: 14,
+                                fontWeight: "500",
+                              }}
+                            >
+                              {c.name}
+                            </Text>
+                          </Pressable>
+                        ))}
+
+                      {activeSheet === "brand" && (
+                        <View style={{ width: "100%", height: 100 }}>
+                          <TextInput
+                            value={brand}
+                            onChangeText={setBrand}
+                            placeholder="Enter brand or designer"
+                            placeholderTextColor="#9CA3AF"
+                            style={{
+                              width: "100%",
+                              height: 50,
+                              borderWidth: 1,
+                              borderColor: "#E5E7EB",
+                              borderRadius: 12,
+                              paddingHorizontal: 16,
+                              fontSize: 15,
+                              color: "#1F2937",
+                            }}
+                          />
+                        </View>
+                      )}
+                      {activeSheet === "care" && (
+                        <View style={{ width: "100%", height: 100 }}>
+                          <TextInput
+                            value={careInstructions}
+                            onChangeText={setCareInstructions}
+                            placeholder="Enter care instructions"
+                            placeholderTextColor="#9CA3AF"
+                            style={{
+                              width: "100%",
+                              height: 50,
+                              borderWidth: 1,
+                              borderColor: "#E5E7EB",
+                              borderRadius: 12,
+                              paddingHorizontal: 16,
+                              fontSize: 15,
+                              color: "#1F2937",
+                            }}
+                          />
+                        </View>
+                      )}
+                      {activeSheet === "notes" && (
+                        <View style={{ width: "100%", height: 150 }}>
+                          <TextInput
+                            value={notes}
+                            onChangeText={setNotes}
+                            placeholder="Add notes..."
+                            placeholderTextColor="#9CA3AF"
+                            multiline
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              borderWidth: 1,
+                              borderColor: "#E5E7EB",
+                              borderRadius: 12,
+                              padding: 16,
+                              fontSize: 15,
+                              color: "#1F2937",
+                              textAlignVertical: "top",
+                            }}
+                          />
+                        </View>
+                      )}
+                    </View>
                   </View>
-                </View>
-              </Pressable>
-            </Animated.View>
-          </Pressable>
+                </Pressable>
+              </Animated.View>
+            </Pressable>
+          </KeyboardAvoidingView>
         </Modal>
       </SafeAreaView>
     </View>

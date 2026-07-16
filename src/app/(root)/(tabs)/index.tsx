@@ -23,8 +23,11 @@ import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { useUser } from "@clerk/clerk-expo";
+import { usePremiumLimits, WARDROBE_LIMIT } from "@/shared/hooks/usePremiumLimits";
+import { IconAlertTriangle } from "@tabler/icons-react-native";
+import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, FlatList, View } from "react-native";
+import { Animated, Dimensions, FlatList, View, Pressable, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -34,10 +37,10 @@ const H_PADDING = 20;
 const HEADER_HEIGHT = 140;
 
 const RING_SEGMENT_BASE: readonly Omit<RingProgressSegment, "progress">[] = [
-  { id: "outer", color: "#01B3F7", radius: 88, strokeWidth: 13 },
-  { id: "middle", color: "#AB86F1", radius: 74.7, strokeWidth: 13 },
-  { id: "inner", color: "#FEC466", radius: 61.4, strokeWidth: 13 },
-  { id: "innermost", color: "#000000", radius: 47.9, strokeWidth: 13 },
+  { id: "outer", color: "#01B3F7", radius: 89, strokeWidth: 13 },
+  { id: "middle", color: "#AB86F1", radius: 75.7, strokeWidth: 13 },
+  { id: "inner", color: "#FEC466", radius: 62.4, strokeWidth: 13 },
+  { id: "innermost", color: "#000000", radius: 48.9, strokeWidth: 13 },
 ] as const;
 
 const clampRatio = (value: number): number => {
@@ -54,6 +57,8 @@ type FilterTab = "Days" | "Weeks" | "Months" | "All";
 
 export default function HomeScreen() {
   const { user } = useUser();
+  const { canAddWardrobe, wardrobeCount } = usePremiumLimits();
+  const router = useRouter();
   const [timeframe, setTimeframe] = useState<FilterTab>("Days");
   const period =
     timeframe === "Days"
@@ -118,11 +123,25 @@ export default function HomeScreen() {
       <View style={{ width: SCREEN_WIDTH, paddingHorizontal: H_PADDING }}>
         {item === "wardrobe" ? (
           <>
+            {!canAddWardrobe && (
+              <Pressable
+                onPress={() => router.push("/(root)/(subscription)/subscription" as never)}
+                className="mt-4 flex-row border border-[#FECACA] items-center bg-[#FEF2F2] rounded-[16px] px-4 py-3"
+              >
+                <IconAlertTriangle size={20} color="#EF4444" strokeWidth={1.5} />
+                <Text
+                  className="ml-3 text-[#991B1B] font-sans"
+                  style={{ fontSize: 13, flex: 1, fontWeight: "600" }}
+                >
+                  Wardrobe limit reached ({wardrobeCount}/{WARDROBE_LIMIT}). Upgrade to Pro to add more items.
+                </Text>
+              </Pressable>
+            )}
             <WardrobeRingSummaryCard
               wornPercentage={clampRatio(summary.wornPercentage)}
               totalWorn={currentStreak}
-              wearCount={summary.wearCount}
-              neverCount={summary.totalWorn + summary.neverCount}
+              wearCount={summary.totalWorn > 0 ? Number((summary.wearCount / summary.totalWorn).toFixed(1)) : 0}
+              neverCount={summary.totalWorn}
               ringSegments={ringSegments}
               streak={currentStreak}
               labels={{

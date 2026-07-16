@@ -30,9 +30,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CanvasImageItem } from "../../components/canvas/CanvasImageItem";
-import { CanvasTextItem } from "../../components/canvas/CanvasTextItem";
-import { CanvasItemData } from "../../components/canvas/types";
+import { CanvasImageItem } from "../../features/outfits/ui/canvas/CanvasImageItem";
+import { CanvasTextItem } from "../../features/outfits/ui/canvas/CanvasTextItem";
+import { CanvasItemData } from "../../features/outfits/ui/canvas/types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -215,7 +215,7 @@ function BottomSheet({
   );
 }
 
-// Canvas items extracted to components/canvas
+// Canvas items extracted to features/outfits/ui/canvas
 
 export default function CreateOutfitScreen() {
   const router = useRouter();

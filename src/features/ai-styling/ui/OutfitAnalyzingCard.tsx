@@ -68,7 +68,7 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
           <ExpoImage
             source={{ uri: outfit.imageUri }}
             style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
+            contentFit="contain"
             cachePolicy="memory"
           />
         </View>
@@ -194,7 +194,7 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
           <ExpoImage
             source={{ uri: imageUri }}
             style={{ width: "100%", height: 160 }}
-            contentFit="cover"
+            contentFit="contain"
             blurRadius={5}
             cachePolicy="memory"
           />
@@ -421,6 +421,9 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
             color: aiData?.primaryColor,
             occasion: aiData?.occasion?.[0] || "Casual",
             season: aiData?.season?.[0] || "All",
+            brand: aiData?.brand || "",
+            careInstructions: aiData?.careInstructions || "",
+            notes: aiData?.notes || "",
             outfitIndex: index.toString(),
           },
         } as never);
@@ -462,7 +465,7 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
     lastOutfits.forEach((outfit, i) => {
       const mode = outfit.mode || "scan-cloth";
       if (!groups[mode]) groups[mode] = [];
-      groups[mode].push({ type: "completed" as const, outfit, outfitIndex: i });
+      groups[mode].unshift({ type: "completed" as const, outfit, outfitIndex: i });
     });
 
     // Add analyzing outfit to its mode group at the TOP

@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 import RevenueCatUI from "react-native-purchases-ui";
 import { useRouter } from "expo-router";
-import { useRevenueCat } from "./useRevenueCat";
+import { useRevenueCat } from "../model/useRevenueCat";
 
 export default function PaywallScreen() {
   const router = useRouter();

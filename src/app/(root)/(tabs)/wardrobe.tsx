@@ -1,5 +1,5 @@
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
-import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+// import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import {
@@ -82,6 +82,10 @@ interface ClothingItem {
   wears: number;
   isNew: boolean;
   image?: string;
+  seasons: string[];
+  occasions: string[];
+  rating: number;
+  brand?: string;
 }
 
 // Category tabs (plain text strip below toolbar)
@@ -119,6 +123,72 @@ const FILTER_CHIPS: { label: string; value: CategoryId | "all" }[] = [
   { label: "Sportswear", value: "sportswear" },
 ];
 
+const OCCASIONS: string[] = [
+  "Casual",
+  "Smart Casual",
+  "Business Casual",
+  "Formal",
+  "Office",
+  "College",
+  "Party",
+  "Wedding",
+  "Festive",
+  "Traditional",
+  "Date Night",
+  "Travel",
+  "Beach",
+  "Gym",
+  "Sports",
+  "Outdoor",
+  "Lounge",
+  "Sleepwear",
+  "Interview",
+  "All Occasion",
+];
+
+const SEASONS: string[] = [
+  "Spring",
+  "Summer",
+  "Autumn",
+  "Winter",
+  "Monsoon",
+  "All Season",
+];
+
+const CATEGORY_MAPPING: Record<string, string[]> = {
+  top: ["T-Shirt", "Polo Shirt", "Shirt", "Blouse", "Crop Top", "Tank Top"],
+  bottoms: [
+    "Jeans",
+    "Trousers",
+    "Chinos",
+    "Cargo Pants",
+    "Joggers",
+    "Shorts",
+    "Leggings",
+    "Skirt",
+  ],
+  dress: ["Dress", "Jumpsuit", "Romper"],
+  outerwear: [
+    "Jacket",
+    "Blazer",
+    "Coat",
+    "Cardigan",
+    "Hoodie",
+    "Sweatshirt",
+    "Sweater",
+  ],
+  footwear: [],
+  bags: [],
+  accessory: [],
+  ethnic: ["Traditional", "Festive"],
+  activewear: ["Activewear", "Tracksuit"],
+  jackets: ["Jacket", "Blazer", "Coat"],
+  hoodies: ["Hoodie", "Sweatshirt", "Sweater"],
+  formal: ["Suit", "Shirt", "Trousers", "Blazer", "Coat"],
+  casual: ["T-Shirt", "Jeans", "Shorts", "Co-ord Set"],
+  sportswear: ["Activewear", "Tracksuit"],
+};
+
 const SORT_OPTIONS: { label: string; value: SortId }[] = [
   { label: "Recently added", value: "recently_added" },
   { label: "Name A–Z", value: "name_az" },
@@ -128,12 +198,11 @@ const SORT_OPTIONS: { label: string; value: SortId }[] = [
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const NUM_COLUMNS = 3;
-const GRID_GAP = 8;
-const GRID_PADDING = 16;
-const CONTENT_WIDTH = SCREEN_WIDTH - GRID_PADDING * 2;
-const ITEM_WIDTH =
-  (CONTENT_WIDTH - GRID_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS - 0.01;
-const ITEM_HEIGHT = ITEM_WIDTH;
+const GRID_GAP = 0;
+const GRID_PADDING = 0;
+const CONTENT_WIDTH = SCREEN_WIDTH;
+const ITEM_WIDTH = CONTENT_WIDTH / NUM_COLUMNS;
+const ITEM_HEIGHT = ITEM_WIDTH * 1.25;
 
 // Bento Card
 const BentoCard = React.memo(function BentoCard({
@@ -152,20 +221,24 @@ const BentoCard = React.memo(function BentoCard({
       style={{
         width,
         height,
-        borderRadius: 12,
-        overflow: "hidden",
+        borderRightWidth: 0.5,
+        borderBottomWidth: 0.5,
+        borderColor: "#F0F0F0",
         backgroundColor: "#FFFFFF",
+        padding: 8,
       }}
     >
-      {item.image ? (
-        <ExpoImage
-          source={{ uri: item.image }}
-          style={{ width: "100%", height: "100%" }}
-          contentFit="contain"
-        />
-      ) : (
-        <View style={{ flex: 1, backgroundColor: "#F3F4F6" }} />
-      )}
+      <View style={{ flex: 1 }}>
+        {item.image ? (
+          <ExpoImage
+            source={{ uri: item.image }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="contain"
+          />
+        ) : (
+          <View style={{ flex: 1, backgroundColor: "#F3F4F6" }} />
+        )}
+      </View>
     </Pressable>
   );
 });
@@ -181,7 +254,7 @@ const EmptyState = React.memo(function EmptyState({
       style={{
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 60,
+        paddingVertical: 190,
         paddingHorizontal: 40,
       }}
     >
@@ -190,15 +263,15 @@ const EmptyState = React.memo(function EmptyState({
           width: 88,
           height: 88,
           borderRadius: 44,
-          backgroundColor: "#F8F7FC",
+          backgroundColor: "#FFFFFF",
           alignItems: "center",
           justifyContent: "center",
           marginBottom: 20,
-          borderWidth: 1,
+          borderWidth: 0.5,
           borderColor: "#E9EBF8",
         }}
       >
-        <IconHanger size={36} color="#9CA3AF" strokeWidth={1.5} />
+        <IconHanger size={36} color="#000000" strokeWidth={1.2} />
       </View>
       <Text
         style={{
@@ -213,7 +286,7 @@ const EmptyState = React.memo(function EmptyState({
       <Text
         style={{
           fontSize: 13,
-          color: "#9B9BAF",
+          color: "#00000090",
           textAlign: "center",
           lineHeight: 20,
           marginBottom: 15,
@@ -342,13 +415,21 @@ export default function WardrobeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const HEADER_HEIGHT = 50;
 
-  const [activeCategory, setActiveCategory] = useState<CategoryId | "all">(
-    "all",
-  );
+  const [activeFilters, setActiveFilters] = useState({
+    category: "all",
+    occasion: "all",
+    season: "all",
+    rating: 0,
+  });
+  const [tempFilters, setTempFilters] = useState({
+    category: "all",
+    occasion: "all",
+    season: "all",
+    rating: 0,
+  });
   const [activeSort, setActiveSort] = useState<SortId>("recently_added");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [tempCategory, setTempCategory] = useState<CategoryId | "all">("all");
   const [tempSort, setTempSort] = useState<SortId>("recently_added");
 
   const headerTranslateY = scrollY.interpolate({
@@ -374,15 +455,49 @@ export default function WardrobeScreen() {
         wears: item.wearCount ?? 0,
         isNew: true,
         image: item.imageUrl ?? `https://picsum.photos/seed/${item.id}/300/400`,
+        seasons: item.season ?? [],
+        occasions: item.occasion ?? [],
+        rating: item.rating ?? 0,
       })),
     [userItems],
   );
 
   const filteredItems = useMemo(() => {
-    let items =
-      activeCategory === "all"
-        ? displayItems
-        : displayItems.filter((i) => i.category === activeCategory);
+    let items = displayItems.filter((i) => {
+      // Filter by category
+      if (activeFilters.category !== "all") {
+        const catStr = i.category.toLowerCase();
+        const activeStr = activeFilters.category.toLowerCase();
+        if (catStr !== activeStr) {
+          const mapping = CATEGORY_MAPPING[activeStr] || [];
+          if (!mapping.includes(i.category)) return false;
+        }
+      }
+
+      // Filter by occasion
+      if (
+        activeFilters.occasion !== "all" &&
+        !i.occasions.includes(activeFilters.occasion)
+      ) {
+        return false;
+      }
+
+      // Filter by season
+      if (
+        activeFilters.season !== "all" &&
+        !i.seasons.includes(activeFilters.season)
+      ) {
+        return false;
+      }
+
+      // Filter by rating
+      if (i.rating < activeFilters.rating) {
+        return false;
+      }
+
+      return true;
+    });
+
     if (activeSort === "name_az")
       items = [...items].sort((a, b) => a.name.localeCompare(b.name));
     else if (activeSort === "most_worn")
@@ -390,20 +505,26 @@ export default function WardrobeScreen() {
     else if (activeSort === "least_worn")
       items = [...items].sort((a, b) => a.wears - b.wears);
     return items;
-  }, [displayItems, activeCategory, activeSort]);
+  }, [displayItems, activeFilters, activeSort]);
+
+  const activeFiltersCount =
+    (activeFilters.category !== "all" ? 1 : 0) +
+    (activeFilters.occasion !== "all" ? 1 : 0) +
+    (activeFilters.season !== "all" ? 1 : 0) +
+    (activeFilters.rating > 0 ? 1 : 0);
 
   const categoryLabel =
-    FILTER_CHIPS.find((c) => c.value === activeCategory)?.label ?? "All";
+    activeFiltersCount > 0 ? `${activeFiltersCount} Filters` : "All";
   const sortLabel =
     SORT_OPTIONS.find((s) => s.value === activeSort)?.label ?? "Recently added";
-  const hasActiveFilter = activeCategory !== "all";
+  const hasActiveFilter = activeFiltersCount > 0;
 
   const handleSaved = useCallback(
     () => router.push("/(root)/saved" as never),
     [router],
   );
   const openCategory = () => {
-    setTempCategory(activeCategory);
+    setTempFilters(activeFilters);
     setIsCategoryOpen(true);
   };
   const openSort = () => {
@@ -413,129 +534,171 @@ export default function WardrobeScreen() {
 
   return (
     <SwipeTabWrapper tabIndex={1}>
-      <AppGradientBackground>
-        <StatusBar style="dark" />
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-          <Animated.ScrollView
-            key="grid-view"
-            showsVerticalScrollIndicator={false}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true, listener: hideTabBarOnScroll },
-            )}
-            scrollEventThrottle={16}
-            contentContainerStyle={{ paddingBottom: 140 }}
+      {/* <AppGradientBackground> */}
+      <StatusBar style="dark" />
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "white" }}
+        edges={["top"]}
+      >
+        <Animated.ScrollView
+          key="grid-view"
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true, listener: hideTabBarOnScroll },
+          )}
+          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingBottom: 140 }}
+        >
+          {/* Header */}
+          <Animated.View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              height: HEADER_HEIGHT,
+              transform: [{ translateY: headerTranslateY }],
+              opacity: headerOpacity,
+              zIndex: 0,
+            }}
           >
-            {/* Header */}
-            <Animated.View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingHorizontal: 25,
-                height: HEADER_HEIGHT,
-                transform: [{ translateY: headerTranslateY }],
-                opacity: headerOpacity,
-                zIndex: 0,
-              }}
-            >
-              <View>
-                <ExpoImage
-                  source={require("@/assets/images/getStartedLogo.png")}
-                  style={{ height: 56, width: 180, marginLeft: -32 }}
-                  contentFit="contain"
-                  cachePolicy="memory-disk"
-                />
-              </View>
-              <View className="flex-row items-center gap-2">
-                <TouchableOpacity
-                  onPress={() => router.push("/(root)/calendar" as never)}
-                  activeOpacity={0.7}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 100,
-                    borderWidth: 1,
-                    borderColor: "#E2E2EA",
-                    backgroundColor: "#F8F7FC",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <ExpoImage
-                    source={{
-                      uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
-                    }}
-                    style={{ width: 19, height: 19 }}
-                    contentFit="contain"
-                  />
-                </TouchableOpacity>
-                <Pressable
-                  onPress={handleSaved}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 100,
-                    borderWidth: 1,
-                    borderColor: "#E2E2EA",
-                    backgroundColor: "#F8F7FC",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <IconBookmark size={19} color="#1D1A27" strokeWidth={1.5} />
-                </Pressable>
-              </View>
-            </Animated.View>
-
-            {/* Filter Toolbar Row */}
-            <View
-              style={{ paddingHorizontal: 16, paddingBottom: 6, paddingTop: 2 }}
-            >
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8, alignItems: "center" }}
+            <View>
+              <Text
+                style={{
+                  fontSize: 24,
+                  color: "#1D1A27",
+                  fontWeight: "800",
+                }}
               >
-                {/* Filter icon - blue dot when active */}
-                <Pressable
-                  onPress={openCategory}
+                Wardrobe
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity
+                onPress={() => router.push("/(root)/calendar" as never)}
+                activeOpacity={0.7}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 100,
+                  borderWidth: 1,
+                  borderColor: "#E2E2EA",
+                  backgroundColor: "#F8F7FC",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ExpoImage
+                  source={{
+                    uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
+                  }}
+                  style={{ width: 19, height: 19 }}
+                  contentFit="contain"
+                />
+              </TouchableOpacity>
+              <Pressable
+                onPress={handleSaved}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 100,
+                  borderWidth: 1,
+                  borderColor: "#E2E2EA",
+                  backgroundColor: "#F8F7FC",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconBookmark size={19} color="#1D1A27" strokeWidth={1.5} />
+              </Pressable>
+            </View>
+          </Animated.View>
+
+          {/* Filter Toolbar Row */}
+          <View
+            style={{ paddingHorizontal: 16, paddingBottom: 6, paddingTop: 2 }}
+          >
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, alignItems: "center" }}
+            >
+              {/* Filter icon - blue dot when active */}
+              <Pressable
+                onPress={openCategory}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  borderWidth: 1.5,
+                  borderColor: "#E2E2EA",
+                  backgroundColor: "#FFFFFF",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconAdjustmentsHorizontal
+                  size={20}
+                  color="#1D1A27"
+                  strokeWidth={1.8}
+                />
+                {hasActiveFilter && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      right: 6,
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: "#3B82F6",
+                      borderWidth: 1.5,
+                      borderColor: "#FFFFFF",
+                    }}
+                  />
+                )}
+              </Pressable>
+
+              {/* Sort dropdown pill */}
+              <Pressable
+                onPress={openSort}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                  borderRadius: 50,
+                  borderWidth: 1.5,
+                  borderColor: "#E2E2EA",
+                  backgroundColor: "#FFFFFF",
+                  height: 44,
+                }}
+              >
+                <Text
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 14,
-                    borderWidth: 1.5,
-                    borderColor: "#E2E2EA",
-                    backgroundColor: "#FFFFFF",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: "#1D1A27",
                   }}
                 >
-                  <IconAdjustmentsHorizontal
-                    size={20}
-                    color="#1D1A27"
-                    strokeWidth={1.8}
-                  />
-                  {hasActiveFilter && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        top: 6,
-                        right: 6,
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: "#3B82F6",
-                        borderWidth: 1.5,
-                        borderColor: "#FFFFFF",
-                      }}
-                    />
-                  )}
-                </Pressable>
+                  {sortLabel}
+                </Text>
+                <IconChevronDown size={14} color="#6B7280" strokeWidth={2.5} />
+              </Pressable>
 
-                {/* Sort dropdown pill */}
+              {/* Active filter removable chip */}
+              {hasActiveFilter && (
                 <Pressable
-                  onPress={openSort}
+                  onPress={() =>
+                    setActiveFilters({
+                      category: "all",
+                      occasion: "all",
+                      season: "all",
+                      rating: 0,
+                    })
+                  }
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -545,7 +708,7 @@ export default function WardrobeScreen() {
                     borderRadius: 50,
                     borderWidth: 1.5,
                     borderColor: "#E2E2EA",
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: "#F4F4F6",
                     height: 44,
                   }}
                 >
@@ -556,175 +719,421 @@ export default function WardrobeScreen() {
                       color: "#1D1A27",
                     }}
                   >
-                    {sortLabel}
+                    {categoryLabel}
                   </Text>
-                  <IconChevronDown
-                    size={14}
-                    color="#6B7280"
-                    strokeWidth={2.5}
-                  />
+                  <IconX size={13} color="#6B7280" strokeWidth={2.5} />
                 </Pressable>
+              )}
+            </ScrollView>
+          </View>
 
-                {/* Active filter removable chip */}
-                {hasActiveFilter && (
+          {/* Category Tabs Strip (plain text) */}
+          <View
+            style={{
+              borderBottomWidth: 1,
+              borderBottomColor: "#F0F0F0",
+              marginBottom: 0,
+            }}
+          >
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                gap: 20,
+                alignItems: "center",
+              }}
+            >
+              {CATEGORY_TABS.map((tab) => {
+                const isActive = activeFilters.category === tab.value;
+                return (
                   <Pressable
-                    onPress={() => setActiveCategory("all")}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 4,
-                      paddingHorizontal: 14,
-                      paddingVertical: 10,
-                      borderRadius: 50,
-                      borderWidth: 1.5,
-                      borderColor: "#E2E2EA",
-                      backgroundColor: "#F4F4F6",
-                      height: 44,
-                    }}
+                    key={tab.value}
+                    onPress={() =>
+                      setActiveFilters({
+                        ...activeFilters,
+                        category: isActive ? "all" : (tab.value as any),
+                      })
+                    }
+                    style={{ paddingBottom: 12, position: "relative" }}
                   >
                     <Text
                       style={{
-                        fontSize: 14,
-                        fontWeight: "500",
-                        color: "#1D1A27",
+                        fontSize: 15,
+                        fontWeight: isActive ? "600" : "400",
+                        color: isActive ? "#000000" : "#9B9BAF",
                       }}
                     >
-                      {categoryLabel}
+                      {tab.label}
                     </Text>
-                    <IconX size={13} color="#6B7280" strokeWidth={2.5} />
+                    {isActive && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          bottom: -1,
+                          left: 0,
+                          right: 0,
+                          height: 2,
+                          backgroundColor: "#000000",
+                        }}
+                      />
+                    )}
                   </Pressable>
-                )}
-              </ScrollView>
-            </View>
+                );
+              })}
+            </ScrollView>
+          </View>
 
-            {/* Category Tabs Strip (plain text) */}
-            <View style={{ paddingBottom: 12 }}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingHorizontal: 16,
-                  gap: 20,
-                  alignItems: "center",
+          {/* Grid */}
+          <View style={{ zIndex: 1, position: "relative" }}>
+            {filteredItems.length === 0 ? (
+              <EmptyState
+                onAdd={() => router.push("/(root)/log-outfit/camera" as never)}
+              />
+            ) : (
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  paddingHorizontal: GRID_PADDING,
+                  gap: GRID_GAP,
                 }}
               >
-                {CATEGORY_TABS.map((tab) => {
-                  const isActive = activeCategory === tab.value;
-                  return (
-                    <Pressable
-                      key={tab.value}
-                      onPress={() =>
-                        setActiveCategory(isActive ? "all" : tab.value)
-                      }
-                    >
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontWeight: isActive ? "700" : "400",
-                          color: isActive ? "#1D1A27" : "#9B9BAF",
-                        }}
-                      >
-                        {tab.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
+                {filteredItems.map((item) => (
+                  <BentoCard
+                    key={item.id}
+                    item={item}
+                    width={ITEM_WIDTH}
+                    height={ITEM_HEIGHT}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        </Animated.ScrollView>
+      </SafeAreaView>
+      {/* </AppGradientBackground> */}
 
-            {/* Grid */}
-            <View style={{ zIndex: 1, position: "relative" }}>
-              {filteredItems.length === 0 ? (
-                <EmptyState
-                  onAdd={() =>
-                    router.push("/(root)/log-outfit/camera" as never)
-                  }
-                />
-              ) : (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    paddingHorizontal: GRID_PADDING,
-                    gap: GRID_GAP,
-                  }}
-                >
-                  {filteredItems.map((item) => (
-                    <BentoCard
-                      key={item.id}
-                      item={item}
-                      width={ITEM_WIDTH}
-                      height={ITEM_HEIGHT}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
-          </Animated.ScrollView>
-        </SafeAreaView>
-      </AppGradientBackground>
-
-      {/* Category Bottom Sheet */}
+      {/* Filter Bottom Sheet */}
       <BottomSheet
         visible={isCategoryOpen}
         onClose={() => setIsCategoryOpen(false)}
-        title="Filter by Category"
+        title="Filters"
       >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          style={{ maxHeight: SCREEN_HEIGHT * 0.6 }}
+        >
+          {/* Category Section */}
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+              color: "#1D1A27",
+              paddingHorizontal: 16,
+              marginTop: 10,
+              marginBottom: 8,
+            }}
+          >
+            Category
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              paddingHorizontal: 16,
+              gap: 10,
+              paddingBottom: 16,
+            }}
+          >
+            {FILTER_CHIPS.map((chip) => {
+              const isActive = tempFilters.category === chip.value;
+              return (
+                <Pressable
+                  key={chip.value}
+                  onPress={() =>
+                    setTempFilters({
+                      ...tempFilters,
+                      category: chip.value as any,
+                    })
+                  }
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 50,
+                    backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: "#E2E2EA",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {chip.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Occasion Section */}
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+              color: "#1D1A27",
+              paddingHorizontal: 16,
+              marginTop: 10,
+              marginBottom: 8,
+            }}
+          >
+            Occasion
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              paddingHorizontal: 16,
+              gap: 10,
+              paddingBottom: 16,
+            }}
+          >
+            <Pressable
+              onPress={() =>
+                setTempFilters({ ...tempFilters, occasion: "all" })
+              }
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 50,
+                backgroundColor:
+                  tempFilters.occasion === "all" ? "#1D1A27" : "#F4F4F6",
+                borderWidth: tempFilters.occasion === "all" ? 0 : 1,
+                borderColor: "#E2E2EA",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: tempFilters.occasion === "all" ? "#FFFFFF" : "#6B7280",
+                }}
+              >
+                All Occasions
+              </Text>
+            </Pressable>
+            {OCCASIONS.map((occ) => {
+              const isActive = tempFilters.occasion === occ;
+              return (
+                <Pressable
+                  key={occ}
+                  onPress={() =>
+                    setTempFilters({ ...tempFilters, occasion: occ })
+                  }
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 50,
+                    backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: "#E2E2EA",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {occ}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Season Section */}
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+              color: "#1D1A27",
+              paddingHorizontal: 16,
+              marginTop: 10,
+              marginBottom: 8,
+            }}
+          >
+            Season
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              paddingHorizontal: 16,
+              gap: 10,
+              paddingBottom: 16,
+            }}
+          >
+            <Pressable
+              onPress={() => setTempFilters({ ...tempFilters, season: "all" })}
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 50,
+                backgroundColor:
+                  tempFilters.season === "all" ? "#1D1A27" : "#F4F4F6",
+                borderWidth: tempFilters.season === "all" ? 0 : 1,
+                borderColor: "#E2E2EA",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: tempFilters.season === "all" ? "#FFFFFF" : "#6B7280",
+                }}
+              >
+                All Seasons
+              </Text>
+            </Pressable>
+            {SEASONS.map((sea) => {
+              const isActive = tempFilters.season === sea;
+              return (
+                <Pressable
+                  key={sea}
+                  onPress={() =>
+                    setTempFilters({ ...tempFilters, season: sea })
+                  }
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 50,
+                    backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: "#E2E2EA",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {sea}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Rating Section */}
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+              color: "#1D1A27",
+              paddingHorizontal: 16,
+              marginTop: 10,
+              marginBottom: 8,
+            }}
+          >
+            Minimum Rating
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              paddingHorizontal: 16,
+              gap: 10,
+              paddingBottom: 16,
+            }}
+          >
+            {[0, 1, 2, 3, 4, 5].map((rating) => {
+              const isActive = tempFilters.rating === rating;
+              return (
+                <Pressable
+                  key={`rating-${rating}`}
+                  onPress={() => setTempFilters({ ...tempFilters, rating })}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 50,
+                    backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: "#E2E2EA",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {rating === 0 ? "Any Rating" : `${rating}+ Stars`}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
         <View
           style={{
             flexDirection: "row",
-            flexWrap: "wrap",
-            paddingHorizontal: 16,
-            gap: 10,
-            paddingTop: 4,
-            paddingBottom: 24,
+            paddingHorizontal: 20,
+            paddingTop: 10,
+            gap: 12,
           }}
         >
-          {FILTER_CHIPS.map((chip) => {
-            const isActive = tempCategory === chip.value;
-            return (
-              <Pressable
-                key={chip.value}
-                onPress={() => setTempCategory(chip.value)}
-                style={{
-                  paddingHorizontal: 18,
-                  paddingVertical: 10,
-                  borderRadius: 50,
-                  backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
-                  borderWidth: isActive ? 0 : 1,
-                  borderColor: "#E2E2EA",
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: isActive ? "#FFFFFF" : "#6B7280",
-                  }}
-                >
-                  {chip.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          <Pressable
+            onPress={() => {
+              const defaultFilters = {
+                category: "all",
+                occasion: "all",
+                season: "all",
+                rating: 0,
+              };
+              setTempFilters(defaultFilters as any);
+              setActiveFilters(defaultFilters as any);
+              setIsCategoryOpen(false);
+            }}
+            style={{
+              flex: 1,
+              paddingVertical: 16,
+              borderRadius: 18,
+              backgroundColor: "#F4F4F6",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#1D1A27", fontSize: 15, fontWeight: "700" }}>
+              Clear
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setActiveFilters(tempFilters);
+              setIsCategoryOpen(false);
+            }}
+            style={{
+              flex: 2,
+              paddingVertical: 16,
+              borderRadius: 18,
+              backgroundColor: "#1D1A27",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
+              Apply Filters
+            </Text>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={() => {
-            setActiveCategory(tempCategory);
-            setIsCategoryOpen(false);
-          }}
-          style={{
-            marginHorizontal: 20,
-            paddingVertical: 16,
-            borderRadius: 18,
-            backgroundColor: "#1D1A27",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
-            Apply Filter
-          </Text>
-        </Pressable>
       </BottomSheet>
 
       {/* Sort Bottom Sheet */}

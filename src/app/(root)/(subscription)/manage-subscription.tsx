@@ -1,4 +1,4 @@
-import { useRevenueCat } from "@/features/payments/useRevenueCat";
+import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { IconArrowLeft } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import React from "react";

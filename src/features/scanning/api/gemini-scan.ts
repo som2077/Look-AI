@@ -21,6 +21,8 @@ export interface BarcodeAnalysis {
   price: string;
   material: string;
   rawText: string;
+  careInstructions?: string;
+  notes?: string;
   error?: string;
 }
 
@@ -111,7 +113,11 @@ async function callGeminiVision(
         ],
       },
     ],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
+    generationConfig: { 
+      temperature: 0.2, 
+      maxOutputTokens: 1024,
+      responseMimeType: "application/json" 
+    },
   };
 
   for (const model of MODELS) {
@@ -160,11 +166,14 @@ export interface FullClothingAnalysis {
   fit: string;
   sleeveType: string;
   neckType: string;
-  style: string[];
   season: string[];
   occasion: string[];
   formalityScore: number;
   versatilityTags: string[];
+  brand?: string;
+  careInstructions?: string;
+  notes?: string;
+  colorHex?: string;
   confidence: number;
   error?: string;
 }
@@ -179,20 +188,23 @@ STEP 1: EVALUATE IMAGE TYPE.
 STEP 2: ANALYZE SINGLE ITEM.
 ONLY IF the image is a clear shot of a SINGLE clothing item, accessory, or footwear (e.g., laid flat, on a hanger, or a very close-up shot of just the item), return a valid JSON object with EXACTLY these fields:
 {
-  "category": "Top, Bottoms, Footwear, Outerwear, Dress, Ethnic, or Accessory",
-  "subCategory": "e.g., T-shirt, Shirt, Jeans, Kurta, Hoodie, Jacket",
-  "primaryColor": "main color (e.g., Navy Blue)",
+  "category": "MUST BE EXACTLY ONE OF: T-Shirt, Polo Shirt, Shirt, Blouse, Crop Top, Tank Top, Hoodie, Sweatshirt, Sweater, Cardigan, Jacket, Blazer, Coat, Jeans, Trousers, Chinos, Cargo Pants, Joggers, Shorts, Leggings, Skirt, Dress, Jumpsuit, Romper, Suit, Tracksuit, Co-ord Set, Activewear, Swimwear, Loungewear",
+  "subCategory": "e.g., Slim Fit Jeans, Graphic T-Shirt, Zip-up Hoodie",
+  "primaryColor": "MUST EXACTLY match one of: White, Ivory, Beige, Light-Gray, Dark-Gray, Black, Light-Yellow, Yellow, Turmeric, Orange, Coral, Red, Pink, Hot-Pink, Light-Green, Green, Olive, Dark-Olive, Teal, Khaki, Cyan, Sky-Blue, Blue, Navy, Lavender, Purple, Burgundy, Camel, Brown, Dark-Brown, Magenta, Gold, Silver, Colorful",
   "secondaryColors": ["color1", "color2"] (if applicable, else empty array),
   "pattern": "Solid, Striped, Checked, Floral, Printed, Textured, etc.",
   "fabricGuess": "Cotton, Denim, Silk, Polyester, Wool, etc.",
   "fit": "Slim, Regular, Oversized, Loose, or Unknown",
   "sleeveType": "Full, Half, Sleeveless, 3/4th, or null",
   "neckType": "Round, V-neck, Collar, Turtleneck, or null",
-  "style": ["Casual", "Formal", "Streetwear", "Ethnic", "Athleisure", "Party"], (array of applicable styles)
-  "season": ["Summer", "Winter", "Monsoon", "All-season"], (array of applicable seasons)
-  "occasion": ["Office", "Party", "Wedding", "Gym", "Daily wear", "Date"], (array of applicable occasions)
+  "season": ["Spring", "Summer", "Autumn", "Winter", "Monsoon", "All Season"], (MUST ONLY contain exact matches from this list)
+  "occasion": ["Casual", "Smart Casual", "Business Casual", "Formal", "Office", "College", "Party", "Wedding", "Festive", "Traditional", "Date Night", "Travel", "Beach", "Gym", "Sports", "Outdoor", "Lounge", "Sleepwear", "Interview", "All Occasion"], (MUST ONLY contain exact matches from this list)
   "formalityScore": number from 1 to 10 (1 = very casual, 10 = very formal),
   "versatilityTags": ["pairs well with denim", "good for layering", etc.],
+  "brand": "Guess brand if visible, otherwise return 'Unknown'",
+  "careInstructions": "Determine standard care instructions by guessing the fabric material. Provide 2-3 short, specific washing/drying rules (e.g., 'Machine wash cold. Do not bleach. Tumble dry low.'). If unsure, provide safe defaults like 'Hand wash cold. Dry flat.'",
+  "notes": "Write a stylish, engaging 1-2 sentence fashion note describing the vibe of the item, how it feels, and a quick styling tip.",
+  "colorHex": "hex code (e.g. #FF5733) if the color doesn't perfectly match the primaryColor list, otherwise empty string",
   "confidence": number between 0.0 and 1.0
 }
 Return only valid JSON. No markdown, no explanation.`;
@@ -211,11 +223,14 @@ export async function analyzeClothingFull(
     fit: "Regular",
     sleeveType: "Half",
     neckType: "Round",
-    style: ["Casual"],
-    season: ["All-season"],
-    occasion: ["Daily wear"],
+    season: ["All Season"],
+    occasion: ["Casual"],
     formalityScore: 3,
     versatilityTags: ["Pairs well with jeans"],
+    brand: "Unknown",
+    careInstructions: "Machine wash cold",
+    notes: "A casual item",
+    colorHex: "",
     confidence: 0.8,
   });
 }
@@ -254,25 +269,62 @@ export async function analyzeBarcodeImage(
 
 // ─── 3. Care Label OCR ────────────────────────────────────────────────────────
 
-const LABEL_PROMPT = `You are a clothing care expert. Analyze this clothing care label image.
-IMPORTANT LAWS (STRICT VALIDATION):
-1. You MUST verify that the image is actually a photo of a clothing care label, price tag, or brand tag.
-2. If the image is a full body shot, a person wearing clothes, or just a piece of clothing with NO visible care label/tag, you MUST set the "error" field to: "No care label detected. Please zoom in and take a clear photo of the clothing's care tag."
-3. If the image is of a completely unrelated object (e.g., food nutrition label, bottle, animal), you MUST set the "error" field to: "This does not appear to be a clothing care label. Please scan a valid clothing tag."
-4. If an error is set, set all other fields to "Not detected".
+const LABEL_PROMPT = `You are an expert clothing care analyst and textile scientist. Your task is to analyze an image of a clothing care label, tag, or printed fabric care instructions and extract highly accurate care data based strictly on ISO 3758 / GINETEX international standards.
 
-Extract care instructions and return ONLY a valid JSON:
+IMPORTANT LAWS (STRICT VALIDATION):
+1. You MUST verify that the image contains a clothing care label, price tag, or fabric care symbols.
+2. If the image is a full body shot, a person wearing clothes, or clothing with NO visible care instructions/symbols, you MUST set the "error" field to: "No care label or symbols detected. Please take a clear, close-up photo of the care tag."
+3. If the image is of a completely unrelated object, set "error" to: "This does not appear to be a clothing care label. Please scan a valid clothing tag."
+4. If an error is set, set all other fields to "Not specified".
+
+ISO 3758 SYMBOL DECODING INSTRUCTIONS (PRIORITIZE THESE):
+- Washing (Tub):
+  - Empty Tub: Machine Wash (normal).
+  - Dots for temp: 1 dot = 30°C, 2 dots = 40°C, 3 dots = 50°C, 4 dots = 60°C, 5 dots = 70°C, 6 dots = 95°C.
+  - 1 line under tub: Machine Wash (permanent press).
+  - 2 lines under tub: Machine Wash (gentle or delicate).
+  - Hand in tub: Hand Wash.
+  - Crossed out tub: Do not wash.
+- Bleaching (Triangle):
+  - Empty triangle: Bleaching is allowed (any bleach).
+  - Triangle with CL inside: Only chlorine bleaching is allowed.
+  - Triangle with diagonal lines: Only non-chlorine (color-safe) bleaching allowed.
+  - Crossed out solid triangle: Bleaching is not allowed.
+- Drying (Square):
+  - Circle inside square (Tumble Dry): 1 dot = low heat, 2 dots = medium heat, 3 dots = high heat, solid dark circle = no heat/air only.
+  - Tumble dry with lines under: 1 line = permanent press, 2 lines = gentle.
+  - Crossed out circle in square: Do not tumble dry.
+  - Crossed out square: Do not dry.
+  - Square with curve line at top: Line dry.
+  - Square with 3 vertical lines: Drip dry.
+  - Square with 1 horizontal line: Dry flat.
+  - Square with diagonal line in top corner: Dry in shade.
+- Ironing (Iron):
+  - Empty iron: Iron in any temperature (steam or dry).
+  - Dots: 1 dot = Low (110°C), 2 dots = Medium (150°C), 3 dots = High (200°C).
+  - Iron with crossed steam: Do not steam.
+  - Crossed out iron: Do not iron.
+- Dry Cleaning (Circle):
+  - Empty circle: Dry clean.
+  - Letters inside: A = Any solvent, P = Any solvent except trichloroethylene, F = Petroleum solvent.
+  - Lines around circle: bottom right = reduced moisture, bottom left = short cycle, top right = no steam, top left = low heat.
+  - Crossed out circle: Do not dry clean.
+- Wringing (Twisted towel): Crossed out = Do not wring.
+
+OUTPUT FORMAT:
+Extract the instructions and return ONLY a valid JSON object matching this structure EXACTLY:
 {
-  "rawText": "all text visible on the label",
-  "washTemp": "washing instructions (e.g. Machine wash cold 30C, Hand wash only)",
-  "ironInstructions": "ironing instructions (e.g. Iron on low heat, Do not iron)",
-  "bleach": "bleach instructions (e.g. Do not bleach, Bleach when needed)",
-  "drying": "drying instructions (e.g. Tumble dry low, Hang dry, Do not tumble dry)",
-  "fabricComposition": "fabric percentages (e.g. 80% Cotton 20% Polyester)",
-  "aiExplanation": "Simple 2-3 sentence explanation of how to care for this item in plain English",
-  "error": "Error message if validation fails, otherwise omit this field"
+  "rawText": "Transcribe all visible text on the label. Include all languages present.",
+  "washTemp": "Concise washing instruction (e.g., 'Machine wash cold 30°C, gentle cycle'). Set to 'Not specified' if no washing info is present.",
+  "ironInstructions": "Concise ironing instruction (e.g., 'Iron on low heat'). Set to 'Not specified' if no ironing info is present.",
+  "bleach": "Concise bleaching instruction (e.g., 'Do not bleach'). Set to 'Not specified' if no bleach info is present.",
+  "drying": "Concise drying instruction (e.g., 'Dry flat in shade'). Set to 'Not specified' if no drying info is present.",
+  "fabricComposition": "Extract fabric percentages (e.g., '80% Cotton, 20% Polyester'). Output English translations only.",
+  "aiExplanation": "Write a helpful, conversational 2-3 sentence summary explaining how to care for this specific garment based on its fabric and symbols. Give practical advice to extend the garment's life.",
+  "error": "Error message if validation fails, otherwise omit this field entirely."
 }
-Return only valid JSON. No markdown.`;
+
+CRITICAL: Return ONLY raw, valid JSON. Do NOT wrap the JSON in markdown formatting block quotes like \`\`\`json ... \`\`\`.`;
 
 export async function analyzeClothLabel(
   imageUri: string,
@@ -280,11 +332,11 @@ export async function analyzeClothLabel(
   const text = await callGeminiVision(imageUri, LABEL_PROMPT);
   return parseJson<LabelAnalysis>(text, {
     rawText: "Could not read label",
-    washTemp: "Not detected",
-    ironInstructions: "Not detected",
-    bleach: "Not detected",
-    drying: "Not detected",
-    fabricComposition: "Not detected",
+    washTemp: "Not specified",
+    ironInstructions: "Not specified",
+    bleach: "Not specified",
+    drying: "Not specified",
+    fabricComposition: "Not specified",
     aiExplanation:
       "Could not extract care instructions from this label. Please try capturing a clearer image of the label.",
   });

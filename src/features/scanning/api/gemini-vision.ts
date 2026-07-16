@@ -18,6 +18,9 @@ export interface ClothingAnalysis {
   occasion: "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym";
   season: "All" | "Summer" | "Winter" | "Monsoon" | "Spring";
   matchingColors: Array<{ name: string; hex: string }>;
+  brand: string;
+  careInstructions: string;
+  notes: string;
   confidence: number; // 0-1
 }
 
@@ -34,6 +37,9 @@ const SYSTEM_PROMPT = `You are a fashion AI assistant. Analyze the clothing item
     { "name": "color name", "hex": "#hexcode" },
     { "name": "color name", "hex": "#hexcode" }
   ],
+  "brand": "Guess brand if visible or return 'Unknown'",
+  "careInstructions": "Determine standard care instructions by guessing the fabric material. Provide 2-3 short, specific washing/drying rules (e.g., 'Machine wash cold. Do not bleach. Tumble dry low.'). If unsure, provide safe defaults like 'Hand wash cold. Dry flat.'",
+  "notes": "Write a stylish, engaging 1-2 sentence fashion note describing the vibe of the item, how it feels, and a quick styling tip.",
   "confidence": a number between 0.7 and 1.0
 }
 Be specific and accurate. Always return valid JSON only.`;
@@ -154,19 +160,21 @@ export async function analyzeClothingImage(
 /**
  * Fallback analysis when API is unavailable or key is missing.
  */
-function getFallbackAnalysis(): ClothingAnalysis {
+const getFallbackAnalysis = (): ClothingAnalysis => {
   return {
-    name: "Casual Top",
-    category: "top",
-    color: "White",
-    colorHex: "#FFFFFF",
+    name: "Classic Denim Jacket",
+    category: "outerwear",
+    color: "Blue",
+    colorHex: "#3b82f6",
     occasion: "Casual",
     season: "All",
     matchingColors: [
-      { name: "Navy Blue", hex: "#1B3A6B" },
-      { name: "Beige", hex: "#F5F0E8" },
-      { name: "Olive Green", hex: "#6B7A3A" },
+      { name: "White", hex: "#ffffff" },
+      { name: "Black", hex: "#000000" },
     ],
-    confidence: 0.75,
+    brand: "Unknown",
+    careInstructions: "Machine wash cold, tumble dry low",
+    notes: "A timeless classic for any casual outfit.",
+    confidence: 0.8,
   };
-}
+};
