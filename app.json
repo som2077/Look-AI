@@ -3,7 +3,7 @@
     "name": "Look AI",
     "slug": "look-ai",
     "version": "4.2.9",
-    "owner": "your-eas-account-username",
+    "owner": "imperial-tech",
     "description": "AI-powered outfit recommendations based on your wardrobe, body type, weather, and occasion.",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
