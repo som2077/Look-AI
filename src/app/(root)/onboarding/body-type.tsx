@@ -17,25 +17,25 @@ const maleBodyTypes: BodyTypeOption[] = [
     id: "slim",
     title: "Rectangle",
     description: "Shoulders, waist and hips are roughly the same width.",
-    image: require("@/assets/bodytypes/male/slim.png"),
+    image: require("@/assets/bodytypes/male/slim.jpg"),
   },
   {
     id: "athletic",
     title: "Inverted Triangle",
     description: "Broad shoulders taper down to a narrow waist and hips.",
-    image: require("@/assets/bodytypes/male/Athletic.png"),
+    image: require("@/assets/bodytypes/male/Athletic.jpg"),
   },
   {
     id: "average",
     title: "Trapezoid",
     description: "Shoulders slightly wider than hips with a defined waist.",
-    image: require("@/assets/bodytypes/male/Average.png"),
+    image: require("@/assets/bodytypes/male/Average.jpg"),
   },
   {
     id: "plus",
     title: "Oval",
     description: "Broader midsection with a rounder, fuller torso shape.",
-    image: require("@/assets/bodytypes/male/plus.png"),
+    image: require("@/assets/bodytypes/male/plus.jpg"),
   },
 ];
 
@@ -44,25 +44,25 @@ const femaleBodyTypes: BodyTypeOption[] = [
     id: "slim",
     title: "Rectangle",
     description: "Shoulders, waist and hips are roughly the same width.",
-    image: require("@/assets/bodytypes/female/slim.png"),
+    image: require("@/assets/bodytypes/female/slim.jpg"),
   },
   {
     id: "curvy",
     title: "Hourglass",
     description: "Fuller bust and hips with a clearly defined narrow waist.",
-    image: require("@/assets/bodytypes/female/Curvy.png"),
+    image: require("@/assets/bodytypes/female/Curvy.jpg"),
   },
   {
     id: "average",
     title: "Trapezoid",
     description: "Slightly wider hips than shoulders with gentle curves.",
-    image: require("@/assets/bodytypes/female/Average.png"),
+    image: require("@/assets/bodytypes/female/Average.jpg"),
   },
   {
     id: "plus",
     title: "Oval",
     description: "Broader midsection with a rounder, fuller torso shape.",
-    image: require("@/assets/bodytypes/female/Plus.png"),
+    image: require("@/assets/bodytypes/female/Plus.jpg"),
   },
 ];
 
