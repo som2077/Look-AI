@@ -62,15 +62,15 @@ const RANGE_DATA: Record<
     clothes: {
       p1: {
         title: "Floral dress",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
       },
       p2: {
         title: "Casual Jeans",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
       },
       p3: {
         title: "White Sneakers",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
       },
     },
     list: [
@@ -81,7 +81,7 @@ const RANGE_DATA: Record<
         status: "HOT",
         statusBg: "#1D9E75",
         lastWorn: "today",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
         category: "Footwear",
         costPerWear: "$15.00",
         stylingPartner: "Casual Jeans",
@@ -93,7 +93,7 @@ const RANGE_DATA: Record<
         status: "NEW",
         statusBg: "#000000",
         lastWorn: "yesterday",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
         category: "Bottoms",
         costPerWear: "$45.00",
         stylingPartner: "White Sneakers",
@@ -105,7 +105,7 @@ const RANGE_DATA: Record<
         status: "NEW",
         statusBg: "#000000",
         lastWorn: "3 days ago",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
         category: "Dresses",
         costPerWear: "$60.00",
         stylingPartner: "Denim Jacket",
@@ -118,15 +118,15 @@ const RANGE_DATA: Record<
     clothes: {
       p1: {
         title: "White Sneakers",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
       },
       p2: {
         title: "Black Blazer",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
       },
       p3: {
         title: "Casual Jeans",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
       },
     },
     list: [
@@ -137,7 +137,7 @@ const RANGE_DATA: Record<
         status: "HOT",
         statusBg: "#1D9E75",
         lastWorn: "today",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
         category: "Bottoms",
         costPerWear: "$15.00",
         stylingPartner: "Black Blazer",
@@ -149,7 +149,7 @@ const RANGE_DATA: Record<
         status: "FAV",
         statusBg: "#CD7C46",
         lastWorn: "yesterday",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
         category: "Outerwear",
         costPerWear: "$32.50",
         stylingPartner: "Casual Jeans",
@@ -161,7 +161,7 @@ const RANGE_DATA: Record<
         status: "NEW",
         statusBg: "#000000",
         lastWorn: "3 days ago",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
         category: "Footwear",
         costPerWear: "$30.00",
         stylingPartner: "Floral dress",
@@ -174,15 +174,15 @@ const RANGE_DATA: Record<
     clothes: {
       p1: {
         title: "Casual Jeans",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
       },
       p2: {
         title: "White Sneakers",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
       },
       p3: {
         title: "Floral dress",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
       },
     },
     list: [
@@ -193,7 +193,7 @@ const RANGE_DATA: Record<
         status: "HOT",
         statusBg: "#1D9E75",
         lastWorn: "today",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
         category: "Dresses",
         costPerWear: "$8.57",
         stylingPartner: "White Sneakers",
@@ -205,7 +205,7 @@ const RANGE_DATA: Record<
         status: "NEW",
         statusBg: "#000000",
         lastWorn: "2 days ago",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
         category: "Bottoms",
         costPerWear: "$15.00",
         stylingPartner: "Black Blazer",
@@ -217,7 +217,7 @@ const RANGE_DATA: Record<
         status: "NEW",
         statusBg: "#000000",
         lastWorn: "5 days ago",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
         category: "Footwear",
         costPerWear: "$15.00",
         stylingPartner: "Casual Jeans",
@@ -230,15 +230,15 @@ const RANGE_DATA: Record<
     clothes: {
       p1: {
         title: "Casual Jeans",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
       },
       p2: {
         title: "Floral dress",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
       },
       p3: {
         title: "Black Blazer",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
       },
     },
     list: [
@@ -249,7 +249,7 @@ const RANGE_DATA: Record<
         status: "FAV",
         statusBg: "#CD7C46",
         lastWorn: "yesterday",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
         category: "Outerwear",
         costPerWear: "$5.41",
         stylingPartner: "Casual Jeans",
@@ -261,7 +261,7 @@ const RANGE_DATA: Record<
         status: "HOT",
         statusBg: "#1D9E75",
         lastWorn: "today",
-        image: require("@/assets/images/mirror_selfie_girl.png"),
+        image: require("@/assets/images/mirror_selfie_girl.jpg"),
         category: "Dresses",
         costPerWear: "$6.67",
         stylingPartner: "White Sneakers",
@@ -273,7 +273,7 @@ const RANGE_DATA: Record<
         status: "NEW",
         statusBg: "#000000",
         lastWorn: "2 days ago",
-        image: require("@/assets/images/mirror_selfie_guy.png"),
+        image: require("@/assets/images/mirror_selfie_guy.jpg"),
         category: "Bottoms",
         costPerWear: "$11.25",
         stylingPartner: "Black Blazer",

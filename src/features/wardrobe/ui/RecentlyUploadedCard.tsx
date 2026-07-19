@@ -137,7 +137,7 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
           }}
         >
           <ExpoImage
-            source={require("@/assets/images/mirror_selfie_guy.png")}
+            source={require("@/assets/images/mirror_selfie_guy.jpg")}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             cachePolicy="memory-disk"
@@ -158,7 +158,7 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
           }}
         >
           <ExpoImage
-            source={require("@/assets/images/mirror_selfie_girl.png")}
+            source={require("@/assets/images/mirror_selfie_girl.jpg")}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             cachePolicy="memory-disk"

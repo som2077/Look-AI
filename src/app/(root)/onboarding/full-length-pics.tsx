@@ -259,7 +259,7 @@ export default function FullLengthPicsScreen() {
               className="h-[280px] w-[200px] rounded-[24px] bg-white p-[6px]"
             >
               <Image
-                source={require("@/assets/images/mirror_selfie_girl.png")}
+                source={require("@/assets/images/mirror_selfie_girl.jpg")}
                 className="h-full w-full rounded-[18px]"
                 resizeMode="cover"
               />
