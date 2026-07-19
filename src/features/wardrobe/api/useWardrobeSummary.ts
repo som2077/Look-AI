@@ -1,6 +1,6 @@
-import { useMemo } from "react";
-import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
+import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import { useMemo } from "react";
 
 export interface WardrobeSummary {
   readonly periodLabel: string;
@@ -27,11 +27,11 @@ export const useWardrobeSummary = (
 
   const summary = useMemo<WardrobeSummary>(() => {
     const totalItems = wardrobeItems.length;
-    
+
     // Filter outfits based on period
     const now = new Date();
     const startTime = new Date();
-    
+
     switch (period) {
       case "daily":
         startTime.setHours(0, 0, 0, 0);
@@ -53,13 +53,20 @@ export const useWardrobeSummary = (
       // If it's scheduled for the future, we don't count it towards past stats yet
       if (outfit.scheduledDate) {
         const parts = outfit.scheduledDate.split("-");
-        const outfitDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        const outfitDate = new Date(
+          parseInt(parts[0]),
+          parseInt(parts[1]) - 1,
+          parseInt(parts[2]),
+        );
         outfitDate.setHours(23, 59, 59, 999);
         if (outfitDate.getTime() > now.getTime()) return false;
         return outfitDate.getTime() >= startTime.getTime();
       }
       // Fallback to createdAt for outfits without scheduledDate
-      return outfit.createdAt >= startTime.getTime() && outfit.createdAt <= now.getTime();
+      return (
+        outfit.createdAt >= startTime.getTime() &&
+        outfit.createdAt <= now.getTime()
+      );
     });
 
     const wornItemIds = new Set<string>();

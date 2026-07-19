@@ -8,9 +8,7 @@ import { useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-import {
-  useOnboardingState,
-} from "@/features/onboarding/model/onboarding-store";
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 
 const hearOptions = [
   {
@@ -36,10 +34,12 @@ export default function WhereDidYouHearScreen() {
   const posthog = usePostHog();
   const router = useRouter();
   const setWhereDidYouHear = useOnboardingState((s) => s.setWhereDidYouHear);
-  
+
   // Initialize with store value if available
   const initialValue = useOnboardingState((s) => s.whereDidYouHear);
-  const [selectedOptions, setSelectedOptions] = useState<string[]>(initialValue || []);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(
+    initialValue || [],
+  );
 
   const handleSelect = (id: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -64,15 +64,17 @@ export default function WhereDidYouHearScreen() {
   };
 
   return (
-    <View className="flex-1 px-5 pb-6 pt-2">
+    <View className="flex-1 px-6 pb-8">
       <OnboardingHeader step={9} />
 
-      <Text className="text-4xl  font-semibold tracking-tight text-[#1D1A27] mt-2 px-1">
-        Where did you hear{"\n"}about us?
-      </Text>
-      <Text className="mt-2 px-1 text-lg font-regular text-[#6B7280]">
-        Choose up to 3 options.
-      </Text>
+      <View className="mt-4">
+        <Text className="text-4xl font-sans font-semibold tracking-tight text-[#1D1A27]">
+          Where did you hear{"\n"}about us?
+        </Text>
+        <Text className="mt-3 text-[15px] font-sans leading-relaxed text-[#4B4852]">
+          Choose up to 3 options.
+        </Text>
+      </View>
 
       <FlatList
         data={hearOptions}
@@ -93,7 +95,7 @@ export default function WhereDidYouHearScreen() {
                 }`}
               >
                 <Text
-                  className={`font-semibold text-[16px] pl-2 ${
+                  className={`font-sans font-semibold text-base pl-2 ${
                     isSelected ? "text-white" : "text-[#1D1A27]"
                   }`}
                 >
@@ -117,7 +119,7 @@ export default function WhereDidYouHearScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      <View className="absolute inset-x-5 bottom-6">
+      <View className="absolute inset-x-6 bottom-8">
         <ContinueButton
           onPress={handleContinue}
           disabled={selectedOptions.length === 0}

@@ -1,12 +1,12 @@
-import { usePostHog } from 'posthog-react-native';
-import { router, useLocalSearchParams } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
-import { useSupabase } from "@/shared/supabase/use-supabase";
-import { Text, View } from "react-native";
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { HeightPicker } from "@/features/onboarding/ui/onboarding/HeightPicker";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useUser } from "@clerk/clerk-expo";
+import { router, useLocalSearchParams } from "expo-router";
+import { usePostHog } from "posthog-react-native";
+import { Text, View } from "react-native";
 
 export default function HeightScreen() {
   const posthog = usePostHog();
@@ -15,16 +15,21 @@ export default function HeightScreen() {
   const { supabase } = useSupabase();
   const { height, setHeight, completeOnboarding } = useOnboardingState();
   return (
-    // <SafeAreaView className="flex-1">
-    <View className="flex-1 px-5 pb-6 pt-2">
+    <View className="flex-1 px-6 pb-8">
       <OnboardingHeader step={3} />
-      <Text className="text-4xl font-semibold px-2 tracking-tight text-[#1D1A27]">
-        What is your height?
-      </Text>
-      <Text className="mt-2 text-left text-xl px-2 font-regular text-[#000000]">
-        This will be used to calibrate your custom plan
-      </Text>
-      <HeightPicker height={height} onChange={setHeight} />
+
+      <View className="mt-4">
+        <Text className="text-4xl font-sans font-semibold tracking-tight text-[#1D1A27]">
+          What is your height?
+        </Text>
+        <Text className="mt-3 text-[15px] font-sans leading-relaxed text-[#4B4852]">
+          This helps us personalize your wardrobe, outfit recommendations, and
+          fit suggestions.
+        </Text>
+      </View>
+      <View className="flex-1 justify-center mb-12">
+        <HeightPicker height={height} onChange={setHeight} />
+      </View>
       <ContinueButton
         onPress={async () => {
           posthog?.capture("onboarding_step_completed", { step: "height" });

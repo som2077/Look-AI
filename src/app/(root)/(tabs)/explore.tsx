@@ -54,7 +54,7 @@ function timeAgoHelper(dateString: string) {
 }
 
 // ─── Post Card ────────────────────────────────────────────────────────────────
-function PostCard({
+const PostCard = React.memo(function PostCard({
   post,
   toggleReaction,
 }: {
@@ -268,11 +268,10 @@ function PostCard({
         </View>
       )}
 
-      {/* Divider Line */}
       <View style={{ height: 1, backgroundColor: "#E5E7EB50", marginTop: 8 }} />
     </View>
   );
-}
+});
 
 // ─── Feed Tab ────────────────────────────────────────────────────────────────
 

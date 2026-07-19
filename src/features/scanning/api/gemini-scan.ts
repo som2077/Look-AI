@@ -27,13 +27,25 @@ export interface BarcodeAnalysis {
 }
 
 export interface LabelAnalysis {
-  rawText: string;
-  washTemp: string;
-  ironInstructions: string;
-  bleach: string;
-  drying: string;
-  fabricComposition: string;
-  aiExplanation: string;
+  care_symbols: Array<{
+    id: string;
+    category: string;
+    label: string;
+    confidence: "high" | "medium" | "low";
+  }>;
+  fabric_composition: Array<{
+    material: string;
+    percentage: number | null;
+  }>;
+  brand: string | null;
+  size: string | null;
+  origin_text: string | null;
+  detected_language: string | null;
+  original_text: string | null;
+  translated_text: string | null;
+  label_standard_guess: "iso_ginetex" | "astm" | "unclear";
+  needs_user_review: boolean;
+  review_notes: string | null;
   error?: string;
 }
 
@@ -269,77 +281,75 @@ export async function analyzeBarcodeImage(
 
 // ─── 3. Care Label OCR ────────────────────────────────────────────────────────
 
-const LABEL_PROMPT = `You are an expert clothing care analyst and textile scientist. Your task is to analyze an image of a clothing care label, tag, or printed fabric care instructions and extract highly accurate care data based strictly on ISO 3758 / GINETEX international standards.
-
-IMPORTANT LAWS (STRICT VALIDATION):
-1. You MUST verify that the image contains a clothing care label, price tag, or fabric care symbols.
-2. If the image is a full body shot, a person wearing clothes, or clothing with NO visible care instructions/symbols, you MUST set the "error" field to: "No care label or symbols detected. Please take a clear, close-up photo of the care tag."
-3. If the image is of a completely unrelated object, set "error" to: "This does not appear to be a clothing care label. Please scan a valid clothing tag."
-4. If an error is set, set all other fields to "Not specified".
-
-ISO 3758 SYMBOL DECODING INSTRUCTIONS (PRIORITIZE THESE):
-- Washing (Tub):
-  - Empty Tub: Machine Wash (normal).
-  - Dots for temp: 1 dot = 30°C, 2 dots = 40°C, 3 dots = 50°C, 4 dots = 60°C, 5 dots = 70°C, 6 dots = 95°C.
-  - 1 line under tub: Machine Wash (permanent press).
-  - 2 lines under tub: Machine Wash (gentle or delicate).
-  - Hand in tub: Hand Wash.
-  - Crossed out tub: Do not wash.
-- Bleaching (Triangle):
-  - Empty triangle: Bleaching is allowed (any bleach).
-  - Triangle with CL inside: Only chlorine bleaching is allowed.
-  - Triangle with diagonal lines: Only non-chlorine (color-safe) bleaching allowed.
-  - Crossed out solid triangle: Bleaching is not allowed.
-- Drying (Square):
-  - Circle inside square (Tumble Dry): 1 dot = low heat, 2 dots = medium heat, 3 dots = high heat, solid dark circle = no heat/air only.
-  - Tumble dry with lines under: 1 line = permanent press, 2 lines = gentle.
-  - Crossed out circle in square: Do not tumble dry.
-  - Crossed out square: Do not dry.
-  - Square with curve line at top: Line dry.
-  - Square with 3 vertical lines: Drip dry.
-  - Square with 1 horizontal line: Dry flat.
-  - Square with diagonal line in top corner: Dry in shade.
-- Ironing (Iron):
-  - Empty iron: Iron in any temperature (steam or dry).
-  - Dots: 1 dot = Low (110°C), 2 dots = Medium (150°C), 3 dots = High (200°C).
-  - Iron with crossed steam: Do not steam.
-  - Crossed out iron: Do not iron.
-- Dry Cleaning (Circle):
-  - Empty circle: Dry clean.
-  - Letters inside: A = Any solvent, P = Any solvent except trichloroethylene, F = Petroleum solvent.
-  - Lines around circle: bottom right = reduced moisture, bottom left = short cycle, top right = no steam, top left = low heat.
-  - Crossed out circle: Do not dry clean.
-- Wringing (Twisted towel): Crossed out = Do not wring.
-
-OUTPUT FORMAT:
-Extract the instructions and return ONLY a valid JSON object matching this structure EXACTLY:
-{
-  "rawText": "Transcribe all visible text on the label. Include all languages present.",
-  "washTemp": "Concise washing instruction (e.g., 'Machine wash cold 30°C, gentle cycle'). Set to 'Not specified' if no washing info is present.",
-  "ironInstructions": "Concise ironing instruction (e.g., 'Iron on low heat'). Set to 'Not specified' if no ironing info is present.",
-  "bleach": "Concise bleaching instruction (e.g., 'Do not bleach'). Set to 'Not specified' if no bleach info is present.",
-  "drying": "Concise drying instruction (e.g., 'Dry flat in shade'). Set to 'Not specified' if no drying info is present.",
-  "fabricComposition": "Extract fabric percentages (e.g., '80% Cotton, 20% Polyester'). Output English translations only.",
-  "aiExplanation": "Write a helpful, conversational 2-3 sentence summary explaining how to care for this specific garment based on its fabric and symbols. Give practical advice to extend the garment's life.",
-  "error": "Error message if validation fails, otherwise omit this field entirely."
-}
-
-CRITICAL: Return ONLY raw, valid JSON. Do NOT wrap the JSON in markdown formatting block quotes like \`\`\`json ... \`\`\`.`;
-
 export async function analyzeClothLabel(
   imageUri: string,
 ): Promise<LabelAnalysis> {
-  const text = await callGeminiVision(imageUri, LABEL_PROMPT);
-  return parseJson<LabelAnalysis>(text, {
-    rawText: "Could not read label",
-    washTemp: "Not specified",
-    ironInstructions: "Not specified",
-    bleach: "Not specified",
-    drying: "Not specified",
-    fabricComposition: "Not specified",
-    aiExplanation:
-      "Could not extract care instructions from this label. Please try capturing a clearer image of the label.",
-  });
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !anonKey) {
+    throw new Error("Missing Supabase configuration");
+  }
+
+  let base64Image: string;
+  try {
+    base64Image = await uriToBase64(imageUri);
+  } catch (error) {
+    return {
+      care_symbols: [],
+      fabric_composition: [],
+      brand: null,
+      size: null,
+      origin_text: null,
+      detected_language: null,
+      original_text: null,
+      translated_text: null,
+      label_standard_guess: "unclear",
+      needs_user_review: true,
+      review_notes: "Could not read image file",
+      error: "Could not read image file",
+    };
+  }
+
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/cloth-label-scan`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({ base64Image }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`Edge function failed with status ${res.status}: ${errText}`);
+      throw new Error(`Edge function failed (Status: ${res.status}). Please ensure it is deployed.`);
+    }
+
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || "Edge function failed");
+    }
+
+    return data.result as LabelAnalysis;
+  } catch (err: any) {
+    console.error("Error calling cloth-label-scan:", err);
+    return {
+      care_symbols: [],
+      fabric_composition: [],
+      brand: null,
+      size: null,
+      origin_text: null,
+      detected_language: null,
+      original_text: null,
+      translated_text: null,
+      label_standard_guess: "unclear",
+      needs_user_review: true,
+      review_notes: "Could not analyze the label via edge function.",
+      error: err.message,
+    };
+  }
 }
 
 // ─── 4. Fit Check Analysis ────────────────────────────────────────────────────

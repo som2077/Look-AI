@@ -1,24 +1,82 @@
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
-import * as Haptics from "expo-haptics";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useUser } from "@clerk/clerk-expo";
+import * as Haptics from "expo-haptics";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Activity,
+  BookOpen,
+  Briefcase,
+  Camera,
+  Cloud,
+  Coffee,
+  Cpu,
+  Disc,
+  Feather,
+  Flame,
+  Gem,
+  Glasses,
+  GlassWater,
+  Maximize,
+  Minus,
+  Moon,
+  Scissors,
+  Search,
+  Shirt,
+  Snowflake,
+  Sparkles,
+  Sun,
+  Tent,
+  Umbrella,
+} from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
 import React, { useCallback } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
+
+const styleIcons: Record<string, any> = {
+  Casual: Coffee,
+  Streetwear: Flame,
+  Y2k: Disc,
+  Preppy: BookOpen,
+  Scandinavian: Snowflake,
+  Oversized: Maximize,
+  Glam: Sparkles,
+  Minimal: Minus,
+  "Smart casual": Glasses,
+  "Business Casual": Briefcase,
+  "Quiet Luxury": Gem,
+  "Old Money": Gem,
+  Luxury: Gem,
+  Vintage: Camera,
+  Bohemian: Feather,
+  Soft: Cloud,
+  Athleisure: Activity,
+  Formal: Shirt,
+  Edgy: Scissors,
+  Dark: Moon,
+  Party: GlassWater,
+  Light: Sun,
+  Techwear: Cpu,
+  Sporty: Activity,
+  Grunge: Tent,
+  Vacation: Umbrella,
+  "Not sure": Search,
+};
 
 interface StyleChipProps {
   label: string;
   selected: boolean;
   onToggle: (style: string) => void;
+  Icon: any;
 }
 
 const StyleChip = React.memo(function StyleChip({
   label,
   selected,
   onToggle,
+  Icon,
 }: StyleChipProps) {
   const handlePress = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -27,12 +85,19 @@ const StyleChip = React.memo(function StyleChip({
   return (
     <Pressable
       onPress={handlePress}
-      className={`rounded-full border px-5 py-3 ${
+      className={`rounded-full border px-5 py-3 flex-row items-center gap-2 ${
         selected ? "border-black bg-black" : "border-transparent bg-[#ECEDF9]"
       }`}
     >
+      {Icon && (
+        <Icon
+          size={16}
+          color={selected ? "white" : "#000000"}
+          strokeWidth={2.5}
+        />
+      )}
       <Text
-        className={`text-base ${selected ? "font-semibold text-white" : "font-regular text-[#1D1A27]"}`}
+        className={`text-base font-sans ${selected ? "font-semibold text-white" : "font-medium text-[#000000]"}`}
       >
         {label}
       </Text>
@@ -76,7 +141,8 @@ export default function StylePreferenceScreen() {
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { user } = useUser();
   const { supabase } = useSupabase();
-  const { stylePreferences, toggleStyle, completeOnboarding } = useOnboardingState();
+  const { stylePreferences, toggleStyle, completeOnboarding } =
+    useOnboardingState();
 
   const handleContinue = useCallback(async () => {
     posthog?.capture("onboarding_step_completed", { step: "style-preference" });
@@ -88,36 +154,52 @@ export default function StylePreferenceScreen() {
     } else {
       router.push("/(root)/onboarding/full-length-pics");
     }
-  }, [router, stylePreferences, fromProfile, user, supabase, completeOnboarding]);
+  }, [
+    router,
+    stylePreferences,
+    fromProfile,
+    user,
+    supabase,
+    completeOnboarding,
+  ]);
 
   return (
-    // <SafeAreaView className="flex-1">
-    <View className="flex-1 px-5 pb-6 pt-2">
+    <View className="flex-1 px-6 pb-8">
       <OnboardingHeader step={5} />
-      <Text className="text-4xl font-semibold tracking-tight text-center text-[#1D1A27]">
-        Style preferences
-      </Text>
-      <Text className="mt-2 text-xl font-regular text-center text-[#000000]">
-        Select fashion styles you like most.
-      </Text>
-      <View className="flex-row flex-wrap gap-[7px] mt-8 items-center justify-center">
-        {styles.map((style) => (
-          <StyleChip
-            key={style}
-            label={style}
-            selected={stylePreferences.includes(style)}
-            onToggle={toggleStyle}
-          />
-        ))}
+
+      <View className="mt-4">
+        <Text className="text-4xl font-sans font-semibold tracking-tight text-[#1D1A27]">
+          Style preferences
+        </Text>
+        <Text className="mt-3 text-[15px] font-sans leading-relaxed text-[#4B4852]">
+          Select up to 5 fashion styles that feel most like you.
+        </Text>
       </View>
-      <Text className="mt-8  text-sm font-medium text-center text-[#000000]">
-        Choose up to 5 styles that feel most like you.
-      </Text>
-      <ContinueButton
-        onPress={handleContinue}
-        disabled={stylePreferences.length !== 5}
-      />
+
+      <ScrollView
+        className="mt-8 flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        <View className="flex-row flex-wrap gap-3 items-center justify-center">
+          {styles.map((style) => (
+            <StyleChip
+              key={style}
+              label={style}
+              Icon={styleIcons[style] || Sparkles}
+              selected={stylePreferences.includes(style)}
+              onToggle={toggleStyle}
+            />
+          ))}
+        </View>
+      </ScrollView>
+
+      <View className="absolute inset-x-6 bottom-8">
+        <ContinueButton
+          onPress={handleContinue}
+          disabled={stylePreferences.length !== 5}
+        />
+      </View>
     </View>
-    // </SafeAreaView>
   );
 }

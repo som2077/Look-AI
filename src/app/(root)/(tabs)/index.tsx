@@ -11,6 +11,11 @@ import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
 import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
 import type { RingProgressSegment } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
 import { WardrobeRingSummaryCard } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
+import { useWeatherStore } from "@/features/weather/model/weather-store";
+import {
+  usePremiumLimits,
+  WARDROBE_LIMIT,
+} from "@/shared/hooks/usePremiumLimits";
 import { useStreakStore } from "@/shared/store/useStreakStore";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
@@ -23,11 +28,17 @@ import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { useUser } from "@clerk/clerk-expo";
-import { usePremiumLimits, WARDROBE_LIMIT } from "@/shared/hooks/usePremiumLimits";
 import { IconAlertTriangle } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, FlatList, View, Pressable, Text } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -37,10 +48,10 @@ const H_PADDING = 20;
 const HEADER_HEIGHT = 140;
 
 const RING_SEGMENT_BASE: readonly Omit<RingProgressSegment, "progress">[] = [
-  { id: "outer", color: "#01B3F7", radius: 89, strokeWidth: 13 },
-  { id: "middle", color: "#AB86F1", radius: 75.7, strokeWidth: 13 },
-  { id: "inner", color: "#FEC466", radius: 62.4, strokeWidth: 13 },
-  { id: "innermost", color: "#000000", radius: 48.9, strokeWidth: 13 },
+  { id: "outer", color: "#01B3F7", radius: 90, strokeWidth: 15 },
+  { id: "middle", color: "#AB86F1", radius: 73, strokeWidth: 15 },
+  { id: "inner", color: "#FEC466", radius: 56, strokeWidth: 15 },
+  { id: "innermost", color: "#000000", radius: 39, strokeWidth: 15 },
 ] as const;
 
 const clampRatio = (value: number): number => {
@@ -54,6 +65,97 @@ type CardKey = "wardrobe" | "blank1";
 const CARDS: CardKey[] = ["wardrobe", "blank1"];
 
 type FilterTab = "Days" | "Weeks" | "Months" | "All";
+
+const HomeCard = React.memo(function HomeCard({
+  item,
+  canAddWardrobe,
+  wardrobeCount,
+  summary,
+  ringSegments,
+  currentStreak,
+  setTimeframe,
+  weatherData,
+}: any) {
+  const router = useRouter();
+  return (
+    <View style={{ width: SCREEN_WIDTH, paddingHorizontal: H_PADDING }}>
+      {item === "wardrobe" ? (
+        <>
+          {!canAddWardrobe && (
+            <Pressable
+              onPress={() =>
+                router.push("/(root)/(subscription)/subscription" as never)
+              }
+              className="mt-4 flex-row border border-[#FECACA] items-center bg-[#FEF2F2] rounded-[16px] px-4 py-3"
+            >
+              <IconAlertTriangle
+                size={20}
+                color="#EF4444"
+                strokeWidth={1.5}
+              />
+              <Text
+                className="ml-3 text-[#991B1B] font-sans"
+                style={{ fontSize: 13, flex: 1, fontWeight: "600" }}
+              >
+                Wardrobe limit reached ({wardrobeCount}/{WARDROBE_LIMIT}).
+                Upgrade to Pro to add more items.
+              </Text>
+            </Pressable>
+          )}
+          <WardrobeRingSummaryCard
+            wornPercentage={clampRatio(summary.wornPercentage)}
+            totalWorn={currentStreak}
+            wearCount={
+              summary.totalWorn > 0
+                ? Number((summary.wearCount / summary.totalWorn).toFixed(1))
+                : 0
+            }
+            neverCount={summary.totalWorn}
+            ringSegments={ringSegments}
+            streak={currentStreak}
+            labels={{
+              topLeft: "Usage",
+              bottomLeft: "Streak",
+              topRight: "Avg Wears",
+              bottomRight: "Total Items",
+            }}
+            statColors={{
+              bottomLeft: "#FEC466",
+              bottomRight: "#1D1A27",
+            }}
+          />
+          <View
+            style={{
+              borderWidth: 0.7,
+              borderColor: "#E9EBF8",
+              backgroundColor: "#FFFFFF",
+              borderRadius: 24,
+              padding: 8,
+              marginTop: 5,
+              shadowColor: "#FFFFFF",
+              shadowOpacity: 0.02,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 10,
+            }}
+          >
+            <WardrobeFilterTabs onChange={setTimeframe} />
+            <WardrobeMessageBar />
+          </View>
+        </>
+      ) : (
+        <>
+          <WeatherOutfitCard />
+          <LookAIBanner
+            score={
+              weatherData ? Math.round(weatherData.comfortScore / 10) : 8
+            }
+          />
+        </>
+      )}
+    </View>
+  );
+});
 
 export default function HomeScreen() {
   const { user } = useUser();
@@ -69,6 +171,7 @@ export default function HomeScreen() {
           ? "monthly"
           : "all";
   const { summary } = useWardrobeSummary(user?.id, period);
+  const weatherData = useWeatherStore((state) => state.data);
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
   const [selectedDate, setSelectedDate] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -120,70 +223,18 @@ export default function HomeScreen() {
 
   const renderCard = useCallback(
     ({ item }: { item: CardKey }) => (
-      <View style={{ width: SCREEN_WIDTH, paddingHorizontal: H_PADDING }}>
-        {item === "wardrobe" ? (
-          <>
-            {!canAddWardrobe && (
-              <Pressable
-                onPress={() => router.push("/(root)/(subscription)/subscription" as never)}
-                className="mt-4 flex-row border border-[#FECACA] items-center bg-[#FEF2F2] rounded-[16px] px-4 py-3"
-              >
-                <IconAlertTriangle size={20} color="#EF4444" strokeWidth={1.5} />
-                <Text
-                  className="ml-3 text-[#991B1B] font-sans"
-                  style={{ fontSize: 13, flex: 1, fontWeight: "600" }}
-                >
-                  Wardrobe limit reached ({wardrobeCount}/{WARDROBE_LIMIT}). Upgrade to Pro to add more items.
-                </Text>
-              </Pressable>
-            )}
-            <WardrobeRingSummaryCard
-              wornPercentage={clampRatio(summary.wornPercentage)}
-              totalWorn={currentStreak}
-              wearCount={summary.totalWorn > 0 ? Number((summary.wearCount / summary.totalWorn).toFixed(1)) : 0}
-              neverCount={summary.totalWorn}
-              ringSegments={ringSegments}
-              streak={currentStreak}
-              labels={{
-                topLeft: "Usage",
-                bottomLeft: "Streak",
-                topRight: "Avg Wears",
-                bottomRight: "Total Items",
-              }}
-              statColors={{
-                bottomLeft: "#FEC466",
-                bottomRight: "#1D1A27",
-              }}
-            />
-            <View
-              style={{
-                borderWidth: 0.7,
-                borderColor: "#E9EBF8",
-                backgroundColor: "#FFFFFF",
-                borderRadius: 24,
-                padding: 8,
-                marginTop: 5,
-                shadowColor: "#FFFFFF",
-                shadowOpacity: 0.02,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 10,
-                // padddingBottom:1
-              }}
-            >
-              <WardrobeFilterTabs onChange={setTimeframe} />
-              <WardrobeMessageBar />
-            </View>
-          </>
-        ) : (
-          <>
-            <WeatherOutfitCard />
-            <LookAIBanner />
-          </>
-        )}
-      </View>
+      <HomeCard
+        item={item}
+        canAddWardrobe={canAddWardrobe}
+        wardrobeCount={wardrobeCount}
+        summary={summary}
+        ringSegments={ringSegments}
+        currentStreak={currentStreak}
+        setTimeframe={setTimeframe}
+        weatherData={weatherData}
+      />
     ),
-    [summary, ringSegments, currentStreak],
+    [summary, ringSegments, currentStreak, canAddWardrobe, wardrobeCount, weatherData],
   );
 
   // Header stays in place (translateY counteracts scroll), clamped to HEADER_HEIGHT

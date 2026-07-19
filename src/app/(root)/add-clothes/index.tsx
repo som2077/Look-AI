@@ -107,14 +107,24 @@ export default function AddClothesIndex() {
     setTimeout(async () => {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.85,
-        allowsEditing: true,
+        allowsEditing: false,
+        allowsMultipleSelection: true,
+        selectionLimit: 5,
+        orderedSelection: true,
       });
-      if (!result.canceled && result.assets[0]?.uri) {
-        router.push({
-          pathname: "/(root)/add-clothes/scanning",
-          params: { photoUri: result.assets[0].uri },
-        } as never);
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        if (result.assets.length === 1) {
+          router.push({
+            pathname: "/(root)/add-clothes/scanning",
+            params: { photoUri: result.assets[0].uri },
+          } as never);
+        } else {
+          router.push({
+            pathname: "/(root)/add-clothes/batch-scan",
+            params: { uris: JSON.stringify(result.assets.map((a) => a.uri)), mode: "cloth" },
+          } as never);
+        }
       }
     }, 280);
   }, [router, closeSheet]);
@@ -122,7 +132,7 @@ export default function AddClothesIndex() {
   const handleCamera = useCallback(() => {
     closeSheet();
     setTimeout(() => {
-      router.push("/(root)/log-outfit/camera" as never);
+      router.push("/(root)/add-clothes/camera" as never);
     }, 280);
   }, [router, closeSheet]);
 

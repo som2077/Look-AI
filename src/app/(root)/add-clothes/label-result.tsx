@@ -1,20 +1,27 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { LabelAnalysis } from "@/features/scanning/api/gemini-scan";
+import { saveLabelToDatabase } from "@/features/scanning/api/save-label";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useSavedStore } from "@/features/wardrobe/model/saved-store";
 import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useAuth } from "@clerk/clerk-expo";
 import {
+  IconAlertTriangle,
   IconArrowLeft,
   IconBleachOff,
   IconDotsVertical,
   IconIroning1,
+  IconShirt,
   IconWashMachine,
   IconWind,
+  IconX,
 } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -33,19 +40,26 @@ type LabelResultParams = {
 };
 
 const DEFAULT_RESULT: LabelAnalysis = {
-  rawText: "Could not read label",
-  washTemp: "Not detected",
-  ironInstructions: "Not detected",
-  bleach: "Not detected",
-  drying: "Not detected",
-  fabricComposition: "Not detected",
-  aiExplanation:
-    "Could not extract care instructions from this label. Please try capturing a clearer image of the label.",
+  care_symbols: [],
+  fabric_composition: [],
+  brand: null,
+  size: null,
+  origin_text: null,
+  detected_language: null,
+  original_text: null,
+  translated_text: null,
+  label_standard_guess: "unclear",
+  needs_user_review: true,
+  review_notes: "Could not read label data",
 };
 
 export default function LabelResultScreen() {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { supabase } = useSupabase();
+  const { userId } = useAuth();
   const { canAddClothLabel, handleLimitReached } = usePremiumLimits();
   const params = useLocalSearchParams() as LabelResultParams;
   const addScan = useScanHistoryStore((s) => s.addScan);
@@ -79,10 +93,8 @@ export default function LabelResultScreen() {
     if (params.resultJson && params.photoUri && !params.scanId) {
       if (!canAddClothLabel) {
         handleLimitReached("cloth_label");
-        // We still show the result, but don't save to history
         return;
       }
-      // Add to history immediately since we already have the result from the background
       addScan({
         type: "label",
         thumbnail: params.photoUri,
@@ -94,9 +106,36 @@ export default function LabelResultScreen() {
   }, [canAddClothLabel, handleLimitReached]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F7F8FA" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+      {isSaving && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(255,255,255,0.8)",
+            zIndex: 100,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color="#4F46E5" />
+          <Text
+            style={{
+              marginTop: 16,
+              fontSize: 16,
+              fontWeight: "600",
+              color: "#1D1A27",
+            }}
+          >
+            Saving to Cloud...
+          </Text>
+        </View>
+      )}
       <StatusBar style="dark" />
-      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+      <View style={{ flex: 1 }}>
         {/* Header */}
         <View
           style={{
@@ -113,11 +152,9 @@ export default function LabelResultScreen() {
           >
             <IconArrowLeft size={24} color="#1D1A27" />
           </Pressable>
-
           <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
             Care Label Result
           </Text>
-
           <Pressable
             onPress={() => setShowMenu(true)}
             style={{ width: 60, alignItems: "flex-end", paddingVertical: 4 }}
@@ -138,7 +175,7 @@ export default function LabelResultScreen() {
               <View
                 style={{
                   position: "absolute",
-                  top: 80,
+                  top: 105,
                   right: 30,
                   backgroundColor: "#fff",
                   borderRadius: 12,
@@ -155,20 +192,41 @@ export default function LabelResultScreen() {
               >
                 <Pressable
                   style={{ paddingVertical: 12, paddingHorizontal: 16 }}
-                  onPress={() => {
+                  onPress={async () => {
                     setShowMenu(false);
-                    if (photoUri) {
-                      addSavedItem({
-                        id: `label-${Date.now()}`,
-                        name: "Care Label",
-                        occasion: "cloth label",
-                        wears: 0,
-                        image: photoUri,
-                        match: 100,
-                        tags: ["cloth label"],
-                        saveType: "label",
+                    if (photoUri && userId) {
+                      setIsSaving(true);
+                      const success = await saveLabelToDatabase({
+                        supabase,
+                        userId,
+                        photoUri,
+                        analysis: result,
                       });
-                      Alert.alert("Success", "Label saved to your wardrobe!");
+                      setIsSaving(false);
+                      if (success) {
+                        addSavedItem({
+                          id: `label-${Date.now()}`,
+                          name: result.brand
+                            ? `${result.brand} Label`
+                            : "Care Label",
+                          occasion: "cloth label",
+                          wears: 0,
+                          image: photoUri, // keep local copy in zustand for immediate UI
+                          match: 100,
+                          tags: ["cloth label"],
+                          saveType: "label",
+                        });
+                        Alert.alert("Success", "Label saved to your database!");
+                      } else {
+                        Alert.alert(
+                          "Error",
+                          "Failed to save label to database.",
+                        );
+                        return;
+                      }
+                    } else if (!userId) {
+                      Alert.alert("Error", "You must be logged in to save.");
+                      return;
                     }
                     if (params.outfitIndex)
                       removeOutfit(parseInt(params.outfitIndex));
@@ -217,238 +275,230 @@ export default function LabelResultScreen() {
         >
           {/* Photo */}
           {photoUri && (
+            <>
+              <Pressable
+                onPress={() => setIsFullscreen(true)}
+                style={{
+                  marginHorizontal: 20,
+                  borderRadius: 30,
+                  marginBottom: 24,
+                  backgroundColor: "#FFFFFF",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.06,
+                  shadowRadius: 16,
+                  elevation: 2,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: "#E9EBF8",
+                }}
+              >
+                <Image
+                  source={{ uri: photoUri }}
+                  style={{ height: 220, width: "100%" }}
+                  resizeMode="cover"
+                />
+              </Pressable>
+
+              <Modal
+                visible={isFullscreen}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setIsFullscreen(false)}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "rgba(0,0,0,0.9)",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Pressable
+                    style={{
+                      position: "absolute",
+                      top: 50,
+                      right: 20,
+                      zIndex: 10,
+                      padding: 8,
+                    }}
+                    onPress={() => setIsFullscreen(false)}
+                  >
+                    <IconX size={32} color="#FFFFFF" />
+                  </Pressable>
+                  <Image
+                    source={{ uri: photoUri }}
+                    style={{ width: "100%", height: "80%" }}
+                    resizeMode="contain"
+                  />
+                </View>
+              </Modal>
+            </>
+          )}
+
+          {/* Warnings */}
+          {result.needs_user_review && (
             <View
               style={{
                 marginHorizontal: 20,
-                borderRadius: 24,
-                marginBottom: 24,
-                backgroundColor: "#FFFFFF",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.06,
-                shadowRadius: 16,
-                elevation: 4,
-                overflow: "hidden",
+                marginBottom: 20,
+                backgroundColor: "#FEF2F2",
+                padding: 16,
+                borderRadius: 16,
+                flexDirection: "row",
+                alignItems: "flex-start",
                 borderWidth: 1,
-                borderColor: "#E9EBF8",
+                borderColor: "#FCA5A5",
               }}
             >
-              <Image
-                source={{ uri: photoUri }}
-                style={{
-                  height: 220,
-                  width: "100%",
-                }}
-                resizeMode="cover"
+              <IconAlertTriangle
+                size={20}
+                color="#EF4444"
+                style={{ marginTop: 2, marginRight: 10 }}
               />
-              <View
-                style={{
-                  position: "absolute",
-                  bottom: 12,
-                  left: 16,
-                  backgroundColor: "rgba(0,0,0,0.5)",
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 12,
-                }}
-              >
+              <View style={{ flex: 1 }}>
                 <Text
-                  style={{ color: "#FFF", fontSize: 11, fontWeight: "600" }}
+                  style={{
+                    color: "#991B1B",
+                    fontWeight: "700",
+                    marginBottom: 4,
+                  }}
                 >
-                  Scan ID: #{Math.floor(Math.random() * 90000) + 10000}
+                  Review Needed
+                </Text>
+                <Text
+                  style={{ color: "#B91C1C", fontSize: 13, lineHeight: 18 }}
+                >
+                  {result.review_notes ||
+                    "The AI could not confidently read all symbols or standards."}
                 </Text>
               </View>
             </View>
           )}
 
-          {/* Care Cards List */}
-          <View style={{ marginBottom: 12 }}>
-            {/* Washing */}
+          {/* Core Info */}
+          {(result.brand || result.size) && (
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 28,
-                paddingHorizontal: 24,
+                marginHorizontal: 20,
+                marginBottom: 20,
+                backgroundColor: "#FFF",
+                padding: 16,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: "#E9EBF8",
               }}
             >
-              <View
-                style={{ width: 40, alignItems: "center", marginRight: 16 }}
-              >
-                <IconWashMachine size={32} color="#1D1A27" strokeWidth={1.5} />
-              </View>
-              <View style={{ flex: 1 }}>
+              {result.brand && (
                 <Text
                   style={{
-                    fontSize: 15,
+                    fontSize: 18,
                     fontWeight: "700",
-                    color: "#1D1A27",
+                    color: "#111827",
                     marginBottom: 4,
                   }}
                 >
-                  Washing:
+                  {result.brand}
                 </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color:
-                      result?.washTemp === "Not specified" ||
-                      result?.washTemp === "Not detected"
-                        ? "#9CA3AF"
-                        : "#4B5563",
-                  }}
-                >
-                  {result?.washTemp && result.washTemp !== "Not detected"
-                    ? result.washTemp
-                    : "Not specified on label"}
+              )}
+              {result.size && (
+                <Text style={{ fontSize: 14, color: "#4B5563" }}>
+                  Size: {result.size}
                 </Text>
-              </View>
+              )}
             </View>
+          )}
 
-            {/* Ironing */}
+          {/* Care Symbols List */}
+          {result.care_symbols && result.care_symbols.length > 0 && (
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 28,
-                paddingHorizontal: 24,
+                marginHorizontal: 20,
+                marginBottom: 20,
+                backgroundColor: "#FFF",
+                padding: 16,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: "#E9EBF8",
               }}
             >
-              <View
-                style={{ width: 40, alignItems: "center", marginRight: 16 }}
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: "#1D1A27",
+                  marginBottom: 12,
+                }}
               >
-                <IconIroning1 size={32} color="#1D1A27" strokeWidth={1.5} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
+                Care Instructions
+              </Text>
+              {result.care_symbols.map((symbol, idx) => (
+                <View
+                  key={idx}
                   style={{
-                    fontSize: 15,
-                    fontWeight: "700",
-                    color: "#1D1A27",
-                    marginBottom: 4,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 12,
                   }}
                 >
-                  Ironing:
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color:
-                      result?.ironInstructions === "Not specified" ||
-                      result?.ironInstructions === "Not detected"
-                        ? "#9CA3AF"
-                        : "#4B5563",
-                  }}
-                >
-                  {result?.ironInstructions &&
-                  result.ironInstructions !== "Not detected"
-                    ? result.ironInstructions
-                    : "Not specified on label"}
-                </Text>
-              </View>
+                  <View
+                    style={{ width: 36, alignItems: "center", marginRight: 12 }}
+                  >
+                    {symbol.category === "washing" && (
+                      <IconWashMachine size={24} color="#4B5563" />
+                    )}
+                    {symbol.category === "ironing" && (
+                      <IconIroning1 size={24} color="#4B5563" />
+                    )}
+                    {symbol.category === "bleaching" && (
+                      <IconBleachOff size={24} color="#4B5563" />
+                    )}
+                    {symbol.category === "drying" && (
+                      <IconWind size={24} color="#4B5563" />
+                    )}
+                    {symbol.category === "professional_care" && (
+                      <IconShirt size={24} color="#4B5563" />
+                    )}
+                    {symbol.category === "wringing" && (
+                      <IconShirt size={24} color="#4B5563" />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: "#111827",
+                      }}
+                    >
+                      {symbol.label}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#6B7280",
+                        marginTop: 2,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {symbol.category.replace("_", " ")}
+                    </Text>
+                  </View>
+                </View>
+              ))}
             </View>
-
-            {/* Bleaching */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 28,
-                paddingHorizontal: 24,
-              }}
-            >
-              <View
-                style={{ width: 40, alignItems: "center", marginRight: 16 }}
-              >
-                <IconBleachOff size={32} color="#1D1A27" strokeWidth={1.5} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontWeight: "700",
-                    color: "#1D1A27",
-                    marginBottom: 4,
-                  }}
-                >
-                  Bleaching:
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color:
-                      result?.bleach === "Not specified" ||
-                      result?.bleach === "Not detected"
-                        ? "#9CA3AF"
-                        : "#4B5563",
-                  }}
-                >
-                  {result?.bleach && result.bleach !== "Not detected"
-                    ? result.bleach
-                    : "Not specified on label"}
-                </Text>
-              </View>
-            </View>
-
-            {/* Drying */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 28,
-                paddingHorizontal: 24,
-              }}
-            >
-              <View
-                style={{ width: 40, alignItems: "center", marginRight: 16 }}
-              >
-                <IconWind size={32} color="#1D1A27" strokeWidth={1.5} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontWeight: "700",
-                    color: "#1D1A27",
-                    marginBottom: 4,
-                  }}
-                >
-                  Drying:
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color:
-                      result?.drying === "Not specified" ||
-                      result?.drying === "Not detected"
-                        ? "#9CA3AF"
-                        : "#4B5563",
-                  }}
-                >
-                  {result?.drying && result.drying !== "Not detected"
-                    ? result.drying
-                    : "Not specified on label"}
-                </Text>
-              </View>
-            </View>
-          </View>
+          )}
 
           {/* Composition */}
-          {!!result.fabricComposition &&
-            result.fabricComposition !== "Not detected" &&
-            result.fabricComposition !== "Not specified" && (
+          {result.fabric_composition &&
+            result.fabric_composition.length > 0 && (
               <View
                 style={{
                   marginHorizontal: 20,
                   backgroundColor: "#FFFFFF",
-                  borderRadius: 20,
-                  padding: 18,
+                  borderRadius: 16,
+                  padding: 16,
                   marginBottom: 20,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 10,
-                  elevation: 2,
                   borderWidth: 1,
                   borderColor: "#E9EBF8",
                 }}
@@ -456,54 +506,67 @@ export default function LabelResultScreen() {
                 <Text
                   style={{
                     color: "#1D1A27",
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: "700",
-                    marginBottom: 6,
+                    marginBottom: 8,
                   }}
                 >
-                  Composition
+                  Fabric Composition
                 </Text>
-                <Text style={{ color: "#4B5563", fontSize: 13 }}>
-                  Details:{" "}
-                  <Text style={{ fontWeight: "700", color: "#1D1A27" }}>
-                    {result.fabricComposition}
-                  </Text>
-                </Text>
+                {result.fabric_composition.map((comp, idx) => (
+                  <View
+                    key={idx}
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <Text style={{ color: "#4B5563", fontSize: 14 }}>
+                      {comp.material}
+                    </Text>
+                    <Text
+                      style={{
+                        color: "#111827",
+                        fontSize: 14,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {comp.percentage ? `${comp.percentage}%` : "Unknown"}
+                    </Text>
+                  </View>
+                ))}
               </View>
             )}
 
-          {/* AI Care Summary */}
-          <View
-            style={{
-              marginHorizontal: 20,
-              // backgroundColor: "#F3F4F6",
-              // borderRadius: 12,
-              padding: 18,
-              // borderWidth: 1,
-              // borderColor: "#E5E7EB",
-            }}
-          >
-            {/* <View
+          {/* Translations */}
+          {result.translated_text && (
+            <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 10,
+                marginHorizontal: 20,
+                backgroundColor: "#F3F4F6",
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 20,
               }}
             >
-              <Text style={{ fontSize: 20 }}>🧠</Text>
               <Text
-                style={{ color: "#1D1A27", fontSize: 15, fontWeight: "700" }}
+                style={{
+                  color: "#1D1A27",
+                  fontSize: 14,
+                  fontWeight: "700",
+                  marginBottom: 8,
+                }}
               >
-                AI Care Summary:
+                Translated Text ({result.detected_language})
               </Text>
-            </View> */}
-            <Text style={{ color: "#374151", fontSize: 14, lineHeight: 22 }}>
-              {result.aiExplanation}
-            </Text>
-          </View>
+              <Text style={{ color: "#374151", fontSize: 13, lineHeight: 20 }}>
+                {result.translated_text}
+              </Text>
+            </View>
+          )}
         </ScrollView>
-      </SafeAreaView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }

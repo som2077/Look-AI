@@ -14,7 +14,7 @@ import {
   useOutfitAnalysisStore,
 } from "@/features/ai-styling/model/outfit-analysis-store";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
-import { Audio } from "expo-av";
+import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
 import { useRouter } from "expo-router";
 
 const SVG_SIZE = 72;
@@ -25,8 +25,6 @@ const CENTER = SVG_SIZE / 2;
 
 const CARD_H_MARGIN = 20;
 const CARD_WIDTH = Dimensions.get("window").width - CARD_H_MARGIN * 2;
-
-const CHIME_SOUND = require("@/assets/sounds/analysis-complete.wav");
 
 // ─── Slide type: either a completed outfit or the in-progress analysis ───────
 
@@ -60,10 +58,14 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
       style={{ width: CARD_WIDTH }}
       onPress={() => onViewDetails(outfitIndex)}
     >
-      <View className="flex-row rounded-[24px] border-[0.5px] border-[#E9EBF8] bg-[#ffffff] overflow-hidden h-40">
+      <View className="flex-row rounded-[24px] border-[0.8px] border-[#E9EBF8] bg-[#F3F2F790] overflow-hidden h-40">
         <View
-          className="justify-center items-center"
-          style={{ width: 135, height: 170, backgroundColor: "#FFFFFF" }}
+          className="justify-center items-center rounded-[24px]"
+          style={{
+            width: 135,
+            height: 140,
+            backgroundColor: "#FFFFFF",
+          }}
         >
           <ExpoImage
             source={{ uri: outfit.imageUri }}
@@ -85,10 +87,14 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
               </Text>
               <Text
                 style={{
-                  color: "#9B9BAF",
+                  color: "#00000090",
                   fontSize: 11,
                   marginTop: 2,
-                  marginRight: 12,
+                  marginRight: 7,
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 30,
+                  paddingVertical: 3,
+                  paddingHorizontal: 8,
                   fontFamily: "TikTokSans16pt-Medium",
                 }}
               >
@@ -180,26 +186,20 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
 }) {
   return (
     <View style={{ width: CARD_WIDTH }}>
-      <View
-        className="flex-row rounded-[24px] border-[0.5px] border-[#E9EBF8] bg-[#FFFFFF] overflow-hidden h-40"
-        // style={{
-        //   shadowColor: "#000000",
-        //   shadowOpacity: 0.09,
-        //   shadowRadius: 16,
-        //   shadowOffset: { width: 0, height: 2 },
-        //   elevation: 1,
-        // }}
-      >
-        <View style={{ width: 135, height: 160 }} className="overflow-hidden">
+      <View className="flex-row rounded-[24px] border-[0.8px] border-[#E9EBF8] bg-[#F8F7FA90] overflow-hidden h-40">
+        <View
+          style={{ width: 135, height: 140 }}
+          className="overflow-hidden justify-center items-center rounded-[24px]"
+        >
           <ExpoImage
             source={{ uri: imageUri }}
-            style={{ width: "100%", height: 160 }}
-            contentFit="contain"
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
             blurRadius={5}
             cachePolicy="memory"
           />
           <View
-            className="absolute inset-0 items-center justify-center mb-5"
+            className="absolute inset-0 items-center justify-center "
             style={{ backgroundColor: "rgba(0,0,0,0.38)" }}
           >
             <Svg width={SVG_SIZE} height={SVG_SIZE}>
@@ -375,6 +375,7 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
   } = useOutfitAnalysisStore();
 
   const prevIsDoneRef = useRef(false);
+  const notifyComplete = useAnalysisCompleteNotification();
 
   // Check for 3 AM cleanup on mount
   useEffect(() => {
@@ -384,22 +385,10 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
   // Play chime when analysis finishes
   useEffect(() => {
     if (isDone && !prevIsDoneRef.current) {
-      (async () => {
-        try {
-          const { sound } = await Audio.Sound.createAsync(CHIME_SOUND);
-          await sound.playAsync();
-          sound.setOnPlaybackStatusUpdate((status) => {
-            if ("didJustFinish" in status && status.didJustFinish) {
-              sound.unloadAsync();
-            }
-          });
-        } catch (e) {
-          console.warn("Chime playback failed", e);
-        }
-      })();
+      notifyComplete();
     }
     prevIsDoneRef.current = isDone;
-  }, [isDone]);
+  }, [isDone, notifyComplete]);
 
   const strokeDashoffset = useMemo(
     () => CIRCUMFERENCE * (1 - Math.min(progress, 100) / 100),
@@ -465,7 +454,11 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
     lastOutfits.forEach((outfit, i) => {
       const mode = outfit.mode || "scan-cloth";
       if (!groups[mode]) groups[mode] = [];
-      groups[mode].unshift({ type: "completed" as const, outfit, outfitIndex: i });
+      groups[mode].unshift({
+        type: "completed" as const,
+        outfit,
+        outfitIndex: i,
+      });
     });
 
     // Add analyzing outfit to its mode group at the TOP

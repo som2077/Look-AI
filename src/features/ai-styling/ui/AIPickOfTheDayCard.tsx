@@ -1,3 +1,8 @@
+import {
+  IconCheck,
+  IconRefresh,
+  IconSparkles,
+} from "@tabler/icons-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -8,11 +13,6 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import {
-  IconSparkles,
-  IconRefresh,
-  IconCheck,
-} from "@tabler/icons-react-native";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

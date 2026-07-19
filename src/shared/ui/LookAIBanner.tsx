@@ -19,7 +19,7 @@ export const LookAIBanner = React.memo(function LookAIBanner({
         backgroundColor: "#FFFFFF",
         borderColor: "#EDEDF2",
         borderWidth: 0.7,
-        borderRadius: 24,
+        borderRadius: 30,
         paddingHorizontal: 24,
         paddingVertical: 25,
       }}

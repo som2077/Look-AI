@@ -5,8 +5,8 @@ import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { Text, TextInput, View, ActivityIndicator } from "react-native";
 import { useState } from "react";
+import { Text, TextInput, View } from "react-native";
 
 const MAX_LENGTH = 15;
 
@@ -32,7 +32,7 @@ export default function NicknameScreen() {
       // 1. Check globally if the username is available using RPC (bypasses RLS)
       const { data: isAvailable, error } = await supabase.rpc(
         "check_username_available",
-        { check_username: username.trim() }
+        { check_username: username.trim() },
       );
 
       if (error) {
@@ -79,19 +79,21 @@ export default function NicknameScreen() {
   };
 
   return (
-    <View className="flex-1 px-6 pb-6 pt-2">
+    <View className="flex-1 px-6 pb-8">
       <OnboardingHeader step={7} />
 
-      <Text className="text-4xl font-semibold tracking-tight px-3 text-[#1D1A27]">
-        Create nickname
-      </Text>
-      <Text className="mt-2 px-3 text-lg font-regular text-[#6B7280]">
-        This can be anything you like and can be changed later.
-      </Text>
+      <View className="mt-4">
+        <Text className="text-4xl font-sans font-semibold tracking-tight text-[#1D1A27]">
+          Create nickname
+        </Text>
+        <Text className="mt-3 text-[15px] font-sans leading-relaxed text-[#4B4852]">
+          This can be anything you like and can be changed later.
+        </Text>
+      </View>
 
       {/* Nickname Input Section */}
-      <View className="mt-8 px-3">
-        <Text className="text-base font-semibold text-[#1D1A27] mb-2">
+      <View className="mt-8">
+        <Text className="text-base font-sans font-semibold text-[#1D1A27] mb-2">
           Nickname
         </Text>
         <TextInput
@@ -102,16 +104,16 @@ export default function NicknameScreen() {
           placeholder="Add your nickname"
           placeholderTextColor="#5A5566"
           maxLength={MAX_LENGTH}
-          className="rounded-xl border bg-[#F3F4F6] border-gray-200 px-5 py-5 text-base font-medium text-[#1D1A27]"
+          className="rounded-xl border bg-[#F3F4F6] border-gray-200 px-5 py-5 text-base font-sans font-medium text-[#1D1A27]"
         />
-        <Text className="mt-2 text-sm font-regular text-[#5A5566]">
+        <Text className="mt-2 text-sm font-sans text-[#5A5566]">
           {nickname.length}/{MAX_LENGTH}
         </Text>
       </View>
 
       {/* Username Input Section */}
-      <View className="mt-6 px-3">
-        <Text className="text-base font-semibold text-[#1D1A27] mb-2">
+      <View className="mt-6">
+        <Text className="text-base font-sans font-semibold text-[#1D1A27] mb-2">
           Username
         </Text>
         <TextInput
@@ -125,22 +127,22 @@ export default function NicknameScreen() {
           placeholderTextColor="#5A5566"
           maxLength={MAX_LENGTH}
           autoCapitalize="none"
-          className={`rounded-xl border bg-[#F3F4F6] px-5 py-5 text-base font-medium text-[#1D1A27] ${
+          className={`rounded-xl border bg-[#F3F4F6] px-5 py-5 text-base font-sans font-medium text-[#1D1A27] ${
             usernameError ? "border-red-500" : "border-gray-200"
           }`}
         />
         <View className="flex-row justify-between items-start mt-2">
           <View className="flex-1">
-            <Text className="text-xs font-regular text-[#5A5566]">
+            <Text className="text-xs font-sans text-[#5A5566]">
               Only letters, numbers, and underscores
             </Text>
             {!!usernameError && (
-              <Text className="text-sm font-medium text-red-500 mt-1">
+              <Text className="text-sm font-sans font-medium text-red-500 mt-1">
                 {usernameError}
               </Text>
             )}
           </View>
-          <Text className="text-sm font-regular text-[#5A5566]">
+          <Text className="text-sm font-sans text-[#5A5566]">
             {username.length}/{MAX_LENGTH}
           </Text>
         </View>

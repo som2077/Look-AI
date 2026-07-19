@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { create } from "zustand";
 import { uploadToCloudinary } from "@/shared/cloudinary/client";
 import { useSupabase } from "@/shared/supabase/use-supabase";
@@ -184,8 +184,27 @@ export function useCommunityPosts() {
     }
   };
 
-  const toggleReaction = async (postId: string, reactionType: string | null) => {
+  const toggleReaction = useCallback(async (postId: string, reactionType: string | null) => {
     if (!userId || !supabase) return;
+    
+    const previousPosts = usePostsStore.getState().posts;
+    
+    // Optimistic UI Update
+    usePostsStore.setState((state) => ({
+      posts: state.posts.map((post) => {
+        if (post.id === postId) {
+          const newReactions = (post as any).post_reactions?.filter(
+            (r: any) => r.user_id !== userId
+          ) || [];
+          if (reactionType !== null) {
+            newReactions.push({ user_id: userId, reaction_type: reactionType });
+          }
+          return { ...post, post_reactions: newReactions };
+        }
+        return post;
+      }),
+    }));
+
     try {
       if (reactionType === null) {
         const { error } = await supabase
@@ -199,11 +218,12 @@ export function useCommunityPosts() {
           .upsert({ post_id: postId, user_id: userId, reaction_type: reactionType }, { onConflict: 'post_id,user_id' });
         if (error) throw error;
       }
-      await fetchPosts();
     } catch (err) {
       console.error("Error toggling reaction:", err);
+      // Rollback on error
+      usePostsStore.setState({ posts: previousPosts });
     }
-  };
+  }, [userId, supabase]);
 
   const createPost = async (imageUri: string, caption: string) => {
     setUploading(true);

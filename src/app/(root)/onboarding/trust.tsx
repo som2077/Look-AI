@@ -2,6 +2,7 @@ import { useOnboardingState } from "@/features/onboarding/model/onboarding-store
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
 import { ResizeMode, Video } from "expo-av";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Lock } from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
@@ -18,41 +19,70 @@ export default function TrustScreen() {
   };
 
   return (
-    <View className="flex-1 px-5 pb-6 pt-2">
+    <View className="flex-1 bg-white px-6 pb-8 pt-2">
       <OnboardingHeader step={10} />
 
-      <View className="items-center -mt-20">
-        <Video
-          source={require("@/assets/trustVideo.webm")}
-          style={{ height: 480, width: 332 }}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay
-          isMuted
-        />
+      <View className="items-center mt-10">
+        <View
+          className="h-[230px] w-[230px] rounded-full overflow-hidden items-center justify-center shadow-lg"
+          style={{
+            shadowColor: "#DFC7D3",
+            shadowOpacity: 0.5,
+            shadowRadius: 24,
+            shadowOffset: { width: 0, height: 12 },
+          }}
+        >
+          <LinearGradient
+            colors={["#FAE8EF", "#DFE6F5"]}
+            start={{ x: 0.2, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
+            className="absolute inset-0"
+          />
+          <View className="h-[180px] w-[180px] items-center justify-center rounded-full overflow-hidden bg-white z-10 border-[3px] border-white/80">
+            <Video
+              source={require("@/assets/trustVideo.webm")}
+              style={{ height: "170%", width: "170%" }}
+              resizeMode={ResizeMode.CONTAIN}
+              shouldPlay
+              isMuted
+            />
+          </View>
+        </View>
       </View>
 
-      <Text className="-mt-24 py-1 text-center text-5xl  font-semibold  text-[#1D1A27]">
+      <Text className="mt-10 text-center text-[33px] leading-[38px] font-sans font-semibold tracking-tight text-[#1D1A27]">
         Thank you for{"\n"}trusting us
       </Text>
-      <Text className="mt-2 text-center font-regular text-lg text-[#6B7280]">
+      <Text className="mt-3 text-center font-sans text-[16px] leading-relaxed text-[#4B4852]">
         Now let&apos;s personalize Look AI for you...
       </Text>
 
       {/* Privacy and Security Card */}
-      <View className="mt-14 items-center px-2">
-        <View className="w-full rounded-[24px] bg-[#F2F4F7] border border-[#E5E7EB] shadow px-6 pb-8 pt-10 relative items-center">
-          {/* Lock Icon Badge Overlapping Top */}
-          <View className="absolute -top-6 h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm border border-[#E5E7EB]">
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-[#F2F4F7]">
-              <Lock size={20} color="#000000" />
-            </View>
+      <View className="mt-28 items-center w-full">
+        <View
+          className="w-[90%] rounded-[20px] bg-white px-5 pb-5 pt-7 relative items-center shadow-md"
+          style={{
+            shadowColor: "#1D1A27",
+            shadowOpacity: 0.06,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 6 },
+            borderWidth: 1,
+            borderColor: "#F1EEF3",
+          }}
+        >
+          {/* Lock Icon Badge Overlapping Top — tinted to echo the hero gradient */}
+          <View
+            className="absolute -top-6 h-12 w-12 items-center justify-center rounded-full border-4 border-white shadow-sm"
+            style={{ backgroundColor: "#F6EEF2" }}
+          >
+            <Lock size={16} color="#6B5A73" strokeWidth={2.2} />
           </View>
 
-          <Text className="text-center font-semibold text-[20px] leading-7 text-[#1D1A27]">
-            Your privacy and security{"\n"}matter to us.
+          <Text className="text-center font-sans font-semibold text-[16px] text-[#1D1A27] p-1">
+            Your privacy and security matter to us.
           </Text>
-          <Text className="mt-3 text-center font-regular text-[13px] leading-5 text-[#6B7280]">
-            We prioritize keeping your personal{"\n"}information private and
+          <Text className="mt-1.5 text-center font-sans text-[13px] leading-5 text-[#6B7280] py-1">
+            We promise to always keep your{"\n"}personal information private and
             secure.
           </Text>
         </View>
@@ -64,7 +94,7 @@ export default function TrustScreen() {
         </Text>
       )}
 
-      <View className="mt-auto w-full">
+      <View className="absolute inset-x-6 bottom-8">
         <ContinueButton onPress={handleContinue} />
       </View>
     </View>

@@ -21,8 +21,12 @@ import { StatusBar } from "expo-status-bar";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
 import { memo, useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { LogLevel, OneSignal } from "react-native-onesignal";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  requestUserPermission,
+  getFCMToken,
+  setupNotificationListeners,
+} from "@/shared/notifications/firebase-service";
 import "../../global.css";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -165,6 +169,38 @@ const RootNavigator = memo(function RootNavigator() {
     }
   }, [user?.imageUrl, supabase, userId]);
 
+  // Sync FCM Token on app start if enabled
+  useEffect(() => {
+    if (!isSignedIn || !userId || !supabase) return;
+    
+    async function syncFCM() {
+      try {
+        const { data } = await supabase
+          .from("user_profiles")
+          .select("notifications_enabled")
+          .eq("user_id", userId)
+          .single();
+          
+        if (data && data.notifications_enabled) {
+          const hasPermission = await requestUserPermission();
+          if (hasPermission) {
+            const token = await getFCMToken();
+            if (token) {
+              await supabase
+                .from("user_profiles")
+                .update({ fcm_token: token })
+                .eq("user_id", userId);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to sync FCM token", err);
+      }
+    }
+    syncFCM();
+  }, [isSignedIn, userId, supabase]);
+
+
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -218,14 +254,20 @@ export default function RootLayout() {
     NavigationBar.setButtonStyleAsync("light");
   }, []);
 
-  // Initialize OneSignal Push Notifications
+  // Initialize Firebase Push Notifications
   useEffect(() => {
-    const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
-    if (oneSignalAppId) {
-      OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-      OneSignal.initialize(oneSignalAppId);
-      OneSignal.Notifications.requestPermission(true);
+    let unsubscribe: (() => void) | undefined;
+
+    async function setupFirebaseNotifications() {
+      // Just set up listeners for background/foreground messages
+      // Permissions and token fetching are handled when user logs in or toggles settings
+      unsubscribe = setupNotificationListeners();
     }
+    setupFirebaseNotifications();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const checkConnectivity = useCallback(async () => {

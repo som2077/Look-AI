@@ -1,29 +1,26 @@
+import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { FitCheckAnalysis } from "@/features/scanning/api/gemini-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
-import { BlurView } from "expo-blur";
 import {
   IconArrowLeft,
-  IconCheck,
-  IconCircleCheck,
   IconCircleX,
-  IconAlertCircle,
   IconDotsVertical,
 } from "@tabler/icons-react-native";
+import { BlurView } from "expo-blur";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
   Image,
+  Modal,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
-  StyleSheet,
-  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, G } from "react-native-svg";
-import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 
 type FitCheckParams = {
   scanId?: string;
@@ -76,9 +73,21 @@ function getStatusColor(status: string): string {
 }
 
 // Custom Glass Card Component
-const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <View className={`rounded-3xl overflow-hidden mb-6 border border-white/60 bg-white/40 ${className}`}>
-    <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
+const GlassCard = ({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <View
+    className={`rounded-3xl overflow-hidden mb-6 border border-white/60 bg-white/40 ${className}`}
+  >
+    <BlurView
+      intensity={30}
+      tint="light"
+      style={StyleSheet.absoluteFillObject}
+    />
     <View className="p-5">{children}</View>
   </View>
 );
@@ -90,15 +99,17 @@ export default function FitCheckResultScreen() {
   const scans = useScanHistoryStore((s) => s.scans);
   const removeScan = useScanHistoryStore((s) => s.removeScan);
   const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
-  
+
   const scan = scans.find((s) => s.id === params.scanId);
-  const result = (scan?.result as unknown as FitCheckAnalysis) || DEFAULT_RESULT;
+  const result =
+    (scan?.result as unknown as FitCheckAnalysis) || DEFAULT_RESULT;
   const photoUri = scan?.thumbnail;
 
   const scoreColor = getScoreColor(result.fitScore || 75);
 
   const CIRCUMFERENCE = 2 * Math.PI * 40;
-  const strokeDashoffset = CIRCUMFERENCE - (CIRCUMFERENCE * (result.fitScore || 75)) / 100;
+  const strokeDashoffset =
+    CIRCUMFERENCE - (CIRCUMFERENCE * (result.fitScore || 75)) / 100;
 
   return (
     <View className="flex-1 bg-[#F3F4F6]">
@@ -113,7 +124,11 @@ export default function FitCheckResultScreen() {
           <Pressable
             onPress={() => router.back()}
             className="w-10 h-10 rounded-full bg-white/70 items-center justify-center border border-white/50"
-            style={{ shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 10 }}
+            style={{
+              shadowColor: "#000",
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
+            }}
           >
             <IconArrowLeft size={22} color="#111827" />
           </Pressable>
@@ -123,7 +138,11 @@ export default function FitCheckResultScreen() {
           <Pressable
             onPress={() => setShowMenu(true)}
             className="w-10 h-10 rounded-full bg-white/70 items-center justify-center border border-white/50"
-            style={{ shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 10 }}
+            style={{
+              shadowColor: "#000",
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
+            }}
           >
             <IconDotsVertical size={22} color="#111827" />
           </Pressable>
@@ -131,33 +150,49 @@ export default function FitCheckResultScreen() {
 
         {/* Dropdown Menu Modal */}
         {showMenu && (
-          <Modal transparent visible animationType="fade" onRequestClose={() => setShowMenu(false)}>
+          <Modal
+            transparent
+            visible
+            animationType="fade"
+            onRequestClose={() => setShowMenu(false)}
+          >
             <Pressable style={{ flex: 1 }} onPress={() => setShowMenu(false)}>
-              <View style={{
-                position: "absolute",
-                top: 60,
-                right: 20,
-                backgroundColor: "#fff",
-                borderRadius: 12,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 8,
-                minWidth: 140,
-                paddingVertical: 4,
-                borderWidth: 1,
-                borderColor: "#F3F4F6",
-              }}>
+              <View
+                style={{
+                  position: "absolute",
+                  top: 60,
+                  right: 20,
+                  backgroundColor: "#fff",
+                  borderRadius: 12,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 12,
+                  elevation: 8,
+                  minWidth: 140,
+                  paddingVertical: 4,
+                  borderWidth: 1,
+                  borderColor: "#F3F4F6",
+                }}
+              >
                 <Pressable
                   style={{ paddingVertical: 12, paddingHorizontal: 16 }}
                   onPress={() => {
                     setShowMenu(false);
-                    if (params.outfitIndex) removeOutfit(parseInt(params.outfitIndex));
+                    if (params.outfitIndex)
+                      removeOutfit(parseInt(params.outfitIndex));
                     router.replace("/(root)/(tabs)" as never);
                   }}
                 >
-                  <Text style={{ fontSize: 15, color: "#1D1A27", fontWeight: "500" }}>Save</Text>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: "#1D1A27",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Save
+                  </Text>
                 </Pressable>
                 <View style={{ height: 1, backgroundColor: "#F3F4F6" }} />
                 <Pressable
@@ -165,18 +200,30 @@ export default function FitCheckResultScreen() {
                   onPress={() => {
                     setShowMenu(false);
                     if (params.scanId) removeScan(params.scanId);
-                    if (params.outfitIndex) removeOutfit(parseInt(params.outfitIndex));
+                    if (params.outfitIndex)
+                      removeOutfit(parseInt(params.outfitIndex));
                     router.replace("/(root)/(tabs)" as never);
                   }}
                 >
-                  <Text style={{ fontSize: 15, color: "#EF4444", fontWeight: "500" }}>Delete</Text>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: "#EF4444",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Delete
+                  </Text>
                 </Pressable>
               </View>
             </Pressable>
           </Modal>
         )}
 
-        <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          className="flex-1 px-5"
+          showsVerticalScrollIndicator={false}
+        >
           {/* Main Photo Card */}
           <GlassCard className="mt-2 p-0">
             {photoUri ? (
@@ -187,7 +234,9 @@ export default function FitCheckResultScreen() {
               />
             ) : (
               <View className="w-full h-[380px] bg-gray-200/50 items-center justify-center rounded-3xl">
-                <Text className="text-gray-400 font-bold">FULL-LENGTH PHOTO</Text>
+                <Text className="text-gray-400 font-bold">
+                  FULL-LENGTH PHOTO
+                </Text>
               </View>
             )}
           </GlassCard>
@@ -196,7 +245,14 @@ export default function FitCheckResultScreen() {
           <View className="flex-row items-center mb-10 px-2">
             <View className="relative w-[90px] h-[90px] items-center justify-center mr-5">
               <Svg width={90} height={90}>
-                <Circle cx={45} cy={45} r={40} stroke="#E5E7EB" strokeWidth={8} fill="none" />
+                <Circle
+                  cx={45}
+                  cy={45}
+                  r={40}
+                  stroke="#E5E7EB"
+                  strokeWidth={8}
+                  fill="none"
+                />
                 <G rotation="-90" origin="45, 45">
                   <Circle
                     cx={45}
@@ -253,19 +309,29 @@ export default function FitCheckResultScreen() {
                 TOP : BOTTOM RATIO
               </Text>
             </View>
-            
+
             <View className="h-8 rounded-full overflow-hidden flex-row mb-3 bg-gray-200">
-              <View 
-                style={{ width: `${result.silhouette?.topRatio || 50}%`, backgroundColor: "#10B981" }} 
+              <View
+                style={{
+                  width: `${result.silhouette?.topRatio || 50}%`,
+                  backgroundColor: "#10B981",
+                }}
                 className="h-full items-center justify-center"
               >
-                <Text className="text-white font-bold text-xs">{result.silhouette?.topRatio || 50}</Text>
+                <Text className="text-white font-bold text-xs">
+                  {result.silhouette?.topRatio || 50}
+                </Text>
               </View>
-              <View 
-                style={{ width: `${result.silhouette?.bottomRatio || 50}%`, backgroundColor: "#374151" }} 
+              <View
+                style={{
+                  width: `${result.silhouette?.bottomRatio || 50}%`,
+                  backgroundColor: "#374151",
+                }}
                 className="h-full items-center justify-center"
               >
-                <Text className="text-white font-bold text-xs">{result.silhouette?.bottomRatio || 50}</Text>
+                <Text className="text-white font-bold text-xs">
+                  {result.silhouette?.bottomRatio || 50}
+                </Text>
               </View>
             </View>
 
@@ -281,15 +347,30 @@ export default function FitCheckResultScreen() {
           <GlassCard>
             {[
               { label: "Shoulder Fit", data: result.fitPrecision?.shoulderFit },
-              { label: "Sleeve Length", data: result.fitPrecision?.sleeveLength },
-              { label: "Trouser Break", data: result.fitPrecision?.trouserBreak },
+              {
+                label: "Sleeve Length",
+                data: result.fitPrecision?.sleeveLength,
+              },
+              {
+                label: "Trouser Break",
+                data: result.fitPrecision?.trouserBreak,
+              },
             ].map((item, idx) => (
-              <View key={idx} className="flex-row items-center justify-between py-3 border-b border-gray-100/50">
-                <Text className="text-[#374151] font-medium text-[15px]">{item.label}</Text>
+              <View
+                key={idx}
+                className="flex-row items-center justify-between py-3 border-b border-gray-100/50"
+              >
+                <Text className="text-[#374151] font-medium text-[15px]">
+                  {item.label}
+                </Text>
                 <View className="flex-row items-center">
-                  <View 
-                    className="w-2.5 h-2.5 rounded-full mr-2" 
-                    style={{ backgroundColor: getStatusColor(item.data?.status || "Perfect") }}
+                  <View
+                    className="w-2.5 h-2.5 rounded-full mr-2"
+                    style={{
+                      backgroundColor: getStatusColor(
+                        item.data?.status || "Perfect",
+                      ),
+                    }}
                   />
                   <Text className="text-[#111827] font-bold text-[15px]">
                     {item.data?.status || "Perfect"}
@@ -306,10 +387,15 @@ export default function FitCheckResultScreen() {
           <GlassCard>
             <View className="flex-row gap-3 mb-5">
               {result.colorTheory?.hexColors?.map((color, idx) => (
-                <View 
+                <View
                   key={idx}
                   className="w-14 h-14 rounded-2xl border border-gray-200"
-                  style={{ backgroundColor: color, shadowColor: color, shadowOpacity: 0.2, shadowRadius: 8 }}
+                  style={{
+                    backgroundColor: color,
+                    shadowColor: color,
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                  }}
                 />
               ))}
             </View>
@@ -336,9 +422,11 @@ export default function FitCheckResultScreen() {
                 TREND RELEVANCE
               </Text>
               <View className="h-2 rounded-full bg-gray-200 w-full overflow-hidden">
-                <View 
-                  className="h-full bg-[#10B981] rounded-full" 
-                  style={{ width: `${result.styleCategory?.trendScore || 50}%` }}
+                <View
+                  className="h-full bg-[#10B981] rounded-full"
+                  style={{
+                    width: `${result.styleCategory?.trendScore || 50}%`,
+                  }}
                 />
               </View>
               <View className="flex-row justify-between mt-1">
@@ -356,13 +444,19 @@ export default function FitCheckResultScreen() {
             {result.actionableFixes?.map((fix, idx) => (
               <GlassCard key={idx} className="mb-3 p-4">
                 <View className="flex-row items-start mb-2 opacity-60">
-                  <IconCircleX size={16} color="#EF4444" className="mr-2 mt-0.5" />
+                  <IconCircleX
+                    size={16}
+                    color="#EF4444"
+                    className="mr-2 mt-0.5"
+                  />
                   <Text className="text-gray-500 line-through text-sm flex-1">
                     {fix.problem}
                   </Text>
                 </View>
                 <View className="flex-row items-start pl-6">
-                  <Text className="text-[#10B981] font-bold text-lg mr-2 mt-[-3px]">↳</Text>
+                  <Text className="text-[#10B981] font-bold text-lg mr-2 mt-[-3px]">
+                    ↳
+                  </Text>
                   <Text className="text-[#111827] font-bold text-[15px] flex-1 leading-5">
                     {fix.solution}
                   </Text>
@@ -370,7 +464,6 @@ export default function FitCheckResultScreen() {
               </GlassCard>
             ))}
           </View>
-
         </ScrollView>
       </SafeAreaView>
     </View>

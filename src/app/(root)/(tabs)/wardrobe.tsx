@@ -1,6 +1,7 @@
+import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
-// import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
+import { PremiumGradientBackground } from "@/shared/ui/PremiumGradientBackground";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import {
   IconAdjustmentsHorizontal,
@@ -11,6 +12,7 @@ import {
   IconX,
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useMemo, useRef, useState } from "react";
@@ -21,7 +23,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -224,7 +225,7 @@ const BentoCard = React.memo(function BentoCard({
         borderRightWidth: 0.5,
         borderBottomWidth: 0.5,
         borderColor: "#F0F0F0",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "transparent",
         padding: 8,
       }}
     >
@@ -532,35 +533,48 @@ export default function WardrobeScreen() {
     setIsSortOpen(true);
   };
 
+  const handleAddClothesGallery = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      allowsMultipleSelection: true,
+      selectionLimit: 5,
+      orderedSelection: true,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (result.assets.length === 1) {
+        useOutfitAnalysisStore
+          .getState()
+          .startAnalysis(result.assets[0].uri, "scan-cloth");
+        router.push("/(root)/(tabs)" as never);
+      } else {
+        router.push({
+          pathname: "/(root)/add-clothes/batch-scan",
+          params: {
+            uris: JSON.stringify(result.assets.map((a) => a.uri)),
+            mode: "cloth",
+          },
+        } as never);
+      }
+    }
+  }, [router]);
+
   return (
     <SwipeTabWrapper tabIndex={1}>
-      {/* <AppGradientBackground> */}
-      <StatusBar style="dark" />
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: "white" }}
-        edges={["top"]}
-      >
-        <Animated.ScrollView
-          key="grid-view"
-          showsVerticalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true, listener: hideTabBarOnScroll },
-          )}
-          scrollEventThrottle={16}
-          contentContainerStyle={{ paddingBottom: 140 }}
-        >
+      <PremiumGradientBackground>
+        <StatusBar style="dark" />
+        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
           {/* Header */}
-          <Animated.View
+          <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
               paddingHorizontal: 16,
               height: HEADER_HEIGHT,
-              transform: [{ translateY: headerTranslateY }],
-              opacity: headerOpacity,
-              zIndex: 0,
+              zIndex: 10,
+              backgroundColor: "transparent",
             }}
           >
             <View>
@@ -575,7 +589,7 @@ export default function WardrobeScreen() {
               </Text>
             </View>
             <View className="flex-row items-center gap-2">
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 onPress={() => router.push("/(root)/calendar" as never)}
                 activeOpacity={0.7}
                 style={{
@@ -596,7 +610,24 @@ export default function WardrobeScreen() {
                   style={{ width: 19, height: 19 }}
                   contentFit="contain"
                 />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
+
+              <Pressable
+                onPress={handleAddClothesGallery}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 100,
+                  borderWidth: 1,
+                  borderColor: "#E2E2EA",
+                  backgroundColor: "#F8F7FC",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconPlus size={20} color="#1D1A27" strokeWidth={1.8} />
+              </Pressable>
+
               <Pressable
                 onPress={handleSaved}
                 style={{
@@ -613,11 +644,16 @@ export default function WardrobeScreen() {
                 <IconBookmark size={19} color="#1D1A27" strokeWidth={1.5} />
               </Pressable>
             </View>
-          </Animated.View>
+          </View>
 
           {/* Filter Toolbar Row */}
           <View
-            style={{ paddingHorizontal: 16, paddingBottom: 6, paddingTop: 2 }}
+            style={{
+              paddingHorizontal: 16,
+              paddingBottom: 6,
+              paddingTop: 2,
+              backgroundColor: "transparent",
+            }}
           >
             <ScrollView
               horizontal
@@ -785,34 +821,42 @@ export default function WardrobeScreen() {
           </View>
 
           {/* Grid */}
-          <View style={{ zIndex: 1, position: "relative" }}>
-            {filteredItems.length === 0 ? (
-              <EmptyState
-                onAdd={() => router.push("/(root)/log-outfit/camera" as never)}
-              />
-            ) : (
-              <View
-                style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  paddingHorizontal: GRID_PADDING,
-                  gap: GRID_GAP,
-                }}
-              >
-                {filteredItems.map((item) => (
-                  <BentoCard
-                    key={item.id}
-                    item={item}
-                    width={ITEM_WIDTH}
-                    height={ITEM_HEIGHT}
-                  />
-                ))}
-              </View>
+          <Animated.ScrollView
+            key="grid-view"
+            showsVerticalScrollIndicator={false}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: true, listener: hideTabBarOnScroll },
             )}
-          </View>
-        </Animated.ScrollView>
-      </SafeAreaView>
-      {/* </AppGradientBackground> */}
+            scrollEventThrottle={16}
+            contentContainerStyle={{ paddingBottom: 140, paddingTop: 12 }}
+          >
+            <View style={{ zIndex: 1, position: "relative" }}>
+              {filteredItems.length === 0 ? (
+                <EmptyState onAdd={handleAddClothesGallery} />
+              ) : (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    paddingHorizontal: GRID_PADDING,
+                    gap: GRID_GAP,
+                  }}
+                >
+                  {filteredItems.map((item) => (
+                    <BentoCard
+                      key={item.id}
+                      item={item}
+                      width={ITEM_WIDTH}
+                      height={ITEM_HEIGHT}
+                    />
+                  ))}
+                </View>
+              )}
+            </View>
+          </Animated.ScrollView>
+        </SafeAreaView>
+      </PremiumGradientBackground>
 
       {/* Filter Bottom Sheet */}
       <BottomSheet

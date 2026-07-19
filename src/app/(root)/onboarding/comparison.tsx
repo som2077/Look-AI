@@ -69,12 +69,14 @@ export default function ComparisonScreen() {
   };
 
   return (
-    <View className="flex-1 px-5 pb-6 pt-2">
+    <View className="flex-1 px-6 pb-8">
       <OnboardingHeader step={8} />
 
-      <Text className="text-4xl leading-10 font-semibold tracking-tight text-[#1D1A27] mt-2 px-4 text-center">
-        Get ready twice as fast with Look AI vs on your own
-      </Text>
+      <View className="mt-4">
+        <Text className="text-4xl font-sans font-semibold tracking-tight  text-[#1D1A27]">
+          Get ready twice as fast with Look AI vs on your own
+        </Text>
+      </View>
 
       <View className="flex-1 justify-center mt-8">
         <Animated.View
@@ -85,7 +87,7 @@ export default function ComparisonScreen() {
             {/* Left Card - Without Look AI */}
             <View className="flex-1 bg-white rounded-[24px] p-2 h-full">
               <View className="h-[80px] justify-center">
-                <Text className="text-center font-medium text-[13px] leading-[18px] text-[#1D1A27]">
+                <Text className="text-center font-sans font-medium text-[13px] leading-[18px] text-[#1D1A27]">
                   Without{"\n"}Look AI
                 </Text>
               </View>
@@ -94,7 +96,7 @@ export default function ComparisonScreen() {
                   style={leftBarStyle}
                   className="w-full bg-[#F5F4F8] rounded-[20px] items-center justify-center overflow-hidden"
                 >
-                  <Text className="font-bold text-[15px] text-[#1D1A27]">
+                  <Text className="font-sans font-bold text-[15px] text-[#1D1A27]">
                     20%
                   </Text>
                 </Animated.View>
@@ -104,7 +106,7 @@ export default function ComparisonScreen() {
             {/* Right Card - With Look AI */}
             <View className="flex-1 bg-white rounded-[24px] p-2 h-full">
               <View className="h-[80px] justify-center">
-                <Text className="text-center font-medium text-[13px] leading-[18px] text-[#1D1A27]">
+                <Text className="text-center font-sans font-medium text-[13px] leading-[18px] text-[#1D1A27]">
                   With{"\n"}Look AI
                 </Text>
               </View>
@@ -113,7 +115,7 @@ export default function ComparisonScreen() {
                   style={rightBarStyle}
                   className="w-full bg-[#1D1A27] rounded-[20px] items-center justify-center overflow-hidden"
                 >
-                  <Text className="font-bold text-[16px] text-white">
+                  <Text className="font-sans font-bold text-[16px] text-white">
                     {rightText}
                   </Text>
                 </Animated.View>
@@ -123,13 +125,13 @@ export default function ComparisonScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(400).delay(200)}>
-          <Text className="text-center font-regular text-lg text-[#6B7280] mt-8">
+          <Text className="text-center font-sans font-medium text-base text-[#4B4852] mt-8">
             Look AI makes your morning easy.
           </Text>
         </Animated.View>
       </View>
 
-      <View className="mt-auto pt-4 min-h-[70px]">
+      <View className="mt-auto">
         <Animated.View>
           <ContinueButton onPress={handleContinue} disabled={!showContinue} />
         </Animated.View>

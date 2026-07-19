@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "788461844391",
+    "project_id": "lookai-e83c9",
+    "storage_bucket": "lookai-e83c9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:788461844391:android:daf640cd8abe1f57636882",
+        "android_client_info": {
+          "package_name": "com.lookai.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6nWwMSYeh67GKwdkxU1vjBxBJCEjuy50"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

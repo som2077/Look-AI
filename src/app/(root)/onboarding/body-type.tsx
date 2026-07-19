@@ -1,16 +1,16 @@
-import { usePostHog } from 'posthog-react-native';
-import { useUser } from "@clerk/clerk-expo";
-import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import {
   BodyTypeCard,
   type BodyTypeOption,
 } from "@/features/onboarding/ui/onboarding/BodyTypeCard";
+import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useUser } from "@clerk/clerk-expo";
+import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import { useMemo, useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
-import * as Haptics from "expo-haptics";
-import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 
 const maleBodyTypes: BodyTypeOption[] = [
   {
@@ -70,7 +70,8 @@ export default function BodyTypesScreen() {
   const posthog = usePostHog();
   const { user } = useUser();
   const { supabase } = useSupabase();
-  const { gender, bodyType, setBodyType, completeOnboarding } = useOnboardingState();
+  const { gender, bodyType, setBodyType, completeOnboarding } =
+    useOnboardingState();
   const [selectedBodyType, setSelectedBodyType] = useState<string | null>(
     bodyType || null,
   );
@@ -82,7 +83,7 @@ export default function BodyTypesScreen() {
   }, [gender]);
 
   const handleContinue = async () => {
-    posthog?.capture('onboarding_step_completed', { step: 'body-type' });
+    posthog?.capture("onboarding_step_completed", { step: "body-type" });
     if (!selectedBodyType) return;
     setBodyType(selectedBodyType);
     if (fromProfile === "true") {
@@ -94,15 +95,18 @@ export default function BodyTypesScreen() {
   };
 
   return (
-    <View className="flex-1 px-6 pb-6 pt-2">
+    <View className="flex-1 px-6 pb-8">
       <OnboardingHeader step={4} />
 
-      <Text className="text-4xl font-semibold px-1 tracking-tight text-[#1D1A27]">
-        Body types
-      </Text>
-      <Text className="mt-2 text-base px-1 font-regular text-[#6B7280]">
-        This will be used to calibrate your custom plan
-      </Text>
+      <View className="mt-4">
+        <Text className="text-4xl font-sans font-semibold tracking-tight text-[#1D1A27]">
+          Body types
+        </Text>
+        <Text className="mt-3 text-[15px] font-sans leading-relaxed text-[#4B4852]">
+          This helps us personalize your wardrobe, outfit recommendations, and
+          fit suggestions.
+        </Text>
+      </View>
 
       <FlatList
         data={bodyTypes}
@@ -121,7 +125,7 @@ export default function BodyTypesScreen() {
         )}
       />
 
-      <View className="absolute inset-x-5 bottom-6">
+      <View className="absolute inset-x-6 bottom-8">
         <TouchableOpacity
           activeOpacity={0.9}
           disabled={!selectedBodyType}
@@ -130,10 +134,14 @@ export default function BodyTypesScreen() {
             handleContinue();
           }}
           className={`items-center rounded-2xl py-5 ${
-            selectedBodyType ? "bg-[#1D1A27]" : "bg-[#ffffff]"
+            selectedBodyType ? "bg-[#1D1A27]" : "bg-[#E5E7EB]"
           }`}
         >
-          <Text className="text-base font-semibold text-white">Continue</Text>
+          <Text
+            className={`text-base font-sans font-semibold ${selectedBodyType ? "text-white" : "text-[#9CA3AF]"}`}
+          >
+            Continue
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

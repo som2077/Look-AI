@@ -1,3 +1,4 @@
+import * as Haptics from "expo-haptics";
 import { useRef } from "react";
 import {
   Dimensions,
@@ -7,7 +8,6 @@ import {
   View,
   ViewToken,
 } from "react-native";
-import * as Haptics from "expo-haptics";
 
 const AGE_MIN = 13;
 const AGE_MAX = 70;
@@ -48,7 +48,7 @@ export function AgePicker({
         </Text>
         <Image
           source={require("@/assets/images/polygon.png")}
-          className="mt-3 h-10 w-10"
+          className="mt-3 h-10 w-10 "
           resizeMode="contain"
         />
       </View>
@@ -82,7 +82,9 @@ export function AgePicker({
                 <Text
                   style={{
                     fontSize: isSelected ? 45 : 35,
-                    fontFamily: isSelected ? "TikTokSans16pt-Bold" : "TikTokSans16pt-Medium",
+                    fontFamily: isSelected
+                      ? "TikTokSans16pt-Bold"
+                      : "TikTokSans16pt-Medium",
                     // selected → white, others → muted gray
                     color: isSelected ? "#FFFFFF" : "#A3A3A3",
                   }}

@@ -7,15 +7,7 @@ interface WeeklyCalendarStripProps {
   onDateChange?: (date: Date) => void;
 }
 
-const DAY_LABELS: readonly string[] = [
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-  "Sun",
-];
+const DAY_LABELS: readonly string[] = ["M", "T", "W", "T", "F", "S", "S"];
 
 const isSameDay = (first: Date, second: Date) =>
   first.getFullYear() === second.getFullYear() &&
@@ -51,55 +43,55 @@ const DayCell = React.memo(function DayCell({
 }: DayCellProps) {
   const handlePress = useCallback(() => onPress(date), [onPress, date]);
 
-  let borderColor = "#E9EBF8";
-  if (streakStatus === "future") borderColor = "#000000";
-  else if (streakStatus === "streak")
-    borderColor = "#22c55e"; // green-500
-  else if (streakStatus === "missed") borderColor = "#ef4444"; // red-500
+  const isFuture = streakStatus === "future";
+
+  let borderColor = "#C4C4C4";
+  if (isFuture) borderColor = "transparent";
+  else if (isActive) borderColor = "#1D1A27";
+  else if (streakStatus === "streak") borderColor = "#22c55e90";
+  else if (streakStatus === "missed") borderColor = "#ef444490";
 
   return (
     <Pressable
-      style={{ alignItems: "center" }}
+      style={{ alignItems: "center", gap: 6, width: 40 }}
       accessibilityRole="button"
       accessibilityLabel={`Select ${date.toDateString()}`}
       onPress={handlePress}
     >
       <Text
         style={{
-          fontSize: 12,
-          fontFamily: "TikTokSans16pt-Bold",
-          color: isActive ? "#000000" : "#868693",
+          fontSize: 14,
+          fontFamily: isActive
+            ? "TikTokSans16pt-Bold"
+            : "TikTokSans16pt-Medium",
+          color: isActive ? "#1D1A27" : isFuture ? "#A0A0AB" : "#555555",
         }}
       >
-        {dayLabel}
+        {String(date.getDate())}
       </Text>
-      {/* Fixed 48×48 container — no layout shift on selection */}
       <View
         style={{
-          marginTop: 6,
           width: 40,
           height: 40,
-          borderRadius: 100,
+          borderRadius: 30,
+          backgroundColor: "#FFFFFF",
           alignItems: "center",
           justifyContent: "center",
-          ...(isActive
-            ? { backgroundColor: "#1D1A27" }
-            : {
-                borderWidth: 1.4,
-                borderStyle: "dashed",
-                borderColor,
-                backgroundColor: "#FFFFFF",
-              }),
+          borderWidth: isFuture ? 0 : 1.5,
+          borderStyle: isFuture ? "solid" : "dashed",
+          borderColor,
         }}
       >
         <Text
           style={{
             fontSize: 14,
-            fontFamily: "TikTokSans16pt-Bold",
-            color: isActive ? "#FFFFFF" : "#1D1A27",
+            fontFamily: isActive
+              ? "TikTokSans16pt-Bold"
+              : "TikTokSans16pt-Medium",
+            color: isActive ? "#1D1A27" : isFuture ? "#A0A0AB" : "#555555",
           }}
         >
-          {String(date.getDate()).padStart(2, "0")}
+          {dayLabel}
         </Text>
       </View>
     </Pressable>

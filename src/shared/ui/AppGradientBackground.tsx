@@ -2,10 +2,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { ReactNode } from "react";
 import { View } from "react-native";
 
-const GRADIENT_COLORS = ["#F3D1C360", "#ABB9C750", "#FFFFFF"] as const;
-const GRADIENT_LOCATIONS = [0.01, 0.1, 0.3] as const;
-const GRADIENT_START = { x: 2.4, y: 0.35 };
-const GRADIENT_END = { x: 0.8, y: 1.8 };
+const GRADIENT_COLORS = ["#F3D1C390", "#ABB9C740", "#FFFFFF"] as const;
+const GRADIENT_LOCATIONS = [0.01, 0.3, 0.5] as const;
+const GRADIENT_START = { x: 2.6, y: 0.35 };
+const GRADIENT_END = { x: 1.6, y: 1.2 };
 
 export const AppGradientBackground = React.memo(function AppGradientBackground({
   children,

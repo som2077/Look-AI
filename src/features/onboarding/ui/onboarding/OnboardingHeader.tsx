@@ -1,5 +1,6 @@
-import { View } from "react-native";
 import { useRouter } from "expo-router";
+import { Smile } from "lucide-react-native";
+import { View } from "react-native";
 import { BackButton } from "./BackButton";
 import { ProgressIndicator } from "./ProgressIndicator";
 
@@ -12,13 +13,19 @@ export function OnboardingHeader({ step, showBack = true }: Props) {
   const router = useRouter();
 
   return (
-    <View className="mb-4 flex-row items-center justify-between">
-      {showBack ? (
+    <View className="mb-4 flex-row items-center">
+      {step === 1 ? (
+        <View className="h-11 w-11 items-center justify-center rounded-full bg-[#F8F8FA]">
+          <Smile size={20} color="#1D1A27" strokeWidth={2} />
+        </View>
+      ) : showBack ? (
         <BackButton onPress={() => router.back()} />
       ) : (
-        <View className="h-10 w-10" />
+        <View className="h-11 w-11" />
       )}
-      <ProgressIndicator step={step} />
+      <View className="flex-1 ml-6">
+        <ProgressIndicator step={step} />
+      </View>
     </View>
   );
 }

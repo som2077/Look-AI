@@ -21,7 +21,8 @@ import {
 } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import { getFCMToken, requestUserPermission } from "@/shared/notifications/firebase-service";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -603,6 +604,59 @@ export default function ProfileScreen() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
+  useEffect(() => {
+    if (!user) return;
+    async function loadSettings() {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("notifications_enabled")
+        .eq("user_id", user.id)
+        .single();
+      
+      // We check undefined because the column might not exist yet
+      if (data && data.notifications_enabled !== undefined && data.notifications_enabled !== null) {
+        setNotificationsEnabled(data.notifications_enabled);
+      }
+    }
+    loadSettings();
+  }, [user, supabase]);
+
+  const handleToggleNotifications = async (val: boolean) => {
+    setNotificationsEnabled(val); // optimistic update
+    if (!user) return;
+
+    try {
+      let fcm_token = null;
+      if (val) {
+        const hasPermission = await requestUserPermission();
+        if (hasPermission) {
+          fcm_token = await getFCMToken();
+        } else {
+          Alert.alert("Permission Required", "Please enable notifications in your phone settings.");
+          setNotificationsEnabled(false); // revert
+          return;
+        }
+      }
+
+      const updates: any = { notifications_enabled: val };
+      if (fcm_token) updates.fcm_token = fcm_token;
+
+      const { error } = await supabase
+        .from("user_profiles")
+        .update(updates)
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Failed to update notification settings", error);
+        // If the column doesn't exist yet, we can catch it or ignore.
+        // Alert.alert("Error", "Failed to save settings.");
+      }
+    } catch (e) {
+      console.error(e);
+      setNotificationsEnabled(!val);
+    }
+  };
+
   const onLogoutPress = () => setShowLogoutModal(true);
 
   const confirmLogout = async () => {
@@ -687,7 +741,7 @@ export default function ProfileScreen() {
               user={user}
               router={router}
               notificationsEnabled={notificationsEnabled}
-              setNotificationsEnabled={setNotificationsEnabled}
+              setNotificationsEnabled={handleToggleNotifications}
               handleDeleteAccount={handleDeleteAccount}
               isLoggingOut={isLoggingOut}
               isDeletingAccount={isDeletingAccount}

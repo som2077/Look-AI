@@ -1,26 +1,27 @@
-import { usePostHog } from 'posthog-react-native';
-import { useCallback } from "react";
-import { router, useLocalSearchParams } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
-import { useSupabase } from "@/shared/supabase/use-supabase";
-import { Pressable, Text, View } from "react-native";
-import * as Haptics from "expo-haptics";
+import type { Gender } from "@/features/onboarding/model/onboarding-store";
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
-import type { Gender } from "@/features/onboarding/model/onboarding-store";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useUser } from "@clerk/clerk-expo";
+import * as Haptics from "expo-haptics";
+import { router, useLocalSearchParams } from "expo-router";
+import { Mars, Venus } from "lucide-react-native";
+import { usePostHog } from "posthog-react-native";
+import { useCallback } from "react";
+import { Pressable, Text, View } from "react-native";
 
 const GENDER_OPTIONS = [
   {
     label: "Male",
-    icon: "♂",
+    icon: Mars,
     bg: "#1E1A27",
     iconColor: "#FFFFFF",
     ringColor: "#1E1A27",
   },
   {
     label: "Female",
-    icon: "♀",
+    icon: Venus,
     bg: "#DCE754",
     iconColor: "#1E1A27",
     ringColor: "#DCE754",
@@ -34,7 +35,7 @@ export default function GenderScreen() {
   const { supabase } = useSupabase();
   const { gender, setGender, completeOnboarding } = useOnboardingState();
   const handleContinue = useCallback(async () => {
-    posthog?.capture('onboarding_step_completed', { step: 'gender' });
+    posthog?.capture("onboarding_step_completed", { step: "gender" });
     if (!gender) return;
 
     if (fromProfile === "true") {
@@ -46,16 +47,20 @@ export default function GenderScreen() {
   }, [gender, fromProfile, user, supabase, completeOnboarding]);
 
   return (
-    <View className="flex-1 mx-7 pb-6 pt-2">
-      <OnboardingHeader step={1} showBack={false} />
-      <Text className="text-4xl font-semibold tracking-tight px-3 text-[#1D1A27]">
-        Choose your Gender
-      </Text>
-      <Text className="mt-2 text-xl px-3 font-regular text-[#000000]">
-        This will be used to calibrate your custom plan
-      </Text>
+    <View className="flex-1 px-6 pb-8">
+      <OnboardingHeader step={1} />
 
-      <View className="mt-[80px] items-center gap-8">
+      <View className="mt-4">
+        <Text className="text-4xl font-sans font-semibold tracking-tight text-[#1D1A27]">
+          Choose your Gender
+        </Text>
+        <Text className="mt-3 text-[15px] font-sans leading-relaxed text-[#4B4852]">
+          This helps us personalize your wardrobe, outfit recommendations, and
+          fit suggestions.
+        </Text>
+      </View>
+
+      <View className="flex-1 justify-center items-center gap-10">
         {GENDER_OPTIONS.map((o) => {
           const isSelected = gender === o.label;
           return (
@@ -71,35 +76,28 @@ export default function GenderScreen() {
             >
               {/* Outer glow ring when selected */}
               <View
+                className="rounded-full p-1 border-[3px]"
                 style={{
-                  borderRadius: 999,
-                  padding: 4,
-                  borderWidth: 3,
                   borderColor: isSelected ? o.ringColor : "transparent",
                   shadowColor: isSelected ? o.ringColor : "transparent",
-                  shadowOpacity: isSelected ? 0.5 : 0,
-                  shadowRadius: 10,
-                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: isSelected ? 0.4 : 0,
+                  shadowRadius: 12,
+                  shadowOffset: { width: 0, height: 4 },
                   elevation: isSelected ? 8 : 0,
                 }}
               >
                 <View
-                  className="h-40 w-40 items-center justify-center rounded-full"
+                  className="h-36 w-36 items-center justify-center rounded-full"
                   style={{ backgroundColor: o.bg }}
                 >
-                  <Text
-                    className="text-8xl font-semibold"
-                    style={{ color: o.iconColor }}
-                  >
-                    {o.icon}
-                  </Text>
+                  <o.icon size={64} color={o.iconColor} strokeWidth={1.5} />
                 </View>
               </View>
 
               {/* Label */}
               <Text
-                className="mt-2 text-base font-semibold"
-                style={{ color: isSelected ? o.ringColor : "#1D1A27" }}
+                className="mt-4 text-lg font-sans font-semibold tracking-wide"
+                style={{ color: isSelected ? o.ringColor : "#4B4852" }}
               >
                 {o.label}
               </Text>

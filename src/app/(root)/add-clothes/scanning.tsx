@@ -134,8 +134,8 @@ export default function AddClothesScanningScreen() {
   }, [photoUri]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0F0E15" }}>
-      <StatusBar style="light" />
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+      <StatusBar style="dark" />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         {/* ── Title ── */}
         <Animated.View
@@ -144,7 +144,7 @@ export default function AddClothesScanningScreen() {
         >
           <Text
             style={{
-              color: "#FFFFFF",
+              color: "#111827",
               fontSize: 26,
               fontWeight: "800",
               letterSpacing: -0.5,
@@ -152,7 +152,7 @@ export default function AddClothesScanningScreen() {
           >
             AI is analyzing{"\n"}your item ✨
           </Text>
-          <Text style={{ color: "#888", fontSize: 14, marginTop: 6 }}>
+          <Text style={{ color: "#6B7280", fontSize: 14, marginTop: 6 }}>
             Powered by Gemini Vision
           </Text>
         </Animated.View>
@@ -165,7 +165,7 @@ export default function AddClothesScanningScreen() {
             borderRadius: 28,
             overflow: "hidden",
             height: SCREEN_W * 0.75,
-            backgroundColor: "#1A1827",
+            backgroundColor: "#F3F4F6",
           }}
         >
           {photoUri ? (
@@ -178,12 +178,12 @@ export default function AddClothesScanningScreen() {
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#1A1827",
+                backgroundColor: "#F3F4F6",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Text style={{ color: "#555", fontSize: 14 }}>No image</Text>
+              <Text style={{ color: "#9CA3AF", fontSize: 14 }}>No image</Text>
             </View>
           )}
 
@@ -297,7 +297,7 @@ export default function AddClothesScanningScreen() {
         >
           <Text
             style={{
-              color: "#FFFFFF",
+              color: "#111827",
               fontSize: 16,
               fontWeight: "700",
               marginBottom: 16,
@@ -315,7 +315,7 @@ export default function AddClothesScanningScreen() {
                   height: 4,
                   flex: i <= stepIndex ? 2 : 1,
                   borderRadius: 999,
-                  backgroundColor: i <= stepIndex ? "#7C6AFF" : "#2A2840",
+                  backgroundColor: i <= stepIndex ? "#7C6AFF" : "#E5E7EB",
                   overflow: "hidden",
                 }}
               />
@@ -339,9 +339,9 @@ export default function AddClothesScanningScreen() {
               <View
                 key={tag}
                 style={{
-                  backgroundColor: i <= stepIndex ? "#7C6AFF22" : "#1A1827",
+                  backgroundColor: i <= stepIndex ? "#7C6AFF22" : "#F3F4F6",
                   borderWidth: 1,
-                  borderColor: i <= stepIndex ? "#7C6AFF" : "#2A2840",
+                  borderColor: i <= stepIndex ? "#7C6AFF" : "#E5E7EB",
                   paddingHorizontal: 14,
                   paddingVertical: 7,
                   borderRadius: 999,
@@ -355,12 +355,12 @@ export default function AddClothesScanningScreen() {
                     width: 6,
                     height: 6,
                     borderRadius: 3,
-                    backgroundColor: i <= stepIndex ? "#7C6AFF" : "#444",
+                    backgroundColor: i <= stepIndex ? "#7C6AFF" : "#D1D5DB",
                   }}
                 />
                 <Text
                   style={{
-                    color: i <= stepIndex ? "#7C6AFF" : "#555",
+                    color: i <= stepIndex ? "#7C6AFF" : "#6B7280",
                     fontSize: 12,
                     fontWeight: "600",
                   }}
@@ -384,7 +384,7 @@ export default function AddClothesScanningScreen() {
             alignItems: "center",
           }}
         >
-          <Text style={{ color: "#555", fontSize: 13, textAlign: "center" }}>
+          <Text style={{ color: "#6B7280", fontSize: 13, textAlign: "center" }}>
             This usually takes 5–8 seconds
           </Text>
         </View>

@@ -1,10 +1,10 @@
-import { createSupabaseClient } from "@/shared/supabase/client";
-import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
-import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
+import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
+import { createSupabaseClient } from "@/shared/supabase/client";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Info, Upload, X } from "lucide-react-native";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
@@ -45,14 +45,14 @@ export default function FullLengthPicsScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsMultipleSelection: true,
-      selectionLimit: 2,
+      selectionLimit: 3,
       quality: 0.8,
     });
 
     if (!result.canceled) {
       setSelectedImages((prev) => {
         const combined = [...prev, ...result.assets];
-        return combined.slice(0, 2);
+        return combined.slice(0, 3);
       });
     }
   };
@@ -103,7 +103,9 @@ export default function FullLengthPicsScreen() {
         }
       }
 
-      posthog?.capture("onboarding_step_completed", { step: "full-length-pics" });
+      posthog?.capture("onboarding_step_completed", {
+        step: "full-length-pics",
+      });
       if (fromProfile === "true") {
         if (user) await completeOnboarding(user.id, supabase);
         router.back();
@@ -132,45 +134,102 @@ export default function FullLengthPicsScreen() {
   const showPreview = selectedImages.length > 0;
 
   return (
-    <View className="flex-1 px-5 pb-6 pt-2">
+    <View className="flex-1 px-6 pb-8">
       <OnboardingHeader step={6} />
 
-      <Text className="text-4xl font-semibold tracking-tight px-1 text-[#1D1A27]">
-        Full length pics
-      </Text>
-      <Text className="mt-2 text-base px-1 font-regular text-[#6B7280]">
-        This helps AI understand your body shape and styling needs.
-      </Text>
+      <View className="mt-4">
+        <Text className="text-4xl font-sans font-semibold tracking-tight text-[#1D1A27]">
+          Full length pics
+        </Text>
+        <Text className="mt-3 text-[15px] font-sans leading-relaxed text-[#4B4852]">
+          This helps AI understand your body shape and styling needs.
+        </Text>
+      </View>
 
       {/* Image area: show selected previews or placeholder */}
       <View className="mt-8 flex-1 items-center justify-center">
         {showPreview ? (
-          <View className="flex-row justify-center gap-4 w-full px-2">
-            {selectedImages.map((img, idx) => (
-              <View key={idx} className="relative">
-                <Image
-                  source={{ uri: img.uri }}
-                  className="h-[280px] w-[150px] rounded-2xl border border-[#7f8fad]"
-                  resizeMode="cover"
-                />
-                <TouchableOpacity
-                  onPress={() => removeImage(idx)}
-                  className="absolute -right-3 -top-3 h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-[#E5E7EB]"
+          <View className="h-[320px] w-full items-center justify-center relative">
+            {selectedImages.map((img, idx) => {
+              const transformConfig =
+                idx === 0
+                  ? {
+                      rotate: "0deg",
+                      translateX: 0,
+                      translateY: 10,
+                      zIndex: 10,
+                    }
+                  : idx === 1
+                    ? {
+                        rotate: "-12deg",
+                        translateX: -60,
+                        translateY: 20,
+                        zIndex: 5,
+                      }
+                    : {
+                        rotate: "12deg",
+                        translateX: 60,
+                        translateY: 20,
+                        zIndex: 4,
+                      };
+
+              return (
+                <View
+                  key={idx}
+                  style={{
+                    position: "absolute",
+                    transform: [
+                      { rotate: transformConfig.rotate },
+                      { translateX: transformConfig.translateX },
+                      { translateY: transformConfig.translateY },
+                    ],
+                    zIndex: transformConfig.zIndex,
+                    shadowColor: "#000000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 12,
+                    elevation: 5,
+                  }}
+                  className="h-[280px] w-[200px] rounded-[24px] bg-white p-[6px]"
                 >
-                  <X size={16} color="#1D1A27" />
-                </TouchableOpacity>
-              </View>
-            ))}
-            {selectedImages.length < 2 && (
+                  <Image
+                    source={{ uri: img.uri }}
+                    className="h-full w-full rounded-[18px]"
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    onPress={() => removeImage(idx)}
+                    className="absolute -right-3 -top-3 h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-[#E5E7EB]"
+                    style={{ zIndex: 20 }}
+                  >
+                    <X size={16} color="#1D1A27" />
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+
+            {/* "Add More" placeholder card stacked in the next available slot */}
+            {selectedImages.length < 3 && (
               <TouchableOpacity
                 onPress={handlePickImages}
-                className="h-[280px] w-[150px] items-center justify-center rounded-2xl border-2 border-dashed border-[#D1D1D8] bg-[#F9F9FB]"
+                style={{
+                  position: "absolute",
+                  transform: [
+                    {
+                      rotate: selectedImages.length === 1 ? "-12deg" : "12deg",
+                    },
+                    { translateX: selectedImages.length === 1 ? -60 : 60 },
+                    { translateY: 20 },
+                  ],
+                  zIndex: selectedImages.length === 1 ? 5 : 4,
+                }}
+                className="h-[280px] w-[200px] items-center justify-center rounded-[24px] border-2 border-dashed border-[#D1D1D8] bg-[#F9F9FB]"
               >
                 <View className="h-12 w-12 items-center justify-center rounded-full bg-[#ECEDF9]">
                   <Upload size={24} color="#1D1A27" />
                 </View>
-                <Text className="mt-3 text-sm font-medium text-[#1D1A27]">
-                  Add More
+                <Text className="mt-3 text-sm font-sans font-medium text-[#1D1A27]">
+                  {selectedImages.length === 1 ? "Add 2nd Pic" : "Add 3rd Pic"}
                 </Text>
               </TouchableOpacity>
             )}
@@ -179,80 +238,81 @@ export default function FullLengthPicsScreen() {
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={handlePickImages}
-            className="w-full items-center justify-center py-6"
+            className="h-[320px] w-full items-center justify-center relative"
           >
-            {/* 3 stacked tilted cards */}
-            <View className="h-[240px] w-full items-center justify-center relative">
-              {/* Card 1: Left */}
-              <View
-                style={{
-                  position: "absolute",
-                  transform: [
-                    { rotate: "-15deg" },
-                    { translateX: -70 },
-                    { translateY: 10 },
-                  ],
-                  shadowColor: "#000000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 10,
-                  elevation: 2,
-                  zIndex: 1,
-                }}
-                className="h-[270px] w-[225px] rounded-3xl bg-white p-[6px]"
-              >
-                <Image
-                  source={require("@/assets/images/mirror_selfie_girl.png")}
-                  className="h-full w-full rounded-[18px]"
-                  resizeMode="cover"
-                />
-              </View>
+            {/* Left Card */}
+            <View
+              style={{
+                position: "absolute",
+                transform: [
+                  { rotate: "-12deg" },
+                  { translateX: -60 },
+                  { translateY: 20 },
+                ],
+                zIndex: 5,
+                shadowColor: "#000000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 5,
+              }}
+              className="h-[280px] w-[200px] rounded-[24px] bg-white p-[6px]"
+            >
+              <Image
+                source={require("@/assets/images/mirror_selfie_girl.png")}
+                className="h-full w-full rounded-[18px]"
+                resizeMode="cover"
+              />
+            </View>
 
-              {/* Card 3: Right */}
-              <View
-                style={{
-                  position: "absolute",
-                  transform: [
-                    { rotate: "15deg" },
-                    { translateX: 70 },
-                    { translateY: 10 },
-                  ],
-                  shadowColor: "#000000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 10,
-                  elevation: 2,
-                  zIndex: 2,
-                }}
-                className="h-[270px] w-[225px] rounded-3xl bg-white p-[6px]"
-              >
-                <Image
-                  source={require("@/assets/images/mirror_selfie_girl.png")}
-                  className="h-full w-full rounded-[18px]"
-                  resizeMode="cover"
-                />
-              </View>
+            {/* Right Card */}
+            <View
+              style={{
+                position: "absolute",
+                transform: [
+                  { rotate: "12deg" },
+                  { translateX: 60 },
+                  { translateY: 20 },
+                ],
+                zIndex: 4,
+                shadowColor: "#000000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 5,
+              }}
+              className="h-[280px] w-[200px] rounded-[24px] bg-white p-[6px]"
+            >
+              <Image
+                source={require("@/assets/Rectangle 126.png")}
+                className="h-full w-full rounded-[18px]"
+                resizeMode="cover"
+              />
+            </View>
 
-              {/* Card 2: Center (Top layer) */}
-              <View
-                style={{
-                  position: "absolute",
-                  transform: [{ rotate: "-3deg" }, { translateY: 15 }],
-                  shadowColor: "#000000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 12,
-                  elevation: 2,
-                  zIndex: 3,
-                }}
-                className="h-[320px] w-[200px] rounded-3xl bg-white p-[6px]"
-              >
-                <Image
-                  source={require("@/assets/images/mirror_selfie_guy.png")}
-                  className="h-full w-full rounded-[18px]"
-                  resizeMode="cover"
-                />
-              </View>
+            {/* Center Card (Top layer) */}
+            <View
+              style={{
+                position: "absolute",
+                transform: [
+                  { rotate: "0deg" },
+                  { translateX: 0 },
+                  { translateY: 10 },
+                ],
+                zIndex: 10,
+                shadowColor: "#000000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 5,
+              }}
+              className="h-[280px] w-[200px] rounded-[24px] bg-white p-[6px]"
+            >
+              <Image
+                source={require("@/assets/Rectangle 125.png")}
+                className="h-full w-full rounded-[18px]"
+                resizeMode="cover"
+              />
             </View>
           </TouchableOpacity>
         )}
@@ -261,7 +321,7 @@ export default function FullLengthPicsScreen() {
       {/* Tips */}
       <View className="mt-6 flex-row items-start rounded-2xl bg-[#F5F4F8] p-4">
         <Info size={20} color="#1D1A27" className="mt-0.5" />
-        <Text className="ml-3 flex-1 text-[13px] leading-5 font-regular text-[#6B7280]">
+        <Text className="ml-3 flex-1 text-sm font-sans leading-relaxed text-[#000000]">
           Please upload a clear full-length photo with no close-ups, glasses,
           hats, AirPods, bags, pets, or phones.
         </Text>
@@ -278,7 +338,7 @@ export default function FullLengthPicsScreen() {
           {uploading ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text className="text-base font-semibold text-white">
+            <Text className="text-base font-sans font-semibold text-white">
               {showPreview ? "Continue" : "Select Images"}
             </Text>
           )}
@@ -289,7 +349,7 @@ export default function FullLengthPicsScreen() {
           onPress={handleSkip}
           className="items-center justify-center py-3"
         >
-          <Text className="text-sm font-semibold text-[#6B7280]">
+          <Text className="text-sm font-sans font-semibold text-[#6B7280]">
             Skip for now
           </Text>
         </TouchableOpacity>

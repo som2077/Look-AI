@@ -273,9 +273,9 @@ export function WardrobeRingSummaryCard({
       style={{
         marginTop: 16,
         backgroundColor: "#ffffff",
-        borderWidth: 0.7,
+        borderWidth: 0.9,
         borderColor: "#E9EBF8",
-        borderRadius: 24,
+        borderRadius: 40,
         paddingVertical: 16,
         paddingHorizontal: 12,
         shadowColor: "#FFFFFF",
@@ -368,9 +368,9 @@ export function WardrobeRingSummaryCard({
               }}
             >
               <View className="h-10 w-10 items-center justify-center rounded-full  bg-[#F8F7FC80]">
-                <Image 
-                  source={require("../../../../assets/fire_x.avif")} 
-                  style={{ width: 24, height: 24 }} 
+                <Image
+                  source={require("../../../../assets/fire_x.avif")}
+                  style={{ width: 24, height: 24 }}
                   contentFit="contain"
                 />
               </View>
@@ -379,7 +379,7 @@ export function WardrobeRingSummaryCard({
         </View>
 
         {/* Right Stats */}
-        <View className="flex-1 items-start gap-10 py-1">
+        <View className="flex-1 items-start gap-10 py-2 ml-1">
           <View>
             <Text
               style={{
