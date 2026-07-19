@@ -12,7 +12,11 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EAS_BUILD_NPM_INSTALL": "1",
+        "EAS_SKIP_AUTO_FINGERPRINT": "1"
+      }
     }
   },
   "submit": {
