@@ -1,6 +1,6 @@
 import { OutfitAnalyzingCard } from "@/features/ai-styling/ui/OutfitAnalyzingCard";
 import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
-import { useWardrobeSummary } from "@/features/wardrobe/api/useWardrobeSummary";
+import { useRingStats } from "@/features/wardrobe/api/useRingStats";
 import {
   EmptyStyleBanner,
   ErrorBanner,
@@ -18,6 +18,7 @@ import {
 } from "@/shared/hooks/usePremiumLimits";
 import { useStreakStore } from "@/shared/store/useStreakStore";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
+import { PendingBatchBanner } from "@/features/wardrobe/ui/PendingBatchBanner";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { HomeHeader } from "@/shared/ui/HomeHeader";
 import { LookAIBanner } from "@/shared/ui/LookAIBanner";
@@ -70,7 +71,7 @@ const HomeCard = React.memo(function HomeCard({
   item,
   canAddWardrobe,
   wardrobeCount,
-  summary,
+  stats,
   ringSegments,
   currentStreak,
   setTimeframe,
@@ -103,16 +104,12 @@ const HomeCard = React.memo(function HomeCard({
             </Pressable>
           )}
           <WardrobeRingSummaryCard
-            wornPercentage={clampRatio(summary.wornPercentage)}
-            totalWorn={currentStreak}
-            wearCount={
-              summary.totalWorn > 0
-                ? Number((summary.wearCount / summary.totalWorn).toFixed(1))
-                : 0
-            }
-            neverCount={summary.totalWorn}
+            wornPercentage={stats.usagePercent}
+            totalWorn={stats.raw.streakCount}
+            wearCount={stats.raw.avgWears}
+            neverCount={stats.raw.totalItems}
             ringSegments={ringSegments}
-            streak={currentStreak}
+            streak={stats.raw.streakCount}
             labels={{
               topLeft: "Usage",
               bottomLeft: "Streak",
@@ -170,7 +167,7 @@ export default function HomeScreen() {
         : timeframe === "Months"
           ? "monthly"
           : "all";
-  const { summary } = useWardrobeSummary(user?.id, period);
+  const { stats, isLoading } = useRingStats(period);
   const weatherData = useWeatherStore((state) => state.data);
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -181,30 +178,13 @@ export default function HomeScreen() {
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)
 
   const ringSegments = useMemo<readonly RingProgressSegment[]>(() => {
-    const total = summary.totalWorn; // total wardrobe items
-    const hasData = total > 0;
-
-    // Ring 1 (orange) — Worn %: what % of wardrobe has been worn at least once
-    const wornRatio = hasData ? summary.wornPercentage : 0;
-
-    // Ring 2 (pink) — Never worn ratio: neverCount / total
-    const neverRatio = hasData ? summary.neverCount / total : 0;
-
-    // Ring 3 (blue) — Wear frequency: wearCount / total (avg wears per item)
-    // Cap at 1 (100%) for visualization if they wore items more times than total items
-    const wearFreqRatio = hasData ? Math.min(1, summary.wearCount / total) : 0;
-
-    // Ring 4 (orange) — Streak: always uses real streak data
-    const STREAK_GOAL = 30;
-    const streakRatio = clampRatio(currentStreak / STREAK_GOAL);
-
     return [
-      { ...RING_SEGMENT_BASE[0], progress: wornRatio },
-      { ...RING_SEGMENT_BASE[1], progress: neverRatio },
-      { ...RING_SEGMENT_BASE[2], progress: wearFreqRatio },
-      { ...RING_SEGMENT_BASE[3], progress: streakRatio },
+      { ...RING_SEGMENT_BASE[0], progress: clampRatio(stats.usagePercent) },
+      { ...RING_SEGMENT_BASE[1], progress: clampRatio(stats.avgWearsPercent) },
+      { ...RING_SEGMENT_BASE[2], progress: clampRatio(stats.streakPercent) },
+      { ...RING_SEGMENT_BASE[3], progress: clampRatio(stats.totalItemsPercent) },
     ];
-  }, [summary, currentStreak]);
+  }, [stats]);
 
   const handleMomentumScrollEnd = useCallback((event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -227,14 +207,14 @@ export default function HomeScreen() {
         item={item}
         canAddWardrobe={canAddWardrobe}
         wardrobeCount={wardrobeCount}
-        summary={summary}
+        stats={stats}
         ringSegments={ringSegments}
         currentStreak={currentStreak}
         setTimeframe={setTimeframe}
         weatherData={weatherData}
       />
     ),
-    [summary, ringSegments, currentStreak, canAddWardrobe, wardrobeCount, weatherData],
+    [stats, ringSegments, currentStreak, canAddWardrobe, wardrobeCount, weatherData],
   );
 
   // Header stays in place (translateY counteracts scroll), clamped to HEADER_HEIGHT
@@ -326,6 +306,7 @@ export default function HomeScreen() {
               </View>
 
               <RecentlyUploadedHeading />
+              <PendingBatchBanner />
               <ErrorBanner />
               <NotifyBanner />
               <EmptyStyleBanner />

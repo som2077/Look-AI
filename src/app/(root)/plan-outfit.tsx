@@ -29,7 +29,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Sharing from "expo-sharing";
 import * as MediaLibrary from "expo-media-library";
 import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
-import { usePostHog } from "posthog-react-native";
+import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import { useLogWears } from "@/features/wardrobe/api/useLogWears";
+import analytics from "@react-native-firebase/analytics";
 
 export default function PlanOutfitScreen() {
   const router = useRouter();
@@ -40,13 +42,14 @@ export default function PlanOutfitScreen() {
   }>();
 
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<Date | undefined>(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [notes, setNotes] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const { logWears } = useLogWears();
 
   const addOutfit = useUserOutfitsStore((state) => state.addOutfit);
-  const posthog = usePostHog();
+
 
   const handleSaveToCalendar = () => {
     if (!selectedDate) {
@@ -70,16 +73,21 @@ export default function PlanOutfitScreen() {
     router.replace("/");
   };
 
-  const handleSaveToWardrobe = () => {
+  const handleSaveToWardrobe = async () => {
+    const idsArray = itemIds ? itemIds.split(",") : [];
     addOutfit({
       id: Date.now().toString(),
       imageUri,
       name: "My Outfit",
-      items: itemIds ? itemIds.split(",") : [],
+      items: idsArray,
       createdAt: Date.now(),
       notes,
     });
-    posthog?.capture("outfit_created");
+    // Log to Supabase wear_logs
+    if (idsArray.length > 0) {
+      logWears(idsArray);
+    }
+    await analytics().logEvent("outfit_created");
     Alert.alert("Saved", "Outfit saved to your wardrobe.");
   };
 

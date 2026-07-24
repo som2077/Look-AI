@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  namespacedAsyncStorage,
+  registerStoreRehydration,
+  registerStoreReset,
+} from "@/shared/store/namespacedStorage";
 
 export interface Group {
   id: string;
@@ -233,7 +237,12 @@ export const useSocialStore = create<SocialState>()(
     }),
     {
       name: "look-ai-social-storage",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => namespacedAsyncStorage),
     },
   ),
+);
+
+registerStoreRehydration(() => useSocialStore.persist.rehydrate());
+registerStoreReset(() =>
+  useSocialStore.setState({ joinedGroups: [], postsByGroup: {} })
 );

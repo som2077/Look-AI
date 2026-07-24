@@ -240,3 +240,23 @@ DROP TRIGGER IF EXISTS wardrobe_items_updated_at ON wardrobe_items;
 CREATE TRIGGER wardrobe_items_updated_at
   BEFORE UPDATE ON wardrobe_items
   FOR EACH ROW EXECUTE FUNCTION update_entitlement_updated_at();
+
+-- =============================================
+-- WEAR LOGS (FOR HOMESCREEN RINGS & ANALYTICS)
+-- =============================================
+DROP TABLE IF EXISTS wear_logs;
+CREATE TABLE wear_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user_profiles(user_id),
+  item_id UUID NOT NULL REFERENCES wardrobe_items(id) ON DELETE CASCADE,
+  worn_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE wear_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "select_own_wear_logs" ON wear_logs FOR SELECT
+USING (auth.jwt() ->> 'sub' = user_id);
+
+CREATE POLICY "insert_own_wear_logs" ON wear_logs FOR INSERT
+WITH CHECK (auth.jwt() ->> 'sub' = user_id);
+

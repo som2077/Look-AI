@@ -5,12 +5,18 @@ import {
   IconPencil,
   IconShare,
   IconSparklesFilled,
+  IconCheck,
 } from "@tabler/icons-react-native";
 import { Asset } from "expo-asset";
 import { ResizeMode, Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
+import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
+import { decode } from "base64-arraybuffer";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
@@ -22,6 +28,7 @@ import {
   ScrollView,
   Text,
   View,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -41,6 +48,10 @@ export default function OutfitScreen() {
 
   const handleDownload = async () => {
     try {
+      if (!resultImageUrl) {
+        Alert.alert("No Image", "Please generate an outfit first.");
+        return;
+      }
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
@@ -49,12 +60,14 @@ export default function OutfitScreen() {
         );
         return;
       }
-      const asset = await Asset.fromModule(
-        require("../../../../assets/final.webm"),
-      ).downloadAsync();
-      if (asset.localUri || asset.uri) {
-        await MediaLibrary.saveToLibraryAsync(asset.localUri || asset.uri);
-        Alert.alert("Success", "Saved to your gallery!");
+      
+      const filename = resultImageUrl.split('/').pop() || 'outfit.jpg';
+      const fileUri = `${FileSystem.documentDirectory}${filename}`;
+      const downloadedFile = await FileSystem.downloadAsync(resultImageUrl, fileUri);
+
+      if (downloadedFile.uri) {
+        await MediaLibrary.saveToLibraryAsync(downloadedFile.uri);
+        setShowSuccessModal(true);
       }
     } catch (e) {
       console.error(e);
@@ -64,16 +77,22 @@ export default function OutfitScreen() {
 
   const handleShare = async () => {
     try {
-      const asset = await Asset.fromModule(
-        require("../../../../assets/final.webm"),
-      ).downloadAsync();
+      if (!resultImageUrl) {
+        Alert.alert("No Image", "Please generate an outfit first.");
+        return;
+      }
       const isAvailable = await Sharing.isAvailableAsync();
       if (!isAvailable) {
         Alert.alert("Error", "Sharing is not available on this device");
         return;
       }
-      if (asset.localUri || asset.uri) {
-        await Sharing.shareAsync(asset.localUri || asset.uri);
+      
+      const filename = resultImageUrl.split('/').pop() || 'outfit.jpg';
+      const fileUri = `${FileSystem.documentDirectory}${filename}`;
+      const downloadedFile = await FileSystem.downloadAsync(resultImageUrl, fileUri);
+
+      if (downloadedFile.uri) {
+        await Sharing.shareAsync(downloadedFile.uri);
       }
     } catch (e) {
       console.error(e);
@@ -81,12 +100,20 @@ export default function OutfitScreen() {
     }
   };
 
+  const { supabase } = useSupabase();
+  const { isPro } = useRevenueCat();
   const [loading, setLoading] = useState(false);
   const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Outfit States
   const [personImage, setPersonImage] = useState<string | null>(null);
   const [outfitImage, setOutfitImage] = useState<string | null>(null);
+  const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
+  
+  // Toggles (assume user will wire UI later as they mentioned)
+  const [garmentPhotoType, setGarmentPhotoType] = useState<"model" | "flat-lay">("model");
+  const [garmentCategory, setGarmentCategory] = useState<"tops" | "bottoms" | "footwear">("tops");
 
   const pickImage = async (setImage: (uri: string) => void) => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -112,12 +139,81 @@ export default function OutfitScreen() {
     return () => clearInterval(interval);
   }, [loading]);
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
+    if (!isPro) {
+      router.push("/(root)/(subscription)/subscription");
+      return;
+    }
+
+    if (!personImage || !outfitImage) {
+      Alert.alert("Missing Images", "Please select both a person image and an outfit image.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      // 1. Helper function to upload image to Supabase Storage
+      const uploadImage = async (uri: string, folder: string) => {
+        const fileName = `${Date.now()}_${uri.split('/').pop()}`;
+        const filePath = `${folder}/${fileName}`;
+
+        // Read the local file as base64 to avoid React Native fetch Blob issues
+        const base64 = await FileSystem.readAsStringAsync(uri, { 
+          encoding: 'base64' 
+        });
+        const arrayBuffer = decode(base64);
+
+        const { error } = await supabase.storage
+          .from("try-on-uploads")
+          .upload(filePath, arrayBuffer, {
+            contentType: 'image/jpeg',
+          });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from("try-on-uploads")
+          .getPublicUrl(filePath);
+
+        return publicUrlData.publicUrl;
+      };
+
+      // 2. Upload both images
+      const personImageUrl = await uploadImage(personImage, "person");
+      const garmentImageUrl = await uploadImage(outfitImage, "garment");
+
+      // 3. Call Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke("virtual-try-on", {
+        body: {
+          person_image_url: personImageUrl,
+          garment_image_url: garmentImageUrl,
+          garment_photo_type: garmentPhotoType,
+          garment_category: garmentCategory,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || "Failed to invoke edge function");
+      }
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      if (data?.resultUrl) {
+        setResultImageUrl(data.resultUrl);
+        useStreakStore.getState().incrementStreakAction();
+      } else {
+        throw new Error("No result URL returned from AI");
+      }
+    } catch (e: any) {
+      console.error("Virtual Try-On Error:", e);
+      Alert.alert("Generation Failed", e.message || "An unexpected error occurred.");
+    } finally {
       setLoading(false);
-    }, 2000);
-  }, []);
+    }
+  }, [personImage, outfitImage, garmentPhotoType, garmentCategory, supabase, isPro, router]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -369,30 +465,40 @@ export default function OutfitScreen() {
                   overflow: "hidden",
                 }}
               >
-                <Video
-                  source={require("../../../../assets/final.webm")}
-                  style={{
-                    width: 350,
-                    height: 350,
-                    marginBottom: 16,
-                  }}
-                  resizeMode={ResizeMode.CONTAIN}
-                  shouldPlay
-                  isMuted
-                  isLooping
-                />
+                {resultImageUrl ? (
+                  <Image
+                    source={{ uri: resultImageUrl }}
+                    style={{ width: "100%", height: "100%" }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <>
+                    <Video
+                      source={require("../../../../assets/final.webm")}
+                      style={{
+                        width: 350,
+                        height: 350,
+                        marginBottom: 16,
+                      }}
+                      resizeMode={ResizeMode.CONTAIN}
+                      shouldPlay
+                      isMuted
+                      isLooping
+                    />
 
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: "#9B9BAF",
-                    textAlign: "center",
-                    paddingHorizontal: 32,
-                    lineHeight: 22,
-                  }}
-                >
-                  Your merged try-on image will appear here after generation.
-                </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: "#9B9BAF",
+                        textAlign: "center",
+                        paddingHorizontal: 32,
+                        lineHeight: 22,
+                      }}
+                    >
+                      Your merged try-on image will appear here after generation.
+                    </Text>
+                  </>
+                )}
               </View>
 
               {/* Download and Share Buttons */}
@@ -458,6 +564,98 @@ export default function OutfitScreen() {
             </View>
           </ScrollView>
         )}
+        
+        {/* Success Modal */}
+        <Modal
+          transparent={true}
+          visible={showSuccessModal}
+          animationType="fade"
+          onRequestClose={() => setShowSuccessModal(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 24,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: "#FFFFFF",
+                borderRadius: 24,
+                padding: 32,
+                alignItems: "center",
+                width: "100%",
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 4,
+                elevation: 5,
+              }}
+            >
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  backgroundColor: "#E8F5E9",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <IconCheck size={32} color="#4CAF50" />
+              </View>
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "700",
+                  color: "#1D1A27",
+                  marginBottom: 8,
+                }}
+              >
+                Success!
+              </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: "#9B9BAF",
+                  textAlign: "center",
+                  marginBottom: 24,
+                }}
+              >
+                Image successfully saved to your gallery.
+              </Text>
+              
+              <Pressable
+                onPress={() => setShowSuccessModal(false)}
+                style={{
+                  backgroundColor: "#1D1A27",
+                  borderRadius: 50,
+                  width: "100%",
+                  paddingVertical: 16,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  OK
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
     </View>
   );

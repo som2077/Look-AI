@@ -2,6 +2,7 @@ import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analy
 import { ScanningOverlay } from "@/features/scanning/ui/ScanningOverlay";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
+import { useStreakStore } from "@/shared/store/useStreakStore";
 import {
   IconArrowLeft,
   IconChevronDown,
@@ -384,6 +385,7 @@ export default function AddClothesFormScreen() {
 
   const addItem = useUserWardrobeStore((s) => s.addItem);
   const { canAddWardrobe, handleLimitReached } = usePremiumLimits();
+  const incrementStreakAction = useStreakStore((s) => s.incrementStreakAction);
 
   const handleConfirm = useCallback(() => {
     if (!canAddWardrobe) {
@@ -405,6 +407,7 @@ export default function AddClothesFormScreen() {
     if (params.outfitIndex !== undefined) {
       removeOutfit(parseInt(params.outfitIndex, 10));
     }
+    incrementStreakAction();
     router.replace("/(root)/(tabs)/wardrobe" as never);
   }, [
     router,
@@ -423,6 +426,7 @@ export default function AddClothesFormScreen() {
     handleLimitReached,
     params.outfitIndex,
     removeOutfit,
+    incrementStreakAction,
   ]);
 
   const handleRetake = useCallback(() => {

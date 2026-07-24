@@ -1,4 +1,4 @@
-import { usePostHog } from 'posthog-react-native';
+import analytics from "@react-native-firebase/analytics";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
@@ -17,7 +17,7 @@ const LOADING_MESSAGES = [
 ];
 
 export default function SetupAccountScreen() {
-  const posthog = usePostHog();
+
   const { user } = useUser();
   const { supabase, isInitializing } = useSupabase();
   const { completeOnboarding, isSaving, error } = useOnboardingState();
@@ -32,7 +32,7 @@ export default function SetupAccountScreen() {
     
     const success = await completeOnboarding(user.id, supabase, user.imageUrl);
     if (success) {
-      posthog?.capture("onboarding_completed");
+      analytics().logEvent("onboarding_completed");
       router.replace("/(root)/(tabs)" as never);
     }
   };

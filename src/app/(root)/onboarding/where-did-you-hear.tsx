@@ -3,7 +3,7 @@ import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/Onboarding
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -31,7 +31,7 @@ const hearOptions = [
 ];
 
 export default function WhereDidYouHearScreen() {
-  const posthog = usePostHog();
+
   const router = useRouter();
   const setWhereDidYouHear = useOnboardingState((s) => s.setWhereDidYouHear);
 
@@ -55,7 +55,7 @@ export default function WhereDidYouHearScreen() {
   };
 
   const handleContinue = () => {
-    posthog?.capture("onboarding_step_completed", {
+    analytics().logEvent("onboarding_step_completed", {
       step: "where-did-you-hear",
     });
     if (selectedOptions.length === 0) return;

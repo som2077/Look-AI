@@ -58,7 +58,7 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
       style={{ width: CARD_WIDTH }}
       onPress={() => onViewDetails(outfitIndex)}
     >
-      <View className="flex-row rounded-[24px] border-[0.8px] border-[#E9EBF8] bg-[#F3F2F790] overflow-hidden h-40">
+      <View className="flex-row rounded-[24px] border-[0.8px] border-[#E9EBF8] bg-[#F3F2F770] overflow-hidden h-40">
         <View
           className="justify-center items-center rounded-[24px]"
           style={{

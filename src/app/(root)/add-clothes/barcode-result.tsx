@@ -1,6 +1,7 @@
 import { BarcodeAnalysis, analyzeBarcodeImage } from "@/features/scanning/api/gemini-scan"
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store"
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store"
+import { useStreakStore } from "@/shared/store/useStreakStore"
 import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits"
 import {
   IconArrowLeft,
@@ -75,6 +76,7 @@ export default function BarcodeResultScreen() {
   const params = useLocalSearchParams() as BarcodeResultParams
   const addItem = useUserWardrobeStore((s) => s.addItem)
   const addScan = useScanHistoryStore((s) => s.addScan)
+  const incrementStreakAction = useStreakStore((s) => s.incrementStreakAction)
 
   const [saved, setSaved] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
@@ -132,6 +134,7 @@ const handleSave = () => {
       brand: result.brand,
     })
     setSaved(true)
+    incrementStreakAction()
   }
 
   const infoRows: Array<{ label: string; value: string }> = [

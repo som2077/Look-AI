@@ -5,16 +5,16 @@ import { ResizeMode, Video } from "expo-av";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Lock } from "lucide-react-native";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { Text, View } from "react-native";
 
 export default function TrustScreen() {
-  const posthog = usePostHog();
+
   const router = useRouter();
   const { error } = useOnboardingState();
 
   const handleContinue = () => {
-    posthog?.capture("onboarding_step_completed", { step: "trust" });
+    analytics().logEvent("onboarding_step_completed", { step: "trust" });
     router.push("/(root)/onboarding/setup-account" as never);
   };
 

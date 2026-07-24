@@ -5,11 +5,11 @@ import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/Onboarding
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { router, useLocalSearchParams } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { Text, View } from "react-native";
 
 export default function HeightScreen() {
-  const posthog = usePostHog();
+
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { user } = useUser();
   const { supabase } = useSupabase();
@@ -32,7 +32,7 @@ export default function HeightScreen() {
       </View>
       <ContinueButton
         onPress={async () => {
-          posthog?.capture("onboarding_step_completed", { step: "height" });
+          analytics().logEvent("onboarding_step_completed", { step: "height" });
           if (fromProfile === "true") {
             if (user) await completeOnboarding(user.id, supabase);
             router.back();

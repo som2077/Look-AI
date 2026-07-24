@@ -4,6 +4,11 @@ import { useWeatherStore } from "@/features/weather/model/weather-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  namespacedAsyncStorage,
+  registerStoreRehydration,
+  registerStoreReset,
+} from "@/shared/store/namespacedStorage";
 
 export interface LastOutfit {
   imageUri: string;
@@ -451,11 +456,16 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>()(
     }),
     {
       name: "outfit-analysis-store",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => namespacedAsyncStorage),
       partialize: (state) => ({
         lastOutfits: state.lastOutfits,
         lastClearedTimestamp: state.lastClearedTimestamp,
       }),
     },
   ),
+);
+
+registerStoreRehydration(() => useOutfitAnalysisStore.persist.rehydrate());
+registerStoreReset(() =>
+  useOutfitAnalysisStore.setState({ lastOutfits: [], lastClearedTimestamp: 0 })
 );

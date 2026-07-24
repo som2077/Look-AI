@@ -1,9 +1,6 @@
 import {
   IconArrowLeft,
   IconChevronDown,
-  IconChevronRight,
-  IconEdit,
-  IconPlus,
   IconShirt,
   IconSquare,
   IconSquareCheck,
@@ -15,7 +12,9 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Dimensions,
+  FlatList,
   Image,
   Pressable,
   ScrollView,
@@ -25,38 +24,28 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { uploadToCloudinaryWithBgRemoval } from "@/features/scanning/api/cloudinary-upload";
-import {
-  FullClothingAnalysis,
-  analyzeClothingFull,
-} from "@/features/scanning/api/gemini-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
+import { useStreakStore } from "@/shared/store/useStreakStore";
+
+import {
+  BatchItem,
+  usePendingBatchStore,
+} from "@/features/wardrobe/model/usePendingBatchStore";
 
 type ViewMode = "detail" | "simple";
-
-type BatchItemStatus = "loading" | "success" | "error";
-
-interface BatchItem {
-  id: string;
-  originalUri: string;
-  status: BatchItemStatus;
-  data: FullClothingAnalysis | null;
-  cloudinaryUrl: string | null;
-  error?: string;
-  // local edits
-  customName: string;
-  brand: string;
-}
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function BatchScanScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ uris?: string }>();
-  const [viewMode, setViewMode] = useState<ViewMode>("detail");
-  const [items, setItems] = useState<BatchItem[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>("simple");
+
+  const { items, startBatch, updateItem, removeItems, clearBatch } =
+    usePendingBatchStore();
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -66,94 +55,32 @@ export default function BatchScanScreen() {
     usePremiumLimits();
   const addItem = useUserWardrobeStore((s) => s.addItem);
   const addScan = useScanHistoryStore((s) => s.addScan);
-
-  const processBatchItem = async (item: BatchItem) => {
-    try {
-      // 1. BG Removal
-      let finalUri = item.originalUri;
-      let cloudUrl = null;
-      try {
-        const uploadRes = await uploadToCloudinaryWithBgRemoval(
-          item.originalUri,
-        );
-        finalUri = uploadRes.imageUrl;
-        cloudUrl = uploadRes.imageUrl;
-      } catch (bgError) {
-        console.warn("BG removal failed for batch item:", bgError);
-      }
-
-      // 2. Gemini Analysis
-      const aiData = await analyzeClothingFull(finalUri);
-      if (
-        !aiData ||
-        aiData.category === "Full Body" ||
-        aiData.category === "Not Clothing"
-      ) {
-        throw new Error("Invalid clothing image");
-      }
-
-      setItems((prev) =>
-        prev.map((p) => {
-          if (p.id === item.id) {
-            return {
-              ...p,
-              status: "success",
-              data: aiData,
-              cloudinaryUrl: cloudUrl || p.originalUri,
-              customName: `${aiData.primaryColor} ${aiData.subCategory}`,
-            };
-          }
-          return p;
-        }),
-      );
-
-      addScan({
-        type: "cloth",
-        thumbnail: cloudUrl || item.originalUri,
-        date: new Date().toISOString(),
-        result: aiData as unknown as Record<string, unknown>,
-        isFavorite: false,
-      });
-    } catch (error) {
-      console.error("Failed to process batch item", item.id, error);
-      setItems((prev) =>
-        prev.map((p) => {
-          if (p.id === item.id) {
-            return { ...p, status: "error", error: "Failed to analyze" };
-          }
-          return p;
-        }),
-      );
-    }
-  };
+  const incrementStreakAction = useStreakStore((s) => s.incrementStreakAction);
 
   useEffect(() => {
-    if (hasStarted.current || !params.uris) return;
+    if (hasStarted.current) return;
     hasStarted.current = true;
 
-    try {
-      const urisArray = JSON.parse(params.uris) as string[];
-
-      const initialItems: BatchItem[] = urisArray.map((uri, index) => ({
-        id: `item-${Date.now()}-${index}`,
-        originalUri: uri,
-        status: "loading",
-        data: null,
-        cloudinaryUrl: null,
-        customName: "",
-        brand: "",
-      }));
-      setItems(initialItems);
-      // pre-select all items initially
-      setSelectedIds(initialItems.map((i) => i.id));
-
-      // Process items concurrently but safely
-      initialItems.forEach(processBatchItem);
-    } catch (e) {
-      console.error("Invalid URIs array", e);
-      router.back();
+    if (params.uris) {
+      try {
+        const urisArray = JSON.parse(params.uris) as string[];
+        startBatch(urisArray, true);
+      } catch (e) {
+        console.error("Invalid URIs array", e);
+        router.back();
+      }
     }
   }, [params.uris]);
+
+  // Keep selectedIds in sync with items (select new items)
+  useEffect(() => {
+    const newIds = items
+      .map((i) => i.id)
+      .filter((id) => !selectedIds.includes(id));
+    if (newIds.length > 0) {
+      setSelectedIds((prev) => [...prev, ...newIds]);
+    }
+  }, [items]);
 
   const allInitialLoading =
     items.every((i) => i.status === "loading") && items.length > 0;
@@ -173,15 +100,20 @@ export default function BatchScanScreen() {
   };
 
   const handleDelete = () => {
-    const newItems = items.filter((i) => !selectedIds.includes(i.id));
-    if (newItems.length === 0) {
+    const idsToDelete = items
+      .filter((i) => selectedIds.includes(i.id))
+      .map((i) => i.id);
+    removeItems(idsToDelete);
+
+    const newItemsCount = items.length - idsToDelete.length;
+    if (newItemsCount === 0) {
       router.back();
       return;
     }
-    setItems(newItems);
+
     setSelectedIds([]);
-    if (currentIndex >= newItems.length) {
-      setCurrentIndex(Math.max(0, newItems.length - 1));
+    if (currentIndex >= newItemsCount) {
+      setCurrentIndex(Math.max(0, newItemsCount - 1));
     }
   };
 
@@ -195,20 +127,10 @@ export default function BatchScanScreen() {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      const newItems: BatchItem[] = result.assets.map((asset, index) => ({
-        id: `item-${Date.now()}-${index}`,
-        originalUri: asset.uri,
-        status: "loading",
-        data: null,
-        cloudinaryUrl: null,
-        customName: "",
-        brand: "",
-      }));
-
-      setItems((prev) => [...prev, ...newItems]);
-      setSelectedIds((prev) => [...prev, ...newItems.map((i) => i.id)]);
-
-      newItems.forEach(processBatchItem);
+      startBatch(
+        result.assets.map((a) => a.uri),
+        true,
+      );
     }
   };
 
@@ -268,20 +190,15 @@ export default function BatchScanScreen() {
           isFavorite: false,
           wearCount: 0,
         });
+        removeItems([item.id]);
       }
-      Alert.alert(
-        "Success",
-        `${itemsToSave.length} items added to your closet!`,
-        [
-          {
-            text: "OK",
-            onPress: () => router.replace("/(root)/(tabs)" as never),
-          },
-        ],
-      );
+
+      clearBatch();
+      incrementStreakAction();
+      router.replace("/(root)/(tabs)/wardrobe");
     } catch (e) {
-      console.error("Save failed", e);
-      Alert.alert("Error", "Failed to save items.");
+      console.error(e);
+      Alert.alert("Error", "Failed to save items to wardrobe");
     } finally {
       setSaving(false);
     }
@@ -297,22 +214,28 @@ export default function BatchScanScreen() {
         <IconArrowLeft size={24} color="#111827" />
       </Pressable>
 
-      <View style={styles.toggleContainer}>
-        <Pressable
-          onPress={() =>
-            setViewMode((prev) => (prev === "detail" ? "simple" : "detail"))
-          }
-          style={styles.toggleBtn}
-        >
-          <IconEdit size={16} color="#111827" />
-          <Text style={styles.toggleText}>
-            {viewMode === "detail" ? "Detail view" : "Simple view"}
-          </Text>
-        </Pressable>
+      <View style={{ flex: 1, alignItems: "center", marginLeft: 65 }}>
+        {viewMode === "simple" && (
+          <View style={[styles.carouselPill, { marginTop: 0 }]}>
+            <Text style={styles.carouselText}>
+              {currentIndex + 1}/{items.length}
+            </Text>
+          </View>
+        )}
       </View>
 
-      <Pressable onPress={handleAddMore} style={styles.iconBtn}>
-        <IconPlus size={24} color="#111827" />
+      <Pressable
+        onPress={() =>
+          setViewMode((prev) => (prev === "detail" ? "simple" : "detail"))
+        }
+        style={[styles.toggleBtn, { paddingHorizontal: 12 }]}
+      >
+        {/* {viewMode === "detail" && (
+          <IconEdit size={14} color="#111827" style={{ marginRight: 6 }} />
+        )} */}
+        <Text style={styles.toggleText}>
+          {viewMode === "detail" ? "Detail view" : "Simple view"}
+        </Text>
       </Pressable>
     </View>
   );
@@ -328,11 +251,16 @@ export default function BatchScanScreen() {
           onToggleSelect={handleToggleSelect}
           onSelectAll={handleSelectAll}
           onDelete={handleDelete}
+          onOpenItem={(idx: number) => {
+            setCurrentIndex(idx);
+            setViewMode("simple");
+          }}
         />
       ) : (
         <SimpleView
           items={items}
           currentIndex={currentIndex}
+          onIndexChange={(idx: number) => setCurrentIndex(idx)}
           onNext={() => {
             if (currentIndex < items.length - 1) {
               setCurrentIndex(currentIndex + 1);
@@ -341,11 +269,7 @@ export default function BatchScanScreen() {
             }
           }}
           isLast={currentIndex === items.length - 1}
-          onUpdateItem={(id: string, updates: Partial<BatchItem>) => {
-            setItems((prev) =>
-              prev.map((p) => (p.id === id ? { ...p, ...updates } : p)),
-            );
-          }}
+          onUpdateItem={updateItem}
         />
       )}
 
@@ -371,12 +295,44 @@ export default function BatchScanScreen() {
   );
 }
 
+function SkeletonRow() {
+  const opacity = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View style={[styles.skeletonRow, { opacity }]}>
+      <View style={styles.skeletonImage} />
+      <View style={styles.skeletonDetails}>
+        <View style={styles.skeletonLine1} />
+        <View style={styles.skeletonLine2} />
+      </View>
+    </Animated.View>
+  );
+}
+
 function DetailView({
   items,
   selectedIds,
   onToggleSelect,
   onSelectAll,
   onDelete,
+  onOpenItem,
 }: any) {
   const allSelected = selectedIds.length === items.length && items.length > 0;
   return (
@@ -384,7 +340,7 @@ function DetailView({
       <View style={styles.actionRow}>
         <Pressable onPress={onSelectAll} style={styles.selectAllBtn}>
           {allSelected ? (
-            <IconSquareCheck size={24} color="#7C6AFF" />
+            <IconSquareCheck size={24} color="#000000" />
           ) : (
             <IconSquare size={24} color="#D1D5DB" />
           )}
@@ -396,7 +352,7 @@ function DetailView({
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {items.map((item: BatchItem) => {
+        {items.map((item: BatchItem, index: number) => {
           const isSelected = selectedIds.includes(item.id);
           return (
             <View key={item.id} style={styles.itemRow}>
@@ -405,34 +361,28 @@ function DetailView({
                 style={styles.checkbox}
               >
                 {isSelected ? (
-                  <IconSquareCheck size={24} color="#7C6AFF" />
+                  <IconSquareCheck size={24} color="#000000" />
                 ) : (
                   <IconSquare size={24} color="#D1D5DB" />
                 )}
               </Pressable>
 
               {item.status === "loading" ? (
-                <View style={styles.skeletonRow}>
-                  <View style={styles.skeletonImage} />
-                  <View style={styles.skeletonDetails}>
-                    <View style={styles.skeletonLine1} />
-                    <View style={styles.skeletonLine2} />
-                  </View>
-                </View>
+                <SkeletonRow />
               ) : item.status === "error" ? (
                 <View style={styles.errorRow}>
                   <Text style={{ color: "#F44336" }}>Analysis failed</Text>
                 </View>
               ) : (
-                <View style={styles.successRow}>
+                <Pressable
+                  style={styles.successRow}
+                  onPress={() => onOpenItem(index)}
+                >
                   <View style={styles.imageContainer}>
                     <Image
                       source={{ uri: item.cloudinaryUrl || item.originalUri }}
                       style={styles.itemImage}
                     />
-                    <View style={styles.badgeIcon}>
-                      <IconEdit size={12} color="#FFF" />
-                    </View>
                   </View>
                   <View style={styles.itemDetails}>
                     <View style={styles.categoryBadge}>
@@ -446,8 +396,7 @@ function DetailView({
                       {item.data?.season?.join(", ")}
                     </Text>
                   </View>
-                  <IconChevronRight size={20} color="#9CA3AF" />
-                </View>
+                </Pressable>
               )}
             </View>
           );
@@ -460,105 +409,189 @@ function DetailView({
 function SimpleView({
   items,
   currentIndex,
+  onIndexChange,
   onNext,
   isLast,
   onUpdateItem,
 }: any) {
-  const item = items[currentIndex];
+  const flatListRef = useRef<FlatList>(null);
 
-  if (!item) return <View style={{ flex: 1 }} />;
+  useEffect(() => {
+    if (flatListRef.current && items.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({
+          index: currentIndex,
+          animated: false,
+        });
+      }, 10);
+    }
+  }, [currentIndex, items.length]);
+
+  const handleScroll = (event: any) => {
+    const slideSize = event.nativeEvent.layoutMeasurement.width;
+    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
+    if (index !== currentIndex && index >= 0 && index < items.length) {
+      onIndexChange(index);
+    }
+  };
+
+  const renderItem = ({ item }: { item: BatchItem }) => {
+    return (
+      <View style={{ width: SCREEN_WIDTH }}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+        >
+          <View style={styles.carouselImageContainer}>
+            <Image
+              source={{ uri: item.cloudinaryUrl || item.originalUri }}
+              style={styles.carouselImage}
+            />
+          </View>
+
+          {item.status === "loading" ? (
+            <View style={{ marginTop: 40, alignItems: "center" }}>
+              <ActivityIndicator size="large" color="#7C6AFF" />
+              <Text style={{ color: "#6B7280", marginTop: 16 }}>
+                Analyzing...
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.formContainer}>
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>My Rating</Text>
+                <View style={styles.formValueContainer}>
+                  <Text style={[styles.formValue, { color: "#9CA3AF" }]}>
+                    Give a rating
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Season</Text>
+                <View style={styles.formValueContainer}>
+                  <Text style={styles.formValue}>
+                    {item.data?.season?.join(", ") || "All Season"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Occasion</Text>
+                <View style={styles.formValueContainer}>
+                  <Text
+                    style={styles.formValue}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.data?.occasion?.join(", ") || "Casual"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Category</Text>
+                <View style={styles.formValueContainer}>
+                  <Text
+                    style={styles.formValue}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.data?.category}{" "}
+                    {item.data?.subCategory ? `> ${item.data.subCategory}` : ""}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Color</Text>
+                <View style={styles.formValueContainer}>
+                  <View
+                    style={[
+                      styles.colorDot,
+                      { backgroundColor: item.data?.colorHex || "#FFFFFF" },
+                    ]}
+                  />
+                  <Text style={styles.formValue}>
+                    {item.data?.primaryColor || "Unknown"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Brand / Designer</Text>
+                <View style={styles.formValueContainer}>
+                  <Text
+                    style={[
+                      styles.formValue,
+                      !item.brand && { color: "#9CA3AF" },
+                    ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.brand || "Unknown"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Care Instructions</Text>
+                <View style={styles.formValueContainer}>
+                  <Text
+                    style={styles.formValue}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.data?.careInstructions || "Unknown"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Notes</Text>
+                <View style={styles.formValueContainer}>
+                  <Text
+                    style={styles.formValue}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.data?.notes || "None"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    );
+  };
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={styles.carouselHeader}>
-        <View style={styles.carouselPill}>
-          <Text style={styles.carouselText}>
-            {currentIndex + 1}/{items.length}
-          </Text>
-        </View>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
-      >
-        <View style={styles.carouselImageContainer}>
-          <Image
-            source={{ uri: item.cloudinaryUrl || item.originalUri }}
-            style={styles.carouselImage}
-          />
-          <Pressable style={styles.carouselEditBtn}>
-            <IconEdit size={16} color="#111827" />
-            <Text style={styles.carouselBtnText}>Edit</Text>
-          </Pressable>
-        </View>
-
-        {item.status === "loading" ? (
-          <View style={{ marginTop: 40, alignItems: "center" }}>
-            <ActivityIndicator size="large" color="#7C6AFF" />
-            <Text style={{ color: "#6B7280", marginTop: 16 }}>
-              Analyzing...
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.formContainer}>
-            <View style={styles.formRow}>
-              <Text style={styles.formLabel}>Category</Text>
-              <View style={styles.formValueContainer}>
-                <Text style={styles.formValue}>
-                  {item.data?.category}
-                  {" > "}
-                  {item.data?.subCategory}
-                </Text>
-                <IconChevronDown size={16} color="#9CA3AF" />
-              </View>
-            </View>
-            <View style={styles.formRow}>
-              <Text style={styles.formLabel}>Color</Text>
-              <View style={styles.formValueContainer}>
-                <View
-                  style={[
-                    styles.colorDot,
-                    { backgroundColor: item.data?.colorHex || "#FFFFFF" },
-                  ]}
-                />
-                <IconChevronDown size={16} color="#9CA3AF" />
-              </View>
-            </View>
-            <View style={styles.formRow}>
-              <Text style={styles.formLabel}>Season</Text>
-              <View style={styles.formValueContainer}>
-                <Text style={styles.formValue}>
-                  {item.data?.season?.join(", ")}
-                </Text>
-                <IconChevronDown size={16} color="#9CA3AF" />
-              </View>
-            </View>
-            <View style={styles.formRow}>
-              <Text style={styles.formLabel}>Brand</Text>
-              <View style={styles.formValueContainer}>
-                <Text
-                  style={[
-                    styles.formValue,
-                    !item.brand && { color: "#9CA3AF" },
-                  ]}
-                >
-                  {item.brand || "Choose the brand"}
-                </Text>
-                <IconChevronDown size={16} color="#9CA3AF" />
-              </View>
-            </View>
-          </View>
-        )}
-      </ScrollView>
+      <FlatList
+        ref={flatListRef}
+        data={items}
+        keyExtractor={(i) => i.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={handleScroll}
+        renderItem={renderItem}
+        getItemLayout={(data, index) => ({
+          length: SCREEN_WIDTH,
+          offset: SCREEN_WIDTH * index,
+          index,
+        })}
+      />
 
       <View style={styles.bottomBar}>
         <Pressable
           style={[
             styles.saveBtn,
-            item.status === "loading" && { opacity: 0.5 },
+            items[currentIndex]?.status === "loading" && { opacity: 0.5 },
           ]}
           onPress={onNext}
-          disabled={item.status === "loading"}
+          disabled={items[currentIndex]?.status === "loading"}
         >
           <Text style={styles.saveBtnText}>
             {isLast ? "Add to Closet" : "Next"}
@@ -613,6 +646,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginLeft: 5,
   },
   selectAllText: {
     color: "#111827",
@@ -623,6 +657,7 @@ const styles = StyleSheet.create({
     color: "#EF4444",
     fontSize: 14,
     fontWeight: "600",
+    marginRight: 10,
   },
   itemRow: {
     flexDirection: "row",
@@ -782,12 +817,17 @@ const styles = StyleSheet.create({
   formValueContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-end",
+    flex: 1,
+    paddingLeft: 16,
     gap: 8,
   },
   formValue: {
     color: "#111827",
     fontSize: 14,
     fontWeight: "500",
+    flexShrink: 1,
+    textAlign: "right",
   },
   colorDot: {
     width: 16,
@@ -799,7 +839,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 32,
+    paddingBottom: 12,
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
     backgroundColor: "#FFFFFF",

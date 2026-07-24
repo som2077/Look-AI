@@ -1,4 +1,5 @@
 import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
+import { useNotifications } from "@/features/social/api/useNotifications";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 
@@ -17,7 +18,9 @@ import {
   ActivityIndicator,
   Image,
   Keyboard,
+  Modal,
   Platform,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -25,8 +28,10 @@ import {
   View,
 } from "react-native";
 import ImageCropPicker from "react-native-image-crop-picker";
+import ImageViewer from "react-native-image-zoom-viewer";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { useUser } from "@clerk/clerk-expo";
 
 const USER_COLORS = ["#000000", "#BA0017", "#403193", "#34787D", "#2900BF"];
@@ -62,7 +67,9 @@ const PostCard = React.memo(function PostCard({
   toggleReaction: (postId: string, reactionType: string | null) => void;
 }) {
   const { user } = useUser();
+  const { nickname, username } = useOnboardingState();
   const [showReactions, setShowReactions] = useState(false);
+  const [showFullImage, setShowFullImage] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number>(4 / 3);
 
   useEffect(() => {
@@ -93,6 +100,11 @@ const PostCard = React.memo(function PostCard({
   const timeAgo = post.created_at ? timeAgoHelper(post.created_at) : "Just now";
   const isCurrentUser =
     post.user_id === user?.id || post.user_profiles?.user_id === user?.id;
+
+  const displayNickname = isCurrentUser
+    ? nickname || username || user?.fullName || "User"
+    : post.user_profiles?.nickname || post.user_profiles?.username || "User";
+
   const avatarUrl =
     isCurrentUser && user?.imageUrl
       ? user.imageUrl
@@ -107,13 +119,13 @@ const PostCard = React.memo(function PostCard({
     >
       {/* Header: Avatar + Info */}
       <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
       >
         <Image
           source={{ uri: avatarUrl }}
           style={{
-            width: 35,
-            height: 35,
+            width: 40,
+            height: 40,
             borderRadius: 44,
             marginRight: 8,
             marginLeft: 8,
@@ -128,9 +140,7 @@ const PostCard = React.memo(function PostCard({
               color: getUserColor(post.user_id || "User"),
             }}
           >
-            {post.user_profiles?.nickname ||
-              post.user_profiles?.username ||
-              "User"}
+            {displayNickname}
           </Text>
           <Text style={{ fontSize: 11, color: "#00000080", marginTop: 1 }}>
             {timeAgo}
@@ -156,16 +166,52 @@ const PostCard = React.memo(function PostCard({
 
       {/* Image */}
       {post.image_url ? (
-        <Image
-          source={{ uri: post.image_url }}
-          style={{
-            width: "100%",
-            aspectRatio: aspectRatio,
-            borderRadius: 12,
-            marginBottom: 8,
-          }}
-          resizeMode="cover"
-        />
+        <>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setShowFullImage(true)}
+          >
+            <Image
+              source={{ uri: post.image_url }}
+              style={{
+                width: "100%",
+                aspectRatio: aspectRatio,
+                borderRadius: 12,
+                marginBottom: 8,
+              }}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+
+          <Modal
+            visible={showFullImage}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowFullImage(false)}
+          >
+            <ImageViewer
+              imageUrls={[{ url: post.image_url }]}
+              enableSwipeDown={true}
+              onSwipeDown={() => setShowFullImage(false)}
+              onCancel={() => setShowFullImage(false)}
+              renderIndicator={() => <View />} // Hides the '1/1' text
+              renderHeader={() => (
+                <TouchableOpacity
+                  style={{
+                    position: "absolute",
+                    top: 50,
+                    right: 20,
+                    zIndex: 9999,
+                    padding: 8,
+                  }}
+                  onPress={() => setShowFullImage(false)}
+                >
+                  <IconX size={32} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+            />
+          </Modal>
+        </>
       ) : null}
 
       {/* Reactions */}
@@ -178,7 +224,7 @@ const PostCard = React.memo(function PostCard({
           paddingVertical: 4,
           paddingHorizontal: 10,
         }}
-        style={{ marginTop: -5, marginBottom: 7 }}
+        style={{ marginTop: -5 }}
       >
         {uniqueReactions.slice(0, 3).map((emoji) => (
           <TouchableOpacity
@@ -239,7 +285,7 @@ const PostCard = React.memo(function PostCard({
             flexDirection: "row",
             flexWrap: "wrap",
             gap: 6,
-            paddingBottom: 8,
+            // paddingBottom: 8,
           }}
         >
           {["👍", "👎", "😂", "😡", "🔥"].map((emoji) => (
@@ -268,7 +314,9 @@ const PostCard = React.memo(function PostCard({
         </View>
       )}
 
-      <View style={{ height: 1, backgroundColor: "#E5E7EB50", marginTop: 8 }} />
+      <View
+        style={{ height: 1, backgroundColor: "#E5E7EB70", marginTop: 15 }}
+      />
     </View>
   );
 });
@@ -279,11 +327,21 @@ function FeedTab() {
   const router = useRouter();
   const { posts, loading, uploading, createPost, toggleReaction, refetch } =
     useCommunityPosts();
+  const { unreadCount } = useNotifications();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
   const [inputText, setInputText] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const [isPickingImage, setIsPickingImage] = useState(false);
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
@@ -303,12 +361,18 @@ function FeedTab() {
   }, []);
 
   useEffect(() => {
-    if (keyboardHeight === 0 && !inputText.trim() && !imageUri) {
+    if (
+      keyboardHeight === 0 &&
+      !inputText.trim() &&
+      !imageUri &&
+      !isPickingImage
+    ) {
       setIsComposing(false);
     }
-  }, [keyboardHeight, inputText, imageUri]);
+  }, [keyboardHeight, inputText, imageUri, isPickingImage]);
 
   const pickImage = async () => {
+    setIsPickingImage(true);
     try {
       const result = await ImageCropPicker.openPicker({
         mediaType: "photo",
@@ -323,6 +387,8 @@ function FeedTab() {
       }
     } catch (e) {
       console.log("Image picker error:", e);
+    } finally {
+      setIsPickingImage(false);
     }
   };
 
@@ -391,19 +457,21 @@ function FeedTab() {
           >
             <IconBell size={24} color="#1D1A27" />
             {/* Notification Badge */}
-            <View
-              style={{
-                position: "absolute",
-                top: 2,
-                right: 2,
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: "#FF3B30",
-                borderWidth: 1,
-                borderColor: "#FFF",
-              }}
-            />
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  right: 2,
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: "#FF3B30",
+                  borderWidth: 1,
+                  borderColor: "#FFF",
+                }}
+              />
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
@@ -418,6 +486,9 @@ function FeedTab() {
 
       <ScrollView
         ref={scrollRef as any}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         onContentSizeChange={() => {
           if (posts.length !== previousPostsLength.current) {
             scrollRef.current?.scrollToEnd({ animated: true });

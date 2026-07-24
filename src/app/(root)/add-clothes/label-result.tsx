@@ -122,16 +122,7 @@ export default function LabelResultScreen() {
           }}
         >
           <ActivityIndicator size="large" color="#4F46E5" />
-          <Text
-            style={{
-              marginTop: 16,
-              fontSize: 16,
-              fontWeight: "600",
-              color: "#1D1A27",
-            }}
-          >
-            Saving to Cloud...
-          </Text>
+
         </View>
       )}
       <StatusBar style="dark" />
@@ -216,7 +207,7 @@ export default function LabelResultScreen() {
                           tags: ["cloth label"],
                           saveType: "label",
                         });
-                        Alert.alert("Success", "Label saved to your database!");
+
                       } else {
                         Alert.alert(
                           "Error",

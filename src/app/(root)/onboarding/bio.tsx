@@ -2,19 +2,19 @@ import { useOnboardingState } from "@/features/onboarding/model/onboarding-store
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { Text, TextInput, View } from "react-native";
 
 const MAX_LENGTH = 50;
 
 export default function BioScreen() {
-  const posthog = usePostHog();
+
   const router = useRouter();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { bio, setBio } = useOnboardingState();
 
   const handleContinue = () => {
-    posthog?.capture("onboarding_step_completed", { step: "bio" });
+    analytics().logEvent("onboarding_step_completed", { step: "bio" });
 
     if (fromProfile === "true") {
       router.back();

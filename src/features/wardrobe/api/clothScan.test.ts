@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { saveClothToWardrobe } from './saveClothToWardrobe';
 import { SupabaseClient } from '@supabase/supabase-js';
 
@@ -6,12 +6,12 @@ describe('saveClothToWardrobe', () => {
   let mockSupabase: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     mockSupabase = {
-      from: vi.fn(() => ({
-        insert: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn()
+      from: jest.fn(() => ({
+        insert: jest.fn(() => ({
+          select: jest.fn(() => ({
+            single: jest.fn()
           }))
         }))
       }))
@@ -20,9 +20,9 @@ describe('saveClothToWardrobe', () => {
 
   it('should successfully save cloth item', async () => {
     // Setup mock return
-    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'item-123' }, error: null });
-    const mockSelect = vi.fn(() => ({ single: mockSingle }));
-    const mockInsert = vi.fn(() => ({ select: mockSelect }));
+    const mockSingle = jest.fn().mockResolvedValue({ data: { id: 'item-123' }, error: null });
+    const mockSelect = jest.fn(() => ({ single: mockSingle }));
+    const mockInsert = jest.fn(() => ({ select: mockSelect }));
     mockSupabase.from.mockReturnValue({ insert: mockInsert });
 
     const analysisResult = {

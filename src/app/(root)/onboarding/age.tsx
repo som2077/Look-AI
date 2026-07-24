@@ -1,7 +1,7 @@
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { router, useLocalSearchParams } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { Text, View } from "react-native";
 
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
@@ -10,7 +10,7 @@ import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButt
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
 
 export default function AgeScreen() {
-  const posthog = usePostHog();
+
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { user } = useUser();
   const { supabase } = useSupabase();
@@ -40,7 +40,7 @@ export default function AgeScreen() {
       <View className="px-5">
         <ContinueButton
           onPress={async () => {
-            posthog?.capture("onboarding_step_completed", { step: "age" });
+            analytics().logEvent("onboarding_step_completed", { step: "age" });
             if (fromProfile === "true") {
               if (user) await completeOnboarding(user.id, supabase);
               router.back();

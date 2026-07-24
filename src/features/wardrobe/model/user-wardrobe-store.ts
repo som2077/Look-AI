@@ -1,6 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  namespacedAsyncStorage,
+  registerStoreRehydration,
+  registerStoreReset,
+} from "@/shared/store/namespacedStorage";
 
 export type UserClothingItem = {
   id: string;
@@ -129,7 +134,12 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
     }),
     {
       name: "user-wardrobe-v2",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => namespacedAsyncStorage),
     },
   ),
+);
+
+registerStoreRehydration(() => useUserWardrobeStore.persist.rehydrate());
+registerStoreReset(() =>
+  useUserWardrobeStore.setState({ items: [], outfits: [], recentScans: [] })
 );

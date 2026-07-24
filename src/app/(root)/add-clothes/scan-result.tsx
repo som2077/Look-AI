@@ -6,6 +6,7 @@ import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-nati
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+import { useStreakStore } from "@/shared/store/useStreakStore";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -92,6 +93,7 @@ export default function ScanResultScreen() {
   const hasItem = useUserWardrobeStore((s) => s.hasItem);
   const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
   const addScan = useScanHistoryStore((s) => s.addScan);
+  const incrementStreakAction = useStreakStore((s) => s.incrementStreakAction);
 
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -261,6 +263,7 @@ export default function ScanResultScreen() {
       advanceToNext();
     } else {
       setSaved(true);
+      incrementStreakAction();
     }
   };
 

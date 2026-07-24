@@ -1,6 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  namespacedAsyncStorage,
+  registerStoreRehydration,
+  registerStoreReset,
+} from "@/shared/store/namespacedStorage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,7 +66,10 @@ export const useScanHistoryStore = create<ScanHistoryState>()(
     }),
     {
       name: "scan-history-v1",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => namespacedAsyncStorage),
     },
   ),
 );
+
+registerStoreRehydration(() => useScanHistoryStore.persist.rehydrate());
+registerStoreReset(() => useScanHistoryStore.getState().clearAll());

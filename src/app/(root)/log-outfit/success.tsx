@@ -13,7 +13,11 @@ interface Stat {
 
 export default function SuccessScreen() {
   const router = useRouter();
-  const { currentStreak } = useStreakStore();
+  const { currentStreak, incrementStreakAction } = useStreakStore();
+
+  React.useEffect(() => {
+    incrementStreakAction();
+  }, [incrementStreakAction]);
 
   const STATS: Stat[] = [
     { value: "9", label: "Blue kurta wears" },

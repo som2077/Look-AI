@@ -1,4 +1,5 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+import { usePendingBatchStore } from "@/features/wardrobe/model/usePendingBatchStore";
 import { IconAlertTriangle, IconBell, IconX } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import React from "react";
@@ -25,8 +26,10 @@ export const NotifyBanner = React.memo(function NotifyBanner() {
   const [isDismissed, setIsDismissed] = React.useState(false);
   const opacity = React.useRef(new Animated.Value(1)).current;
 
-  // Show banner only when no analysis and no completed outfits
-  if (isAnalyzing || lastOutfits.length > 0 || isDismissed) return null;
+  const pendingBatchItems = usePendingBatchStore((s) => s.items);
+
+  // Show banner only when no analysis and no completed outfits and no pending batch items
+  if (isAnalyzing || lastOutfits.length > 0 || isDismissed || pendingBatchItems.length > 0) return null;
 
   return (
     <Animated.View
@@ -108,9 +111,10 @@ export const ErrorBanner = React.memo(function ErrorBanner() {
 
 export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
   const { isAnalyzing, lastOutfits } = useOutfitAnalysisStore();
+  const pendingBatchItems = usePendingBatchStore((s) => s.items);
 
-  // Show banner only when no analysis and no completed outfits
-  if (isAnalyzing || lastOutfits.length > 0) return null;
+  // Show banner only when no analysis and no completed outfits and no pending batch items
+  if (isAnalyzing || lastOutfits.length > 0 || pendingBatchItems.length > 0) return null;
 
   return (
     <View className="mx-6 mt-3  items-center justify-center bg-[#F8F7FC80] border-[0.5px] border-[#E9EBF8] rounded-[24px] px-4 py-6">

@@ -2,13 +2,13 @@ import { Href, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { usePostHog } from 'posthog-react-native';
+import analytics from "@react-native-firebase/analytics";
 
 const getStartedLogo = require("@/assets/images/getStartedLogo.png");
 
 export default function GetStartedScreen() {
   const router = useRouter();
-  const posthog = usePostHog();
+
 
   return (
     <LinearGradient
@@ -45,7 +45,7 @@ export default function GetStartedScreen() {
           <View className="w-full">
             <TouchableOpacity
               onPress={() => {
-                posthog?.capture('onboarding_started');
+                analytics().logEvent('onboarding_started');
                 router.push("/(auth)/sign-in" as Href);
               }}
               activeOpacity={0.9}

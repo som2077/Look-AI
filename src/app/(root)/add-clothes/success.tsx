@@ -7,7 +7,7 @@ import {
 import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import React, { useCallback, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,10 +21,10 @@ type SuccessParams = {
 export default function AddClothesSuccessScreen() {
   const router = useRouter();
   const params = useLocalSearchParams() as SuccessParams;
-  const posthog = usePostHog();
+
 
   useEffect(() => {
-    posthog?.capture("cloth_added", { category: params.category || "Item" });
+    analytics().logEvent("cloth_added", { category: params.category || "Item" });
   }, []);
 
   const goHome = useCallback(() => {

@@ -607,6 +607,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (!user) return;
     async function loadSettings() {
+      if (!user) return;
       const { data, error } = await supabase
         .from("user_profiles")
         .select("notifications_enabled")
@@ -641,6 +642,7 @@ export default function ProfileScreen() {
       const updates: any = { notifications_enabled: val };
       if (fcm_token) updates.fcm_token = fcm_token;
 
+      if (!user) return;
       const { error } = await supabase
         .from("user_profiles")
         .update(updates)

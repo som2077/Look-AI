@@ -2,6 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  namespacedSecureStorage,
+  registerStoreRehydration,
+  registerStoreReset,
+} from "@/shared/store/namespacedStorage";
 
 export type Gender = "Male" | "Female" | "";
 
@@ -55,12 +60,7 @@ const createInitialFormState = (): OnboardingFormData => ({
   whereDidYouHear: [],
 });
 
-const secureStorage = {
-  getItem: (name: string) => SecureStore.getItemAsync(name),
-  setItem: (name: string, value: string) =>
-    SecureStore.setItemAsync(name, value),
-  removeItem: (name: string) => SecureStore.deleteItemAsync(name),
-};
+// We no longer need the local secureStorage wrapper since we use namespacedSecureStorage
 
 export const useOnboardingState = create<OnboardingState>()(
   persist(
@@ -158,11 +158,14 @@ export const useOnboardingState = create<OnboardingState>()(
     }),
     {
       name: "onboarding-state",
-      storage: createJSONStorage(() => secureStorage),
+      storage: createJSONStorage(() => namespacedSecureStorage),
       partialize: ({ isSaving, error, _completionVersion, ...state }) => state,
     },
   ),
 );
+
+registerStoreRehydration(() => useOnboardingState.persist.rehydrate());
+registerStoreReset(() => useOnboardingState.getState().resetState());
 
 export const OnboardingProvider = ({
   children,

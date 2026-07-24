@@ -4,14 +4,14 @@ import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/Onboarding
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { useState } from "react";
 import { Text, TextInput, View } from "react-native";
 
 const MAX_LENGTH = 15;
 
 export default function NicknameScreen() {
-  const posthog = usePostHog();
+
   const router = useRouter();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { user } = useUser();
@@ -22,7 +22,7 @@ export default function NicknameScreen() {
   const [isChecking, setIsChecking] = useState(false);
 
   const handleContinue = async () => {
-    posthog?.capture("onboarding_step_completed", { step: "nickname" });
+    analytics().logEvent("onboarding_step_completed", { step: "nickname" });
     if (!nickname.trim() || !username.trim()) return;
 
     setUsernameError("");

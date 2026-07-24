@@ -4,6 +4,7 @@ import {
 } from "@/features/onboarding/model/onboarding-store";
 import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { FONT_ASSETS } from "@/shared/config/constants/fonts";
+import { syncStoresWithUser } from "@/shared/store/namespacedStorage";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
   AppErrorBoundary,
@@ -18,7 +19,7 @@ import * as NavigationBar from "expo-navigation-bar";
 import { Stack, useRouter, useSegments, usePathname } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { PostHogProvider, usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { memo, useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -41,7 +42,7 @@ const RootNavigator = memo(function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
   const pathname = usePathname();
-  const posthog = usePostHog();
+
   const segmentKey = segments.join("/");
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(
     null,
@@ -56,12 +57,15 @@ const RootNavigator = memo(function RootNavigator() {
   // Initialize RevenueCat
   useRevenueCat();
 
-  // PostHog screen tracking
+  // Firebase screen tracking
   useEffect(() => {
     if (pathname) {
-      posthog?.screen(pathname);
+      analytics().logScreenView({
+        screen_name: pathname,
+        screen_class: pathname,
+      });
     }
-  }, [pathname, posthog]);
+  }, [pathname]);
 
   const loadOnboardingStatus = useCallback(
     async (uid: string, client: SupabaseClient) => {
@@ -102,23 +106,25 @@ const RootNavigator = memo(function RootNavigator() {
     [],
   );
 
-  // PostHog User Identification
+  // Firebase User Identification
   useEffect(() => {
     if (userId) {
-      posthog?.identify(userId);
+      analytics().setUserId(userId);
     } else {
-      posthog?.reset();
+      analytics().setUserId(null);
     }
-  }, [userId, posthog]);
+  }, [userId]);
 
   useEffect(() => {
     if (!isLoaded) return;
 
     if (!isSignedIn || !userId) {
+      syncStoresWithUser(null);
       resetOnboardingState();
       return;
     }
 
+    syncStoresWithUser(userId);
     ensureOnboardingSession(userId);
   }, [
     ensureOnboardingSession,
@@ -321,23 +327,17 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <PostHogProvider
-        apiKey="phc_o2qT8hofFXzTgfyCLkDXw7CLoCeiq2g3zprd5jF3MWok"
-        //      phc_o2qT8hofFXzTgfyCLkDXw7CLoCeiq2g3zprd5jF3MWok
-        options={{ host: "https://us.i.posthog.com" }}
-      >
-        <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-          <SafeAreaProvider>
-            <StatusBar style="dark" />
-            <OnboardingProvider>
-              <AppErrorBoundary>
-                <RootNavigator />
-                <ErrorStateView onRetry={checkConnectivity} />
-              </AppErrorBoundary>
-            </OnboardingProvider>
-          </SafeAreaProvider>
-        </ClerkProvider>
-      </PostHogProvider>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <SafeAreaProvider>
+          <StatusBar style="dark" />
+          <OnboardingProvider>
+            <AppErrorBoundary>
+              <RootNavigator />
+              <ErrorStateView onRetry={checkConnectivity} />
+            </AppErrorBoundary>
+          </OnboardingProvider>
+        </SafeAreaProvider>
+      </ClerkProvider>
     </GestureHandlerRootView>
   );
 }

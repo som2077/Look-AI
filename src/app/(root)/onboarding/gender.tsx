@@ -7,7 +7,7 @@ import { useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { Mars, Venus } from "lucide-react-native";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -29,13 +29,13 @@ const GENDER_OPTIONS = [
 ] as const;
 
 export default function GenderScreen() {
-  const posthog = usePostHog();
+
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { user } = useUser();
   const { supabase } = useSupabase();
   const { gender, setGender, completeOnboarding } = useOnboardingState();
   const handleContinue = useCallback(async () => {
-    posthog?.capture("onboarding_step_completed", { step: "gender" });
+    analytics().logEvent("onboarding_step_completed", { step: "gender" });
     if (!gender) return;
 
     if (fromProfile === "true") {

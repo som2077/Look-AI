@@ -4,23 +4,23 @@ import { AppState } from "react-native";
 import { useStreakStore } from "@/shared/store/useStreakStore";
 
 export default function RootLayout() {
-  const updateStreak = useStreakStore((state) => state.updateStreak);
+  const checkStreakValidity = useStreakStore((state) => state.checkStreakValidity);
 
   useEffect(() => {
     // Initial check on mount
-    updateStreak();
+    checkStreakValidity();
 
     // Check when returning to foreground
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (nextAppState === "active") {
-        updateStreak();
+        checkStreakValidity();
       }
     });
 
     return () => {
       subscription.remove();
     };
-  }, [updateStreak]);
+  }, [checkStreakValidity]);
 
   return (
     <Stack

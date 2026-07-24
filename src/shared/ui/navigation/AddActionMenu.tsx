@@ -5,6 +5,7 @@ import {
   type IconProps,
 } from "@tabler/icons-react-native";
 import { BlurView } from "expo-blur";
+import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import React, { useCallback, useEffect, useState } from "react";
 import { Image, Modal, Pressable, Text, View } from "react-native";
 import Animated, {
@@ -59,6 +60,7 @@ export function AddActionMenu({
   onNavigate,
 }: AddActionMenuProps) {
   const insets = useSafeAreaInsets();
+  const { isPro } = useRevenueCat();
   const fadeAnim = useSharedValue(0);
   const scaleAnim = useSharedValue(0.95);
   const translateY = useSharedValue(30);
@@ -120,6 +122,21 @@ export function AddActionMenu({
           <View className="flex-row flex-wrap justify-between mb-4">
             {ACTION_CARDS.map((card) => {
               const IconComponent = card.icon;
+              
+              let chipText = card.chipText;
+              let chipBgColor = "#F1EFFF";
+              let chipTextColor = "#594EE6";
+
+              if (card.id === "ai-outfit") {
+                if (isPro) {
+                  chipText = "Unlimited";
+                } else {
+                  chipText = "PRO";
+                  chipBgColor = "#FFF3E0"; // Light orange/gold for PRO
+                  chipTextColor = "#F57C00";
+                }
+              }
+
               return (
                 <Pressable
                   key={card.id}
@@ -127,10 +144,16 @@ export function AddActionMenu({
                   className="w-[48%] h-[240px] rounded-[35px] bg-[#ffffff] mb-4 overflow-hidden"
                 >
                   <View className="flex-1 pt-3 pb-6 px-3 items-center">
-                    {!!card.chipText && (
-                      <View className="bg-[#F1EFFF] px-3 py-[6px] rounded-full mb-3">
-                        <Text className="text-[#594EE6] text-[11px] font-bold tracking-wide">
-                          {card.chipText}
+                    {!!chipText && (
+                      <View 
+                        className="px-3 py-[6px] rounded-full mb-3"
+                        style={{ backgroundColor: chipBgColor }}
+                      >
+                        <Text 
+                          className="text-[11px] font-bold tracking-wide"
+                          style={{ color: chipTextColor }}
+                        >
+                          {chipText}
                         </Text>
                       </View>
                     )}

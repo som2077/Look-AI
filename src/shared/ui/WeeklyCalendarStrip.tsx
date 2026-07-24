@@ -64,7 +64,7 @@ const DayCell = React.memo(function DayCell({
           fontFamily: isActive
             ? "TikTokSans16pt-Bold"
             : "TikTokSans16pt-Medium",
-          color: isActive ? "#1D1A27" : isFuture ? "#A0A0AB" : "#555555",
+          color: isActive ? "#1D1A27" : isFuture ? "#00000090" : "#555555",
         }}
       >
         {String(date.getDate())}
@@ -88,7 +88,7 @@ const DayCell = React.memo(function DayCell({
             fontFamily: isActive
               ? "TikTokSans16pt-Bold"
               : "TikTokSans16pt-Medium",
-            color: isActive ? "#1D1A27" : isFuture ? "#A0A0AB" : "#555555",
+            color: isActive ? "#1D1A27" : isFuture ? "#00000090" : "#555555",
           }}
         >
           {dayLabel}
@@ -107,6 +107,7 @@ export function WeeklyCalendarStrip({
   );
 
   const currentStreak = useStreakStore((state) => state.currentStreak);
+  const lastActiveDate = useStreakStore((state) => state.lastActiveDate);
 
   const weekDates = useMemo(() => {
     const startOfWeek = getStartOfWeek(selectedDate);
@@ -139,15 +140,34 @@ export function WeeklyCalendarStrip({
           dateAtMidnight.setHours(0, 0, 0, 0);
 
           const diffTime = dateAtMidnight.getTime() - today.getTime();
-          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+          const diffDaysFromToday = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
           let streakStatus: "streak" | "missed" | "future";
-          if (diffDays > 0) {
+          if (diffDaysFromToday > 0) {
             streakStatus = "future";
-          } else if (-diffDays < currentStreak) {
-            streakStatus = "streak";
           } else {
-            streakStatus = "missed";
+            // Determine if the date is within the actual valid streak
+            // The streak goes back `currentStreak` days from `lastActiveDate`
+            if (!lastActiveDate) {
+              streakStatus = "missed";
+            } else {
+              const lastActive = new Date(lastActiveDate);
+              lastActive.setHours(0, 0, 0, 0);
+              const diffFromLastActive = Math.round(
+                (dateAtMidnight.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)
+              );
+
+              if (diffFromLastActive > 0) {
+                // E.g., today, but they haven't done the action yet (lastActiveDate is yesterday)
+                streakStatus = "missed";
+              } else if (-diffFromLastActive < currentStreak) {
+                // Within the streak window
+                streakStatus = "streak";
+              } else {
+                // Before the streak started
+                streakStatus = "missed";
+              }
+            }
           }
 
           return (

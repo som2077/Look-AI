@@ -8,7 +8,7 @@ import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { useMemo, useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 
@@ -67,7 +67,7 @@ const femaleBodyTypes: BodyTypeOption[] = [
 ];
 
 export default function BodyTypesScreen() {
-  const posthog = usePostHog();
+
   const { user } = useUser();
   const { supabase } = useSupabase();
   const { gender, bodyType, setBodyType, completeOnboarding } =
@@ -83,7 +83,7 @@ export default function BodyTypesScreen() {
   }, [gender]);
 
   const handleContinue = async () => {
-    posthog?.capture("onboarding_step_completed", { step: "body-type" });
+    analytics().logEvent("onboarding_step_completed", { step: "body-type" });
     if (!selectedBodyType) return;
     setBodyType(selectedBodyType);
     if (fromProfile === "true") {

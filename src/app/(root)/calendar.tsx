@@ -426,7 +426,7 @@ export default function CalendarScreen() {
 
             {/* Plus Add Button */}
             <TouchableOpacity
-              onPress={() => router.push("/(root)/log-outfit/camera" as never)}
+              onPress={() => router.push("/(root)/(ai-features)/planner-chat" as never)}
               activeOpacity={0.8}
               style={{
                 width: 46,
@@ -1007,7 +1007,10 @@ export default function CalendarScreen() {
                       <TouchableOpacity
                         activeOpacity={0.8}
                         onPress={() =>
-                          router.push("/(root)/log-outfit/camera" as never)
+                          router.push({
+                            pathname: "/(root)/(ai-features)/planner-chat",
+                            params: { date: selected.toISOString() },
+                          } as any)
                         }
                         style={{
                           backgroundColor: "#4C36F5",

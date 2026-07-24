@@ -2,6 +2,7 @@ import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-st
 import { IconCheck, IconChevronLeft } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useLogWears } from "@/features/wardrobe/api/useLogWears";
 import {
   Image,
   KeyboardAvoidingView,
@@ -20,6 +21,7 @@ export default function CreateOutfitScreen() {
 
   const [name, setName] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const { logWears } = useLogWears();
 
   const toggleSelection = (id: string) => {
     const next = new Set(selectedIds);
@@ -34,10 +36,15 @@ export default function CreateOutfitScreen() {
   const handleSave = () => {
     if (selectedIds.size === 0) return;
 
+    const idsArray = Array.from(selectedIds);
     addOutfit({
       name: name.trim() || "My Outfit",
-      itemIds: Array.from(selectedIds),
+      itemIds: idsArray,
     });
+    
+    // Log to Supabase wear_logs
+    logWears(idsArray);
+    
     router.back();
   };
 

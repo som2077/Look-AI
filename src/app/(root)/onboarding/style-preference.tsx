@@ -31,7 +31,7 @@ import {
   Tent,
   Umbrella,
 } from "lucide-react-native";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import React, { useCallback } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
@@ -136,7 +136,7 @@ const styles = [
 ];
 
 export default function StylePreferenceScreen() {
-  const posthog = usePostHog();
+
   const router = useRouter();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { user } = useUser();
@@ -145,7 +145,7 @@ export default function StylePreferenceScreen() {
     useOnboardingState();
 
   const handleContinue = useCallback(async () => {
-    posthog?.capture("onboarding_step_completed", { step: "style-preference" });
+    analytics().logEvent("onboarding_step_completed", { step: "style-preference" });
     if (stylePreferences.length !== 5) return;
 
     if (fromProfile === "true") {

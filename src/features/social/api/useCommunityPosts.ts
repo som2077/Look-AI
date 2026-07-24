@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { create } from "zustand";
 import { uploadToCloudinary } from "@/shared/cloudinary/client";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 
 export interface CommunityPost {
   id: string;
@@ -227,6 +228,7 @@ export function useCommunityPosts() {
 
   const createPost = async (imageUri: string, caption: string) => {
     setUploading(true);
+    const { nickname, username } = useOnboardingState.getState();
     const newPost: CommunityPost = {
       id: Math.random().toString(),
       user_id: userId || "mock_user",
@@ -235,8 +237,8 @@ export function useCommunityPosts() {
       likes_count: 0,
       created_at: new Date().toISOString(),
       user_profiles: {
-        nickname: "You",
-        username: "you",
+        nickname: nickname || "You",
+        username: username || "you",
         user_id: userId || undefined,
       },
     };

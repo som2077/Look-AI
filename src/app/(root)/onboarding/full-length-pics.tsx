@@ -6,7 +6,7 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Info, Upload, X } from "lucide-react-native";
-import { usePostHog } from "posthog-react-native";
+import analytics from "@react-native-firebase/analytics";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -20,7 +20,7 @@ import {
 const BUCKET = "full-length-pics";
 
 export default function FullLengthPicsScreen() {
-  const posthog = usePostHog();
+
   const router = useRouter();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { getToken, userId } = useAuth();
@@ -103,7 +103,7 @@ export default function FullLengthPicsScreen() {
         }
       }
 
-      posthog?.capture("onboarding_step_completed", {
+      analytics().logEvent("onboarding_step_completed", {
         step: "full-length-pics",
       });
       if (fromProfile === "true") {
@@ -123,7 +123,7 @@ export default function FullLengthPicsScreen() {
 
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    posthog?.capture("onboarding_step_completed", { step: "full-length-pics" });
+    analytics().logEvent("onboarding_step_completed", { step: "full-length-pics" });
     if (fromProfile === "true") {
       router.back();
     } else {

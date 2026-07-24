@@ -1,6 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  namespacedAsyncStorage,
+  registerStoreRehydration,
+  registerStoreReset,
+} from "@/shared/store/namespacedStorage";
 
 export type Outfit = {
   id: string;
@@ -39,7 +44,10 @@ export const useUserOutfitsStore = create<UserOutfitsState>()(
     }),
     {
       name: "look-ai-user-outfits",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => namespacedAsyncStorage),
     },
   ),
 );
+
+registerStoreRehydration(() => useUserOutfitsStore.persist.rehydrate());
+registerStoreReset(() => useUserOutfitsStore.setState({ outfits: [] }));
