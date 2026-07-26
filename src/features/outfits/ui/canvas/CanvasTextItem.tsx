@@ -25,6 +25,13 @@ export function CanvasTextItem({
   onDelete: (id: string) => void;
   onTextChange: (id: string, text: string) => void;
 }) {
+  const getFontFamily = (weight?: string, style?: string) => {
+    if (weight === "700") {
+      return style === "italic" ? "TikTokSans16pt-BoldItalic" : "TikTokSans16pt-Bold";
+    }
+    return style === "italic" ? "TikTokSans16pt-RegularItalic" : "TikTokSans16pt-Regular";
+  };
+
   const pan = useRef(new Animated.ValueXY()).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -63,6 +70,8 @@ export function CanvasTextItem({
   const panResponderResize = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
         scaleAnim.extractOffset();
         rotateAnim.extractOffset();
@@ -134,7 +143,7 @@ export function CanvasTextItem({
           style={{
             fontSize: 24,
             color: item.color,
-            fontWeight: item.fontWeight,
+            fontFamily: getFontFamily(item.fontWeight, item.fontStyle),
             textAlign: item.align,
             padding: 8,
             minWidth: 40,

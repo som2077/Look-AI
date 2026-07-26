@@ -1,22 +1,21 @@
+import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
+import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
   IconArrowLeft,
+  IconCheck,
   IconDownload,
   IconInfoCircle,
   IconPencil,
   IconShare,
   IconSparklesFilled,
-  IconCheck,
 } from "@tabler/icons-react-native";
-import { Asset } from "expo-asset";
+import { decode } from "base64-arraybuffer";
 import { ResizeMode, Video } from "expo-av";
+import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
-import { useStreakStore } from "@/shared/store/useStreakStore";
-import { useSupabase } from "@/shared/supabase/use-supabase";
-import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
-import { decode } from "base64-arraybuffer";
-import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
@@ -24,11 +23,11 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   Text,
   View,
-  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -60,10 +59,13 @@ export default function OutfitScreen() {
         );
         return;
       }
-      
-      const filename = resultImageUrl.split('/').pop() || 'outfit.jpg';
+
+      const filename = resultImageUrl.split("/").pop() || "outfit.jpg";
       const fileUri = `${FileSystem.documentDirectory}${filename}`;
-      const downloadedFile = await FileSystem.downloadAsync(resultImageUrl, fileUri);
+      const downloadedFile = await FileSystem.downloadAsync(
+        resultImageUrl,
+        fileUri,
+      );
 
       if (downloadedFile.uri) {
         await MediaLibrary.saveToLibraryAsync(downloadedFile.uri);
@@ -86,10 +88,13 @@ export default function OutfitScreen() {
         Alert.alert("Error", "Sharing is not available on this device");
         return;
       }
-      
-      const filename = resultImageUrl.split('/').pop() || 'outfit.jpg';
+
+      const filename = resultImageUrl.split("/").pop() || "outfit.jpg";
       const fileUri = `${FileSystem.documentDirectory}${filename}`;
-      const downloadedFile = await FileSystem.downloadAsync(resultImageUrl, fileUri);
+      const downloadedFile = await FileSystem.downloadAsync(
+        resultImageUrl,
+        fileUri,
+      );
 
       if (downloadedFile.uri) {
         await Sharing.shareAsync(downloadedFile.uri);
@@ -110,10 +115,14 @@ export default function OutfitScreen() {
   const [personImage, setPersonImage] = useState<string | null>(null);
   const [outfitImage, setOutfitImage] = useState<string | null>(null);
   const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
-  
+
   // Toggles (assume user will wire UI later as they mentioned)
-  const [garmentPhotoType, setGarmentPhotoType] = useState<"model" | "flat-lay">("model");
-  const [garmentCategory, setGarmentCategory] = useState<"tops" | "bottoms" | "footwear">("tops");
+  const [garmentPhotoType, setGarmentPhotoType] = useState<
+    "model" | "flat-lay"
+  >("model");
+  const [garmentCategory, setGarmentCategory] = useState<
+    "tops" | "bottoms" | "footwear"
+  >("tops");
 
   const pickImage = async (setImage: (uri: string) => void) => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -146,7 +155,10 @@ export default function OutfitScreen() {
     }
 
     if (!personImage || !outfitImage) {
-      Alert.alert("Missing Images", "Please select both a person image and an outfit image.");
+      Alert.alert(
+        "Missing Images",
+        "Please select both a person image and an outfit image.",
+      );
       return;
     }
 
@@ -155,19 +167,19 @@ export default function OutfitScreen() {
     try {
       // 1. Helper function to upload image to Supabase Storage
       const uploadImage = async (uri: string, folder: string) => {
-        const fileName = `${Date.now()}_${uri.split('/').pop()}`;
+        const fileName = `${Date.now()}_${uri.split("/").pop()}`;
         const filePath = `${folder}/${fileName}`;
 
         // Read the local file as base64 to avoid React Native fetch Blob issues
-        const base64 = await FileSystem.readAsStringAsync(uri, { 
-          encoding: 'base64' 
+        const base64 = await FileSystem.readAsStringAsync(uri, {
+          encoding: "base64",
         });
         const arrayBuffer = decode(base64);
 
         const { error } = await supabase.storage
           .from("try-on-uploads")
           .upload(filePath, arrayBuffer, {
-            contentType: 'image/jpeg',
+            contentType: "image/jpeg",
           });
 
         if (error) throw error;
@@ -185,14 +197,17 @@ export default function OutfitScreen() {
       const garmentImageUrl = await uploadImage(outfitImage, "garment");
 
       // 3. Call Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke("virtual-try-on", {
-        body: {
-          person_image_url: personImageUrl,
-          garment_image_url: garmentImageUrl,
-          garment_photo_type: garmentPhotoType,
-          garment_category: garmentCategory,
+      const { data, error } = await supabase.functions.invoke(
+        "virtual-try-on",
+        {
+          body: {
+            person_image_url: personImageUrl,
+            garment_image_url: garmentImageUrl,
+            garment_photo_type: garmentPhotoType,
+            garment_category: garmentCategory,
+          },
         },
-      });
+      );
 
       if (error) {
         throw new Error(error.message || "Failed to invoke edge function");
@@ -209,11 +224,22 @@ export default function OutfitScreen() {
       }
     } catch (e: any) {
       console.error("Virtual Try-On Error:", e);
-      Alert.alert("Generation Failed", e.message || "An unexpected error occurred.");
+      Alert.alert(
+        "Generation Failed",
+        e.message || "An unexpected error occurred.",
+      );
     } finally {
       setLoading(false);
     }
-  }, [personImage, outfitImage, garmentPhotoType, garmentCategory, supabase, isPro, router]);
+  }, [
+    personImage,
+    outfitImage,
+    garmentPhotoType,
+    garmentCategory,
+    supabase,
+    isPro,
+    router,
+  ]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -450,7 +476,7 @@ export default function OutfitScreen() {
                 </View>
               </Pressable>
 
-              {/* Final Result Placeholder */} 
+              {/* Final Result Placeholder */}
               <View
                 style={{
                   marginTop: 10,
@@ -495,7 +521,8 @@ export default function OutfitScreen() {
                         lineHeight: 22,
                       }}
                     >
-                      Your merged try-on image will appear here after generation.
+                      Your merged try-on image will appear here after
+                      generation.
                     </Text>
                   </>
                 )}
@@ -564,7 +591,7 @@ export default function OutfitScreen() {
             </View>
           </ScrollView>
         )}
-        
+
         {/* Success Modal */}
         <Modal
           transparent={true}
@@ -631,7 +658,7 @@ export default function OutfitScreen() {
               >
                 Image successfully saved to your gallery.
               </Text>
-              
+
               <Pressable
                 onPress={() => setShowSuccessModal(false)}
                 style={{
@@ -655,7 +682,6 @@ export default function OutfitScreen() {
             </View>
           </View>
         </Modal>
-
       </SafeAreaView>
     </View>
   );

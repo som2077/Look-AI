@@ -86,7 +86,7 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
       outfits: [],
 
       addItem: (item) => {
-        const id = `user-${Date.now()}`;
+        const id = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         set({
           items: [
             ...get().items,

@@ -1,14 +1,31 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+import { useSavedStore } from "@/features/wardrobe/model/saved-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
-import { PremiumGradientBackground } from "@/shared/ui/PremiumGradientBackground";
+// import { PremiumGradientBackground } from "@/shared/ui/PremiumGradientBackground";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import {
   IconAdjustmentsHorizontal,
+  IconBeach,
   IconBookmark,
+  IconBriefcase,
+  IconBuilding,
   IconChevronDown,
+  IconClock,
+  IconDiamond,
   IconHanger,
+  IconLeaf,
+  IconMoon,
   IconPlus,
+  IconRun,
+  IconShirt,
+  IconShoe,
+  IconSnowflake,
+  IconStarFilled,
+  IconSun,
+  IconTrendingDown,
+  IconTrendingUp,
+  IconUmbrella,
   IconX,
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
@@ -20,6 +37,7 @@ import {
   Animated,
   Dimensions,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   Text,
@@ -30,6 +48,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // Types
 type CategoryId =
   | "all"
+  | "saved_fit_check"
+  | "saved_virtual_try_on"
+  | "saved_cloth_label"
+  | "saved_ai_outfit"
   | "top"
   | "bottoms"
   | "footwear"
@@ -87,6 +109,7 @@ interface ClothingItem {
   occasions: string[];
   rating: number;
   brand?: string;
+  createdAt: string;
 }
 
 // Category tabs (plain text strip below toolbar)
@@ -108,6 +131,10 @@ const CATEGORY_TABS: { label: string; value: CategoryId | "all" }[] = [
 // Filter chips for bottom sheet
 const FILTER_CHIPS: { label: string; value: CategoryId | "all" }[] = [
   { label: "All clothes", value: "all" },
+  { label: "Fit check", value: "saved_fit_check" },
+  { label: "Virtual try on", value: "saved_virtual_try_on" },
+  { label: "Cloth label", value: "saved_cloth_label" },
+  { label: "AI outfit", value: "saved_ai_outfit" },
   { label: "Tops", value: "top" },
   { label: "Bottoms", value: "bottoms" },
   { label: "Dresses", value: "dress" },
@@ -122,6 +149,15 @@ const FILTER_CHIPS: { label: string; value: CategoryId | "all" }[] = [
   { label: "Formal", value: "formal" },
   { label: "Casual", value: "casual" },
   { label: "Sportswear", value: "sportswear" },
+];
+
+// Tabs for the top horizontal scroll strip (only Saved items + All clothes)
+const HORIZONTAL_TABS: { label: string; value: CategoryId | "all" }[] = [
+  { label: "All clothes", value: "all" },
+  { label: "Fit check", value: "saved_fit_check" },
+  { label: "Virtual try on", value: "saved_virtual_try_on" },
+  { label: "Cloth label", value: "saved_cloth_label" },
+  { label: "AI outfit", value: "saved_ai_outfit" },
 ];
 
 const OCCASIONS: string[] = [
@@ -144,17 +180,9 @@ const OCCASIONS: string[] = [
   "Lounge",
   "Sleepwear",
   "Interview",
-  "All Occasion",
 ];
 
-const SEASONS: string[] = [
-  "Spring",
-  "Summer",
-  "Autumn",
-  "Winter",
-  "Monsoon",
-  "All Season",
-];
+const SEASONS: string[] = ["Spring", "Summer", "Autumn", "Winter", "Monsoon"];
 
 const CATEGORY_MAPPING: Record<string, string[]> = {
   top: ["T-Shirt", "Polo Shirt", "Shirt", "Blouse", "Crop Top", "Tank Top"],
@@ -192,7 +220,6 @@ const CATEGORY_MAPPING: Record<string, string[]> = {
 
 const SORT_OPTIONS: { label: string; value: SortId }[] = [
   { label: "Recently added", value: "recently_added" },
-  { label: "Name A–Z", value: "name_az" },
   { label: "Most worn", value: "most_worn" },
   { label: "Least worn", value: "least_worn" },
 ];
@@ -210,21 +237,23 @@ const BentoCard = React.memo(function BentoCard({
   item,
   width,
   height,
+  onPress,
 }: {
   item: ClothingItem;
   width: number;
   height: number;
+  onPress?: () => void;
 }) {
   const router = useRouter();
   return (
     <Pressable
-      onPress={() => router.push(`/(root)/cloth-details/${item.id}` as never)}
+      onPress={() => onPress ? onPress() : router.push(`/(root)/cloth-details/${item.id}` as never)}
       style={{
         width,
         height,
         borderRightWidth: 0.5,
         borderBottomWidth: 0.5,
-        borderColor: "#F0F0F0",
+        borderColor: "#00000010",
         backgroundColor: "transparent",
         padding: 8,
       }}
@@ -332,13 +361,46 @@ function BottomSheet({
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
   React.useEffect(() => {
-    Animated.spring(slideAnim, {
+    Animated.timing(slideAnim, {
       toValue: visible ? 0 : SCREEN_HEIGHT,
+      duration: 250,
       useNativeDriver: true,
-      damping: 20,
-      stiffness: 200,
     }).start();
-  }, [visible]);
+  }, [visible, slideAnim]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return (
+          gestureState.dy > 0 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          Animated.timing(slideAnim, {
+            toValue: SCREEN_HEIGHT,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            onClose();
+          });
+        } else {
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   return (
     <Modal
@@ -364,49 +426,125 @@ function BottomSheet({
           transform: [{ translateY: slideAnim }],
         }}
       >
-        <View
-          style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}
-        >
+        <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
           <View
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: "#E2E2EA",
-            }}
-          />
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingVertical: 12,
-          }}
-        >
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
-            {title}
-          </Text>
-          <Pressable
-            onPress={onClose}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: "#F4F4F6",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}
           >
-            <IconX size={16} color="#6B7280" strokeWidth={2} />
-          </Pressable>
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: "#E2E2EA",
+              }}
+            />
+          </View>
         </View>
         {children}
       </Animated.View>
     </Modal>
   );
 }
+
+const getCategoryIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all clothes":
+      return <IconHanger size={size} color={color} />;
+    case "tops":
+    case "jackets":
+    case "hoodies":
+    case "outerwear":
+      return <IconShirt size={size} color={color} />;
+    case "bottoms":
+      return <IconHanger size={size} color={color} />;
+    case "shoes":
+      return <IconShoe size={size} color={color} />;
+    case "bags":
+    case "accessories":
+      return <IconBriefcase size={size} color={color} />;
+    case "dresses":
+    case "ethnic":
+      return <IconDiamond size={size} color={color} />;
+    case "activewear":
+    case "sportswear":
+      return <IconRun size={size} color={color} />;
+    case "formal":
+      return <IconBuilding size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+const getOccasionIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all occasions":
+      return <IconHanger size={size} color={color} />;
+    case "gym":
+    case "sports":
+    case "outdoor":
+      return <IconRun size={size} color={color} />;
+    case "beach":
+    case "travel":
+      return <IconBeach size={size} color={color} />;
+    case "sleepwear":
+    case "lounge":
+      return <IconMoon size={size} color={color} />;
+    case "office":
+    case "interview":
+    case "business casual":
+      return <IconBuilding size={size} color={color} />;
+    case "party":
+    case "wedding":
+    case "date night":
+    case "festive":
+      return <IconDiamond size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+const getSeasonIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all seasons":
+      return <IconLeaf size={size} color={color} />;
+    case "summer":
+      return <IconSun size={size} color={color} />;
+    case "winter":
+      return <IconSnowflake size={size} color={color} />;
+    case "spring":
+    case "autumn":
+      return <IconLeaf size={size} color={color} />;
+    case "monsoon":
+      return <IconUmbrella size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+const getRatingIcon = (label: string, color: string) => {
+  const size = 16;
+  if (label.includes("Stars") || label === "Any Rating") {
+    return <IconStarFilled size={size} color={color} />;
+  }
+  return null;
+};
+
+const getSortIcon = (value: string, color: string) => {
+  const size = 18;
+  switch (value) {
+    case "recently_added":
+      return <IconClock size={size} color={color} />;
+    case "most_worn":
+      return <IconTrendingUp size={size} color={color} />;
+    case "least_worn":
+      return <IconTrendingDown size={size} color={color} />;
+    default:
+      return null;
+  }
+};
 
 // Main Screen
 export default function WardrobeScreen() {
@@ -429,9 +567,11 @@ export default function WardrobeScreen() {
     rating: 0,
   });
   const [activeSort, setActiveSort] = useState<SortId>("recently_added");
+  const { outfits } = useSavedStore();
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [tempSort, setTempSort] = useState<SortId>("recently_added");
+  const [selectedSavedImage, setSelectedSavedImage] = useState<string | null>(null);
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT],
@@ -446,24 +586,59 @@ export default function WardrobeScreen() {
 
   const displayItems = useMemo(
     () =>
-      userItems.map((item): ClothingItem => ({
-        id: item.id,
-        name: item.customName || item.subCategory || item.category,
-        category: item.category as CategoryId,
-        color: item.primaryColor ?? "—",
-        bgColor: "#F8F7FC",
-        occasion: item.occasion?.[0] ?? "Casual",
-        wears: item.wearCount ?? 0,
-        isNew: true,
-        image: item.imageUrl ?? `https://picsum.photos/seed/${item.id}/300/400`,
-        seasons: item.season ?? [],
-        occasions: item.occasion ?? [],
-        rating: item.rating ?? 0,
-      })),
+      userItems.map(
+        (item): ClothingItem => ({
+          id: item.id,
+          name: item.customName || item.subCategory || item.category,
+          category: item.category as CategoryId,
+          color: item.primaryColor ?? "—",
+          bgColor: "#F8F7FC",
+          occasion: item.occasion?.[0] ?? "Casual",
+          wears: item.wearCount ?? 0,
+          isNew: true,
+          image:
+            item.imageUrl ?? `https://picsum.photos/seed/${item.id}/300/400`,
+          seasons: item.season ?? [],
+          occasions: item.occasion ?? [],
+          rating: item.rating ?? 0,
+          createdAt: item.createdAt || new Date(0).toISOString(),
+        }),
+      ),
     [userItems],
   );
 
   const filteredItems = useMemo(() => {
+    if (activeFilters.category.startsWith("saved_")) {
+      const categoryLabel = activeFilters.category
+        .replace("saved_", "")
+        .replace(/_/g, " ");
+
+      return outfits
+        .filter((outfit) => {
+          const tags = outfit.tags?.map((t) => t.toLowerCase()) ?? [];
+          return (
+            tags.includes(categoryLabel) ||
+            outfit.occasion?.toLowerCase() === categoryLabel ||
+            outfit.name.toLowerCase().includes(categoryLabel)
+          );
+        })
+        .map((outfit) => ({
+          id: outfit.id,
+          name: outfit.name || categoryLabel,
+          category: activeFilters.category as CategoryId,
+          color: "—",
+          bgColor: "#F8F7FC",
+          occasion: outfit.occasion,
+          wears: outfit.wears ?? 0,
+          isNew: false,
+          image: outfit.image,
+          seasons: [],
+          occasions: [],
+          rating: 0,
+          createdAt: new Date(0).toISOString(),
+        }));
+    }
+
     let items = displayItems.filter((i) => {
       // Filter by category
       if (activeFilters.category !== "all") {
@@ -499,7 +674,12 @@ export default function WardrobeScreen() {
       return true;
     });
 
-    if (activeSort === "name_az")
+    if (activeSort === "recently_added")
+      items = [...items].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    else if (activeSort === "name_az")
       items = [...items].sort((a, b) => a.name.localeCompare(b.name));
     else if (activeSort === "most_worn")
       items = [...items].sort((a, b) => b.wears - a.wears);
@@ -562,153 +742,155 @@ export default function WardrobeScreen() {
 
   return (
     <SwipeTabWrapper tabIndex={1}>
-      <PremiumGradientBackground>
-        <StatusBar style="dark" />
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-          {/* Header */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingHorizontal: 16,
-              height: HEADER_HEIGHT,
-              zIndex: 10,
-              backgroundColor: "transparent",
-            }}
+      {/* <PremiumGradientBackground> */}
+      <StatusBar style="dark" />
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "#ffffff" }}
+        edges={["top"]}
+      >
+        {/* Header */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 16,
+            height: HEADER_HEIGHT,
+            zIndex: 10,
+            backgroundColor: "transparent",
+            marginBottom: 7,
+          }}
+        >
+          <View>
+            <Text
+              style={{
+                fontSize: 24,
+                color: "#1D1A27",
+                fontWeight: "800",
+              }}
+            >
+              Wardrobe
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={handleAddClothesGallery}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 100,
+                borderWidth: 1,
+                borderColor: "#E2E2EA",
+                backgroundColor: "#F8F7FC",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconPlus size={20} color="#1D1A27" strokeWidth={1.8} />
+            </Pressable>
+
+          </View>
+        </View>
+
+        {/* Filter Toolbar Row */}
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingBottom: 10,
+            paddingTop: 2,
+            backgroundColor: "transparent",
+            // marginBottom:5
+          }}
+        >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, alignItems: "center" }}
           >
-            <View>
+            {/* Filter icon - blue dot when active */}
+            <Pressable
+              onPress={openCategory}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: "#E2E2EA",
+                backgroundColor: "#FFFFFF",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconAdjustmentsHorizontal
+                size={20}
+                color="#1D1A27"
+                strokeWidth={1.8}
+              />
+              {hasActiveFilter && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 6,
+                    right: 6,
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: "#3B82F6",
+                    borderWidth: 1.5,
+                    borderColor: "#FFFFFF",
+                  }}
+                />
+              )}
+            </Pressable>
+
+            {/* Sort dropdown pill */}
+            <Pressable
+              onPress={openSort}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                borderRadius: 50,
+                borderWidth: 1.5,
+                borderColor: "#E2E2EA",
+                backgroundColor: "#FFFFFF",
+                height: 44,
+              }}
+            >
               <Text
                 style={{
-                  fontSize: 24,
+                  fontSize: 14,
+                  fontWeight: "500",
                   color: "#1D1A27",
-                  fontWeight: "800",
                 }}
               >
-                Wardrobe
+                {sortLabel}
               </Text>
-            </View>
-            <View className="flex-row items-center gap-2">
-              {/* <TouchableOpacity
-                onPress={() => router.push("/(root)/calendar" as never)}
-                activeOpacity={0.7}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 100,
-                  borderWidth: 1,
-                  borderColor: "#E2E2EA",
-                  backgroundColor: "#F8F7FC",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ExpoImage
-                  source={{
-                    uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
-                  }}
-                  style={{ width: 19, height: 19 }}
-                  contentFit="contain"
-                />
-              </TouchableOpacity> */}
+              <IconChevronDown size={14} color="#6B7280" strokeWidth={2.5} />
+            </Pressable>
 
+            {/* Active filter removable chip */}
+            {hasActiveFilter && (
               <Pressable
-                onPress={handleAddClothesGallery}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 100,
-                  borderWidth: 1,
-                  borderColor: "#E2E2EA",
-                  backgroundColor: "#F8F7FC",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <IconPlus size={20} color="#1D1A27" strokeWidth={1.8} />
-              </Pressable>
-
-              <Pressable
-                onPress={handleSaved}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 100,
-                  borderWidth: 1,
-                  borderColor: "#E2E2EA",
-                  backgroundColor: "#F8F7FC",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <IconBookmark size={19} color="#1D1A27" strokeWidth={1.5} />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Filter Toolbar Row */}
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingBottom: 6,
-              paddingTop: 2,
-              backgroundColor: "transparent",
-            }}
-          >
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8, alignItems: "center" }}
-            >
-              {/* Filter icon - blue dot when active */}
-              <Pressable
-                onPress={openCategory}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  borderWidth: 1.5,
-                  borderColor: "#E2E2EA",
-                  backgroundColor: "#FFFFFF",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <IconAdjustmentsHorizontal
-                  size={20}
-                  color="#1D1A27"
-                  strokeWidth={1.8}
-                />
-                {hasActiveFilter && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 6,
-                      right: 6,
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: "#3B82F6",
-                      borderWidth: 1.5,
-                      borderColor: "#FFFFFF",
-                    }}
-                  />
-                )}
-              </Pressable>
-
-              {/* Sort dropdown pill */}
-              <Pressable
-                onPress={openSort}
+                onPress={() =>
+                  setActiveFilters({
+                    category: "all",
+                    occasion: "all",
+                    season: "all",
+                    rating: 0,
+                  })
+                }
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 4,
+                  gap: 5,
                   paddingHorizontal: 14,
                   paddingVertical: 10,
                   borderRadius: 50,
-                  borderWidth: 1.5,
-                  borderColor: "#E2E2EA",
-                  backgroundColor: "#FFFFFF",
+                  borderWidth: 0,
+                  backgroundColor: "#1D1A27",
                   height: 44,
                 }}
               >
@@ -716,147 +898,117 @@ export default function WardrobeScreen() {
                   style={{
                     fontSize: 14,
                     fontWeight: "500",
-                    color: "#1D1A27",
+                    color: "#FFFFFF",
+                    // marginRight:10
                   }}
                 >
-                  {sortLabel}
+                  {categoryLabel}
                 </Text>
-                <IconChevronDown size={14} color="#6B7280" strokeWidth={2.5} />
+                <IconX size={13} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
+            )}
+          </ScrollView>
+        </View>
 
-              {/* Active filter removable chip */}
-              {hasActiveFilter && (
+        {/* Category Tabs Strip (plain text) */}
+        <View
+          style={{
+            borderBottomWidth: 1,
+            borderBottomColor: "#F0F0F0",
+            marginBottom: 0,
+          }}
+        >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              gap: 20,
+              alignItems: "center",
+            }}
+          >
+            {HORIZONTAL_TABS.map((tab) => {
+              const isActive = activeFilters.category === tab.value;
+              return (
                 <Pressable
+                  key={tab.value}
                   onPress={() =>
                     setActiveFilters({
-                      category: "all",
-                      occasion: "all",
-                      season: "all",
-                      rating: 0,
+                      ...activeFilters,
+                      category: isActive ? "all" : (tab.value as any),
                     })
                   }
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 4,
-                    paddingHorizontal: 14,
-                    paddingVertical: 10,
-                    borderRadius: 50,
-                    borderWidth: 1.5,
-                    borderColor: "#E2E2EA",
-                    backgroundColor: "#F4F4F6",
-                    height: 44,
-                  }}
+                  style={{ paddingBottom: 12, position: "relative" }}
                 >
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: "500",
-                      color: "#1D1A27",
+                      fontWeight: isActive ? "600" : "400",
+                      color: isActive ? "#000000" : "#9B9BAF",
                     }}
                   >
-                    {categoryLabel}
+                    {tab.label}
                   </Text>
-                  <IconX size={13} color="#6B7280" strokeWidth={2.5} />
-                </Pressable>
-              )}
-            </ScrollView>
-          </View>
-
-          {/* Category Tabs Strip (plain text) */}
-          <View
-            style={{
-              borderBottomWidth: 1,
-              borderBottomColor: "#F0F0F0",
-              marginBottom: 0,
-            }}
-          >
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingHorizontal: 20,
-                gap: 20,
-                alignItems: "center",
-              }}
-            >
-              {CATEGORY_TABS.map((tab) => {
-                const isActive = activeFilters.category === tab.value;
-                return (
-                  <Pressable
-                    key={tab.value}
-                    onPress={() =>
-                      setActiveFilters({
-                        ...activeFilters,
-                        category: isActive ? "all" : (tab.value as any),
-                      })
-                    }
-                    style={{ paddingBottom: 12, position: "relative" }}
-                  >
-                    <Text
+                  {isActive && (
+                    <View
                       style={{
-                        fontSize: 15,
-                        fontWeight: isActive ? "600" : "400",
-                        color: isActive ? "#000000" : "#9B9BAF",
+                        position: "absolute",
+                        bottom: -1,
+                        left: 0,
+                        right: 0,
+                        height: 2,
+                        backgroundColor: "#000000",
                       }}
-                    >
-                      {tab.label}
-                    </Text>
-                    {isActive && (
-                      <View
-                        style={{
-                          position: "absolute",
-                          bottom: -1,
-                          left: 0,
-                          right: 0,
-                          height: 2,
-                          backgroundColor: "#000000",
-                        }}
-                      />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* Grid */}
-          <Animated.ScrollView
-            key="grid-view"
-            showsVerticalScrollIndicator={false}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true, listener: hideTabBarOnScroll },
-            )}
-            scrollEventThrottle={16}
-            contentContainerStyle={{ paddingBottom: 140, paddingTop: 12 }}
-          >
-            <View style={{ zIndex: 1, position: "relative" }}>
-              {filteredItems.length === 0 ? (
-                <EmptyState onAdd={handleAddClothesGallery} />
-              ) : (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    paddingHorizontal: GRID_PADDING,
-                    gap: GRID_GAP,
-                  }}
-                >
-                  {filteredItems.map((item) => (
-                    <BentoCard
-                      key={item.id}
-                      item={item}
-                      width={ITEM_WIDTH}
-                      height={ITEM_HEIGHT}
                     />
-                  ))}
-                </View>
-              )}
-            </View>
-          </Animated.ScrollView>
-        </SafeAreaView>
-      </PremiumGradientBackground>
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Grid */}
+        <Animated.ScrollView
+          key="grid-view"
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true, listener: hideTabBarOnScroll },
+          )}
+          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingBottom: 140, paddingTop: 10 }}
+        >
+          <View style={{ zIndex: 1, position: "relative" }}>
+            {filteredItems.length === 0 ? (
+              <EmptyState onAdd={handleAddClothesGallery} />
+            ) : (
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  paddingHorizontal: GRID_PADDING,
+                  gap: GRID_GAP,
+                }}
+              >
+                {filteredItems.map((item) => (
+                  <BentoCard
+                    key={item.id}
+                    item={item}
+                    width={ITEM_WIDTH}
+                    height={ITEM_HEIGHT}
+                    onPress={
+                      item.category.startsWith("saved_")
+                        ? () => setSelectedSavedImage(item.image)
+                        : undefined
+                    }
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        </Animated.ScrollView>
+      </SafeAreaView>
+      {/* </PremiumGradientBackground> */}
 
       {/* Filter Bottom Sheet */}
       <BottomSheet
@@ -865,19 +1017,20 @@ export default function WardrobeScreen() {
         title="Filters"
       >
         <ScrollView
+          style={{ maxHeight: SCREEN_HEIGHT * 0.7 }}
+          // contentContainerStyle={{ paddingBottom: 32 }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 24 }}
-          style={{ maxHeight: SCREEN_HEIGHT * 0.6 }}
         >
           {/* Category Section */}
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: "600",
               color: "#1D1A27",
               paddingHorizontal: 16,
               marginTop: 10,
-              marginBottom: 8,
+              textAlign: "center",
+              marginBottom: 13,
             }}
           >
             Category
@@ -887,6 +1040,8 @@ export default function WardrobeScreen() {
               flexDirection: "row",
               flexWrap: "wrap",
               paddingHorizontal: 16,
+              // paddingVertical:12,
+              justifyContent: "center",
               gap: 10,
               paddingBottom: 16,
             }}
@@ -903,14 +1058,21 @@ export default function WardrobeScreen() {
                     })
                   }
                   style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
                     paddingHorizontal: 16,
-                    paddingVertical: 8,
+                    paddingVertical: 10,
                     borderRadius: 50,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
                   }}
                 >
+                  {getCategoryIcon(
+                    chip.label,
+                    isActive ? "#FFFFFF" : "#6B7280",
+                  )}
                   <Text
                     style={{
                       fontSize: 14,
@@ -928,12 +1090,13 @@ export default function WardrobeScreen() {
           {/* Occasion Section */}
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: "600",
               color: "#1D1A27",
               paddingHorizontal: 16,
+              textAlign: "center",
               marginTop: 10,
-              marginBottom: 8,
+              marginBottom: 13,
             }}
           >
             Occasion
@@ -944,6 +1107,7 @@ export default function WardrobeScreen() {
               flexWrap: "wrap",
               paddingHorizontal: 16,
               gap: 10,
+              justifyContent: "center",
               paddingBottom: 16,
             }}
           >
@@ -952,8 +1116,11 @@ export default function WardrobeScreen() {
                 setTempFilters({ ...tempFilters, occasion: "all" })
               }
               style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
                 paddingHorizontal: 16,
-                paddingVertical: 8,
+                paddingVertical: 10,
                 borderRadius: 50,
                 backgroundColor:
                   tempFilters.occasion === "all" ? "#1D1A27" : "#F4F4F6",
@@ -961,6 +1128,10 @@ export default function WardrobeScreen() {
                 borderColor: "#E2E2EA",
               }}
             >
+              {getOccasionIcon(
+                "all occasions",
+                tempFilters.occasion === "all" ? "#FFFFFF" : "#6B7280",
+              )}
               <Text
                 style={{
                   fontSize: 14,
@@ -980,14 +1151,18 @@ export default function WardrobeScreen() {
                     setTempFilters({ ...tempFilters, occasion: occ })
                   }
                   style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
                     paddingHorizontal: 16,
-                    paddingVertical: 8,
+                    paddingVertical: 10,
                     borderRadius: 50,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
                   }}
                 >
+                  {getOccasionIcon(occ, isActive ? "#FFFFFF" : "#6B7280")}
                   <Text
                     style={{
                       fontSize: 14,
@@ -1005,12 +1180,13 @@ export default function WardrobeScreen() {
           {/* Season Section */}
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: "600",
               color: "#1D1A27",
               paddingHorizontal: 16,
               marginTop: 10,
-              marginBottom: 8,
+              marginBottom: 13,
+              textAlign: "center",
             }}
           >
             Season
@@ -1021,14 +1197,18 @@ export default function WardrobeScreen() {
               flexWrap: "wrap",
               paddingHorizontal: 16,
               gap: 10,
+              justifyContent: "center",
               paddingBottom: 16,
             }}
           >
             <Pressable
               onPress={() => setTempFilters({ ...tempFilters, season: "all" })}
               style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
                 paddingHorizontal: 16,
-                paddingVertical: 8,
+                paddingVertical: 10,
                 borderRadius: 50,
                 backgroundColor:
                   tempFilters.season === "all" ? "#1D1A27" : "#F4F4F6",
@@ -1036,6 +1216,10 @@ export default function WardrobeScreen() {
                 borderColor: "#E2E2EA",
               }}
             >
+              {getSeasonIcon(
+                "all seasons",
+                tempFilters.season === "all" ? "#FFFFFF" : "#6B7280",
+              )}
               <Text
                 style={{
                   fontSize: 14,
@@ -1055,14 +1239,18 @@ export default function WardrobeScreen() {
                     setTempFilters({ ...tempFilters, season: sea })
                   }
                   style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
                     paddingHorizontal: 16,
-                    paddingVertical: 8,
+                    paddingVertical: 10,
                     borderRadius: 50,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
                   }}
                 >
+                  {getSeasonIcon(sea, isActive ? "#FFFFFF" : "#6B7280")}
                   <Text
                     style={{
                       fontSize: 14,
@@ -1080,12 +1268,13 @@ export default function WardrobeScreen() {
           {/* Rating Section */}
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: "600",
               color: "#1D1A27",
               paddingHorizontal: 16,
               marginTop: 10,
-              marginBottom: 8,
+              marginBottom: 13,
+              textAlign: "center",
             }}
           >
             Minimum Rating
@@ -1097,6 +1286,7 @@ export default function WardrobeScreen() {
               paddingHorizontal: 16,
               gap: 10,
               paddingBottom: 16,
+              justifyContent: "center",
             }}
           >
             {[0, 1, 2, 3, 4, 5].map((rating) => {
@@ -1106,14 +1296,21 @@ export default function WardrobeScreen() {
                   key={`rating-${rating}`}
                   onPress={() => setTempFilters({ ...tempFilters, rating })}
                   style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
                     paddingHorizontal: 16,
-                    paddingVertical: 8,
+                    paddingVertical: 10,
                     borderRadius: 50,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
                   }}
                 >
+                  {getRatingIcon(
+                    rating === 0 ? "Any Rating" : `${rating}+ Stars`,
+                    isActive ? "#FFFFFF" : "#6B7280",
+                  )}
                   <Text
                     style={{
                       fontSize: 14,
@@ -1132,7 +1329,7 @@ export default function WardrobeScreen() {
           style={{
             flexDirection: "row",
             paddingHorizontal: 20,
-            paddingTop: 10,
+            paddingTop: 15,
             gap: 12,
           }}
         >
@@ -1188,10 +1385,10 @@ export default function WardrobeScreen() {
       >
         <View
           style={{
-            paddingHorizontal: 16,
+            paddingHorizontal: 20,
             gap: 8,
-            paddingTop: 4,
-            paddingBottom: 24,
+            // paddingTop: 4,
+            paddingBottom: 20,
           }}
         >
           {SORT_OPTIONS.map((opt) => {
@@ -1202,7 +1399,7 @@ export default function WardrobeScreen() {
                 onPress={() => setTempSort(opt.value)}
                 style={{
                   paddingHorizontal: 18,
-                  paddingVertical: 14,
+                  paddingVertical: 16,
                   borderRadius: 14,
                   backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                   borderWidth: isActive ? 0 : 1,
@@ -1212,15 +1409,24 @@ export default function WardrobeScreen() {
                   justifyContent: "space-between",
                 }}
               >
-                <Text
+                <View
                   style={{
-                    fontSize: 15,
-                    fontWeight: "600",
-                    color: isActive ? "#FFFFFF" : "#6B7280",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
                   }}
                 >
-                  {opt.label}
-                </Text>
+                  {getSortIcon(opt.value, isActive ? "#FFFFFF" : "#6B7280")}
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                </View>
                 {isActive && (
                   <View
                     style={{
@@ -1253,6 +1459,39 @@ export default function WardrobeScreen() {
           </Text>
         </Pressable>
       </BottomSheet>
+
+      {/* Image Viewer Modal */}
+      <Modal visible={!!selectedSavedImage} transparent={true} animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.95)",
+            justifyContent: "center",
+          }}
+        >
+          <Pressable
+            onPress={() => setSelectedSavedImage(null)}
+            style={{
+              position: "absolute",
+              top: 50,
+              right: 20,
+              zIndex: 10,
+              padding: 8,
+              backgroundColor: "rgba(255,255,255,0.1)",
+              borderRadius: 20,
+            }}
+          >
+            <IconX size={24} color="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          {selectedSavedImage && (
+            <ExpoImage
+              source={{ uri: selectedSavedImage }}
+              style={{ width: "100%", height: "80%" }}
+              contentFit="contain"
+            />
+          )}
+        </View>
+      </Modal>
     </SwipeTabWrapper>
   );
 }

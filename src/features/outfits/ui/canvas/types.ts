@@ -11,6 +11,7 @@ export type CanvasItemData = {
   text?: string;
   color?: string;
   fontWeight?: "400" | "700";
+  fontStyle?: "normal" | "italic";
   align?: "left" | "center" | "right";
 
   // Shared props

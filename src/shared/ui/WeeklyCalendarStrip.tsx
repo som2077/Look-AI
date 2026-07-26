@@ -74,10 +74,10 @@ const DayCell = React.memo(function DayCell({
           width: 40,
           height: 40,
           borderRadius: 30,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: isActive ? "#1D1A27" : "#FFFFFF",
           alignItems: "center",
           justifyContent: "center",
-          borderWidth: isFuture ? 0 : 1.5,
+          borderWidth: isActive || isFuture ? 0 : 1.5,
           borderStyle: isFuture ? "solid" : "dashed",
           borderColor,
         }}
@@ -88,7 +88,7 @@ const DayCell = React.memo(function DayCell({
             fontFamily: isActive
               ? "TikTokSans16pt-Bold"
               : "TikTokSans16pt-Medium",
-            color: isActive ? "#1D1A27" : isFuture ? "#00000090" : "#555555",
+            color: isActive ? "#FFFFFF" : isFuture ? "#00000090" : "#555555",
           }}
         >
           {dayLabel}

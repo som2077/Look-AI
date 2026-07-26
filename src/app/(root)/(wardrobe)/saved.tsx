@@ -2,7 +2,7 @@ import {
   SavedOutfit,
   useSavedStore,
 } from "@/features/wardrobe/model/saved-store";
-import { IconChevronLeft, IconMinus, IconX } from "@tabler/icons-react-native";
+import { IconArrowLeft, IconMinus, IconX } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -20,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const NUM_COLUMNS = 3;
-const GRID_GAP = 1;
+const GRID_GAP = 2;
 const ITEM_SIZE = (SCREEN_WIDTH - GRID_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
 
 export default function SavedScreen() {
@@ -65,14 +65,9 @@ export default function SavedScreen() {
               width: 24,
               height: 24,
               borderRadius: 12,
-              backgroundColor: "rgba(255, 59, 48, 0.9)",
+              backgroundColor: "#EF4444",
               alignItems: "center",
               justifyContent: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 3,
             }}
           >
             <IconMinus size={16} color="#FFFFFF" strokeWidth={3} />
@@ -108,7 +103,7 @@ export default function SavedScreen() {
               padding: 4,
             }}
           >
-            <IconChevronLeft size={28} color="#000000" strokeWidth={2} />
+            <IconArrowLeft size={24} color="#000000" strokeWidth={2} />
           </Pressable>
           <Text style={{ fontSize: 20, fontWeight: "700", color: "#000000" }}>
             Saved
@@ -125,8 +120,8 @@ export default function SavedScreen() {
             <Text
               style={{
                 fontSize: 15,
-                fontWeight: "600",
-                color: isManaging ? "#FF3B30" : "#007AFF",
+                fontWeight: "700",
+                color: isManaging ? "#EF4444" : "#1D1A27",
               }}
             >
               {isManaging ? "Done" : "Manage"}
@@ -135,11 +130,18 @@ export default function SavedScreen() {
         </View>
 
         {/* Categories */}
-        <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+        <View
+          style={{
+            paddingHorizontal: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: "#F3F4F6",
+            marginBottom: 12,
+          }}
+        >
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8 }}
+            contentContainerStyle={{ gap: 24 }}
           >
             {["Fit check", "Virtual try on", "Cloth label", "AI outfit"].map(
               (cat) => (
@@ -147,18 +149,17 @@ export default function SavedScreen() {
                   key={cat}
                   onPress={() => setActiveCategory(cat)}
                   style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 20,
-                    backgroundColor:
-                      activeCategory === cat ? "#1D1A27" : "#F4F4F6",
+                    paddingVertical: 12,
+                    borderBottomWidth: 2,
+                    borderBottomColor:
+                      activeCategory === cat ? "#1D1A27" : "transparent",
                   }}
                 >
                   <Text
                     style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: activeCategory === cat ? "#FFFFFF" : "#6B7280",
+                      fontSize: 15,
+                      fontWeight: activeCategory === cat ? "700" : "500",
+                      color: activeCategory === cat ? "#1D1A27" : "#9CA3AF",
                     }}
                   >
                     {cat}

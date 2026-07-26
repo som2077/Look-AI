@@ -2,17 +2,25 @@ import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-st
 import { getMockWardrobeItemById } from "@/shared/testing/mock-wardrobe-items";
 import {
   IconArrowLeft,
+  IconBeach,
+  IconBriefcase,
+  IconBuilding,
   IconChevronDown,
+  IconDiamond,
   IconDotsVertical,
-  IconInfoCircle,
+  IconHanger,
+  IconLeaf,
+  IconMoon,
   IconPentagonPlus,
   IconPhoto,
-  IconRefresh,
-  IconShare,
-  IconStar,
+  IconRun,
+  IconShirt,
+  IconShoe,
+  IconSnowflake,
   IconStarFilled,
+  IconSun,
   IconTrash,
-  IconX,
+  IconUmbrella,
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,6 +29,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
+  Dimensions,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
@@ -89,7 +98,12 @@ type Occasion =
   | "Interview"
   | "All Occasion";
 type Season =
-  "Spring" | "Summer" | "Autumn" | "Winter" | "Monsoon" | "All Season";
+  | "Spring"
+  | "Summer"
+  | "Autumn"
+  | "Winter"
+  | "Monsoon"
+  | "All Season";
 
 interface MatchingColor {
   name: string;
@@ -267,7 +281,118 @@ function ChipSelector<T extends string>({
 }
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
-export default function ClothDetailsScreen() {
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const getCategoryIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all clothes":
+      return <IconHanger size={size} color={color} />;
+    case "tops":
+    case "jackets":
+    case "hoodies":
+    case "outerwear":
+    case "t-shirt":
+    case "polo shirt":
+    case "shirt":
+    case "blouse":
+    case "crop top":
+    case "tank top":
+    case "hoodie":
+    case "sweatshirt":
+    case "sweater":
+    case "cardigan":
+    case "jacket":
+    case "blazer":
+    case "coat":
+      return <IconShirt size={size} color={color} />;
+    case "bottoms":
+    case "jeans":
+    case "trousers":
+    case "chinos":
+    case "cargo pants":
+    case "joggers":
+    case "shorts":
+    case "leggings":
+    case "skirt":
+      return <IconHanger size={size} color={color} />;
+    case "shoes":
+      return <IconShoe size={size} color={color} />;
+    case "bags":
+    case "accessories":
+      return <IconBriefcase size={size} color={color} />;
+    case "dresses":
+    case "ethnic":
+    case "dress":
+    case "jumpsuit":
+    case "romper":
+    case "suit":
+    case "co-ord set":
+      return <IconDiamond size={size} color={color} />;
+    case "activewear":
+    case "sportswear":
+    case "tracksuit":
+      return <IconRun size={size} color={color} />;
+    case "formal":
+      return <IconBuilding size={size} color={color} />;
+    case "swimwear":
+      return <IconBeach size={size} color={color} />;
+    case "loungewear":
+      return <IconMoon size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+const getOccasionIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all occasions":
+      return <IconHanger size={size} color={color} />;
+    case "gym":
+    case "sports":
+    case "outdoor":
+      return <IconRun size={size} color={color} />;
+    case "beach":
+    case "travel":
+      return <IconBeach size={size} color={color} />;
+    case "sleepwear":
+    case "lounge":
+      return <IconMoon size={size} color={color} />;
+    case "office":
+    case "interview":
+    case "business casual":
+      return <IconBuilding size={size} color={color} />;
+    case "party":
+    case "wedding":
+    case "date night":
+    case "festive":
+      return <IconDiamond size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+const getSeasonIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all seasons":
+      return <IconLeaf size={size} color={color} />;
+    case "summer":
+      return <IconSun size={size} color={color} />;
+    case "winter":
+      return <IconSnowflake size={size} color={color} />;
+    case "spring":
+    case "autumn":
+      return <IconLeaf size={size} color={color} />;
+    case "monsoon":
+      return <IconUmbrella size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+export default function ItemDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -335,7 +460,6 @@ export default function ClothDetailsScreen() {
   >(null);
 
   const [rating, setRating] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<"Info" | "Outfit">("Info");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const panY = useRef(new Animated.Value(400)).current;
@@ -424,13 +548,38 @@ export default function ClothDetailsScreen() {
             onPress={() => {
               handleConfirm();
             }}
+            style={{ zIndex: 10 }}
           >
             <IconArrowLeft size={24} color="#1D1A27" strokeWidth={2} />
           </Pressable>
-          <Text style={{ fontSize: 17, fontWeight: "600", color: "#1D1A27" }}>
-            Item Details
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+          <View
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              alignItems: "center",
+              pointerEvents: "none",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 17,
+                fontWeight: "600",
+                color: "#1D1A27",
+                textAlign: "center",
+              }}
+            >
+              Item Details
+            </Text>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 16,
+              zIndex: 10,
+            }}
+          >
             <Pressable
               onPress={() =>
                 router.push(`/(root)/create-outfit?itemId=${id}` as never)
@@ -475,34 +624,6 @@ export default function ClothDetailsScreen() {
                 minWidth: 160,
               }}
             >
-              <Pressable
-                onPress={() => {
-                  setIsMenuOpen(false);
-                }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
-                  gap: 12,
-                }}
-              >
-                <IconShare size={20} color="#1D1A27" />
-                <Text
-                  style={{ fontSize: 15, fontWeight: "500", color: "#1D1A27" }}
-                >
-                  Share
-                </Text>
-              </Pressable>
-
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: "#F3F4F6",
-                  marginVertical: 4,
-                }}
-              />
-
               <Pressable
                 onPress={() => {
                   setIsMenuOpen(false);
@@ -571,486 +692,403 @@ export default function ClothDetailsScreen() {
               )}
             </View>
           </View>
-
-          {/* ── Segmented Control ── */}
+          {/* ── Fields ── */}
           <View
             style={{
-              marginHorizontal: 20,
-              marginTop: 30,
-              backgroundColor: "#F3F4F6",
-              borderRadius: 12,
-              flexDirection: "row",
-              padding: 4,
+              flex: 1,
+              paddingHorizontal: 24,
+              paddingTop: 20,
+              paddingBottom: 100,
+              gap: 24,
             }}
           >
+            {/* Item name (invisible in target, but maybe we keep it as a row?) */}
+            {/* The target UI just shows My Rating, Season, Occasion, Category, Color */}
+
+            {/* My Rating */}
             <Pressable
-              onPress={() => setActiveTab("Info")}
+              onPress={() => openSheet("rating")}
               style={{
-                flex: 1,
-                backgroundColor: activeTab === "Info" ? "#fff" : "transparent",
-                borderRadius: 10,
-                paddingVertical: 10,
+                flexDirection: "row",
+                justifyContent: "space-between",
                 alignItems: "center",
-                ...(activeTab === "Info"
-                  ? {
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 2,
-                      elevation: 2,
-                    }
-                  : {}),
               }}
             >
               <Text
                 style={{
-                  fontSize: 14,
-                  fontWeight: activeTab === "Info" ? "600" : "500",
-                  color: activeTab === "Info" ? "#1D1A27" : "#9CA3AF",
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
                 }}
               >
-                Info
+                My Rating
               </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                {rating > 0 ? (
+                  <View style={{ flexDirection: "row", gap: 2 }}>
+                    {[...Array(rating)].map((_, i) => (
+                      <IconStarFilled key={i} size={16} color="#EAB308" />
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: 15, color: "#D1D5DB" }}>
+                    Give a rating
+                  </Text>
+                )}
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
             </Pressable>
+
+            {/* Season */}
             <Pressable
-              onPress={() => setActiveTab("Outfit")}
+              onPress={() => openSheet("season")}
               style={{
-                flex: 1,
-                backgroundColor:
-                  activeTab === "Outfit" ? "#fff" : "transparent",
-                borderRadius: 10,
-                paddingVertical: 10,
+                flexDirection: "row",
+                justifyContent: "space-between",
                 alignItems: "center",
-                ...(activeTab === "Outfit"
-                  ? {
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 2,
-                      elevation: 2,
-                    }
-                  : {}),
               }}
             >
               <Text
                 style={{
-                  fontSize: 14,
-                  fontWeight: activeTab === "Outfit" ? "600" : "500",
-                  color: activeTab === "Outfit" ? "#1D1A27" : "#9CA3AF",
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
                 }}
               >
-                Outfit
+                Season
               </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#00000090",
+                    fontWeight: "500",
+                  }}
+                >
+                  {seasons.join(", ")}
+                </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
             </Pressable>
-          </View>
 
-          {/* ── Fields ── */}
-          {activeTab === "Info" ? (
-            <View style={{ paddingHorizontal: 20, paddingTop: 30, gap: 24 }}>
-              {/* Item name (invisible in target, but maybe we keep it as a row?) */}
-              {/* The target UI just shows My Rating, Season, Occasion, Category, Color */}
-
-              {/* My Rating */}
-              <Pressable
-                onPress={() => openSheet("rating")}
+            {/* Occasion */}
+            <Pressable
+              onPress={() => openSheet("occasion")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
+                }}
+              >
+                Occasion
+              </Text>
+              <View
                 style={{
                   flexDirection: "row",
-                  justifyContent: "space-between",
                   alignItems: "center",
+                  gap: 6,
                 }}
               >
                 <Text
-                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+                  style={{
+                    fontSize: 15,
+                    color: "#00000090",
+                    fontWeight: "500",
+                  }}
                 >
-                  My Rating
+                  {occasions.join(", ")}
                 </Text>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  {rating > 0 ? (
-                    <View style={{ flexDirection: "row", gap: 2 }}>
-                      {[...Array(rating)].map((_, i) => (
-                        <IconStarFilled key={i} size={16} color="#EAB308" />
-                      ))}
-                    </View>
-                  ) : (
-                    <Text style={{ fontSize: 15, color: "#D1D5DB" }}>
-                      Give a rating
-                    </Text>
-                  )}
-                  <IconChevronDown size={18} color="#D1D5DB" />
-                </View>
-              </Pressable>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
 
-              {/* Season */}
-              <Pressable
-                onPress={() => openSheet("season")}
+            {/* Category */}
+            <Pressable
+              onPress={() => openSheet("category")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
+                }}
+              >
+                Category
+              </Text>
+              <View
                 style={{
                   flexDirection: "row",
-                  justifyContent: "space-between",
                   alignItems: "center",
+                  gap: 6,
                 }}
               >
                 <Text
-                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+                  style={{
+                    fontSize: 15,
+                    color: "#00000090",
+                    fontWeight: "500",
+                  }}
                 >
-                  Season
+                  {category === "top"
+                    ? "Tops > Shirt"
+                    : (CATEGORIES.find((c) => c.id === category)?.label ??
+                      category)}
                 </Text>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  <Text
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
+
+            {/* Color */}
+            <Pressable
+              onPress={() => openSheet("color")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
+                }}
+              >
+                Color
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                {colorHex ? (
+                  <View
                     style={{
-                      fontSize: 15,
-                      color: "#374151",
-                      fontWeight: "500",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
                     }}
                   >
-                    {seasons.join(", ")}
-                  </Text>
-                  <IconChevronDown size={18} color="#D1D5DB" />
-                </View>
-              </Pressable>
-
-              {/* Occasion */}
-              <Pressable
-                onPress={() => openSheet("occasion")}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
-                >
-                  Occasion
-                </Text>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: "#374151",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {occasions.join(", ")}
-                  </Text>
-                  <IconChevronDown size={18} color="#D1D5DB" />
-                </View>
-              </Pressable>
-
-              {/* Category */}
-              <Pressable
-                onPress={() => openSheet("category")}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
-                >
-                  Category
-                </Text>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: "#374151",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {category === "top"
-                      ? "Tops > Shirt"
-                      : (CATEGORIES.find((c) => c.id === category)?.label ??
-                        category)}
-                  </Text>
-                  <IconChevronDown size={18} color="#D1D5DB" />
-                </View>
-              </Pressable>
-
-              {/* Color */}
-              <Pressable
-                onPress={() => openSheet("color")}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
-                >
-                  Color
-                </Text>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  {colorHex ? (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      {colorHex === "colorful" ? (
-                        <LinearGradient
-                          colors={[
-                            "#FF0000",
-                            "#FFFF00",
-                            "#00FF00",
-                            "#00FFFF",
-                            "#0000FF",
-                            "#FF00FF",
-                          ]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={{ width: 16, height: 16, borderRadius: 8 }}
-                        />
-                      ) : (
-                        <View
-                          style={{
-                            width: 16,
-                            height: 16,
-                            borderRadius: 8,
-                            backgroundColor: colorHex,
-                            borderWidth: 1,
-                            borderColor: "#E5E7EB",
-                          }}
-                        />
-                      )}
-                      <Text
-                        style={{
-                          fontSize: 15,
-                          color: "#374151",
-                          fontWeight: "500",
-                        }}
-                      >
-                        {color}
-                      </Text>
-                    </View>
-                  ) : color ? (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
+                    {colorHex === "colorful" ? (
+                      <LinearGradient
+                        colors={[
+                          "#FF0000",
+                          "#FFFF00",
+                          "#00FF00",
+                          "#00FFFF",
+                          "#0000FF",
+                          "#FF00FF",
+                        ]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{ width: 16, height: 16, borderRadius: 8 }}
+                      />
+                    ) : (
                       <View
                         style={{
                           width: 16,
                           height: 16,
                           borderRadius: 8,
-                          backgroundColor:
-                            COLOR_OPTIONS.find(
-                              (c) =>
-                                c.name.toLowerCase() === color.toLowerCase(),
-                            )?.hex ?? "#D1D5DB",
+                          backgroundColor: colorHex,
                           borderWidth: 1,
                           borderColor: "#E5E7EB",
                         }}
                       />
-                      <Text
-                        style={{
-                          fontSize: 15,
-                          color: "#374151",
-                          fontWeight: "500",
-                        }}
-                      >
-                        {color}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text style={{ fontSize: 15, color: "#D1D5DB" }}>
-                      Select color
+                    )}
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        color: "#00000090",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {color}
                     </Text>
-                  )}
-                  <IconChevronDown size={18} color="#D1D5DB" />
-                </View>
-              </Pressable>
-
-              {/* Brand / Designer */}
-              <Pressable
-                onPress={() => openSheet("brand")}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
-                >
-                  Brand / Designer
-                </Text>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  <Text
+                  </View>
+                ) : color ? (
+                  <View
                     style={{
-                      fontSize: 15,
-                      color: brand ? "#000" : "#D1D5DB",
-                      maxWidth: 150,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
                     }}
-                    numberOfLines={1}
                   >
-                    {brand ? brand : "Add brand"}
+                    <View
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: 8,
+                        backgroundColor:
+                          COLOR_OPTIONS.find(
+                            (c) => c.name.toLowerCase() === color.toLowerCase(),
+                          )?.hex ?? "#D1D5DB",
+                        borderWidth: 1,
+                        borderColor: "#E5E7EB",
+                      }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        color: "#00000090",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {color}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: 15, color: "#D1D5DB" }}>
+                    Select color
                   </Text>
-                  <IconChevronDown size={18} color="#D1D5DB" />
-                </View>
-              </Pressable>
+                )}
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
 
-              {/* Care Instructions */}
-              <Pressable
-                onPress={() => openSheet("care")}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
-                >
-                  Care Instructions
-                </Text>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: careInstructions ? "#000" : "#D1D5DB",
-                      maxWidth: 150,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {careInstructions ? careInstructions : "Add care info"}
-                  </Text>
-                  <IconChevronDown size={18} color="#D1D5DB" />
-                </View>
-              </Pressable>
-
-              {/* Notes */}
-              <Pressable
-                onPress={() => openSheet("notes")}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
-                >
-                  Notes
-                </Text>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: "#374151",
-                      fontWeight: "500",
-                      maxWidth: 150,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {notes || "Add notes"}
-                  </Text>
-                  <IconChevronDown size={18} color="#D1D5DB" />
-                </View>
-              </Pressable>
-            </View>
-          ) : (
-            <View
+            {/* Brand / Designer */}
+            <Pressable
+              onPress={() => openSheet("brand")}
               style={{
-                paddingHorizontal: 20,
-                paddingTop: 30,
-                paddingBottom: 100,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              {/* Header */}
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
+                }}
+              >
+                Brand / Designer
+              </Text>
               <View
                 style={{
                   flexDirection: "row",
-                  justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: 16,
+                  gap: 6,
                 }}
               >
                 <Text
-                  style={{ fontSize: 16, fontWeight: "700", color: "#374151" }}
-                >
-                  Try this outfit
-                </Text>
-                <Pressable>
-                  <IconRefresh size={20} color="#9CA3AF" />
-                </Pressable>
-              </View>
-
-              {/* Horizontal Scroll for outfits */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 20 }}
-              >
-                {/* Empty State Card */}
-                <View
                   style={{
-                    width: 300,
-                    height: 320,
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 16,
-                    borderWidth: 1,
-                    borderColor: "#F3F4F6",
-                    marginRight: 16,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
+                    fontSize: 15,
+                    color: brand ? "#00000090" : "#D1D5DB",
+                    maxWidth: 150,
                   }}
+                  numberOfLines={1}
                 >
-                  <Text style={{ color: "#9CA3AF", fontSize: 14 }}>
-                    No outfit suggestions yet
-                  </Text>
-                </View>
-              </ScrollView>
+                  {brand ? brand : "Add brand"}
+                </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
 
-              {/* Info Text */}
-              <View style={{ flexDirection: "row", marginTop: 24 }}>
-                <IconInfoCircle
-                  size={18}
-                  color="#9CA3AF"
-                  style={{ marginRight: 8, marginTop: 2 }}
-                />
+            {/* Care Instructions */}
+            <Pressable
+              onPress={() => openSheet("care")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
+                }}
+              >
+                Care Instructions
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
                 <Text
                   style={{
-                    fontSize: 12,
-                    color: "#9CA3AF",
-                    flex: 1,
-                    lineHeight: 18,
+                    fontSize: 15,
+                    color: careInstructions ? "#00000090" : "#D1D5DB",
+                    maxWidth: 150,
                   }}
+                  numberOfLines={1}
                 >
-                  Season, category, color, pattern, and material information are
-                  used for outfit suggestions. Please ensure you&apos;ve entered
-                  the correct information to get the best recommendations.
+                  {careInstructions ? careInstructions : "Add care info"}
                 </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
               </View>
-            </View>
-          )}
+            </Pressable>
+
+            {/* Notes */}
+            <Pressable
+              onPress={() => openSheet("notes")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
+                }}
+              >
+                Notes
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#00000090",
+                    fontWeight: "500",
+                    maxWidth: 150,
+                  }}
+                  numberOfLines={1}
+                >
+                  {notes || "Add notes"}
+                </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
+          </View>
         </ScrollView>
 
         {/* ── Category Bottom Sheet ── */}
@@ -1103,7 +1141,7 @@ export default function ClothDetailsScreen() {
                     <View
                       style={{
                         flexDirection: "row",
-                        justifyContent: "space-between",
+                        justifyContent: "center",
                         alignItems: "center",
                         marginBottom: 20,
                       }}
@@ -1125,11 +1163,12 @@ export default function ClothDetailsScreen() {
                                 ? "My Rating"
                                 : activeSheet === "color"
                                   ? "Select Color"
-                                  : "Notes"}
+                                  : activeSheet === "brand"
+                                    ? "Brand / Designer"
+                                    : activeSheet === "care"
+                                      ? "Care Instructions"
+                                      : "Notes"}
                       </Text>
-                      <Pressable onPress={closeSheet}>
-                        <IconX size={22} color="#9CA3AF" />
-                      </Pressable>
                     </View>
 
                     {/* Options */}
@@ -1137,6 +1176,7 @@ export default function ClothDetailsScreen() {
                       style={{
                         flexDirection: "row",
                         flexWrap: "wrap",
+                        justifyContent: "center",
                         gap: 10,
                       }}
                     >
@@ -1159,9 +1199,9 @@ export default function ClothDetailsScreen() {
                               }}
                             >
                               {rating >= star ? (
-                                <IconStarFilled size={36} color="#C4C4CC" />
+                                <IconStarFilled size={36} color="#000000" />
                               ) : (
-                                <IconStar size={36} color="#E5E7EB" />
+                                <IconStarFilled size={36} color="#E5E7EB" />
                               )}
                             </Pressable>
                           ))}
@@ -1177,19 +1217,26 @@ export default function ClothDetailsScreen() {
                               closeSheet();
                             }}
                             style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 6,
                               paddingHorizontal: 18,
                               paddingVertical: 10,
                               borderRadius: 999,
                               backgroundColor:
-                                category === c.id ? "#fff" : "#fff",
+                                category === c.id ? "#1D1A27" : "#fff",
                               borderWidth: 1,
                               borderColor:
-                                category === c.id ? "#000" : "#E5E7EB",
+                                category === c.id ? "#1D1A27" : "#E5E7EB",
                             }}
                           >
+                            {getCategoryIcon(
+                              c.label,
+                              category === c.id ? "#fff" : "#6B7280",
+                            )}
                             <Text
                               style={{
-                                color: category === c.id ? "#000" : "#6B7280",
+                                color: category === c.id ? "#fff" : "#6B7280",
                                 fontSize: 14,
                                 fontWeight: "500",
                               }}
@@ -1214,6 +1261,9 @@ export default function ClothDetailsScreen() {
                                 }
                               }}
                               style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 6,
                                 paddingHorizontal: 18,
                                 paddingVertical: 10,
                                 borderRadius: 999,
@@ -1224,6 +1274,10 @@ export default function ClothDetailsScreen() {
                                 borderColor: isSelected ? "#1D1A27" : "#E5E7EB",
                               }}
                             >
+                              {getSeasonIcon(
+                                s,
+                                isSelected ? "#fff" : "#6B7280",
+                              )}
                               <Text
                                 style={{
                                   color: isSelected ? "#fff" : "#6B7280",
@@ -1254,6 +1308,9 @@ export default function ClothDetailsScreen() {
                                 }
                               }}
                               style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 6,
                                 paddingHorizontal: 18,
                                 paddingVertical: 10,
                                 borderRadius: 999,
@@ -1264,6 +1321,10 @@ export default function ClothDetailsScreen() {
                                 borderColor: isSelected ? "#1D1A27" : "#E5E7EB",
                               }}
                             >
+                              {getOccasionIcon(
+                                o,
+                                isSelected ? "#fff" : "#6B7280",
+                              )}
                               <Text
                                 style={{
                                   color: isSelected ? "#fff" : "#6B7280",

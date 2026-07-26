@@ -4,19 +4,35 @@ import {
   IconAlignCenter,
   IconAlignLeft,
   IconAlignRight,
+  IconBeach,
+  IconBriefcase,
+  IconBuilding,
   IconChevronDown,
   IconChevronUp,
+  IconClock,
+  IconDiamond,
   IconEye,
   IconEyeOff,
-  IconFlipHorizontal,
-  IconLetterT,
+  IconHanger,
+  IconLeaf,
+  IconMoon,
+  IconRun,
+  IconShirt,
+  IconShoe,
+  IconSnowflake,
+  IconStarFilled,
+  IconSun,
+  IconTrendingDown,
+  IconTrendingUp,
+  IconUmbrella,
   IconX,
 } from "@tabler/icons-react-native";
+import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { FlipHorizontal2, Type } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { captureRef } from "react-native-view-shot";
 import {
   Animated,
   Dimensions,
@@ -30,6 +46,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { captureRef } from "react-native-view-shot";
 import { CanvasImageItem } from "../../features/outfits/ui/canvas/CanvasImageItem";
 import { CanvasTextItem } from "../../features/outfits/ui/canvas/CanvasTextItem";
 import { CanvasItemData } from "../../features/outfits/ui/canvas/types";
@@ -83,6 +100,7 @@ type SortId = "recently_added" | "name_az" | "most_worn" | "least_worn";
 
 // Filter chips for bottom sheet
 const FILTER_CHIPS: { label: string; value: CategoryId | "all" }[] = [
+  { label: "All clothes", value: "all" },
   { label: "Tops", value: "top" },
   { label: "Bottoms", value: "bottoms" },
   { label: "Dresses", value: "dress" },
@@ -98,6 +116,7 @@ const FILTER_CHIPS: { label: string; value: CategoryId | "all" }[] = [
   { label: "Casual", value: "casual" },
   { label: "Sportswear", value: "sportswear" },
 ];
+
 // Category tabs (plain text strip below toolbar)
 const CATEGORY_TABS: { label: string; value: CategoryId | "all" }[] = [
   { label: "Tops", value: "top" },
@@ -114,14 +133,177 @@ const CATEGORY_TABS: { label: string; value: CategoryId | "all" }[] = [
   { label: "Formal", value: "formal" },
 ];
 
+const OCCASIONS: string[] = [
+  "Casual",
+  "Smart Casual",
+  "Business Casual",
+  "Formal",
+  "Office",
+  "College",
+  "Party",
+  "Wedding",
+  "Festive",
+  "Traditional",
+  "Date Night",
+  "Travel",
+  "Beach",
+  "Gym",
+  "Sports",
+  "Outdoor",
+  "Lounge",
+  "Sleepwear",
+  "Interview",
+];
+
+const SEASONS: string[] = ["Spring", "Summer", "Autumn", "Winter", "Monsoon"];
+
 const SORT_OPTIONS: { label: string; value: SortId }[] = [
   { label: "Recently added", value: "recently_added" },
-  { label: "Name A–Z", value: "name_az" },
   { label: "Most worn", value: "most_worn" },
   { label: "Least worn", value: "least_worn" },
 ];
 
-const { width, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const CATEGORY_MAPPING: Record<string, string[]> = {
+  top: ["T-Shirt", "Polo Shirt", "Shirt", "Blouse", "Crop Top", "Tank Top"],
+  bottoms: [
+    "Jeans",
+    "Trousers",
+    "Chinos",
+    "Cargo Pants",
+    "Joggers",
+    "Shorts",
+    "Leggings",
+    "Skirt",
+  ],
+  dress: ["Dress", "Jumpsuit", "Romper"],
+  outerwear: [
+    "Jacket",
+    "Blazer",
+    "Coat",
+    "Cardigan",
+    "Hoodie",
+    "Sweatshirt",
+    "Sweater",
+  ],
+  footwear: [],
+  bags: [],
+  accessory: [],
+  ethnic: ["Traditional", "Festive"],
+  activewear: ["Activewear", "Tracksuit"],
+  jackets: ["Jacket", "Blazer", "Coat"],
+  hoodies: ["Hoodie", "Sweatshirt", "Sweater"],
+  formal: ["Suit", "Shirt", "Trousers", "Blazer", "Coat"],
+  casual: ["T-Shirt", "Jeans", "Shorts", "Co-ord Set"],
+  sportswear: ["Activewear", "Tracksuit"],
+};
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const NUM_COLUMNS = 3;
+const GRID_GAP = 0;
+const GRID_PADDING = 0;
+const CONTENT_WIDTH = SCREEN_WIDTH;
+const ITEM_WIDTH = CONTENT_WIDTH / NUM_COLUMNS;
+const ITEM_HEIGHT = ITEM_WIDTH * 1.25;
+
+const getCategoryIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all clothes":
+      return <IconHanger size={size} color={color} />;
+    case "tops":
+    case "jackets":
+    case "hoodies":
+    case "outerwear":
+      return <IconShirt size={size} color={color} />;
+    case "bottoms":
+      return <IconHanger size={size} color={color} />;
+    case "shoes":
+      return <IconShoe size={size} color={color} />;
+    case "bags":
+    case "accessories":
+      return <IconBriefcase size={size} color={color} />;
+    case "dresses":
+    case "ethnic":
+      return <IconDiamond size={size} color={color} />;
+    case "activewear":
+    case "sportswear":
+      return <IconRun size={size} color={color} />;
+    case "formal":
+      return <IconBuilding size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+const getOccasionIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all occasions":
+      return <IconHanger size={size} color={color} />;
+    case "gym":
+    case "sports":
+    case "outdoor":
+      return <IconRun size={size} color={color} />;
+    case "beach":
+    case "travel":
+      return <IconBeach size={size} color={color} />;
+    case "sleepwear":
+    case "lounge":
+      return <IconMoon size={size} color={color} />;
+    case "office":
+    case "interview":
+    case "business casual":
+      return <IconBuilding size={size} color={color} />;
+    case "party":
+    case "wedding":
+    case "date night":
+    case "festive":
+      return <IconDiamond size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+const getSeasonIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all seasons":
+      return <IconLeaf size={size} color={color} />;
+    case "summer":
+      return <IconSun size={size} color={color} />;
+    case "winter":
+      return <IconSnowflake size={size} color={color} />;
+    case "spring":
+    case "autumn":
+      return <IconLeaf size={size} color={color} />;
+    case "monsoon":
+      return <IconUmbrella size={size} color={color} />;
+    default:
+      return null;
+  }
+};
+
+const getRatingIcon = (label: string, color: string) => {
+  const size = 16;
+  if (label.includes("Stars") || label === "Any Rating") {
+    return <IconStarFilled size={size} color={color} />;
+  }
+  return null;
+};
+
+const getSortIcon = (value: string, color: string) => {
+  const size = 18;
+  switch (value) {
+    case "recently_added":
+      return <IconClock size={size} color={color} />;
+    case "most_worn":
+      return <IconTrendingUp size={size} color={color} />;
+    case "least_worn":
+      return <IconTrendingDown size={size} color={color} />;
+    default:
+      return null;
+  }
+};
 
 // Reusable Bottom Sheet
 function BottomSheet({
@@ -138,13 +320,46 @@ function BottomSheet({
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
   React.useEffect(() => {
-    Animated.spring(slideAnim, {
+    Animated.timing(slideAnim, {
       toValue: visible ? 0 : SCREEN_HEIGHT,
+      duration: 250,
       useNativeDriver: true,
-      damping: 20,
-      stiffness: 200,
     }).start();
-  }, [visible]);
+  }, [visible, slideAnim]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return (
+          gestureState.dy > 0 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          Animated.timing(slideAnim, {
+            toValue: SCREEN_HEIGHT,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            onClose();
+          });
+        } else {
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   return (
     <Modal
@@ -171,44 +386,21 @@ function BottomSheet({
           zIndex: 999,
         }}
       >
-        <View
-          style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}
-        >
+        <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
           <View
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: "#E2E2EA",
-            }}
-          />
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingVertical: 12,
-          }}
-        >
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
-            {title}
-          </Text>
-          <Pressable
-            onPress={onClose}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: "#F4F4F6",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}
           >
-            <IconX size={16} color="#6B7280" strokeWidth={2} />
-          </Pressable>
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: "#E2E2EA",
+              }}
+            />
+          </View>
         </View>
+
         {children}
       </Animated.View>
     </Modal>
@@ -225,13 +417,21 @@ export default function CreateOutfitScreen() {
   const initialItem = items.find((item) => item.id === itemId);
 
   // States for filtering and sorting
-  const [activeCategory, setActiveCategory] = useState<CategoryId | "all">(
-    "all",
-  );
+  const [activeFilters, setActiveFilters] = useState({
+    category: "all",
+    occasion: "all",
+    season: "all",
+    rating: 0,
+  });
+  const [tempFilters, setTempFilters] = useState({
+    category: "all",
+    occasion: "all",
+    season: "all",
+    rating: 0,
+  });
   const [activeSort, setActiveSort] = useState<SortId>("recently_added");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [tempCategory, setTempCategory] = useState<CategoryId | "all">("all");
   const [tempSort, setTempSort] = useState<SortId>("recently_added");
 
   // Canvas Interactions
@@ -269,11 +469,11 @@ export default function CreateOutfitScreen() {
           format: "png",
           quality: 1,
         });
-        
-        const itemIds = canvasItems.map(i => i.id).join(',');
+
+        const itemIds = canvasItems.map((i) => i.id).join(",");
         router.push({
           pathname: "/plan-outfit",
-          params: { imageUri: uri, itemIds, ratio }
+          params: { imageUri: uri, itemIds, ratio },
         });
       } catch (e) {
         console.error("Capture failed", e);
@@ -405,32 +605,78 @@ export default function CreateOutfitScreen() {
           : "7/4/2026",
         wears: item.wearCount ?? 0,
         image: item.imageUrl ?? `https://picsum.photos/seed/${item.id}/300/400`,
+        seasons: item.season ?? [],
+        occasions: item.occasion ?? [],
+        rating: item.rating ?? 0,
+        createdAt: item.createdAt || new Date(0).toISOString(),
       })),
     [items],
   );
 
   const filteredItems = useMemo(() => {
-    let _items =
-      activeCategory === "all"
-        ? displayItems
-        : displayItems.filter((i: any) => i.category === activeCategory);
-    if (activeSort === "name_az")
+    let _items = displayItems.filter((i: any) => {
+      // Filter by category
+      if (activeFilters.category !== "all") {
+        const catStr = i.category.toLowerCase();
+        const activeStr = activeFilters.category.toLowerCase();
+        if (catStr !== activeStr) {
+          const mapping = CATEGORY_MAPPING[activeStr] || [];
+          if (!mapping.includes(i.category)) return false;
+        }
+      }
+
+      // Filter by occasion
+      if (
+        activeFilters.occasion !== "all" &&
+        !i.occasions.includes(activeFilters.occasion)
+      ) {
+        return false;
+      }
+
+      // Filter by season
+      if (
+        activeFilters.season !== "all" &&
+        !i.seasons.includes(activeFilters.season)
+      ) {
+        return false;
+      }
+
+      // Filter by rating
+      if (i.rating < activeFilters.rating) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (activeSort === "recently_added")
+      _items = [..._items].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    else if (activeSort === "name_az")
       _items = [..._items].sort((a, b) => a.name.localeCompare(b.name));
     else if (activeSort === "most_worn")
       _items = [..._items].sort((a, b) => b.wears - a.wears);
     else if (activeSort === "least_worn")
       _items = [..._items].sort((a, b) => a.wears - b.wears);
     return _items;
-  }, [displayItems, activeCategory, activeSort]);
+  }, [displayItems, activeFilters, activeSort]);
+
+  const activeFiltersCount =
+    (activeFilters.category !== "all" ? 1 : 0) +
+    (activeFilters.occasion !== "all" ? 1 : 0) +
+    (activeFilters.season !== "all" ? 1 : 0) +
+    (activeFilters.rating > 0 ? 1 : 0);
 
   const categoryLabel =
-    FILTER_CHIPS.find((c) => c.value === activeCategory)?.label ?? "All";
+    activeFiltersCount > 0 ? `${activeFiltersCount} Filters` : "All";
   const sortLabel =
     SORT_OPTIONS.find((s) => s.value === activeSort)?.label ?? "Recently added";
-  const hasActiveFilter = activeCategory !== "all";
+  const hasActiveFilter = activeFiltersCount > 0;
 
   const openCategory = () => {
-    setTempCategory(activeCategory);
+    setTempFilters(activeFilters);
     setIsCategoryOpen(true);
   };
   const openSort = () => {
@@ -444,18 +690,21 @@ export default function CreateOutfitScreen() {
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         {/* ── Header ── */}
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
-            <IconX size={24} color="#1D1A27" />
+          <Pressable
+            onPress={() => router.navigate("/(tabs)/wardrobe" as any)}
+            style={styles.closeButton}
+          >
+            <IconX size={22} color="#1D1A27" />
           </Pressable>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <Pressable
               onPress={() => setIsPreview((p) => !p)}
               style={styles.previewButton}
             >
               {isPreview ? (
-                <IconEyeOff size={18} color="#1D1A27" />
+                <IconEyeOff size={20} color="#1D1A27" />
               ) : (
-                <IconEye size={18} color="#1D1A27" />
+                <IconEye size={20} color="#1D1A27" />
               )}
             </Pressable>
             <Pressable style={styles.nextButton} onPress={captureAndNavigate}>
@@ -520,51 +769,47 @@ export default function CreateOutfitScreen() {
               position: "relative",
             }}
           >
-            <View
-              ref={viewRef}
-              style={{ flex: 1 }}
-              collapsable={false}
-            >
+            <View ref={viewRef} style={{ flex: 1 }} collapsable={false}>
               <Pressable
                 style={[styles.canvas, { aspectRatio: undefined, flex: 1 }]}
                 onPress={() => {
-                Keyboard.dismiss();
-                setIsFocused(false);
-                setBottomSheetMode("wardrobe");
+                  Keyboard.dismiss();
+                  setIsFocused(false);
+                  setBottomSheetMode("wardrobe");
 
-                // If the active item is text and empty, delete it when tapping outside
-                if (activeItem?.type === "text" && !activeItem.text?.trim()) {
-                  handleDelete(activeItem.id);
-                }
-              }}
-            >
-              {canvasItems.map((item) => {
-                if (item.type === "text") {
-                  return (
-                    <CanvasTextItem
-                      key={item.id}
-                      item={item}
-                      isActive={activeItemId === item.id && isFocused}
-                      isPreview={isPreview}
-                      onFocus={handleFocus}
-                      onDelete={handleDelete}
-                      onTextChange={handleTextChange}
-                    />
-                  );
-                } else {
-                  return (
-                    <CanvasImageItem
-                      key={item.id}
-                      item={item}
-                      isActive={activeItemId === item.id && isFocused}
-                      isPreview={isPreview}
-                      onFocus={handleFocus}
-                      onDelete={handleDelete}
-                    />
-                  );
-                }
-              })}
-            </Pressable>
+                  // If the active item is text and empty, delete it when tapping outside
+                  if (activeItem?.type === "text" && !activeItem.text?.trim()) {
+                    handleDelete(activeItem.id);
+                  }
+                }}
+              >
+                {canvasItems.map((item) => {
+                  if (item.type === "text") {
+                    return (
+                      <CanvasTextItem
+                        key={item.id}
+                        item={item}
+                        isActive={activeItemId === item.id && isFocused}
+                        isPreview={isPreview}
+                        onFocus={handleFocus}
+                        onDelete={handleDelete}
+                        onTextChange={handleTextChange}
+                      />
+                    );
+                  } else {
+                    return (
+                      <CanvasImageItem
+                        key={item.id}
+                        item={item}
+                        isActive={activeItemId === item.id && isFocused}
+                        isPreview={isPreview}
+                        onFocus={handleFocus}
+                        onDelete={handleDelete}
+                      />
+                    );
+                  }
+                })}
+              </Pressable>
             </View>
 
             {/* Floating Toolbar (now outside canvas, hidden in preview) */}
@@ -609,10 +854,10 @@ export default function CreateOutfitScreen() {
                     }
                   }}
                 >
-                  <IconLetterT size={22} color="#4B5563" />
+                  <Type size={22} color="#4B5563" />
                 </Pressable>
                 <Pressable style={styles.toolbarIcon} onPress={handleFlip}>
-                  <IconFlipHorizontal size={22} color="#4B5563" />
+                  <FlipHorizontal2 size={22} color="#4B5563" />
                 </Pressable>
               </View>
             )}
@@ -718,10 +963,16 @@ export default function CreateOutfitScreen() {
                       />
                     </Pressable>
 
-                    {/* Active filter removable chip */}
                     {hasActiveFilter && (
                       <Pressable
-                        onPress={() => setActiveCategory("all")}
+                        onPress={() =>
+                          setActiveFilters({
+                            category: "all",
+                            occasion: "all",
+                            season: "all",
+                            rating: 0,
+                          })
+                        }
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
@@ -751,53 +1002,79 @@ export default function CreateOutfitScreen() {
                 </View>
 
                 {/* Category Tabs Strip (plain text) */}
-                <View style={{ paddingBottom: 12 }}>
+                <View
+                  style={{
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#00000010",
+                  }}
+                >
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{
                       paddingHorizontal: 16,
-                      gap: 20,
+                      gap: 24,
                       alignItems: "center",
                     }}
                   >
                     {CATEGORY_TABS.map((tab) => {
-                      const isActive = activeCategory === tab.value;
+                      const isActive = activeFilters.category === tab.value;
                       return (
                         <Pressable
                           key={tab.value}
                           onPress={() =>
-                            setActiveCategory(isActive ? "all" : tab.value)
+                            setActiveFilters((prev) => ({
+                              ...prev,
+                              category: isActive ? "all" : tab.value,
+                            }))
                           }
+                          style={{ paddingBottom: 12, position: "relative" }}
                         >
                           <Text
                             style={{
                               fontSize: 14,
-                              fontWeight: isActive ? "700" : "400",
-                              color: isActive ? "#1D1A27" : "#9B9BAF",
+                              fontWeight: isActive ? "600" : "400",
+                              color: isActive ? "#000000" : "#9B9BAF",
                             }}
                           >
                             {tab.label}
                           </Text>
+                          {isActive && (
+                            <View
+                              style={{
+                                position: "absolute",
+                                bottom: -1,
+                                left: 0,
+                                right: 0,
+                                height: 2,
+                                backgroundColor: "#000000",
+                              }}
+                            />
+                          )}
                         </Pressable>
                       );
                     })}
                   </ScrollView>
                 </View>
 
-                <View style={styles.divider} />
-
                 {/* Clothes Grid */}
                 <ScrollView
-                  contentContainerStyle={styles.gridContainer}
                   showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ paddingBottom: 140 }}
                 >
-                  <View style={styles.grid}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      paddingHorizontal: GRID_PADDING,
+                      gap: GRID_GAP,
+                    }}
+                  >
                     {filteredItems.map((item: any) => (
                       <Pressable
                         key={item.id}
-                        style={styles.gridItem}
                         onPress={() => {
+                          Haptics.selectionAsync();
                           const newItemId = `${item.id}-${Date.now()}`;
                           setCanvasItems((prev) => [
                             ...prev,
@@ -811,16 +1088,29 @@ export default function CreateOutfitScreen() {
                           ]);
                           setActiveItemId(newItemId);
                         }}
+                        style={{
+                          width: ITEM_WIDTH,
+                          height: ITEM_HEIGHT,
+                          borderRightWidth: 0.5,
+                          borderBottomWidth: 0.5,
+                          borderColor: "#00000010",
+                          backgroundColor: "transparent",
+                          padding: 8,
+                        }}
                       >
-                        <View style={styles.gridImageContainer}>
-                          <ExpoImage
-                            source={{ uri: item.image }}
-                            style={styles.gridImage}
-                            contentFit="contain"
-                          />
+                        <View style={{ flex: 1 }}>
+                          {item.image ? (
+                            <ExpoImage
+                              source={{ uri: item.image }}
+                              style={{ width: "100%", height: "100%" }}
+                              contentFit="contain"
+                            />
+                          ) : (
+                            <View
+                              style={{ flex: 1, backgroundColor: "#F3F4F6" }}
+                            />
+                          )}
                         </View>
-                        <Text style={styles.gridBrandText}>{item.brand}</Text>
-                        <Text style={styles.gridDateText}>{item.date}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -916,15 +1206,19 @@ export default function CreateOutfitScreen() {
                       <View style={{ flexDirection: "row", gap: 16 }}>
                         <Pressable
                           onPress={() =>
-                            updateActiveItem({ fontWeight: "400" })
+                            updateActiveItem({
+                              fontWeight: "400",
+                              fontStyle: "normal",
+                            })
                           }
                         >
                           <Text
                             style={{
                               fontSize: 18,
-                              fontWeight: "400",
+                              fontFamily: "TikTokSans16pt-Regular",
                               opacity:
-                                (activeItem?.fontWeight ?? "700") === "400"
+                                (activeItem?.fontWeight ?? "700") === "400" &&
+                                (activeItem?.fontStyle ?? "normal") === "normal"
                                   ? 1
                                   : 0.4,
                               color: "#1D1A27",
@@ -935,15 +1229,41 @@ export default function CreateOutfitScreen() {
                         </Pressable>
                         <Pressable
                           onPress={() =>
-                            updateActiveItem({ fontWeight: "700" })
+                            updateActiveItem({
+                              fontWeight: "700",
+                              fontStyle: "normal",
+                            })
                           }
                         >
                           <Text
                             style={{
                               fontSize: 18,
-                              fontWeight: "700",
+                              fontFamily: "TikTokSans16pt-Bold",
                               opacity:
-                                (activeItem?.fontWeight ?? "700") === "700"
+                                (activeItem?.fontWeight ?? "700") === "700" &&
+                                (activeItem?.fontStyle ?? "normal") === "normal"
+                                  ? 1
+                                  : 0.4,
+                              color: "#1D1A27",
+                            }}
+                          >
+                            Aa
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() =>
+                            updateActiveItem({
+                              fontWeight: "400",
+                              fontStyle: "italic",
+                            })
+                          }
+                        >
+                          <Text
+                            style={{
+                              fontSize: 18,
+                              fontFamily: "TikTokSans16pt-RegularItalic",
+                              opacity:
+                                (activeItem?.fontStyle ?? "normal") === "italic"
                                   ? 1
                                   : 0.4,
                               color: "#1D1A27",
@@ -1084,77 +1404,379 @@ export default function CreateOutfitScreen() {
                   }
                 }}
               >
-                <IconLetterT size={22} color="#4B5563" />
+                <Type size={22} color="#4B5563" />
               </Pressable>
               <Pressable style={styles.toolbarIcon} onPress={handleFlip}>
-                <IconFlipHorizontal size={22} color="#4B5563" />
+                <FlipHorizontal2 size={22} color="#4B5563" />
               </Pressable>
             </View>
           </View>
         )}
       </SafeAreaView>
 
-      {/* Category Bottom Sheet */}
+      {/* Filter Bottom Sheet */}
       <BottomSheet
         visible={isCategoryOpen}
         onClose={() => setIsCategoryOpen(false)}
-        title="Filter by Category"
+        title="Filters"
       >
+        <ScrollView
+          style={{ maxHeight: SCREEN_HEIGHT * 0.7 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Category Section */}
+          <Text
+            style={{
+              fontSize: 17,
+              fontWeight: "600",
+              color: "#1D1A27",
+              paddingHorizontal: 16,
+              marginTop: 10,
+              textAlign: "center",
+              marginBottom: 13,
+            }}
+          >
+            Category
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              paddingHorizontal: 16,
+              justifyContent: "center",
+              gap: 10,
+              paddingBottom: 16,
+            }}
+          >
+            {FILTER_CHIPS.map((chip) => {
+              const isActive = tempFilters.category === chip.value;
+              return (
+                <Pressable
+                  key={chip.value}
+                  onPress={() =>
+                    setTempFilters({
+                      ...tempFilters,
+                      category: chip.value as any,
+                    })
+                  }
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 50,
+                    backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: "#E2E2EA",
+                  }}
+                >
+                  {getCategoryIcon(
+                    chip.label,
+                    isActive ? "#FFFFFF" : "#6B7280",
+                  )}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {chip.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Occasion Section */}
+          <Text
+            style={{
+              fontSize: 17,
+              fontWeight: "600",
+              color: "#1D1A27",
+              paddingHorizontal: 16,
+              textAlign: "center",
+              marginTop: 10,
+              marginBottom: 13,
+            }}
+          >
+            Occasion
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              paddingHorizontal: 16,
+              gap: 10,
+              justifyContent: "center",
+              paddingBottom: 16,
+            }}
+          >
+            <Pressable
+              onPress={() =>
+                setTempFilters({ ...tempFilters, occasion: "all" })
+              }
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 50,
+                backgroundColor:
+                  tempFilters.occasion === "all" ? "#1D1A27" : "#F4F4F6",
+                borderWidth: tempFilters.occasion === "all" ? 0 : 1,
+                borderColor: "#E2E2EA",
+              }}
+            >
+              {getOccasionIcon(
+                "all occasions",
+                tempFilters.occasion === "all" ? "#FFFFFF" : "#6B7280",
+              )}
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: tempFilters.occasion === "all" ? "#FFFFFF" : "#6B7280",
+                }}
+              >
+                All Occasions
+              </Text>
+            </Pressable>
+            {OCCASIONS.map((occ) => {
+              const isActive = tempFilters.occasion === occ;
+              return (
+                <Pressable
+                  key={occ}
+                  onPress={() =>
+                    setTempFilters({ ...tempFilters, occasion: occ })
+                  }
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 50,
+                    backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: "#E2E2EA",
+                  }}
+                >
+                  {getOccasionIcon(occ, isActive ? "#FFFFFF" : "#6B7280")}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {occ}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Season Section */}
+          <Text
+            style={{
+              fontSize: 17,
+              fontWeight: "600",
+              color: "#1D1A27",
+              paddingHorizontal: 16,
+              marginTop: 10,
+              marginBottom: 13,
+              textAlign: "center",
+            }}
+          >
+            Season
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              paddingHorizontal: 16,
+              gap: 10,
+              justifyContent: "center",
+              paddingBottom: 16,
+            }}
+          >
+            <Pressable
+              onPress={() => setTempFilters({ ...tempFilters, season: "all" })}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 50,
+                backgroundColor:
+                  tempFilters.season === "all" ? "#1D1A27" : "#F4F4F6",
+                borderWidth: tempFilters.season === "all" ? 0 : 1,
+                borderColor: "#E2E2EA",
+              }}
+            >
+              {getSeasonIcon(
+                "all seasons",
+                tempFilters.season === "all" ? "#FFFFFF" : "#6B7280",
+              )}
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: tempFilters.season === "all" ? "#FFFFFF" : "#6B7280",
+                }}
+              >
+                All Seasons
+              </Text>
+            </Pressable>
+            {SEASONS.map((sea) => {
+              const isActive = tempFilters.season === sea;
+              return (
+                <Pressable
+                  key={sea}
+                  onPress={() =>
+                    setTempFilters({ ...tempFilters, season: sea })
+                  }
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 50,
+                    backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: "#E2E2EA",
+                  }}
+                >
+                  {getSeasonIcon(sea, isActive ? "#FFFFFF" : "#6B7280")}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {sea}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Rating Section */}
+          <Text
+            style={{
+              fontSize: 17,
+              fontWeight: "600",
+              color: "#1D1A27",
+              paddingHorizontal: 16,
+              marginTop: 10,
+              marginBottom: 13,
+              textAlign: "center",
+            }}
+          >
+            Minimum Rating
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              paddingHorizontal: 16,
+              gap: 10,
+              paddingBottom: 16,
+              justifyContent: "center",
+            }}
+          >
+            {[0, 1, 2, 3, 4, 5].map((rating) => {
+              const isActive = tempFilters.rating === rating;
+              return (
+                <Pressable
+                  key={`rating-${rating}`}
+                  onPress={() => setTempFilters({ ...tempFilters, rating })}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 50,
+                    backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: "#E2E2EA",
+                  }}
+                >
+                  {getRatingIcon(
+                    rating === 0 ? "Any Rating" : `${rating}+ Stars`,
+                    isActive ? "#FFFFFF" : "#6B7280",
+                  )}
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {rating === 0 ? "Any Rating" : `${rating}+ Stars`}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
         <View
           style={{
             flexDirection: "row",
-            flexWrap: "wrap",
-            paddingHorizontal: 16,
-            gap: 10,
-            paddingTop: 4,
-            paddingBottom: 24,
+            paddingHorizontal: 20,
+            paddingTop: 15,
+            gap: 12,
           }}
         >
-          {FILTER_CHIPS.map((chip) => {
-            const isActive = tempCategory === chip.value;
-            return (
-              <Pressable
-                key={chip.value}
-                onPress={() => setTempCategory(chip.value)}
-                style={{
-                  paddingHorizontal: 18,
-                  paddingVertical: 10,
-                  borderRadius: 50,
-                  backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
-                  borderWidth: isActive ? 0 : 1,
-                  borderColor: "#E2E2EA",
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: isActive ? "#FFFFFF" : "#6B7280",
-                  }}
-                >
-                  {chip.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          <Pressable
+            onPress={() => {
+              const defaultFilters = {
+                category: "all",
+                occasion: "all",
+                season: "all",
+                rating: 0,
+              };
+              setTempFilters(defaultFilters as any);
+              setActiveFilters(defaultFilters as any);
+              setIsCategoryOpen(false);
+            }}
+            style={{
+              flex: 1,
+              paddingVertical: 16,
+              borderRadius: 18,
+              backgroundColor: "#F4F4F6",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#1D1A27", fontSize: 15, fontWeight: "700" }}>
+              Clear
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setActiveFilters(tempFilters);
+              setIsCategoryOpen(false);
+            }}
+            style={{
+              flex: 2,
+              paddingVertical: 16,
+              borderRadius: 18,
+              backgroundColor: "#1D1A27",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
+              Apply Filters
+            </Text>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={() => {
-            setActiveCategory(tempCategory);
-            setIsCategoryOpen(false);
-          }}
-          style={{
-            marginHorizontal: 20,
-            paddingVertical: 16,
-            borderRadius: 18,
-            backgroundColor: "#1D1A27",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
-            Apply Filter
-          </Text>
-        </Pressable>
       </BottomSheet>
 
       {/* Sort Bottom Sheet */}
@@ -1165,10 +1787,9 @@ export default function CreateOutfitScreen() {
       >
         <View
           style={{
-            paddingHorizontal: 16,
+            paddingHorizontal: 20,
             gap: 8,
-            paddingTop: 4,
-            paddingBottom: 24,
+            paddingBottom: 20,
           }}
         >
           {SORT_OPTIONS.map((opt) => {
@@ -1179,7 +1800,7 @@ export default function CreateOutfitScreen() {
                 onPress={() => setTempSort(opt.value)}
                 style={{
                   paddingHorizontal: 18,
-                  paddingVertical: 14,
+                  paddingVertical: 16,
                   borderRadius: 14,
                   backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                   borderWidth: isActive ? 0 : 1,
@@ -1189,15 +1810,24 @@ export default function CreateOutfitScreen() {
                   justifyContent: "space-between",
                 }}
               >
-                <Text
+                <View
                   style={{
-                    fontSize: 15,
-                    fontWeight: "600",
-                    color: isActive ? "#FFFFFF" : "#6B7280",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
                   }}
                 >
-                  {opt.label}
-                </Text>
+                  {getSortIcon(opt.value, isActive ? "#FFFFFF" : "#6B7280")}
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "600",
+                      color: isActive ? "#FFFFFF" : "#6B7280",
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                </View>
                 {isActive && (
                   <View
                     style={{
@@ -1246,14 +1876,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 12,
+  },
+  closeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   nextButton: {
     backgroundColor: "#1D1A27",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 22,
+    shadowColor: "#1D1A27",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
   },
   pillToolbarWrapper: {
     paddingVertical: 24,
@@ -1265,8 +1913,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 100,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     gap: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
@@ -1318,19 +1966,22 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   previewButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   nextButtonText: {
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
   },
   canvasContainer: {
     flex: 1,

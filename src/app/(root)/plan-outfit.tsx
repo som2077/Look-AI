@@ -1,37 +1,39 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  TextInput,
-  Alert,
-  Modal,
-  TouchableOpacity,
-} from "react-native";
-import { Image as ExpoImage } from "expo-image";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
+import { useLogWears } from "@/features/wardrobe/api/useLogWears";
+import analytics from "@react-native-firebase/analytics";
 import {
   IconArrowLeft,
   IconCalendarEvent,
-  IconWorld,
-  IconHanger,
-  IconShare,
-  IconPhoto,
-  IconTrash,
+  IconCheck,
+  IconChevronLeft,
+  IconChevronRight,
   IconClock,
+  IconPhoto,
+  IconShare,
   IconX,
 } from "@tabler/icons-react-native";
-import { Calendar } from "react-native-calendars";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import * as Sharing from "expo-sharing";
+import { Image as ExpoImage } from "expo-image";
 import * as MediaLibrary from "expo-media-library";
-import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
-import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
-import { useLogWears } from "@/features/wardrobe/api/useLogWears";
-import analytics from "@react-native-firebase/analytics";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Sharing from "expo-sharing";
+import React, { useState } from "react";
+import {
+  Alert,
+  Animated,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { Calendar } from "react-native-calendars";
+import DatePicker from "react-native-date-picker";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PlanOutfitScreen() {
   const router = useRouter();
@@ -42,14 +44,49 @@ export default function PlanOutfitScreen() {
   }>();
 
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState<Date | undefined>(
+    new Date(),
+  );
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [notes, setNotes] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const bottomSheetSlideAnim = React.useRef(new Animated.Value(400)).current;
+  const bottomSheetFadeAnim = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (showTimePicker) {
+      Animated.parallel([
+        Animated.timing(bottomSheetSlideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomSheetFadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(bottomSheetSlideAnim, {
+          toValue: 400,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomSheetFadeAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [showTimePicker]);
   const { logWears } = useLogWears();
 
   const addOutfit = useUserOutfitsStore((state) => state.addOutfit);
-
 
   const handleSaveToCalendar = () => {
     if (!selectedDate) {
@@ -64,13 +101,35 @@ export default function PlanOutfitScreen() {
       items: itemIds ? itemIds.split(",") : [],
       createdAt: Date.now(),
       scheduledDate: selectedDate,
-      scheduledTime: selectedTime ? selectedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : undefined,
+      scheduledTime: selectedTime
+        ? selectedTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : undefined,
       notes,
     });
 
-    Alert.alert("Success", "Outfit added to calendar!");
     setIsModalVisible(false);
-    router.replace("/");
+
+    // Show custom toast before navigating
+    setToastMessage("Outfit added to calendar!");
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    setTimeout(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setToastMessage("");
+        router.replace("/");
+      });
+    }, 1500);
   };
 
   const handleSaveToWardrobe = async () => {
@@ -88,7 +147,7 @@ export default function PlanOutfitScreen() {
       logWears(idsArray);
     }
     await analytics().logEvent("outfit_created");
-    Alert.alert("Saved", "Outfit saved to your wardrobe.");
+    // Alert.alert("Saved", "Outfit saved to your wardrobe.");
   };
 
   const handleShare = async () => {
@@ -104,7 +163,22 @@ export default function PlanOutfitScreen() {
     if (status === "granted") {
       try {
         await MediaLibrary.saveToLibraryAsync(imageUri);
-        Alert.alert("Success", "Image saved to gallery!");
+
+        // Show Custom Toast
+        setToastMessage("Saved to gallery");
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+
+        setTimeout(() => {
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setToastMessage(""));
+        }, 2500);
       } catch (e) {
         Alert.alert("Error", "Failed to save image.");
       }
@@ -122,23 +196,35 @@ export default function PlanOutfitScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      {/* Toast Notification */}
+      {!!toastMessage && (
+        <Animated.View style={[styles.toastContainer, { opacity: fadeAnim }]}>
+          <View style={styles.toastContent}>
+            <View style={styles.toastIconContainer}>
+              <IconCheck size={16} color="#FFFFFF" />
+            </View>
+            <Text style={styles.toastText}>{toastMessage}</Text>
+          </View>
+        </Animated.View>
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
           <IconArrowLeft size={24} color="#1D1A27" />
         </Pressable>
         <Text style={styles.headerTitle}>Publish Outfit</Text>
-        <TouchableOpacity 
-          onPress={() => setIsModalVisible(true)}
-          style={styles.headerIconBtn}
-        >
-          <IconCalendarEvent size={24} color="#1D1A27" />
-        </TouchableOpacity>
+        <View style={{ width: 32 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Preview */}
-        <View style={[styles.previewContainer, { aspectRatio: ratio === "1:1" ? 1 : 3/4 }]}>
+        <View
+          style={[
+            styles.previewContainer,
+            { aspectRatio: ratio === "1:1" ? 1 : 3 / 4 },
+          ]}
+        >
           <ExpoImage
             source={{ uri: imageUri }}
             style={styles.previewImage}
@@ -146,72 +232,49 @@ export default function PlanOutfitScreen() {
           />
         </View>
 
-        {/* Publish & Save Options */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Publish & Save Options</Text>
-          <View style={styles.actionGrid}>
-            <Pressable
-              style={[
-                styles.actionCard,
-                { backgroundColor: "#EFF6FF", borderColor: "#93C5FD" },
-              ]}
-              onPress={() => {}}
-            >
-              <IconWorld size={28} color="#3B82F6" style={styles.cardIcon} />
-              <View style={styles.cardTextContent}>
-                <Text style={styles.cardTitle}>Share to Explore</Text>
-                <Text style={styles.cardSubtitle}>
-                  Publish to the community feed
-                </Text>
-              </View>
-            </Pressable>
+        {/* Primary Action */}
+        <Pressable
+          style={styles.primaryButton}
+          onPress={() => {
+            router.navigate({
+              pathname: "/(tabs)/explore" as any,
+              params: { attachedImage: imageUri },
+            });
+          }}
+        >
+          <Text style={styles.primaryButtonText}>Share to Explore</Text>
+        </Pressable>
 
-            <Pressable
-              style={[
-                styles.actionCard,
-                { backgroundColor: "#F0FDF4", borderColor: "#86EFAC" },
-              ]}
-              onPress={handleSaveToWardrobe}
-            >
-              <IconHanger size={28} color="#22C55E" style={styles.cardIcon} />
-              <View style={styles.cardTextContent}>
-                <Text style={styles.cardTitle}>Save to Wardrobe</Text>
-                <Text style={styles.cardSubtitle}>
-                  Organize in your collection
-                </Text>
-              </View>
-            </Pressable>
+        {/* Secondary Actions */}
+        <View style={styles.secondaryActionsGroup}>
+          <Pressable
+            style={styles.listButton}
+            onPress={() => setIsModalVisible(true)}
+          >
+            <View style={styles.listButtonLeft}>
+              <IconCalendarEvent size={22} color="#1D1A27" />
+              <Text style={styles.listButtonText}>Plan Future Outfit</Text>
+            </View>
+            <Text style={styles.listButtonSub}>Add to calendar</Text>
+          </Pressable>
+          <View style={styles.divider} />
 
-            <Pressable
-              style={[
-                styles.actionCard,
-                { backgroundColor: "#FFF7ED", borderColor: "#FDBA74" },
-              ]}
-              onPress={handleShare}
-            >
-              <IconShare size={28} color="#F97316" style={styles.cardIcon} />
-              <View style={styles.cardTextContent}>
-                <Text style={styles.cardTitle}>Share</Text>
-                <Text style={styles.cardSubtitle}>
-                  Post to social or message
-                </Text>
-              </View>
-            </Pressable>
+          <Pressable style={styles.listButton} onPress={handleShare}>
+            <View style={styles.listButtonLeft}>
+              <IconShare size={22} color="#1D1A27" />
+              <Text style={styles.listButtonText}>Share</Text>
+            </View>
+            <Text style={styles.listButtonSub}>Post or message</Text>
+          </Pressable>
+          <View style={styles.divider} />
 
-            <Pressable
-              style={[
-                styles.actionCard,
-                { backgroundColor: "#FAF5FF", borderColor: "#D8B4FE" },
-              ]}
-              onPress={handleSaveToGallery}
-            >
-              <IconPhoto size={28} color="#A855F7" style={styles.cardIcon} />
-              <View style={styles.cardTextContent}>
-                <Text style={styles.cardTitle}>Save to Gallery</Text>
-                <Text style={styles.cardSubtitle}>Download to phone photos</Text>
-              </View>
-            </Pressable>
-          </View>
+          <Pressable style={styles.listButton} onPress={handleSaveToGallery}>
+            <View style={styles.listButtonLeft}>
+              <IconPhoto size={22} color="#1D1A27" />
+              <Text style={styles.listButtonText}>Save to Gallery</Text>
+            </View>
+            <Text style={styles.listButtonSub}>Download to phone</Text>
+          </Pressable>
         </View>
 
         <View style={{ height: 40 }} />
@@ -224,81 +287,154 @@ export default function PlanOutfitScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Plan Future Outfit</Text>
-            <TouchableOpacity onPress={() => setIsModalVisible(false)} style={{ padding: 4 }}>
-              <IconX size={24} color="#1D1A27" />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView contentContainerStyle={styles.modalScroll}>
-            <View style={styles.calendarWrapper}>
-              <Calendar
-                onDayPress={(day: any) => setSelectedDate(day.dateString)}
-                markedDates={{
-                  [selectedDate]: {
-                    selected: true,
-                    selectedColor: "#1D1A27",
-                  },
-                }}
-                theme={{
-                  todayTextColor: "#3B82F6",
-                  arrowColor: "#1D1A27",
-                  textDayFontWeight: "500",
-                  textMonthFontWeight: "700",
-                  textDayHeaderFontWeight: "500",
-                }}
-              />
-            </View>
-
-            <View style={styles.timeSection}>
-              <Text style={styles.sectionTitle}>Time (Optional)</Text>
-              <TouchableOpacity 
-                style={styles.timeSelector}
-                onPress={() => setShowTimePicker(true)}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Plan Future Outfit</Text>
+              <TouchableOpacity
+                onPress={() => setIsModalVisible(false)}
+                style={{ padding: 4 }}
               >
-                <IconClock size={20} color="#6B7280" />
-                <Text style={selectedTime ? styles.timeText : styles.timeTextPlaceholder}>
-                  {selectedTime ? selectedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "Add time"}
-                </Text>
+                <IconX size={24} color="#1D1A27" />
               </TouchableOpacity>
-              
-              {showTimePicker && (
-                <DateTimePicker
-                  value={selectedTime || new Date()}
-                  mode="time"
-                  display="default"
-                  onChange={(event, date) => {
-                    setShowTimePicker(false);
-                    if (date) setSelectedTime(date);
-                  }}
-                />
-              )}
             </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Details</Text>
-              <TextInput
-                style={styles.notesInput}
-                placeholder="Write some details... (e.g. For Friday's party)"
-                placeholderTextColor="#999"
-                multiline
-                value={notes}
-                onChangeText={setNotes}
-              />
-            </View>
-          </ScrollView>
-
-          <View style={styles.modalFooter}>
-            <Pressable
-              style={styles.planButton}
-              onPress={handleSaveToCalendar}
+            <ScrollView
+              contentContainerStyle={styles.modalScroll}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
             >
-              <Text style={styles.planButtonText}>+ Plan Future Outfit</Text>
-            </Pressable>
-          </View>
-        </SafeAreaView>
+              <View style={styles.calendarWrapper}>
+                <Calendar
+                  onDayPress={(day: any) => setSelectedDate(day.dateString)}
+                  markedDates={{
+                    [selectedDate]: {
+                      selected: true,
+                      selectedColor: "#1D1A27",
+                    },
+                  }}
+                  theme={{
+                    todayTextColor: "#1D1A27",
+                    arrowColor: "#1D1A27",
+                    textDayFontWeight: "600",
+                    textMonthFontWeight: "800",
+                    textDayHeaderFontWeight: "500",
+                    textSectionTitleColor: "#9CA3AF",
+                    selectedDayBackgroundColor: "#374151",
+                    selectedDayTextColor: "#ffffff",
+                    dayTextColor: "#1D1A27",
+                    monthTextColor: "#1D1A27",
+                  }}
+                  renderArrow={(direction) => (
+                    <View style={styles.calendarArrowContainer}>
+                      {direction === "left" ? (
+                        <IconChevronLeft size={16} color="#4B5563" />
+                      ) : (
+                        <IconChevronRight size={16} color="#4B5563" />
+                      )}
+                    </View>
+                  )}
+                />
+              </View>
+
+              <View style={styles.timeSection}>
+                <Text style={styles.sectionTitle}>Time </Text>
+                <TouchableOpacity
+                  style={styles.timeSelector}
+                  onPress={() => setShowTimePicker(true)}
+                >
+                  <IconClock size={20} color="#6B7280" />
+                  <Text
+                    style={
+                      selectedTime
+                        ? styles.timeText
+                        : styles.timeTextPlaceholder
+                    }
+                  >
+                    {selectedTime
+                      ? selectedTime.toLocaleTimeString([], {
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : "Add time"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Details</Text>
+                <TextInput
+                  style={styles.notesInput}
+                  placeholder="Write some details... (e.g. For Friday's party)"
+                  placeholderTextColor="#999"
+                  multiline
+                  value={notes}
+                  onChangeText={setNotes}
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <Pressable
+                style={styles.planButton}
+                onPress={handleSaveToCalendar}
+              >
+                <Text style={styles.planButtonText}>+ Plan Future Outfit</Text>
+              </Pressable>
+            </View>
+
+            {/* Custom Bottom Sheet for Time Picker - Absolute Overlay */}
+            <Animated.View
+              pointerEvents={showTimePicker ? "auto" : "none"}
+              style={[
+                StyleSheet.absoluteFillObject,
+                { zIndex: 9999, elevation: 9999, opacity: bottomSheetFadeAnim },
+              ]}
+            >
+              <View style={styles.bottomSheetOverlay}>
+                <TouchableOpacity
+                  style={styles.bottomSheetDismissArea}
+                  onPress={() => setShowTimePicker(false)}
+                  activeOpacity={1}
+                />
+                <Animated.View
+                  style={[
+                    styles.bottomSheetContainer,
+                    { transform: [{ translateY: bottomSheetSlideAnim }] },
+                  ]}
+                >
+                  <View style={styles.bottomSheetHeader}>
+                    <View style={{ flex: 1 }} />
+                    <Text style={styles.bottomSheetTitle}>Select Time</Text>
+                    <View style={{ flex: 1, alignItems: "flex-end" }}>
+                      <TouchableOpacity
+                        onPress={() => setShowTimePicker(false)}
+                      >
+                        <Text style={styles.bottomSheetDoneText}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <DatePicker
+                    date={selectedTime || new Date()}
+                    mode="time"
+                    onDateChange={(date) => {
+                      setSelectedTime(date);
+                    }}
+                    // @ts-ignore
+                    textColor="#1D1A27"
+                    theme="light"
+                    locale="en-US"
+                    style={{ alignSelf: "center", height: 200, width: 300 }}
+                  />
+                </Animated.View>
+              </View>
+            </Animated.View>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -314,7 +450,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    // paddingVertical: 12,
   },
   headerTitle: {
     fontSize: 18,
@@ -322,65 +458,75 @@ const styles = StyleSheet.create({
     color: "#1D1A27",
   },
   scrollContent: {
-    padding: 16,
+    padding: 20,
   },
   previewContainer: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
+    // backgroundColor: "#F3F4F6",
     borderRadius: 24,
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
-    padding: 16,
+    marginBottom: 20,
+    // padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   previewImage: {
     width: "100%",
     height: "100%",
   },
-  actionGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    rowGap: 12,
-  },
-  actionCard: {
-    width: "48%",
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 12,
+  primaryButton: {
+    backgroundColor: "#1D1A27",
+    width: "100%",
+    paddingVertical: 18,
     borderRadius: 16,
-    borderWidth: 1.5,
+    alignItems: "center",
+    marginBottom: 20,
   },
-  cardIcon: {
-    marginRight: 8,
-    marginTop: 2,
+  primaryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
-  cardTextContent: {
-    flex: 1,
+  secondaryActionsGroup: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
   },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
+  listButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  listButtonLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  listButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
     color: "#1D1A27",
-    marginBottom: 4,
   },
-  cardSubtitle: {
-    fontSize: 12,
-    fontWeight: "500",
+  listButtonSub: {
+    fontSize: 13,
     color: "#6B7280",
-    lineHeight: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#F3F4F6",
+    marginHorizontal: 16,
   },
   section: {
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1D1A27",
-    marginBottom: 16,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#4B5563",
+    marginBottom: 12,
   },
   notesInput: {
     backgroundColor: "#FFFFFF",
@@ -390,37 +536,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#1D1A27",
     textAlignVertical: "top",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   calendarWrapper: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
+    borderRadius: 35,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  headerIconBtn: {
-    padding: 4,
+  calendarArrowContainer: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 16,
+    padding: 6,
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFFFF",
   },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    paddingVertical: 10,
     backgroundColor: "#FFFFFF",
   },
   modalTitle: {
@@ -429,7 +571,9 @@ const styles = StyleSheet.create({
     color: "#1D1A27",
   },
   modalScroll: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 8,
   },
   timeSection: {
     marginTop: 24,
@@ -470,5 +614,71 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  toastContainer: {
+    position: "absolute",
+    top: 60,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 999,
+  },
+  toastContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1D1A27",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 100,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 6,
+    gap: 12,
+  },
+  toastIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#22C55E",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  toastText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  bottomSheetOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "flex-end",
+  },
+  bottomSheetDismissArea: {
+    flex: 1,
+  },
+  bottomSheetContainer: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 32,
+  },
+  bottomSheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  bottomSheetTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1D1A27",
+  },
+  bottomSheetDoneText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#3B82F6",
   },
 });

@@ -6,12 +6,13 @@ import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import {
   IconBell,
   IconMoodPlus,
+  IconPhoto,
   IconPlus,
   IconSend,
   IconX,
 } from "@tabler/icons-react-native";
 import { ResizeMode, Video } from "expo-av";
-import { useRouter } from "expo-router";
+import { useGlobalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -114,7 +115,11 @@ const PostCard = React.memo(function PostCard({
   return (
     <View
       style={{
-        paddingVertical: 3,
+        backgroundColor: "#F8F7FC70",
+        borderRadius: 24,
+        borderColor: "#000000",
+        borderWidth: 0.02,
+        padding: 10,
       }}
     >
       {/* Header: Avatar + Info */}
@@ -126,12 +131,11 @@ const PostCard = React.memo(function PostCard({
           style={{
             width: 40,
             height: 40,
-            borderRadius: 44,
-            marginRight: 8,
-            marginLeft: 8,
+            borderRadius: 20,
+            marginRight: 10,
           }}
         />
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, justifyContent: "center" }}>
           <Text
             numberOfLines={1}
             style={{
@@ -142,7 +146,7 @@ const PostCard = React.memo(function PostCard({
           >
             {displayNickname}
           </Text>
-          <Text style={{ fontSize: 11, color: "#00000080", marginTop: 1 }}>
+          <Text style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
             {timeAgo}
           </Text>
         </View>
@@ -152,11 +156,9 @@ const PostCard = React.memo(function PostCard({
       {post.caption ? (
         <Text
           style={{
-            fontSize: 13,
+            fontSize: 14,
             color: "#1D1A27",
-            lineHeight: 22,
-            marginLeft: 10,
-            // marginRight: 20,
+            lineHeight: 20,
             marginBottom: post.image_url ? 12 : 8,
           }}
         >
@@ -177,7 +179,9 @@ const PostCard = React.memo(function PostCard({
                 width: "100%",
                 aspectRatio: aspectRatio,
                 borderRadius: 12,
-                marginBottom: 8,
+                marginBottom: 10,
+                borderWidth: 1,
+                borderColor: "rgba(0,0,0,0.04)",
               }}
               resizeMode="cover"
             />
@@ -240,10 +244,8 @@ const PostCard = React.memo(function PostCard({
               flexDirection: "row",
               alignItems: "center",
               backgroundColor: myReaction === emoji ? "#E0F2FE" : "#F3F4F6",
-              borderColor: myReaction === emoji ? "#38BDF890" : "transparent",
-              borderWidth: 1,
               paddingHorizontal: 12,
-              paddingVertical: 5,
+              paddingVertical: 6,
               borderRadius: 16,
             }}
           >
@@ -313,10 +315,6 @@ const PostCard = React.memo(function PostCard({
           ))}
         </View>
       )}
-
-      <View
-        style={{ height: 1, backgroundColor: "#E5E7EB70", marginTop: 15 }}
-      />
     </View>
   );
 });
@@ -342,6 +340,18 @@ function FeedTab() {
   const scrollRef = useRef<ScrollView>(null);
   const [isComposing, setIsComposing] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
+
+  const params = useGlobalSearchParams();
+
+  useEffect(() => {
+    if (params.attachedImage) {
+      setImageUri(params.attachedImage as string);
+      setIsComposing(true);
+      setTimeout(() => inputRef.current?.focus(), 200);
+      // Clear the param so it doesn't re-trigger
+      router.setParams({ attachedImage: "" });
+    }
+  }, [params.attachedImage]);
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
@@ -438,8 +448,8 @@ function FeedTab() {
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 16,
-          paddingHorizontal: 16,
-          // paddingTop: 20,
+          paddingHorizontal: 18,
+          // paddingTop: 1,
         }}
       >
         <Text
@@ -447,39 +457,60 @@ function FeedTab() {
             fontSize: 24,
             fontWeight: "800",
             color: "#1D1A27",
+            letterSpacing: -0.5,
           }}
         >
-          Explore here
+          Explore
         </Text>
-        <View style={{ flexDirection: "row", gap: 16 }}>
+        <View style={{ flexDirection: "row", gap: 8 }}>
           <TouchableOpacity
-            onPress={() => router.push("/(root)/notifications")}
-          >
-            <IconBell size={24} color="#1D1A27" />
-            {/* Notification Badge */}
-            {unreadCount > 0 && (
-              <View
-                style={{
-                  position: "absolute",
-                  top: 2,
-                  right: 2,
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#FF3B30",
-                  borderWidth: 1,
-                  borderColor: "#FFF",
-                }}
-              />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 100,
+              borderWidth: 1,
+              borderColor: "#E2E2EA",
+              backgroundColor: "#F8F7FC",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
             onPress={() => {
               setIsComposing(true);
               setTimeout(() => inputRef.current?.focus(), 100);
             }}
           >
-            <IconPlus size={24} color="#1D1A27" />
+            <IconPlus size={20} color="#1D1A27" strokeWidth={1.8} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 100,
+              borderWidth: 1,
+              borderColor: "#E2E2EA",
+              backgroundColor: "#F8F7FC",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onPress={() => router.push("/(root)/notifications")}
+          >
+            <IconBell size={20} color="#1D1A27" strokeWidth={1.8} />
+            {/* Notification Badge */}
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 10,
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: "#EF4444",
+                  borderWidth: 1,
+                  borderColor: "#F3F4F6",
+                }}
+              />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -535,8 +566,8 @@ function FeedTab() {
             No posts yet. Be the first to share something!
           </Text>
         ) : (
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <View style={{ flex: 1, gap: 12 }}>
+          <View style={{ flexDirection: "row", gap: 7 }}>
+            <View style={{ flex: 1, gap: 7 }}>
               {leftColumn.map((post) => (
                 <PostCard
                   key={post.id}
@@ -545,7 +576,7 @@ function FeedTab() {
                 />
               ))}
             </View>
-            <View style={{ flex: 1, gap: 12 }}>
+            <View style={{ flex: 1, gap: 7 }}>
               {rightColumn.map((post) => (
                 <PostCard
                   key={post.id}
@@ -613,12 +644,12 @@ function FeedTab() {
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: "#000000",
+                backgroundColor: "#F3F4F6",
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <IconPlus size={20} color="#FFFFFF" />
+              <IconPhoto size={20} color="#4B5563" />
             </TouchableOpacity>
 
             <TextInput
@@ -630,31 +661,39 @@ function FeedTab() {
               style={{
                 flex: 1,
                 height: 40,
-                backgroundColor: "#F3F4F6",
+                backgroundColor: "#F9FAFB",
                 borderRadius: 20,
                 paddingHorizontal: 16,
-                fontSize: 14,
+                fontSize: 15,
                 color: "#1D1A27",
+                borderWidth: 1,
+                borderColor: "#E5E7EB",
               }}
             />
 
             <TouchableOpacity
               onPress={handleSend}
-              disabled={uploading}
+              disabled={uploading || (!inputText.trim() && !imageUri)}
               style={{
                 width: 40,
                 height: 40,
                 borderRadius: 20,
                 backgroundColor:
-                  inputText.trim() || imageUri ? "#1D1A27" : "#000000",
+                  inputText.trim() || imageUri ? "#1D1A27" : "#F3F4F6",
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
               {uploading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator
+                  size="small"
+                  color={inputText.trim() || imageUri ? "#FFFFFF" : "#9CA3AF"}
+                />
               ) : (
-                <IconSend size={18} color="#FFFFFF" />
+                <IconSend
+                  size={18}
+                  color={inputText.trim() || imageUri ? "#FFFFFF" : "#9CA3AF"}
+                />
               )}
             </TouchableOpacity>
           </View>

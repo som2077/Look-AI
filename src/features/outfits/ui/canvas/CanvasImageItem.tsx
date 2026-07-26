@@ -58,6 +58,8 @@ export function CanvasImageItem({
   const panResponderResize = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
         scaleAnim.extractOffset();
         rotateAnim.extractOffset();
