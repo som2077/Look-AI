@@ -3,12 +3,14 @@ import { useStreakStore } from "@/shared/store/useStreakStore";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
   IconArrowLeft,
+  IconArrowRight,
   IconCheck,
   IconDownload,
-  IconInfoCircle,
+  IconHanger,
   IconPencil,
   IconShare,
   IconSparklesFilled,
+  IconUser,
 } from "@tabler/icons-react-native";
 import { decode } from "base64-arraybuffer";
 import { ResizeMode, Video } from "expo-av";
@@ -18,17 +20,17 @@ import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
   Modal,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from "react-native";
+import PagerView from "react-native-pager-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -73,7 +75,7 @@ export default function OutfitScreen() {
       }
     } catch (e) {
       console.error(e);
-      Alert.alert("Error", "Failed to save.");
+      showError("Failed to save.");
     }
   };
 
@@ -101,7 +103,7 @@ export default function OutfitScreen() {
       }
     } catch (e) {
       console.error(e);
-      Alert.alert("Error", "Failed to share.");
+      showError("Failed to share.");
     }
   };
 
@@ -110,11 +112,23 @@ export default function OutfitScreen() {
   const [loading, setLoading] = useState(false);
   const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
+
+  const showError = (msg: string) => {
+    setCustomError(msg);
+    setTimeout(() => {
+      setCustomError(null);
+    }, 3000);
+  };
 
   // Outfit States
   const [personImage, setPersonImage] = useState<string | null>(null);
   const [outfitImage, setOutfitImage] = useState<string | null>(null);
   const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
+
+  // Pager State
+  const [activeStep, setActiveStep] = useState(0);
+  const pagerRef = useRef<PagerView>(null);
 
   // Toggles (assume user will wire UI later as they mentioned)
   const [garmentPhotoType, setGarmentPhotoType] = useState<
@@ -242,7 +256,7 @@ export default function OutfitScreen() {
   ]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+    <View style={{ flex: 1, backgroundColor: "#F9F9F9" }}>
       <StatusBar style="dark" />
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* Header */}
@@ -252,24 +266,21 @@ export default function OutfitScreen() {
             alignItems: "center",
             justifyContent: "space-between",
             paddingHorizontal: 24,
-            // paddingTop: 10,
-            // paddingBottom: 16,
+            paddingTop: 10,
+            paddingBottom: 16,
           }}
         >
-          <Pressable onPress={() => router.replace("/")}>
-            <IconArrowLeft size={24} color="#1D1A27" />
-          </Pressable>
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}>
-              Virtual Try On
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => router.push("/(root)/(ai-features)/history")}
-            style={{ padding: 8 }}
-          >
-            <IconInfoCircle size={24} color="#1D1A27" />
-          </Pressable>
+          {resultImageUrl || loading ? (
+            <View style={{ width: 24 }} />
+          ) : (
+            <Pressable onPress={() => router.replace("/")}>
+              <IconArrowLeft size={24} color="#1D1A27" />
+            </Pressable>
+          )}
+          <Text style={{ fontSize: 16, fontWeight: "600", color: "#1D1A27" }}>
+            Virtual Try-On
+          </Text>
+          <View style={{ width: 24 }} />
         </View>
 
         {loading ? (
@@ -304,292 +315,402 @@ export default function OutfitScreen() {
               {LOADING_PHRASES[loadingPhraseIndex]}
             </Text>
           </View>
-        ) : (
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
-          >
-            {/* Virtual Try-On View */}
-            <View style={{ paddingHorizontal: 15, alignItems: "center" }}>
+        ) : resultImageUrl ? (
+          /* Final Result State */
+          <View style={{ flex: 1, paddingHorizontal: 24, marginBottom: 10 }}>
+            <Text
+              style={{
+                fontSize: 15,
+                color: "#666666",
+                textAlign: "center",
+                lineHeight: 22,
+                fontWeight: "400",
+                // textAlign: "center",
+                marginTop: 20,
+                marginBottom: 30,
+                // lineHeight: 26,
+              }}
+            >
+              Seamlessly merge your digital identity with haute couture using
+              our high-fidelity generative engine
+            </Text>
+
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "#FFFFFF",
+                borderRadius: 32,
+                padding: 16,
+                overflow: "hidden",
+              }}
+            >
               <View
                 style={{
                   flexDirection: "row",
-                  width: "100%",
-                  gap: 13,
-                  marginTop: 7,
+                  justifyContent: "flex-end",
+                  gap: 12,
+                  marginBottom: 16,
+                  zIndex: 10,
                 }}
               >
-                {/* Card 1: Your Photo */}
-                <View style={{ flex: 1, alignItems: "center" }}>
-                  <Pressable
-                    onPress={() => pickImage(setPersonImage)}
-                    style={{
-                      width: "100%",
-                      aspectRatio: 3 / 4,
-                      backgroundColor: "#FFFFFF",
-                      borderRadius: 24,
-                      borderWidth: 1,
-                      borderColor: "#E2E2EA",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {personImage ? (
-                      <>
-                        <Image
-                          source={{ uri: personImage }}
-                          style={{ width: "100%", height: "100%" }}
-                          resizeMode="cover"
-                        />
-                        <View
-                          style={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            width: 28,
-                            height: 28,
-                            borderRadius: 14,
-                            backgroundColor: "#000000",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <IconPencil size={16} color="#FFFFFF" />
-                        </View>
-                      </>
-                    ) : (
-                      <Video
-                        source={require("../../../../assets/yourImage.webm")}
-                        style={{ width: "100%", height: "80%" }}
-                        resizeMode={ResizeMode.COVER}
-                        shouldPlay
-                        isMuted
-                      />
-                    )}
-                  </Pressable>
-                  <Text
-                    style={{
-                      marginTop: 12,
-                      fontSize: 14,
-                      fontWeight: "700",
-                      color: "#1D1A27",
-                    }}
-                  >
-                    Select Your Image
-                  </Text>
-                </View>
-
-                {/* Card 2: Garment */}
-                <View style={{ flex: 1, alignItems: "center" }}>
-                  <Pressable
-                    onPress={() => pickImage(setOutfitImage)}
-                    style={{
-                      width: "100%",
-                      aspectRatio: 3 / 4,
-                      backgroundColor: "#FFFFFF",
-                      borderRadius: 24,
-                      borderWidth: 1,
-                      borderColor: "#E2E2EA",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {outfitImage ? (
-                      <>
-                        <Image
-                          source={{ uri: outfitImage }}
-                          style={{ width: "100%", height: "100%" }}
-                          resizeMode="cover"
-                        />
-                        <View
-                          style={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            width: 28,
-                            height: 28,
-                            borderRadius: 14,
-                            backgroundColor: "#000000",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <IconPencil size={16} color="#FFFFFF" />
-                        </View>
-                      </>
-                    ) : (
-                      <Video
-                        source={require("../../../../assets/outfitImage.webm")}
-                        style={{ width: "100%", height: "80%" }}
-                        resizeMode={ResizeMode.COVER}
-                        shouldPlay
-                        isMuted
-                      />
-                    )}
-                  </Pressable>
-                  <Text
-                    style={{
-                      marginTop: 12,
-                      fontSize: 14,
-                      fontWeight: "700",
-                      color: "#1D1A27",
-                    }}
-                  >
-                    Select Outfit Image
-                  </Text>
-                </View>
+                <Pressable
+                  onPress={handleShare}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: "#00000010",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconShare size={20} color="#000000" />
+                </Pressable>
+                <Pressable
+                  onPress={handleDownload}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: "#00000010",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconDownload size={20} color="#000000" />
+                </Pressable>
               </View>
 
-              {/* Action Button */}
-              <Pressable
-                disabled={!personImage || !outfitImage}
-                onPress={handleGenerate}
-                style={{
-                  width: "100%",
-                  marginTop: 20,
-                  backgroundColor:
-                    !personImage || !outfitImage ? "#E2E2EA" : "#1D1A27",
-                  borderRadius: 16,
-                  paddingVertical: 18,
-                  alignItems: "center",
-                }}
-              >
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-                >
-                  <IconSparklesFilled
-                    size={20}
-                    color={!personImage || !outfitImage ? "#9B9BAF" : "#FFFFFF"}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: "700",
-                      color:
-                        !personImage || !outfitImage ? "#9B9BAF" : "#FFFFFF",
-                    }}
-                  >
-                    Generate Try-On
-                  </Text>
-                </View>
-              </Pressable>
-
-              {/* Final Result Placeholder */}
               <View
                 style={{
-                  marginTop: 10,
-                  width: "100%",
-                  aspectRatio: 3 / 4,
+                  flex: 1,
                   backgroundColor: "#FFFFFF",
                   borderRadius: 24,
-                  borderWidth: 1,
-                  borderColor: "#E2E2EA",
+                  overflow: "hidden",
                   alignItems: "center",
                   justifyContent: "center",
-                  overflow: "hidden",
                 }}
               >
-                {resultImageUrl ? (
-                  <Image
-                    source={{ uri: resultImageUrl }}
-                    style={{ width: "100%", height: "100%" }}
-                    resizeMode="cover"
-                  />
-                ) : (
+                {resultImageUrl === "mock_video" ? (
                   <>
-                    <Video
-                      source={require("../../../../assets/final.webm")}
-                      style={{
-                        width: 350,
-                        height: 350,
-                        marginBottom: 16,
-                      }}
-                      resizeMode={ResizeMode.CONTAIN}
-                      shouldPlay
-                      isMuted
-                      isLooping
-                    />
-
+                    <View style={{ flex: 1, width: "100%" }}>
+                      <Video
+                        source={require("../../../../assets/final.webm")}
+                        style={{ width: "100%", height: "90%" }}
+                        resizeMode={ResizeMode.COVER}
+                        shouldPlay
+                        isMuted
+                        isLooping
+                      />
+                    </View>
                     <Text
                       style={{
-                        fontSize: 14,
-                        color: "#9B9BAF",
+                        padding: 16,
                         textAlign: "center",
-                        paddingHorizontal: 32,
-                        lineHeight: 22,
+                        color: "#9CA3AF",
+                        fontSize: 14,
+                        lineHeight: 20,
                       }}
                     >
                       Your merged try-on image will appear here after
                       generation.
                     </Text>
                   </>
+                ) : (
+                  <Image
+                    source={{ uri: resultImageUrl }}
+                    style={{ width: "100%", height: "100%" }}
+                    resizeMode="cover"
+                  />
                 )}
               </View>
+            </View>
 
-              {/* Download and Share Buttons */}
+            <View style={{ paddingVertical: 20 }}>
+              <Pressable
+                onPress={() => setResultImageUrl(null)}
+                style={{
+                  width: "100%",
+                  backgroundColor: "#1C1C1C",
+                  borderRadius: 50,
+                  paddingVertical: 18,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconArrowLeft size={24} color="#FFFFFF" />
+              </Pressable>
+            </View>
+          </View>
+        ) : (
+          /* Input Steps */
+          <View style={{ flex: 1 }}>
+            <View style={{ paddingHorizontal: 24 }}>
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#666666",
+                  textAlign: "center",
+                  lineHeight: 22,
+                  marginTop: 10,
+                  marginBottom: 30,
+                  fontWeight: "400",
+                }}
+              >
+                Elevate your personal style through AI-powered vision. Visualize
+                our high-fashion pieces tailored specifically to your
+                silhouette.
+              </Text>
+
               <View
                 style={{
                   flexDirection: "row",
                   justifyContent: "space-between",
-                  gap: 10,
-                  marginTop: 10,
-                  width: "100%",
+                  alignItems: "center",
+                  marginBottom: 20,
                 }}
               >
-                <Pressable
-                  onPress={handleDownload}
+                <Text
                   style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: "#1C1C1C",
                     flex: 1,
-                    backgroundColor: "#1D1A27",
-                    borderRadius: 50,
-                    paddingVertical: 17,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 12,
                   }}
                 >
-                  <IconDownload size={20} color="#FFFFFF" />
-                  <Text
+                  Swipe left or right to select your person and clothing images.
+                </Text>
+                <View style={{ flexDirection: "row", gap: 8, marginLeft: 16 }}>
+                  <View
                     style={{
-                      fontSize: 16,
-                      fontWeight: "700",
-                      color: "#FFFFFF",
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: activeStep === 0 ? "#000000" : "#999999",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    Download
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={handleShare}
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#1D1A27",
-                    borderRadius: 50,
-                    paddingVertical: 17,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 12,
-                  }}
-                >
-                  <IconShare size={20} color="#FFFFFF" />
-                  <Text
+                    <Text
+                      style={{
+                        color: "#FFFFFF",
+                        fontSize: 14,
+                        fontWeight: "600",
+                      }}
+                    >
+                      1
+                    </Text>
+                  </View>
+                  <View
                     style={{
-                      fontSize: 16,
-                      fontWeight: "700",
-                      color: "#FFFFFF",
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: activeStep === 1 ? "#000000" : "#999999",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    Share
-                  </Text>
-                </Pressable>
+                    <Text
+                      style={{
+                        color: "#FFFFFF",
+                        fontSize: 14,
+                        fontWeight: "600",
+                      }}
+                    >
+                      2
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
-          </ScrollView>
+
+            <PagerView
+              style={{ flex: 1 }}
+              initialPage={0}
+              ref={pagerRef}
+              onPageSelected={(e) => setActiveStep(e.nativeEvent.position)}
+            >
+              {/* Step 1: Person Image */}
+              <View key="0" style={{ flex: 1, paddingHorizontal: 24 }}>
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 32,
+                    overflow: "hidden",
+                  }}
+                >
+                  {personImage ? (
+                    <Image
+                      source={{ uri: personImage }}
+                      style={{ width: "100%", height: "100%" }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        flex: 1,
+                        backgroundColor: "#FFFFFF",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <IconUser size={64} color="#000000" />
+                      <Text
+                        style={{
+                          marginTop: 16,
+                          fontSize: 18,
+                          fontWeight: "700",
+                          color: "#000000",
+                        }}
+                      >
+                        Select Your Photo
+                      </Text>
+                      <Text
+                        style={{ marginTop: 8, fontSize: 14, color: "#9CA3AF" }}
+                      >
+                        Tap to choose from gallery
+                      </Text>
+                    </View>
+                  )}
+
+                  <Pressable
+                    onPress={() => pickImage(setPersonImage)}
+                    style={{
+                      position: "absolute",
+                      bottom: 20,
+                      right: 20,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 24,
+                      backgroundColor: "#000000",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <IconPencil size={20} color="#FFFFFF" />
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Step 2: Garment Image */}
+              <View key="1" style={{ flex: 1, paddingHorizontal: 24 }}>
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#E5E5E5",
+                    borderRadius: 32,
+                    overflow: "hidden",
+                  }}
+                >
+                  {outfitImage ? (
+                    <Image
+                      source={{ uri: outfitImage }}
+                      style={{ width: "100%", height: "100%" }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        flex: 1,
+                        backgroundColor: "#FFFFFF",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <IconHanger size={64} color="#000000" />
+                      <Text
+                        style={{
+                          marginTop: 16,
+                          fontSize: 18,
+                          fontWeight: "700",
+                          color: "#000000",
+                        }}
+                      >
+                        Select Outfit
+                      </Text>
+                      <Text
+                        style={{ marginTop: 8, fontSize: 14, color: "#9CA3AF" }}
+                      >
+                        Tap to choose from gallery
+                      </Text>
+                    </View>
+                  )}
+
+                  <Pressable
+                    onPress={() => pickImage(setOutfitImage)}
+                    style={{
+                      position: "absolute",
+                      bottom: 20,
+                      right: 20,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 24,
+                      backgroundColor: "#000000",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <IconPencil size={20} color="#FFFFFF" />
+                  </Pressable>
+                </View>
+              </View>
+            </PagerView>
+
+            {/* Bottom Actions */}
+            <View
+              style={{
+                flexDirection: "row",
+                paddingHorizontal: 24,
+                paddingVertical: 30,
+                gap: 12,
+              }}
+            >
+              <Pressable
+                disabled={!personImage || !outfitImage}
+                onPress={handleGenerate}
+                style={{
+                  flex: 1,
+                  backgroundColor:
+                    !personImage || !outfitImage ? "#4A4A4A" : "#1C1C1C",
+                  borderRadius: 50,
+                  paddingVertical: 18,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <IconSparklesFilled size={20} color="#FFFFFF" />
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  Generate Try-On
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  // Bypass to test the Final Result State UI with local video
+                  setResultImageUrl("mock_video");
+                }}
+                style={{
+                  width: 60,
+                  backgroundColor: "#1C1C1C",
+                  borderRadius: 30,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconArrowRight size={24} color="#FFFFFF" />
+              </Pressable>
+            </View>
+          </View>
         )}
 
         {/* Success Modal */}
@@ -616,10 +737,7 @@ export default function OutfitScreen() {
                 alignItems: "center",
                 width: "100%",
                 shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 2,
-                },
+                shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.25,
                 shadowRadius: 4,
                 elevation: 5,
@@ -682,6 +800,34 @@ export default function OutfitScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Custom Error Toast */}
+        {customError && (
+          <View
+            style={{
+              position: "absolute",
+              top: 60,
+              left: 20,
+              right: 20,
+              backgroundColor: "#FF3B30",
+              padding: 16,
+              borderRadius: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 5,
+              zIndex: 9999,
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 16 }}>
+              {customError}
+            </Text>
+          </View>
+        )}
       </SafeAreaView>
     </View>
   );

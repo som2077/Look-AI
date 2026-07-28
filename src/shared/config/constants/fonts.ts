@@ -51,6 +51,7 @@ export const FONT_ASSETS = {
   "TikTokSans16pt-ExtraBoldItalic": require("@/assets/fonts/TikTokSans16pt-ExtraBoldItalic.otf"),
   "TikTokSans16pt-Black": require("@/assets/fonts/TikTokSans16pt-Black.otf"),
   "TikTokSans16pt-BlackItalic": require("@/assets/fonts/TikTokSans16pt-BlackItalic.otf"),
+  "SansitaOne-Regular": require("@/assets/fonts/SansitaOne-Regular.ttf"),
 };
 
 export type FontFamily = (typeof FONTS)[keyof typeof FONTS];

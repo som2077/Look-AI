@@ -1,6 +1,7 @@
 import { OutfitAnalyzingCard } from "@/features/ai-styling/ui/OutfitAnalyzingCard";
 import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
 import { useRingStats } from "@/features/wardrobe/api/useRingStats";
+import { PendingBatchBanner } from "@/features/wardrobe/ui/PendingBatchBanner";
 import {
   EmptyStyleBanner,
   ErrorBanner,
@@ -18,7 +19,6 @@ import {
 } from "@/shared/hooks/usePremiumLimits";
 import { useStreakStore } from "@/shared/store/useStreakStore";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
-import { PendingBatchBanner } from "@/features/wardrobe/ui/PendingBatchBanner";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { HomeHeader } from "@/shared/ui/HomeHeader";
 import { LookAIBanner } from "@/shared/ui/LookAIBanner";
@@ -89,11 +89,7 @@ const HomeCard = React.memo(function HomeCard({
               }
               className="mt-4 flex-row border border-[#FECACA] items-center bg-[#FEF2F2] rounded-[16px] px-4 py-3"
             >
-              <IconAlertTriangle
-                size={20}
-                color="#EF4444"
-                strokeWidth={1.5}
-              />
+              <IconAlertTriangle size={20} color="#EF4444" strokeWidth={1.5} />
               <Text
                 className="ml-3 text-[#991B1B] font-sans"
                 style={{ fontSize: 13, flex: 1, fontWeight: "600" }}
@@ -144,9 +140,7 @@ const HomeCard = React.memo(function HomeCard({
         <>
           <WeatherOutfitCard />
           <LookAIBanner
-            score={
-              weatherData ? Math.round(weatherData.comfortScore / 10) : 8
-            }
+            score={weatherData ? Math.round(weatherData.comfortScore / 10) : 8}
           />
         </>
       )}
@@ -182,7 +176,10 @@ export default function HomeScreen() {
       { ...RING_SEGMENT_BASE[0], progress: clampRatio(stats.usagePercent) },
       { ...RING_SEGMENT_BASE[1], progress: clampRatio(stats.avgWearsPercent) },
       { ...RING_SEGMENT_BASE[2], progress: clampRatio(stats.streakPercent) },
-      { ...RING_SEGMENT_BASE[3], progress: clampRatio(stats.totalItemsPercent) },
+      {
+        ...RING_SEGMENT_BASE[3],
+        progress: clampRatio(stats.totalItemsPercent),
+      },
     ];
   }, [stats]);
 
@@ -214,7 +211,14 @@ export default function HomeScreen() {
         weatherData={weatherData}
       />
     ),
-    [stats, ringSegments, currentStreak, canAddWardrobe, wardrobeCount, weatherData],
+    [
+      stats,
+      ringSegments,
+      currentStreak,
+      canAddWardrobe,
+      wardrobeCount,
+      weatherData,
+    ],
   );
 
   // Header stays in place (translateY counteracts scroll), clamped to HEADER_HEIGHT

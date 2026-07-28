@@ -141,5 +141,5 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
 
 registerStoreRehydration(() => useUserWardrobeStore.persist.rehydrate());
 registerStoreReset(() =>
-  useUserWardrobeStore.setState({ items: [], outfits: [], recentScans: [] })
+  useUserWardrobeStore.setState({ items: [], outfits: [], outfitLogs: [] })
 );

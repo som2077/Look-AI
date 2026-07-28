@@ -10,9 +10,11 @@ import {
   IconAlertTriangle,
   IconArrowLeft,
   IconBleachOff,
+  IconBookmark,
   IconDotsVertical,
   IconIroning1,
   IconShirt,
+  IconSparklesFilled,
   IconWashMachine,
   IconWind,
   IconX,
@@ -30,7 +32,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type LabelResultParams = {
   photoUri?: string;
@@ -66,12 +68,22 @@ export default function LabelResultScreen() {
   const removeScan = useScanHistoryStore((s) => s.removeScan);
   const scans = useScanHistoryStore((s) => s.scans);
   const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
+  const startAnalysis = useOutfitAnalysisStore((s) => s.startAnalysis);
   const addSavedItem = useSavedStore((s) => s.addSavedItem);
+  const insets = useSafeAreaInsets();
 
   const scanData = params.scanId
     ? scans.find((s) => s.id === params.scanId)
     : null;
   const photoUri = scanData?.thumbnail || params.photoUri;
+
+  const formattedTime = (
+    scanData?.date ? new Date(scanData.date) : new Date()
+  ).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 
   const [result] = useState<LabelAnalysis>(() => {
     try {
@@ -105,8 +117,41 @@ export default function LabelResultScreen() {
     }
   }, [canAddClothLabel, handleLimitReached]);
 
+  const handleSave = async () => {
+    if (photoUri && userId) {
+      setIsSaving(true);
+      const success = await saveLabelToDatabase({
+        supabase,
+        userId,
+        photoUri,
+        analysis: result,
+      });
+      setIsSaving(false);
+      if (success) {
+        addSavedItem({
+          id: `label-${Date.now()}`,
+          name: result.brand ? `${result.brand} Label` : "Care Label",
+          occasion: "cloth label",
+          wears: 0,
+          image: photoUri,
+          match: 100,
+          tags: ["cloth label"],
+          saveType: "label",
+        });
+      } else {
+        Alert.alert("Error", "Failed to save label to database.");
+        return;
+      }
+    } else if (!userId) {
+      Alert.alert("Error", "You must be logged in to save.");
+      return;
+    }
+    if (params.outfitIndex) removeOutfit(parseInt(params.outfitIndex));
+    router.replace("/(root)/(tabs)" as never);
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       {isSaving && (
         <View
           style={{
@@ -122,217 +167,230 @@ export default function LabelResultScreen() {
           }}
         >
           <ActivityIndicator size="large" color="#4F46E5" />
-
         </View>
       )}
       <StatusBar style="dark" />
-      <View style={{ flex: 1 }}>
-        {/* Header */}
+
+      {/* Absolute Floating Header */}
+      <View
+        style={{
+          position: "absolute",
+          top: insets.top + 0.1,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 20,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: "#FFFFFF",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <IconArrowLeft size={22} color="#1D1A27" />
+        </Pressable>
+        <Text style={{ fontSize: 20, fontWeight: "500", color: "#FFFFFF" }}>
+          Care Label Result
+        </Text>
+        <Pressable
+          onPress={() => setShowMenu(true)}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: "#FFFFFF",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <IconDotsVertical size={22} color="#1D1A27" />
+        </Pressable>
+      </View>
+
+      {showMenu && (
+        <Modal
+          transparent
+          visible
+          animationType="fade"
+          onRequestClose={() => setShowMenu(false)}
+        >
+          <Pressable style={{ flex: 1 }} onPress={() => setShowMenu(false)}>
+            <View
+              style={{
+                position: "absolute",
+                top: insets.top + 50,
+                right: 40,
+                backgroundColor: "#ffffff",
+                borderRadius: 12,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+                minWidth: 140,
+                paddingVertical: 4,
+                borderWidth: 1,
+                borderColor: "#F3F4F6",
+              }}
+            >
+              <Pressable
+                style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+                onPress={() => {
+                  setShowMenu(false);
+                  if (params.scanId) removeScan(params.scanId);
+                  if (params.outfitIndex)
+                    removeOutfit(parseInt(params.outfitIndex));
+                  router.replace("/(root)/(tabs)" as never);
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#EF4444",
+                    fontWeight: "500",
+                  }}
+                >
+                  Delete
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
+
+      {/* Top Background/Image */}
+      <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+        {photoUri ? (
+          <>
+            <Pressable
+              onPress={() => setIsFullscreen(true)}
+              style={{ flex: 1 }}
+            >
+              <Image
+                source={{ uri: photoUri }}
+                style={{ width: "100%", height: "55%" }}
+                resizeMode="cover"
+              />
+            </Pressable>
+
+            <Modal
+              visible={isFullscreen}
+              transparent={true}
+              animationType="fade"
+              onRequestClose={() => setIsFullscreen(false)}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: "rgba(0,0,0,0.9)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Pressable
+                  style={{
+                    position: "absolute",
+                    top: 50,
+                    right: 20,
+                    zIndex: 10,
+                    padding: 8,
+                  }}
+                  onPress={() => setIsFullscreen(false)}
+                >
+                  <IconX size={32} color="#FFFFFF" />
+                </Pressable>
+                <Image
+                  source={{ uri: photoUri }}
+                  style={{ width: "100%", height: "80%" }}
+                  resizeMode="contain"
+                />
+              </View>
+            </Modal>
+          </>
+        ) : (
+          <View style={{ height: "55%" }} />
+        )}
+      </View>
+
+      {/* Bottom Sheet Container */}
+      <View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "60%",
+          backgroundColor: "#FEFEFE",
+          borderTopLeftRadius: 32,
+          borderTopRightRadius: 32,
+          paddingTop: 24,
+          paddingHorizontal: 20,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.05,
+          shadowRadius: 12,
+          elevation: 10,
+        }}
+      >
+        {/* Time Pill and Bookmark */}
         <View
           style={{
             flexDirection: "row",
-            alignItems: "center",
             justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingVertical: 16,
+            alignItems: "center",
+            marginBottom: 20,
           }}
         >
-          <Pressable
-            onPress={() => router.back()}
-            style={{ flexDirection: "row", alignItems: "center", width: 60 }}
+          <View
+            style={{
+              backgroundColor: "#00000010",
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 20,
+            }}
           >
-            <IconArrowLeft size={24} color="#1D1A27" />
-          </Pressable>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
-            Care Label Result
-          </Text>
+            <Text style={{ fontSize: 11, fontWeight: "600", color: "#4B5563" }}>
+              {formattedTime}
+            </Text>
+          </View>
           <Pressable
-            onPress={() => setShowMenu(true)}
-            style={{ width: 60, alignItems: "flex-end", paddingVertical: 4 }}
+            onPress={handleSave}
+            style={{
+              width: 33,
+              height: 33,
+              // borderRadius: 18,
+              backgroundColor: "#FFFFFF",
+              alignItems: "center",
+              justifyContent: "center",
+              // shadowColor: "#000",
+              // shadowOffset: { width: 0, height: 2 },
+              // shadowOpacity: 0.1,
+              // shadowRadius: 4,
+              // elevation: 2,
+            }}
           >
-            <IconDotsVertical size={24} color="#1D1A27" />
+            <IconBookmark size={20} color="#1D1A27" />
           </Pressable>
         </View>
 
-        {/* Dropdown Menu Modal */}
-        {showMenu && (
-          <Modal
-            transparent
-            visible
-            animationType="fade"
-            onRequestClose={() => setShowMenu(false)}
-          >
-            <Pressable style={{ flex: 1 }} onPress={() => setShowMenu(false)}>
-              <View
-                style={{
-                  position: "absolute",
-                  top: 105,
-                  right: 30,
-                  backgroundColor: "#fff",
-                  borderRadius: 12,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 12,
-                  elevation: 8,
-                  minWidth: 140,
-                  paddingVertical: 4,
-                  borderWidth: 1,
-                  borderColor: "#F3F4F6",
-                }}
-              >
-                <Pressable
-                  style={{ paddingVertical: 12, paddingHorizontal: 16 }}
-                  onPress={async () => {
-                    setShowMenu(false);
-                    if (photoUri && userId) {
-                      setIsSaving(true);
-                      const success = await saveLabelToDatabase({
-                        supabase,
-                        userId,
-                        photoUri,
-                        analysis: result,
-                      });
-                      setIsSaving(false);
-                      if (success) {
-                        addSavedItem({
-                          id: `label-${Date.now()}`,
-                          name: result.brand
-                            ? `${result.brand} Label`
-                            : "Care Label",
-                          occasion: "cloth label",
-                          wears: 0,
-                          image: photoUri, // keep local copy in zustand for immediate UI
-                          match: 100,
-                          tags: ["cloth label"],
-                          saveType: "label",
-                        });
-
-                      } else {
-                        Alert.alert(
-                          "Error",
-                          "Failed to save label to database.",
-                        );
-                        return;
-                      }
-                    } else if (!userId) {
-                      Alert.alert("Error", "You must be logged in to save.");
-                      return;
-                    }
-                    if (params.outfitIndex)
-                      removeOutfit(parseInt(params.outfitIndex));
-                    router.replace("/(root)/(tabs)" as never);
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: "#1D1A27",
-                      fontWeight: "500",
-                    }}
-                  >
-                    Save
-                  </Text>
-                </Pressable>
-                <View style={{ height: 1, backgroundColor: "#F3F4F6" }} />
-                <Pressable
-                  style={{ paddingVertical: 12, paddingHorizontal: 16 }}
-                  onPress={() => {
-                    setShowMenu(false);
-                    if (params.scanId) removeScan(params.scanId);
-                    if (params.outfitIndex)
-                      removeOutfit(parseInt(params.outfitIndex));
-                    router.replace("/(root)/(tabs)" as never);
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: "#EF4444",
-                      fontWeight: "500",
-                    }}
-                  >
-                    Delete
-                  </Text>
-                </Pressable>
-              </View>
-            </Pressable>
-          </Modal>
-        )}
-
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}
+          contentContainerStyle={{ paddingBottom: 120 }}
         >
-          {/* Photo */}
-          {photoUri && (
-            <>
-              <Pressable
-                onPress={() => setIsFullscreen(true)}
-                style={{
-                  marginHorizontal: 20,
-                  borderRadius: 30,
-                  marginBottom: 24,
-                  backgroundColor: "#FFFFFF",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 16,
-                  elevation: 2,
-                  overflow: "hidden",
-                  borderWidth: 1,
-                  borderColor: "#E9EBF8",
-                }}
-              >
-                <Image
-                  source={{ uri: photoUri }}
-                  style={{ height: 220, width: "100%" }}
-                  resizeMode="cover"
-                />
-              </Pressable>
-
-              <Modal
-                visible={isFullscreen}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setIsFullscreen(false)}
-              >
-                <View
-                  style={{
-                    flex: 1,
-                    backgroundColor: "rgba(0,0,0,0.9)",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Pressable
-                    style={{
-                      position: "absolute",
-                      top: 50,
-                      right: 20,
-                      zIndex: 10,
-                      padding: 8,
-                    }}
-                    onPress={() => setIsFullscreen(false)}
-                  >
-                    <IconX size={32} color="#FFFFFF" />
-                  </Pressable>
-                  <Image
-                    source={{ uri: photoUri }}
-                    style={{ width: "100%", height: "80%" }}
-                    resizeMode="contain"
-                  />
-                </View>
-              </Modal>
-            </>
-          )}
-
           {/* Warnings */}
           {result.needs_user_review && (
             <View
               style={{
-                marginHorizontal: 20,
-                marginBottom: 20,
+                marginBottom: 16,
                 backgroundColor: "#FEF2F2",
                 padding: 16,
                 borderRadius: 16,
@@ -371,13 +429,10 @@ export default function LabelResultScreen() {
           {(result.brand || result.size) && (
             <View
               style={{
-                marginHorizontal: 20,
-                marginBottom: 20,
+                marginBottom: 16,
                 backgroundColor: "#FFF",
                 padding: 16,
                 borderRadius: 16,
-                borderWidth: 1,
-                borderColor: "#E9EBF8",
               }}
             >
               {result.brand && (
@@ -404,21 +459,18 @@ export default function LabelResultScreen() {
           {result.care_symbols && result.care_symbols.length > 0 && (
             <View
               style={{
-                marginHorizontal: 20,
-                marginBottom: 20,
+                marginBottom: 16,
                 backgroundColor: "#FFF",
                 padding: 16,
                 borderRadius: 16,
-                borderWidth: 1,
-                borderColor: "#E9EBF8",
               }}
             >
               <Text
                 style={{
                   fontSize: 16,
                   fontWeight: "700",
-                  color: "#1D1A27",
-                  marginBottom: 12,
+                  color: "#4B5563",
+                  marginBottom: 16,
                 }}
               >
                 Care Instructions
@@ -428,38 +480,44 @@ export default function LabelResultScreen() {
                   key={idx}
                   style={{
                     flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 12,
+                    alignItems: "flex-start",
+                    marginBottom: 16,
                   }}
                 >
                   <View
-                    style={{ width: 36, alignItems: "center", marginRight: 12 }}
+                    style={{
+                      width: 32,
+                      alignItems: "center",
+                      marginRight: 12,
+                      marginTop: 2,
+                    }}
                   >
                     {symbol.category === "washing" && (
-                      <IconWashMachine size={24} color="#4B5563" />
+                      <IconWashMachine size={22} color="#9CA3AF" />
                     )}
                     {symbol.category === "ironing" && (
-                      <IconIroning1 size={24} color="#4B5563" />
+                      <IconIroning1 size={22} color="#9CA3AF" />
                     )}
                     {symbol.category === "bleaching" && (
-                      <IconBleachOff size={24} color="#4B5563" />
+                      <IconBleachOff size={22} color="#9CA3AF" />
                     )}
                     {symbol.category === "drying" && (
-                      <IconWind size={24} color="#4B5563" />
+                      <IconWind size={22} color="#9CA3AF" />
                     )}
                     {symbol.category === "professional_care" && (
-                      <IconShirt size={24} color="#4B5563" />
+                      <IconShirt size={22} color="#9CA3AF" />
                     )}
                     {symbol.category === "wringing" && (
-                      <IconShirt size={24} color="#4B5563" />
+                      <IconShirt size={22} color="#9CA3AF" />
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text
                       style={{
                         fontSize: 14,
-                        fontWeight: "600",
-                        color: "#111827",
+                        fontWeight: "700",
+                        color: "#374151",
+                        lineHeight: 20,
                       }}
                     >
                       {symbol.label}
@@ -467,8 +525,8 @@ export default function LabelResultScreen() {
                     <Text
                       style={{
                         fontSize: 12,
-                        color: "#6B7280",
-                        marginTop: 2,
+                        color: "#9CA3AF",
+                        marginTop: 4,
                         textTransform: "capitalize",
                       }}
                     >
@@ -485,21 +543,18 @@ export default function LabelResultScreen() {
             result.fabric_composition.length > 0 && (
               <View
                 style={{
-                  marginHorizontal: 20,
                   backgroundColor: "#FFFFFF",
                   borderRadius: 16,
                   padding: 16,
-                  marginBottom: 20,
-                  borderWidth: 1,
-                  borderColor: "#E9EBF8",
+                  marginBottom: 16,
                 }}
               >
                 <Text
                   style={{
-                    color: "#1D1A27",
+                    color: "#4B5563",
                     fontSize: 16,
                     fontWeight: "700",
-                    marginBottom: 8,
+                    marginBottom: 12,
                   }}
                 >
                   Fabric Composition
@@ -510,17 +565,23 @@ export default function LabelResultScreen() {
                     style={{
                       flexDirection: "row",
                       justifyContent: "space-between",
-                      marginBottom: 4,
+                      marginBottom: 6,
                     }}
                   >
-                    <Text style={{ color: "#4B5563", fontSize: 14 }}>
+                    <Text
+                      style={{
+                        color: "#6B7280",
+                        fontSize: 14,
+                        fontWeight: "500",
+                      }}
+                    >
                       {comp.material}
                     </Text>
                     <Text
                       style={{
-                        color: "#111827",
+                        color: "#374151",
                         fontSize: 14,
-                        fontWeight: "600",
+                        fontWeight: "700",
                       }}
                     >
                       {comp.percentage ? `${comp.percentage}%` : "Unknown"}
@@ -534,16 +595,15 @@ export default function LabelResultScreen() {
           {result.translated_text && (
             <View
               style={{
-                marginHorizontal: 20,
                 backgroundColor: "#F3F4F6",
                 borderRadius: 16,
                 padding: 16,
-                marginBottom: 20,
+                marginBottom: 16,
               }}
             >
               <Text
                 style={{
-                  color: "#1D1A27",
+                  color: "#4B5563",
                   fontSize: 14,
                   fontWeight: "700",
                   marginBottom: 8,
@@ -551,13 +611,86 @@ export default function LabelResultScreen() {
               >
                 Translated Text ({result.detected_language})
               </Text>
-              <Text style={{ color: "#374151", fontSize: 13, lineHeight: 20 }}>
+              <Text style={{ color: "#4B5563", fontSize: 13, lineHeight: 20 }}>
                 {result.translated_text}
               </Text>
             </View>
           )}
         </ScrollView>
+
+        {/* Fixed Footer */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 24,
+            backgroundColor: "#FEFEFE",
+            borderTopWidth: 1,
+            borderColor: "#E5E7EB30",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              marginRight: 8,
+              borderWidth: 1,
+              borderColor: "#111827",
+              borderRadius: 28,
+              paddingVertical: 16,
+              alignItems: "center",
+            }}
+            onPress={() => {
+              if (photoUri) {
+                startAnalysis(photoUri, "label");
+                router.replace("/(root)/(tabs)" as never);
+              }
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <IconSparklesFilled size={20} color="#111827" />
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: "#111827",
+                  marginLeft: 6,
+                }}
+              >
+                Fix Scan
+              </Text>
+            </View>
+          </Pressable>
+          <Pressable
+            style={{
+              flex: 1,
+              marginLeft: 8,
+              backgroundColor: "#111827",
+              borderRadius: 28,
+              paddingVertical: 16,
+              alignItems: "center",
+            }}
+            onPress={() => {
+              router.replace("/(root)/(tabs)" as never);
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "600",
+                color: "#FFFFFF",
+              }}
+            >
+              Done
+            </Text>
+          </Pressable>
+        </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

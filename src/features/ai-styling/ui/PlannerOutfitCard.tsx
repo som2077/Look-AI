@@ -1,5 +1,13 @@
 import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export type SuggestedItem = {
   id: string;
@@ -51,12 +59,20 @@ function ItemThumbnail({ item }: { item: SuggestedItem }) {
   }
   return (
     <View style={[styles.thumb, { backgroundColor: getColor(item) }]}>
-      <Text style={styles.thumbLabel}>{(item.category ?? "?").slice(0, 2).toUpperCase()}</Text>
+      <Text style={styles.thumbLabel}>
+        {(item.category ?? "?").slice(0, 2).toUpperCase()}
+      </Text>
     </View>
   );
 }
 
-export default function PlannerOutfitCard({ items, reasoning, onSave, onRegenerate, saving }: PlannerOutfitCardProps) {
+export default function PlannerOutfitCard({
+  items,
+  reasoning,
+  onSave,
+  onRegenerate,
+  saving,
+}: PlannerOutfitCardProps) {
   const displayItems = items.slice(0, 4);
 
   return (
@@ -70,24 +86,28 @@ export default function PlannerOutfitCard({ items, reasoning, onSave, onRegenera
       </View>
 
       {/* Item thumbnails */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbRow}>
-        {displayItems.length > 0 ? displayItems.map((item) => (
-          <View key={item.id} style={styles.thumbWrap}>
-            <ItemThumbnail item={item} />
-            <Text style={styles.thumbCaption} numberOfLines={1}>
-              {item.category ?? "Item"}
-            </Text>
-          </View>
-        )) : (
-          // Fallback placeholders
-          [1, 2, 3].map((i) => (
-            <View key={i} style={styles.thumbWrap}>
-              <View style={[styles.thumb, { backgroundColor: "#2D2E38" }]}>
-                <Text style={styles.thumbLabel}>👕</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.thumbRow}
+      >
+        {displayItems.length > 0
+          ? displayItems.map((item) => (
+              <View key={item.id} style={styles.thumbWrap}>
+                <ItemThumbnail item={item} />
+                <Text style={styles.thumbCaption} numberOfLines={1}>
+                  {item.category ?? "Item"}
+                </Text>
               </View>
-            </View>
-          ))
-        )}
+            ))
+          : // Fallback placeholders
+            [1, 2, 3].map((i) => (
+              <View key={i} style={styles.thumbWrap}>
+                <View style={[styles.thumb, { backgroundColor: "#2D2E38" }]}>
+                  <Text style={styles.thumbLabel}>👕</Text>
+                </View>
+              </View>
+            ))}
       </ScrollView>
 
       {/* AI Reasoning */}
@@ -100,7 +120,9 @@ export default function PlannerOutfitCard({ items, reasoning, onSave, onRegenera
         disabled={saving}
         activeOpacity={0.85}
       >
-        <Text style={styles.saveBtnText}>{saving ? "Saving..." : "Save Plan 🗓️"}</Text>
+        <Text style={styles.saveBtnText}>
+          {saving ? "Saving..." : "Save Plan 🗓️"}
+        </Text>
       </TouchableOpacity>
     </View>
   );

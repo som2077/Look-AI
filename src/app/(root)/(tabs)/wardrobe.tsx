@@ -4,10 +4,10 @@ import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-st
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 // import { PremiumGradientBackground } from "@/shared/ui/PremiumGradientBackground";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
+// import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import {
   IconAdjustmentsHorizontal,
   IconBeach,
-  IconBookmark,
   IconBriefcase,
   IconBuilding,
   IconChevronDown,
@@ -247,7 +247,11 @@ const BentoCard = React.memo(function BentoCard({
   const router = useRouter();
   return (
     <Pressable
-      onPress={() => onPress ? onPress() : router.push(`/(root)/cloth-details/${item.id}` as never)}
+      onPress={() =>
+        onPress
+          ? onPress()
+          : router.push(`/(root)/cloth-details/${item.id}` as never)
+      }
       style={{
         width,
         height,
@@ -571,7 +575,9 @@ export default function WardrobeScreen() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [tempSort, setTempSort] = useState<SortId>("recently_added");
-  const [selectedSavedImage, setSelectedSavedImage] = useState<string | null>(null);
+  const [selectedSavedImage, setSelectedSavedImage] = useState<string | null>(
+    null,
+  );
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT],
@@ -743,6 +749,7 @@ export default function WardrobeScreen() {
   return (
     <SwipeTabWrapper tabIndex={1}>
       {/* <PremiumGradientBackground> */}
+      {/* <AppGradientBackground> */}
       <StatusBar style="dark" />
       <SafeAreaView
         style={{ flex: 1, backgroundColor: "#ffffff" }}
@@ -788,7 +795,6 @@ export default function WardrobeScreen() {
             >
               <IconPlus size={20} color="#1D1A27" strokeWidth={1.8} />
             </Pressable>
-
           </View>
         </View>
 
@@ -998,7 +1004,7 @@ export default function WardrobeScreen() {
                     height={ITEM_HEIGHT}
                     onPress={
                       item.category.startsWith("saved_")
-                        ? () => setSelectedSavedImage(item.image)
+                        ? () => setSelectedSavedImage(item.image ?? null)
                         : undefined
                     }
                   />
@@ -1009,6 +1015,7 @@ export default function WardrobeScreen() {
         </Animated.ScrollView>
       </SafeAreaView>
       {/* </PremiumGradientBackground> */}
+      {/* <AppGradientBackground> */}
 
       {/* Filter Bottom Sheet */}
       <BottomSheet
@@ -1461,7 +1468,11 @@ export default function WardrobeScreen() {
       </BottomSheet>
 
       {/* Image Viewer Modal */}
-      <Modal visible={!!selectedSavedImage} transparent={true} animationType="fade">
+      <Modal
+        visible={!!selectedSavedImage}
+        transparent={true}
+        animationType="fade"
+      >
         <View
           style={{
             flex: 1,

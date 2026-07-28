@@ -1,6 +1,6 @@
 import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
 import { useSupabase } from "@/shared/supabase/use-supabase";
-import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+// import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Calendar from "expo-calendar";
@@ -19,7 +19,6 @@ import {
   Animated,
   Dimensions,
   PanResponder,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -124,7 +123,7 @@ export default function CalendarScreen() {
         outputRange: [0, 10000],
         extrapolateLeft: "clamp",
       }),
-    [scrollY]
+    [scrollY],
   );
 
   const { supabase } = useSupabase();
@@ -316,749 +315,744 @@ export default function CalendarScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-      <AppGradientBackground>
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-          <StatusBar style="dark" />
+      {/* <AppGradientBackground> */}
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <StatusBar style="dark" />
 
-          {/* Unified Top Header Row */}
-          <View
+        {/* Unified Top Header Row */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+          }}
+        >
+          {/* Back Button */}
+          <TouchableOpacity
+            onPress={() => router.back()}
+            activeOpacity={0.8}
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: "#FFFFFF",
+              alignItems: "center",
+              justifyContent: "center",
+              // shadowColor: "#000",
+              // shadowOpacity: 0.08,
+              // shadowRadius: 8,
+              // shadowOffset: { width: 0, height: 4 },
+              // elevation: 2,
+            }}
+          >
+            <IconArrowLeft size={22} color="#171421" />
+          </TouchableOpacity>
+
+          {/* Date Pill Selector */}
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            activeOpacity={0.8}
             style={{
               flexDirection: "row",
               alignItems: "center",
-              justifyContent: "space-between",
-              paddingHorizontal: 20,
-              paddingVertical: 12,
+              backgroundColor: "#F7F7F9",
+              borderRadius: 30,
+              padding: 4,
+              shadowColor: "#000",
+              shadowOpacity: 0.06,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 2,
             }}
           >
-            {/* Back Button */}
-            <TouchableOpacity
-              onPress={() => router.back()}
-              activeOpacity={0.8}
+            {/* Inner Calendar Icon Circle */}
+            <View
               style={{
-                width: 46,
-                height: 46,
-                borderRadius: 23,
-                backgroundColor: "#FFFFFF",
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                // backgroundColor: "#FFFFFF",
                 alignItems: "center",
                 justifyContent: "center",
                 // shadowColor: "#000",
-                // shadowOpacity: 0.08,
-                // shadowRadius: 8,
-                // shadowOffset: { width: 0, height: 4 },
-                // elevation: 2,
+                // shadowOpacity: 0.05,
+                // shadowRadius: 4,
+                // shadowOffset: { width: 0, height: 2 },
+                // elevation: 1,
               }}
             >
-              <IconArrowLeft size={22} color="#171421" />
-            </TouchableOpacity>
+              <ExpoImage
+                source={{
+                  uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
+                }}
+                style={{ width: 21, height: 21 }}
+                contentFit="contain"
+              />
+            </View>
 
-            {/* Date Pill Selector */}
-            <TouchableOpacity
-              onPress={() => setShowDatePicker(true)}
-              activeOpacity={0.8}
+            <Text
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#F7F7F9",
-                borderRadius: 30,
-                padding: 4,
-                shadowColor: "#000",
-                shadowOpacity: 0.06,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 2,
+                fontSize: 14,
+                fontWeight: "700",
+                color: "#1D1A27",
+                paddingHorizontal: 10,
               }}
             >
-              {/* Inner Calendar Icon Circle */}
-              <View
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  // backgroundColor: "#FFFFFF",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  // shadowColor: "#000",
-                  // shadowOpacity: 0.05,
-                  // shadowRadius: 4,
-                  // shadowOffset: { width: 0, height: 2 },
-                  // elevation: 1,
-                }}
-              >
-                <ExpoImage
-                  source={{
-                    uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
-                  }}
-                  style={{ width: 21, height: 21 }}
-                  contentFit="contain"
-                />
-              </View>
+              {MONTH_NAMES[viewMonth]}, {viewYear}
+            </Text>
 
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  color: "#1D1A27",
-                  paddingHorizontal: 10,
-                }}
-              >
-                {MONTH_NAMES[viewMonth]}, {viewYear}
-              </Text>
-
-              {/* Inner Chevron Circle */}
-              <View
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: "#FFFFFF",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  shadowColor: "#000",
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  shadowOffset: { width: 0, height: 2 },
-                  elevation: 1,
-                }}
-              >
-                <IconChevronDown size={18} color="#171421" />
-              </View>
-            </TouchableOpacity>
-
-            {/* Plus Add Button */}
-            <TouchableOpacity
-              onPress={() => router.push("/(root)/(ai-features)/planner-chat" as never)}
-              activeOpacity={0.8}
+            {/* Inner Chevron Circle */}
+            <View
               style={{
-                width: 46,
-                height: 46,
-                borderRadius: 23,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
                 backgroundColor: "#FFFFFF",
                 alignItems: "center",
                 justifyContent: "center",
                 shadowColor: "#000",
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 2,
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                shadowOffset: { width: 0, height: 2 },
+                elevation: 1,
               }}
             >
-              <IconPlus size={22} color="#171421" strokeWidth={2} />
-            </TouchableOpacity>
-          </View>
+              <IconChevronDown size={18} color="#171421" />
+            </View>
+          </TouchableOpacity>
 
-          <Animated.ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 32 }}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true },
-            )}
-            scrollEventThrottle={16}
+          {/* Plus Add Button */}
+          <TouchableOpacity
+            onPress={() =>
+              router.push("/(root)/(ai-features)/planner-chat" as never)
+            }
+            activeOpacity={0.8}
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: "#FFFFFF",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 2,
+            }}
           >
-            <Animated.View
+            <IconPlus size={22} color="#171421" strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 32 }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true },
+          )}
+          scrollEventThrottle={16}
+        >
+          <Animated.View
+            style={{
+              paddingTop: 5,
+              transform: [{ translateY: clampedScrollY }],
+              zIndex: 0,
+            }}
+          >
+            {/* Days of Week Headers */}
+            <View
               style={{
-                paddingTop: 5,
-                transform: [{ translateY: clampedScrollY }],
-                zIndex: 0,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                marginBottom: CELL_GAP,
               }}
             >
-              {/* Days of Week Headers */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  paddingHorizontal: 20,
-                  marginBottom: CELL_GAP,
-                }}
-              >
-                {DAY_LABELS.map((label, idx) => (
-                  <View
-                    key={idx}
+              {DAY_LABELS.map((label, idx) => (
+                <View
+                  key={idx}
+                  style={{
+                    width: CELL_WIDTH,
+                    height: CELL_WIDTH,
+                    borderRadius: 50,
+                    backgroundColor: "#000000",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text
                     style={{
-                      width: CELL_WIDTH,
-                      height: CELL_WIDTH,
-                      borderRadius: 50,
-                      backgroundColor: "#000000",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      fontSize: 12,
+                      fontWeight: "700",
+                      color: "#FFFFFF",
                     }}
                   >
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "700",
-                        color: "#FFFFFF",
-                      }}
-                    >
-                      {label}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+                    {label}
+                  </Text>
+                </View>
+              ))}
+            </View>
 
-              {/* Calendar days cells grid */}
-              <View
-                {...panResponder.panHandlers}
-                style={{ paddingHorizontal: 20 }}
-              >
-                {Array.from({ length: days.length / 7 }, (_, weekIdx) => (
-                  <View
-                    key={weekIdx}
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginBottom: CELL_GAP,
-                    }}
-                  >
-                    {days.slice(weekIdx * 7, weekIdx * 7 + 7).map((date) => {
-                      const isSelected = isSameDay(date, selected);
-                      const isToday = isSameDay(date, today);
-                      const isCurrentMonth = date.getMonth() === viewMonth;
-                      const hasOutfit =
-                        !!combinedOutfitsData[date.toDateString()];
+            {/* Calendar days cells grid */}
+            <View
+              {...panResponder.panHandlers}
+              style={{ paddingHorizontal: 20 }}
+            >
+              {Array.from({ length: days.length / 7 }, (_, weekIdx) => (
+                <View
+                  key={weekIdx}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginBottom: CELL_GAP,
+                  }}
+                >
+                  {days.slice(weekIdx * 7, weekIdx * 7 + 7).map((date) => {
+                    const isSelected = isSameDay(date, selected);
+                    const isToday = isSameDay(date, today);
+                    const isCurrentMonth = date.getMonth() === viewMonth;
+                    const hasOutfit =
+                      !!combinedOutfitsData[date.toDateString()];
 
-                      const isPastOrToday =
-                        new Date(
-                          date.getFullYear(),
-                          date.getMonth(),
-                          date.getDate(),
-                        ).getTime() <=
-                        new Date(
-                          today.getFullYear(),
-                          today.getMonth(),
-                          today.getDate(),
-                        ).getTime();
-                      const isMissingOutfit = isPastOrToday && !hasOutfit;
+                    const isPastOrToday =
+                      new Date(
+                        date.getFullYear(),
+                        date.getMonth(),
+                        date.getDate(),
+                      ).getTime() <=
+                      new Date(
+                        today.getFullYear(),
+                        today.getMonth(),
+                        today.getDate(),
+                      ).getTime();
+                    const isMissingOutfit = isPastOrToday && !hasOutfit;
 
-                      const outfitData =
-                        combinedOutfitsData[date.toDateString()];
+                    const outfitData = combinedOutfitsData[date.toDateString()];
 
-                      const dayEvents = deviceEvents.filter((e) =>
-                        isSameDay(new Date(e.startDate), date),
-                      );
-                      const hasDeviceEvent = dayEvents.length > 0;
+                    const dayEvents = deviceEvents.filter((e) =>
+                      isSameDay(new Date(e.startDate), date),
+                    );
+                    const hasDeviceEvent = dayEvents.length > 0;
 
-                      if (!isCurrentMonth) {
-                        return (
-                          <View
-                            key={date.toISOString()}
-                            style={{ width: CELL_WIDTH, height: CELL_WIDTH }}
-                          />
-                        );
-                      }
-
+                    if (!isCurrentMonth) {
                       return (
-                        <TouchableOpacity
+                        <View
                           key={date.toISOString()}
-                          onPress={() => handleDaySelect(date)}
-                          activeOpacity={0.8}
+                          style={{ width: CELL_WIDTH, height: CELL_WIDTH }}
+                        />
+                      );
+                    }
+
+                    return (
+                      <TouchableOpacity
+                        key={date.toISOString()}
+                        onPress={() => handleDaySelect(date)}
+                        activeOpacity={0.8}
+                        style={{
+                          width: CELL_WIDTH,
+                          height: CELL_WIDTH,
+                          borderRadius: 50,
+                          borderWidth: isSelected ? 0 : 1,
+                          borderColor: isSelected
+                            ? "transparent"
+                            : isToday
+                              ? "#171421"
+                              : "#E2E2EA",
+                          backgroundColor: isSelected ? "#4C36F5" : "#FFFFFF",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: isCurrentMonth ? 1 : 0.35,
+                          position: "relative",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {hasOutfit && !!outfitData?.imageUri && (
+                          <ExpoImage
+                            source={{ uri: outfitData.imageUri }}
+                            style={{
+                              position: "absolute",
+                              width: "100%",
+                              height: "100%",
+                              opacity: isSelected ? 0.3 : 0.6,
+                            }}
+                            contentFit="cover"
+                          />
+                        )}
+                        <Text
                           style={{
-                            width: CELL_WIDTH,
-                            height: CELL_WIDTH,
-                            borderRadius: 50,
-                            borderWidth: isSelected ? 0 : 1,
-                            borderColor: isSelected
-                              ? "transparent"
-                              : isToday
-                                ? "#171421"
-                                : "#E2E2EA",
-                            backgroundColor: isSelected ? "#4C36F5" : "#FFFFFF",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            opacity: isCurrentMonth ? 1 : 0.35,
-                            position: "relative",
-                            overflow: "hidden",
+                            fontSize: 15,
+                            fontWeight: "600",
+                            color: isSelected ? "#FFFFFF" : "#171421",
+                            zIndex: 1,
                           }}
                         >
-                          {hasOutfit && !!outfitData?.imageUri && (
-                            <ExpoImage
-                              source={{ uri: outfitData.imageUri }}
-                              style={{
-                                position: "absolute",
-                                width: "100%",
-                                height: "100%",
-                                opacity: isSelected ? 0.3 : 0.6,
-                              }}
-                              contentFit="cover"
-                            />
-                          )}
-                          <Text
-                            style={{
-                              fontSize: 15,
-                              fontWeight: "600",
-                              color: isSelected ? "#FFFFFF" : "#171421",
-                              zIndex: 1,
-                            }}
-                          >
-                            {date.getDate()}
-                          </Text>
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              gap: 3,
-                              position: "absolute",
-                              bottom: 5,
-                              zIndex: 1,
-                            }}
-                          >
-                            {hasDeviceEvent && (
-                              <View
-                                style={{
-                                  width: 4,
-                                  height: 4,
-                                  borderRadius: 2,
-                                  backgroundColor: isSelected
-                                    ? "#E2E2EA"
-                                    : "#D97706",
-                                }}
-                              />
-                            )}
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                ))}
-              </View>
-            </Animated.View>
-              {/* Timeline Log Section */}
-              <View
-                style={{
-                  paddingHorizontal: 20,
-                  paddingTop: 14,
-                  paddingBottom: 0,
-                  backgroundColor: "#F7F7F9",
-                  minHeight: SCREEN_WIDTH * 1.5,
-                  borderTopLeftRadius: 30,
-                  borderTopRightRadius: 30,
-                  zIndex: 10,
-                }}
-              >
-                {/* Bottom Sheet Grab Handle */}
-                <View style={{ alignItems: "center", marginBottom: 16 }}>
-                  <View
-                    style={{
-                      width: 40,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: "#E2E2EA",
-                    }}
-                  />
-                </View>
-
-                {selectedLog?.isPlanned ? (
-                  <View
-                    style={{ flexDirection: "row", alignItems: "flex-start" }}
-                  >
-                    {/* Left Column Time indicator */}
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        fontWeight: "800",
-                        color: "#171421",
-                        width: 60,
-                        marginRight: 10,
-                        marginTop: 6,
-                      }}
-                    >
-                      {selectedLog.wornTime.split(" ")[0]}
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          fontWeight: "600",
-                          color: "#9B9BAF",
-                        }}
-                      >
-                        {" "}
-                        {selectedLog.wornTime.split(" ")[1] || ""}
-                      </Text>
-                    </Text>
-
-                    {/* Right Cards Stack */}
-                    <View style={{ flex: 1, gap: 12 }}>
-                      <View
-                        style={{
-                          backgroundColor: "#FFFFFF",
-                          borderRadius: 22,
-                          borderWidth: 1,
-                          borderColor: "#E2E2EA",
-                          padding: 16,
-                          shadowColor: "#000",
-                          shadowOpacity: 0.01,
-                          shadowRadius: 3,
-                          shadowOffset: { width: 0, height: 1 },
-                        }}
-                      >
+                          {date.getDate()}
+                        </Text>
                         <View
                           style={{
                             flexDirection: "row",
-                            alignItems: "center",
-                            gap: 12,
+                            gap: 3,
+                            position: "absolute",
+                            bottom: 5,
+                            zIndex: 1,
                           }}
                         >
-                          {selectedLog.imageUri ? (
-                            <ExpoImage
-                              source={{ uri: selectedLog.imageUri }}
-                              style={{
-                                width: 50,
-                                height: 65,
-                                borderRadius: 10,
-                                backgroundColor: "#F3F4F6",
-                              }}
-                              contentFit="cover"
-                            />
-                          ) : (
+                          {hasDeviceEvent && (
                             <View
                               style={{
-                                width: 50,
-                                height: 65,
-                                borderRadius: 10,
-                                backgroundColor: "#E5E7EB",
+                                width: 4,
+                                height: 4,
+                                borderRadius: 2,
+                                backgroundColor: isSelected
+                                  ? "#E2E2EA"
+                                  : "#D97706",
                               }}
                             />
                           )}
-                          <View style={{ flex: 1, justifyContent: "center" }}>
-                            <Text
-                              style={{
-                                fontSize: 16,
-                                fontWeight: "700",
-                                color: "#1D1A27",
-                                marginBottom: 4,
-                              }}
-                            >
-                              {selectedLog.title}
-                            </Text>
-                            {!!selectedLog.description && (
-                              <Text
-                                style={{
-                                  fontSize: 13,
-                                  color: "#6B7280",
-                                  lineHeight: 18,
-                                }}
-                                numberOfLines={2}
-                              >
-                                {selectedLog.description}
-                              </Text>
-                            )}
-                          </View>
                         </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
+          </Animated.View>
+          {/* Timeline Log Section */}
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 14,
+              paddingBottom: 0,
+              backgroundColor: "#F7F7F9",
+              minHeight: SCREEN_WIDTH * 1.5,
+              borderTopLeftRadius: 30,
+              borderTopRightRadius: 30,
+              zIndex: 10,
+            }}
+          >
+            {/* Bottom Sheet Grab Handle */}
+            <View style={{ alignItems: "center", marginBottom: 16 }}>
+              <View
+                style={{
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: "#E2E2EA",
+                }}
+              />
+            </View>
+
+            {selectedLog?.isPlanned ? (
+              <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                {/* Left Column Time indicator */}
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "800",
+                    color: "#171421",
+                    width: 60,
+                    marginRight: 10,
+                    marginTop: 6,
+                  }}
+                >
+                  {selectedLog.wornTime.split(" ")[0]}
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "600",
+                      color: "#9B9BAF",
+                    }}
+                  >
+                    {" "}
+                    {selectedLog.wornTime.split(" ")[1] || ""}
+                  </Text>
+                </Text>
+
+                {/* Right Cards Stack */}
+                <View style={{ flex: 1, gap: 12 }}>
+                  <View
+                    style={{
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: 22,
+                      borderWidth: 1,
+                      borderColor: "#E2E2EA",
+                      padding: 16,
+                      shadowColor: "#000",
+                      shadowOpacity: 0.01,
+                      shadowRadius: 3,
+                      shadowOffset: { width: 0, height: 1 },
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
+                      {selectedLog.imageUri ? (
+                        <ExpoImage
+                          source={{ uri: selectedLog.imageUri }}
+                          style={{
+                            width: 50,
+                            height: 65,
+                            borderRadius: 10,
+                            backgroundColor: "#F3F4F6",
+                          }}
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            width: 50,
+                            height: 65,
+                            borderRadius: 10,
+                            backgroundColor: "#E5E7EB",
+                          }}
+                        />
+                      )}
+                      <View style={{ flex: 1, justifyContent: "center" }}>
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            fontWeight: "700",
+                            color: "#1D1A27",
+                            marginBottom: 4,
+                          }}
+                        >
+                          {selectedLog.title}
+                        </Text>
+                        {!!selectedLog.description && (
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: "#6B7280",
+                              lineHeight: 18,
+                            }}
+                            numberOfLines={2}
+                          >
+                            {selectedLog.description}
+                          </Text>
+                        )}
                       </View>
                     </View>
                   </View>
-                ) : selectedLog ? (
-                  <View
-                    style={{ flexDirection: "row", alignItems: "flex-start" }}
+                </View>
+              </View>
+            ) : selectedLog ? (
+              <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                {/* Left Column Time indicator */}
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "800",
+                    color: "#171421",
+                    width: 60,
+                    marginRight: 10,
+                    marginTop: 6,
+                  }}
+                >
+                  {selectedLog.wornTime.split(" ")[0]}
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "600",
+                      color: "#9B9BAF",
+                    }}
                   >
-                    {/* Left Column Time indicator */}
-                    <Text
+                    {" "}
+                    {selectedLog.wornTime.split(" ")[1]}
+                  </Text>
+                </Text>
+
+                {/* Right Cards Stack */}
+                <View style={{ flex: 1, gap: 12 }}>
+                  {/* 1. Main log card description */}
+                  <View
+                    style={{
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: 22,
+                      borderWidth: 1,
+                      borderColor: "#E2E2EA",
+                      padding: 16,
+                      shadowColor: "#000",
+                      shadowOpacity: 0.01,
+                      shadowRadius: 3,
+                      shadowOffset: { width: 0, height: 1 },
+                    }}
+                  >
+                    <View
                       style={{
-                        fontSize: 18,
-                        fontWeight: "800",
-                        color: "#171421",
-                        width: 60,
-                        marginRight: 10,
-                        marginTop: 6,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
                       }}
                     >
-                      {selectedLog.wornTime.split(" ")[0]}
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          fontWeight: "600",
-                          color: "#9B9BAF",
-                        }}
-                      >
-                        {" "}
-                        {selectedLog.wornTime.split(" ")[1]}
-                      </Text>
-                    </Text>
-
-                    {/* Right Cards Stack */}
-                    <View style={{ flex: 1, gap: 12 }}>
-                      {/* 1. Main log card description */}
                       <View
                         style={{
-                          backgroundColor: "#FFFFFF",
-                          borderRadius: 22,
-                          borderWidth: 1,
-                          borderColor: "#E2E2EA",
-                          padding: 16,
-                          shadowColor: "#000",
-                          shadowOpacity: 0.01,
-                          shadowRadius: 3,
-                          shadowOffset: { width: 0, height: 1 },
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 8,
                         }}
                       >
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: 8,
-                            }}
-                          >
-                            <Text
-                              style={{
-                                fontSize: 15,
-                                fontWeight: "800",
-                                color: "#1D1A27",
-                              }}
-                            >
-                              {selectedLog.title}
-                            </Text>
-                            {selectedLog.weather && (
-                              <View>
-                                <Text
-                                  style={{
-                                    fontSize: 11,
-                                    fontWeight: "600",
-                                    color: "#5A5A6A",
-                                  }}
-                                >
-                                  {selectedLog.weather.condition === "Sunny"
-                                    ? "☀️"
-                                    : selectedLog.weather.condition === "Cloudy"
-                                      ? "☁️"
-                                      : "🌤️"}{" "}
-                                  {selectedLog.weather.temp}
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                        </View>
-
                         <Text
                           style={{
-                            fontSize: 11,
-                            color: "#5A5A6A",
-                            marginTop: 4,
-                            fontWeight: "500",
+                            fontSize: 15,
+                            fontWeight: "800",
+                            color: "#1D1A27",
                           }}
                         >
-                          {selectedLog.itemsWorn}
+                          {selectedLog.title}
                         </Text>
-
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            color: "#9B9BAF",
-                            marginTop: 8,
-                            lineHeight: 15,
-                            fontWeight: "500",
-                          }}
-                        >
-                          {selectedLog.description}
-                        </Text>
-                      </View>
-
-                      {/* 2. Grid-like stats card */}
-                      <LinearGradient
-                        colors={["#EAE8FF", "#F4F3FF"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={{
-                          borderRadius: 22,
-                          padding: 16,
-                          borderWidth: 1,
-                          borderColor: "#EAE8FF",
-                        }}
-                      >
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          {/* Item count */}
+                        {selectedLog.weather && (
                           <View>
                             <Text
                               style={{
                                 fontSize: 11,
-                                color: "#9B9BAF",
                                 fontWeight: "600",
+                                color: "#5A5A6A",
                               }}
                             >
-                              Items Worn
-                            </Text>
-                            <Text
-                              style={{
-                                fontSize: 24,
-                                fontWeight: "800",
-                                color: "#4C36F5",
-                                marginTop: 2,
-                              }}
-                            >
-                              {selectedLog.itemCount}
+                              {selectedLog.weather.condition === "Sunny"
+                                ? "☀️"
+                                : selectedLog.weather.condition === "Cloudy"
+                                  ? "☁️"
+                                  : "🌤️"}{" "}
+                              {selectedLog.weather.temp}
                             </Text>
                           </View>
-
-                          {/* Usage score */}
-                          <View>
-                            <Text
-                              style={{
-                                fontSize: 10,
-                                color: "#9B9BAF",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Usage Score
-                            </Text>
-                            <Text
-                              style={{
-                                fontSize: 24,
-                                fontWeight: "800",
-                                color: "#4C36F5",
-                                marginTop: 2,
-                              }}
-                            >
-                              {selectedLog.score}%
-                            </Text>
-                          </View>
-
-                          {/* Small avatar thumbnail bubble */}
-                          <View
-                            style={{
-                              width: 38,
-                              height: 38,
-                              borderRadius: 19,
-                              backgroundColor: "#FFFFFF",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              borderWidth: 1,
-                              borderColor: "#E2E2EA",
-                            }}
-                          >
-                            <IconShirt size={18} color="#4C36F5" />
-                          </View>
-                        </View>
-                      </LinearGradient>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                ) : (
-                  /* Empty logs timeline state */
-                  <View
-                    style={{ flexDirection: "row", alignItems: "flex-start" }}
-                  >
+
                     <Text
                       style={{
-                        fontSize: 18,
-                        fontWeight: "800",
-                        color: "#171421",
-                        width: 60,
-                        marginRight: 10,
-                        marginTop: 6,
+                        fontSize: 11,
+                        color: "#5A5A6A",
+                        marginTop: 4,
+                        fontWeight: "500",
                       }}
                     >
-                      09:00
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          fontWeight: "600",
-                          color: "#9B9BAF",
-                        }}
-                      >
-                        {" "}
-                        AM
-                      </Text>
+                      {selectedLog.itemsWorn}
                     </Text>
 
-                    <View
+                    <Text
                       style={{
-                        flex: 1,
-                        backgroundColor: "#FFFFFF",
-                        borderRadius: 22,
-                        borderWidth: 1,
-                        borderColor: "#E2E2EA",
-                        padding: 20,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: 140,
+                        fontSize: 11,
+                        color: "#9B9BAF",
+                        marginTop: 8,
+                        lineHeight: 15,
+                        fontWeight: "500",
                       }}
                     >
-                      <Text
-                        style={{
-                          fontSize: 17,
-                          fontWeight: "700",
-                          color: "#1D1A27",
-                          marginBottom: 10,
-                        }}
-                      >
-                        Plan your outfit
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: "#9B9BAF",
-                          textAlign: "center",
-                          fontWeight: "500",
-                          marginBottom: 16,
-                        }}
-                      >
-                        Get ahead of your schedule. Plan what you&apos;ll wear!
-                      </Text>
+                      {selectedLog.description}
+                    </Text>
+                  </View>
 
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() =>
-                          router.push({
-                            pathname: "/(root)/(ai-features)/planner-chat",
-                            params: { date: selected.toISOString() },
-                          } as any)
-                        }
-                        style={{
-                          backgroundColor: "#4C36F5",
-                          paddingHorizontal: 20,
-                          paddingVertical: 10,
-                          borderRadius: 20,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 6,
-                        }}
-                      >
-                        <IconPlus size={16} color="#FFFFFF" strokeWidth={2.5} />
+                  {/* 2. Grid-like stats card */}
+                  <LinearGradient
+                    colors={["#EAE8FF", "#F4F3FF"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      borderRadius: 22,
+                      padding: 16,
+                      borderWidth: 1,
+                      borderColor: "#EAE8FF",
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      {/* Item count */}
+                      <View>
                         <Text
                           style={{
-                            color: "#FFFFFF",
-                            fontWeight: "700",
-                            fontSize: 14,
+                            fontSize: 11,
+                            color: "#9B9BAF",
+                            fontWeight: "600",
                           }}
                         >
-                          Plan Future Outfit
+                          Items Worn
                         </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
+                        <Text
+                          style={{
+                            fontSize: 24,
+                            fontWeight: "800",
+                            color: "#4C36F5",
+                            marginTop: 2,
+                          }}
+                        >
+                          {selectedLog.itemCount}
+                        </Text>
+                      </View>
 
-                {/* Upcoming Events Section */}
-                {selectedDayEvents.length > 0 && (
-                  <View style={{ marginHorizontal: -20, marginBottom: 40 }}>
-                    <UpcomingEvents
-                      date={selected}
-                      showAISuggestion={true}
-                      preFetchedEvents={selectedDayEvents}
-                    />
-                  </View>
-                )}
+                      {/* Usage score */}
+                      <View>
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            color: "#9B9BAF",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Usage Score
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 24,
+                            fontWeight: "800",
+                            color: "#4C36F5",
+                            marginTop: 2,
+                          }}
+                        >
+                          {selectedLog.score}%
+                        </Text>
+                      </View>
+
+                      {/* Small avatar thumbnail bubble */}
+                      <View
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 19,
+                          backgroundColor: "#FFFFFF",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderWidth: 1,
+                          borderColor: "#E2E2EA",
+                        }}
+                      >
+                        <IconShirt size={18} color="#4C36F5" />
+                      </View>
+                    </View>
+                  </LinearGradient>
+                </View>
               </View>
-            </Animated.ScrollView>
-          {showDatePicker && (
-            <DateTimePicker
-              value={selected}
-              mode="date"
-              display="calendar"
-              onChange={onDateChange}
-            />
-          )}
-        </SafeAreaView>
-      </AppGradientBackground>
+            ) : (
+              /* Empty logs timeline state */
+              <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "800",
+                    color: "#171421",
+                    width: 60,
+                    marginRight: 10,
+                    marginTop: 6,
+                  }}
+                >
+                  09:00
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "600",
+                      color: "#9B9BAF",
+                    }}
+                  >
+                    {" "}
+                    AM
+                  </Text>
+                </Text>
+
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 22,
+                    borderWidth: 1,
+                    borderColor: "#E2E2EA",
+                    padding: 20,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 140,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 17,
+                      fontWeight: "700",
+                      color: "#1D1A27",
+                      marginBottom: 10,
+                    }}
+                  >
+                    Plan your outfit
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: "#9B9BAF",
+                      textAlign: "center",
+                      fontWeight: "500",
+                      marginBottom: 16,
+                    }}
+                  >
+                    Get ahead of your schedule. Plan what you&apos;ll wear!
+                  </Text>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(root)/(ai-features)/planner-chat",
+                        params: { date: selected.toISOString() },
+                      } as any)
+                    }
+                    style={{
+                      backgroundColor: "#4C36F5",
+                      paddingHorizontal: 20,
+                      paddingVertical: 10,
+                      borderRadius: 20,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <IconPlus size={16} color="#FFFFFF" strokeWidth={2.5} />
+                    <Text
+                      style={{
+                        color: "#FFFFFF",
+                        fontWeight: "700",
+                        fontSize: 14,
+                      }}
+                    >
+                      Plan Future Outfit
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* Upcoming Events Section */}
+            {selectedDayEvents.length > 0 && (
+              <View style={{ marginHorizontal: -20, marginBottom: 40 }}>
+                <UpcomingEvents
+                  date={selected}
+                  showAISuggestion={true}
+                  preFetchedEvents={selectedDayEvents}
+                />
+              </View>
+            )}
+          </View>
+        </Animated.ScrollView>
+        {showDatePicker && (
+          <DateTimePicker
+            value={selected}
+            mode="date"
+            display="calendar"
+            onChange={onDateChange}
+          />
+        )}
+      </SafeAreaView>
+      {/* </AppGradientBackground> */}
     </View>
   );
 }
