@@ -19,7 +19,7 @@ import React, {
 } from "react";
 import { Animated, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useUIStore } from "../../store/ui-store";
+import { useUIStore } from "../ui-store";
 import { AddActionMenu } from "./AddActionMenu";
 
 type TabIconComponent = React.ComponentType<IconProps>;

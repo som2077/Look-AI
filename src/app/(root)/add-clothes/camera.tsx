@@ -1,4 +1,4 @@
-import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
+import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import {
   IconBolt,
   IconCamera,

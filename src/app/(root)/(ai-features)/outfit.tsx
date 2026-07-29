@@ -1,5 +1,5 @@
 import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
   IconArrowLeft,

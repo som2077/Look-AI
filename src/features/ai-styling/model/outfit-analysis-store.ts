@@ -8,7 +8,7 @@ import {
   namespacedAsyncStorage,
   registerStoreRehydration,
   registerStoreReset,
-} from "@/shared/store/namespacedStorage";
+} from "@/shared/storage/namespacedStorage";
 
 export interface LastOutfit {
   imageUri: string;

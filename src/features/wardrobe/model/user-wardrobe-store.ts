@@ -5,7 +5,7 @@ import {
   namespacedAsyncStorage,
   registerStoreRehydration,
   registerStoreReset,
-} from "@/shared/store/namespacedStorage";
+} from "@/shared/storage/namespacedStorage";
 
 export type UserClothingItem = {
   id: string;

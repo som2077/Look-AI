@@ -1,4 +1,4 @@
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";

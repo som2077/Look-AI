@@ -1,8 +1,8 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { ScanningOverlay } from "@/features/scanning/ui/ScanningOverlay";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
-import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import {
   IconArrowLeft,
   IconChevronDown,

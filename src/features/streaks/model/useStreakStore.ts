@@ -5,7 +5,7 @@ import {
   namespacedAsyncStorage,
   registerStoreRehydration,
   registerStoreReset,
-} from "./namespacedStorage";
+} from '@/shared/storage/namespacedStorage';
 
 export interface StreakState {
   currentStreak: number;

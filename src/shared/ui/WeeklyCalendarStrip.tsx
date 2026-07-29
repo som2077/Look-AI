@@ -1,4 +1,4 @@
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 

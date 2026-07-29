@@ -232,18 +232,49 @@ export default function OutfitLogDetailScreen() {
         <Text style={styles.topHeaderTitle}>
           {isEditing ? "Edit Outfit" : "Outfit Details"}
         </Text>
-        {isEditing ? (
-          <Pressable onPress={handleSaveEdits} style={styles.topHeaderBtn}>
-            <IconCheck size={24} color="#1D1A27" strokeWidth={2} />
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={() => setIsMenuOpen(true)}
-            style={styles.topHeaderBtn}
-          >
-            <IconDotsVertical size={24} color="#1D1A27" strokeWidth={2} />
-          </Pressable>
-        )}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          {!isEditing && (
+            <Pressable
+              onPress={() => {
+                const willSave = !outfit.isSaved;
+                toggleSaved(outfitIndex);
+                if (willSave) {
+                  addSavedItem({
+                    id: outfit.imageUri,
+                    name: outfit.name,
+                    occasion: outfit.occasion || "Casual",
+                    wears: 0,
+                    image: outfit.imageUri,
+                    match: outfit.score,
+                    tags: outfit.tags || [],
+                    saveType: "outfit",
+                  });
+                } else {
+                  removeSavedItem(outfit.imageUri);
+                }
+              }}
+              style={styles.topHeaderBtn}
+            >
+              {outfit.isSaved ? (
+                <IconBookmarkFilled size={24} color="#1D1A27" />
+              ) : (
+                <IconBookmark size={24} color="#1D1A27" strokeWidth={2} />
+              )}
+            </Pressable>
+          )}
+          {isEditing ? (
+            <Pressable onPress={handleSaveEdits} style={styles.topHeaderBtn}>
+              <IconCheck size={24} color="#1D1A27" strokeWidth={2} />
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => setIsMenuOpen(true)}
+              style={styles.topHeaderBtn}
+            >
+              <IconDotsVertical size={24} color="#1D1A27" strokeWidth={2} />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {/* Dropdown Menu Modal */}
@@ -267,38 +298,6 @@ export default function OutfitLogDetailScreen() {
             >
               <IconEdit size={20} color="#1D1A27" />
               <Text style={styles.menuItemText}>Edit</Text>
-            </Pressable>
-            <Pressable
-              style={styles.menuItem}
-              onPress={() => {
-                const willSave = !outfit.isSaved;
-                toggleSaved(outfitIndex);
-                setIsMenuOpen(false);
-
-                if (willSave) {
-                  addSavedItem({
-                    id: outfit.imageUri,
-                    name: outfit.name,
-                    occasion: outfit.occasion || "Casual",
-                    wears: 0,
-                    image: outfit.imageUri,
-                    match: outfit.score,
-                    tags: outfit.tags || [],
-                    saveType: "outfit",
-                  });
-                } else {
-                  removeSavedItem(outfit.imageUri);
-                }
-              }}
-            >
-              {outfit.isSaved ? (
-                <IconBookmarkFilled size={20} color="#1D1A27" />
-              ) : (
-                <IconBookmark size={20} color="#1D1A27" />
-              )}
-              <Text style={styles.menuItemText}>
-                {outfit.isSaved ? "Saved" : "Save"}
-              </Text>
             </Pressable>
             <Pressable style={styles.menuItem}>
               <IconShare size={20} color="#1D1A27" />

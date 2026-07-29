@@ -26,8 +26,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
-import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 
 import {
   BatchItem,

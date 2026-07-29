@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { AppState } from "react-native";
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 
 export default function RootLayout() {
   const checkStreakValidity = useStreakStore((state) => state.checkStreakValidity);

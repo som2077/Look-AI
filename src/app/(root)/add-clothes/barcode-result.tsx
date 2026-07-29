@@ -1,8 +1,8 @@
 import { BarcodeAnalysis, analyzeBarcodeImage } from "@/features/scanning/api/gemini-scan"
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store"
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store"
-import { useStreakStore } from "@/shared/store/useStreakStore"
-import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits"
+import { useStreakStore } from "@/features/streaks/model/useStreakStore"
+import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits"
 import {
   IconArrowLeft,
   IconBarcode,

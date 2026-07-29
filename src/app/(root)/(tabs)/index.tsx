@@ -16,8 +16,8 @@ import { useWeatherStore } from "@/features/weather/model/weather-store";
 import {
   usePremiumLimits,
   WARDROBE_LIMIT,
-} from "@/shared/hooks/usePremiumLimits";
-import { useStreakStore } from "@/shared/store/useStreakStore";
+} from "@/features/payments/model/usePremiumLimits";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { HomeHeader } from "@/shared/ui/HomeHeader";

@@ -4,7 +4,7 @@ import {
 } from "@/features/onboarding/model/onboarding-store";
 import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { FONT_ASSETS } from "@/shared/config/constants/fonts";
-import { syncStoresWithUser } from "@/shared/store/namespacedStorage";
+import { syncStoresWithUser } from "@/shared/storage/namespacedStorage";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
   AppErrorBoundary,

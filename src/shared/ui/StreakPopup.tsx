@@ -3,7 +3,7 @@ import LottieView from "lottie-react-native";
 import React from "react";
 import { Animated, Modal, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 
 interface StreakPopupProps {
   visible: boolean;

@@ -3,7 +3,7 @@ import { LabelAnalysis } from "@/features/scanning/api/gemini-scan";
 import { saveLabelToDatabase } from "@/features/scanning/api/save-label";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useSavedStore } from "@/features/wardrobe/model/saved-store";
-import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
+import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useAuth } from "@clerk/clerk-expo";
 import {

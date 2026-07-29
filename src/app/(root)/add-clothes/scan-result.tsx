@@ -4,9 +4,9 @@ import { useScanHistoryStore } from "@/features/scanning/model/scan-history-stor
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { usePremiumLimits } from "@/shared/hooks/usePremiumLimits";
+import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {

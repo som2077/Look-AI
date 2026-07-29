@@ -4,7 +4,7 @@ import {
   namespacedAsyncStorage,
   registerStoreRehydration,
   registerStoreReset,
-} from "@/shared/store/namespacedStorage";
+} from "@/shared/storage/namespacedStorage";
 
 export interface Group {
   id: string;
@@ -244,5 +244,5 @@ export const useSocialStore = create<SocialState>()(
 
 registerStoreRehydration(() => useSocialStore.persist.rehydrate());
 registerStoreReset(() =>
-  useSocialStore.setState({ joinedGroups: [], postsByGroup: {} })
+  useSocialStore.setState({ joinedGroupIds: [], postsByGroup: {} })
 );

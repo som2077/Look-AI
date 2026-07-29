@@ -6,7 +6,7 @@ import {
   namespacedSecureStorage,
   registerStoreRehydration,
   registerStoreReset,
-} from "@/shared/store/namespacedStorage";
+} from "@/shared/storage/namespacedStorage";
 
 export type Gender = "Male" | "Female" | "";
 

@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { IconCheck, IconTrendingUp } from "@tabler/icons-react-native";

@@ -28,7 +28,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import ImageCropPicker from "react-native-image-crop-picker";
+import * as ImagePicker from "expo-image-picker";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -384,16 +384,13 @@ function FeedTab() {
   const pickImage = async () => {
     setIsPickingImage(true);
     try {
-      const result = await ImageCropPicker.openPicker({
-        mediaType: "photo",
-        cropping: true,
-        freeStyleCropEnabled: true,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
       });
-      if (result && result.path) {
-        const validUri = result.path.startsWith("file://")
-          ? result.path
-          : `file://${result.path}`;
-        setImageUri(validUri);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImageUri(result.assets[0].uri);
       }
     } catch (e) {
       console.log("Image picker error:", e);

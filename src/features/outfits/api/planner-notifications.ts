@@ -21,7 +21,7 @@ export async function scheduleOutfitPlanReminder(
       body: `You planned an outfit for ${occasion} today. Tap to confirm the weather and outfit!`,
       data: { outfitId, type: "planner_reminder" },
     },
-    trigger: trigger,
+    trigger: { date: trigger, type: Notifications.SchedulableTriggerInputTypes.DATE } as any,
   });
 
   // Day before reminder at 8 PM
@@ -36,7 +36,7 @@ export async function scheduleOutfitPlanReminder(
         body: `You have an outfit planned for ${occasion}.`,
         data: { outfitId, type: "planner_reminder" },
       },
-      trigger: dayBefore,
+      trigger: { date: dayBefore, type: Notifications.SchedulableTriggerInputTypes.DATE } as any,
     });
   }
 }

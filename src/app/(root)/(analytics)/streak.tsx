@@ -1,4 +1,4 @@
-import { useStreakStore } from "@/shared/store/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { IconArrowLeft, IconShare2 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
