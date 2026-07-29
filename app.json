@@ -95,7 +95,6 @@
       "expo-font",
       "expo-secure-store",
       "expo-audio",
-      "@react-native-community/datetimepicker",
       "expo-localization",
       [
         "expo-calendar",
