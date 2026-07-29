@@ -64,35 +64,25 @@
 
 ---
 
-## 📂 Production Architecture
+## 📂 Production Architecture (Screaming Architecture)
 
-LookAI utilizes an enterprise-grade **Route Group** architecture. This ensures high maintainability by organizing features logically without affecting URL strings (e.g., `app/(root)/(analytics)/score.tsx` resolves simply to `/score`).
+LookAI utilizes a Feature-Sliced / Screaming Architecture. This ensures high maintainability by organizing code by business domain rather than technical file types.
 
 ```text
-app/
-├── UNNECESSARY/            # Deprecated prototypes / Unused demo files
-├── (auth)/                 # Unauthenticated Routes
-│   ├── sign-in.tsx         # OAuth & Email providers
-│   └── email.tsx           # OTP Validation screen
-└── (root)/                 # Authenticated workspace screens
-    ├── _layout.tsx         # Global Auth Guard wrapper
-    ├── calendar.tsx        # Calendar: Outfit wear logs & scheduling
-    ├── (ai-features)/      # AI & Recommendation engine UI
-    ├── (analytics)/        # Gamification & tracking metrics
-    ├── (social)/           # Social interaction & fashion feeds
-    ├── (subscription)/     # In-app purchase paywalls
-    ├── (wardrobe)/         # Wardrobe discovery
-    ├── (tabs)/             # Swipeable Bottom Tab navigation
-    │   ├── _layout.tsx     
-    │   ├── index.tsx       # Home: Highlights, trend feeds, stats
-    │   ├── explore.tsx     # Explore: Discover new outfits and trends
-    │   ├── wardrobe.tsx    # Wardrobe: Pinterest masonry grid
-    │   └── profile.tsx     # Profile: Bio summary, body stats
-    ├── add-clothes/        # Multi-step camera/upload wizard
-    ├── cloth-details/      # Detailed view for specific clothing items
-    ├── log-outfit/         # Daily wearer logging wizard
-    ├── onboarding/         # 6-step new user preference forms
-    └── post/               # Creating and sharing fashion posts
+src/
+├── app/                    # Expo Router file-based navigation (UI shell)
+│   ├── (auth)/             # Unauthenticated Routes (sign-in, otp)
+│   └── (root)/             # Authenticated workspace screens (tabs, profile)
+├── features/               # Isolated business domains (The Core)
+│   ├── wardrobe/           # Digital wardrobe & clothing detection
+│   ├── outfits/            # AI outfit recommendations & logging
+│   ├── payments/           # In-app purchase paywalls & limits
+│   ├── scanning/           # Background removal & Cloudinary upload
+│   └── streaks/            # Gamification, scores, & progress
+└── shared/                 # Reusable cross-feature utilities
+    ├── ui/                 # Design system, custom components, ui-store
+    ├── storage/            # Local MMKV / secure-store wrappers
+    └── cloudinary/         # Image upload services
 ```
 
 ---
@@ -120,6 +110,15 @@ Handling IAP strictly client-side is insecure. LookAI uses a robust hybrid appro
 
 ### 4. Custom Component Injection (`AddActionMenu.tsx`)
 To achieve a highly premium feel, the FAB (Floating Action Button) triggers a translucent modal overlay. The component dynamically updates the global `StatusBar` and Android Navigation Bar colors to match the dimmed overlay precisely while the menu is open, ensuring a native edge-to-edge aesthetic.
+
+---
+
+## 🪒 Lean Engineering & The "Ponytail" Philosophy
+
+LookAI is built with aggressive optimization in mind. We strictly adhere to a "less code is better code" philosophy:
+- **Zero Dead Weight**: Continuous auditing removes unused dependencies instantly.
+- **Native Over JS**: We rely on OS-level capabilities (like Expo Crypto and native Image Pickers) instead of shipping heavy Javascript polyfills.
+- **Strict Boundaries**: Our `features/` folders cannot arbitrarily import from each other without clear interfaces, preventing spaghetti code as the app scales.
 
 ---
 
