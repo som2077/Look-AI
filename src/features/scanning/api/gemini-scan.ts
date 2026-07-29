@@ -3,7 +3,7 @@
  * Handles: Full Cloth Scan, Barcode Image, Care Label OCR, Fit Check
  */
 
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+import { supabase } from "@/shared/supabase/client";
 
 const MODELS = [
   "gemini-2.5-flash-lite",
@@ -101,10 +101,6 @@ async function callGeminiVision(
   imageUri: string,
   prompt: string,
 ): Promise<string | null> {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-    return null;
-  }
-
   let base64: string;
   try {
     base64 = await uriToBase64(imageUri);
@@ -134,17 +130,10 @@ async function callGeminiVision(
 
   for (const model of MODELS) {
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
-      if (res.status === 429) continue;
-      if (!res.ok) continue;
-      const data = await res.json();
+      const { data, error } = await supabase.functions.invoke("gemini-proxy", {
+        body: { model, body },
+      });
+      if (error) continue;
       const candidate = data?.candidates?.[0];
       if (candidate?.finishReason === "SAFETY") {
         return JSON.stringify({ error: "SAFETY_VIOLATION" });
@@ -284,12 +273,6 @@ export async function analyzeBarcodeImage(
 export async function analyzeClothLabel(
   imageUri: string,
 ): Promise<LabelAnalysis> {
-  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !anonKey) {
-    throw new Error("Missing Supabase configuration");
-  }
 
   let base64Image: string;
   try {
@@ -312,22 +295,15 @@ export async function analyzeClothLabel(
   }
 
   try {
-    const res = await fetch(`${supabaseUrl}/functions/v1/cloth-label-scan`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${anonKey}`,
-      },
-      body: JSON.stringify({ base64Image }),
+    const { data, error: edgeError } = await supabase.functions.invoke("cloth-label-scan", {
+      body: { base64Image },
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error(`Edge function failed with status ${res.status}: ${errText}`);
-      throw new Error(`Edge function failed (Status: ${res.status}). Please ensure it is deployed.`);
+    if (edgeError) {
+      console.error(`Edge function failed:`, edgeError);
+      throw new Error(`Edge function failed. Please ensure it is deployed.`);
     }
 
-    const data = await res.json();
     if (!data.success) {
       throw new Error(data.error || "Edge function failed");
     }

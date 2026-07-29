@@ -1,4 +1,4 @@
-﻿import {
+import {
   IconBarcode,
   IconHeart,
   IconHeartFilled,
@@ -13,9 +13,9 @@ import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useState } from "react";
+import { FlashList } from "@shopify/flash-list";
 import {
   Alert,
-  FlatList,
   Pressable,
   Text,
   View,
@@ -268,19 +268,21 @@ export default function ScanHistoryScreen() {
             </Text>
           </View>
         ) : (
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <HistoryCard
-                item={item}
-                onDelete={handleDelete}
-                onToggleFavorite={toggleFavorite}
-              />
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
-          />
+          <View style={{ flex: 1 }}>
+            <FlashList
+              data={filtered}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <HistoryCard
+                  item={item}
+                  onDelete={handleDelete}
+                  onToggleFavorite={toggleFavorite}
+                />
+              )}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
+            />
+          </View>
         )}
       </SafeAreaView>
     </View>

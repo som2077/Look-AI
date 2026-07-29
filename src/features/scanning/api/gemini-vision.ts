@@ -3,6 +3,8 @@
  * Analyzes a clothing image and extracts structured metadata.
  */
 
+import { supabase } from "@/shared/supabase/client";
+
 export interface ClothingAnalysis {
   name: string;
   category:
@@ -72,11 +74,6 @@ export async function analyzeClothingImage(
   imageUri: string,
 ): Promise<ClothingAnalysis | null> {
   try {
-    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-    if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE") {
-      console.warn("Gemini API key not set. Using fallback analysis.");
-      return getFallbackAnalysis();
-    }
 
     const base64Image = await uriToBase64(imageUri);
     const mimeType = imageUri.toLowerCase().endsWith(".png")
@@ -113,28 +110,16 @@ export async function analyzeClothingImage(
     let lastError = "";
 
     for (const model of MODELS) {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
+      try {
+        const { data, error: edgeError } = await supabase.functions.invoke("gemini-proxy", {
+          body: { model, body: requestBody },
+        });
+
+        if (edgeError) {
+          console.error(`[Gemini] ${model} error:`, edgeError);
+          continue;
         }
-      );
 
-      if (response.status === 429) {
-        lastError = `${model} quota exceeded`;
-        console.warn(`[Gemini] ${model} quota exceeded, trying next model...`);
-        continue; // try next model
-      }
-
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error(`[Gemini] ${model} error:`, errText);
-        continue;
-      }
-
-      const data = await response.json();
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
       const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -146,6 +131,11 @@ export async function analyzeClothingImage(
       const parsed = JSON.parse(jsonMatch[0]) as ClothingAnalysis;
       console.log(`[Gemini] ✅ Success with model: ${model}`);
       return parsed;
+
+      } catch (invokeErr) {
+        console.error(`[Gemini] ${model} invoke error:`, invokeErr);
+        continue;
+      }
     }
 
     // All models failed

@@ -1,8 +1,7 @@
-import CryptoJS from "crypto-js";
+import { supabase } from "@/shared/supabase/client";
 
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
 const API_KEY = process.env.EXPO_PUBLIC_CLOUDINARY_API_KEY?.trim();
-const API_SECRET = process.env.EXPO_PUBLIC_CLOUDINARY_API_SECRET?.trim();
 
 export interface CloudinaryUploadResult {
   imageUrl: string;
@@ -12,71 +11,44 @@ export interface CloudinaryUploadResult {
 
 let currentKeyIndex = 0;
 
+async function uriToBase64(uri: string): Promise<string> {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 /**
- * Removes background using the remove.bg API and handles multiple keys for fallback.
+ * Removes background using the remove.bg edge function.
  */
 async function removeBackgroundLocal(fileUri: string): Promise<string> {
-  const keysEnv = process.env.EXPO_PUBLIC_REMOVE_BG_API_KEYS?.trim() || "";
-  const keys = keysEnv.split(",").map(k => k.trim()).filter(k => k.length > 0);
-  
-  if (keys.length === 0) {
-    throw new Error("No remove.bg API keys found in EXPO_PUBLIC_REMOVE_BG_API_KEYS");
+  const base64Image = await uriToBase64(fileUri);
+
+  const { data, error } = await supabase.functions.invoke("remove-bg", {
+    body: { base64Image },
+  });
+
+  if (error || !data?.result_b64) {
+    console.error("Remove.bg edge function error:", error || data?.error);
+    throw new Error("Failed to remove background via edge function");
   }
 
-  const formData = new FormData();
-  formData.append("image_file", {
-    uri: fileUri,
-    type: "image/jpeg",
-    name: "upload.jpg",
-  } as any);
-  formData.append("size", "auto");
-  formData.append("format", "png");
-  formData.append("response_type", "base64");
-
-  let lastError: any = null;
-
-  while (currentKeyIndex < keys.length) {
-    const key = keys[currentKeyIndex];
-    try {
-      const response = await fetch("https://api.remove.bg/v1.0/removebg", {
-        method: "POST",
-        headers: {
-          "X-Api-Key": key,
-          Accept: "application/json",
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const b64 = data.data.result_b64;
-        return `data:image/png;base64,${b64}`;
-      } else if (response.status === 402 || response.status === 429) {
-        // 402 = Payment Required (Out of credits), 429 = Rate limit
-        console.warn(`Remove.bg key ${currentKeyIndex + 1} failed or exhausted. Trying next key...`);
-        currentKeyIndex++;
-      } else {
-        const errText = await response.text();
-        throw new Error(`Remove.bg API Error (${response.status}): ${errText}`);
-      }
-    } catch (e) {
-      lastError = e;
-      if (e instanceof Error && e.message.includes("Remove.bg API Error")) {
-        throw e; // Stop trying if it's a hard error (not credit related)
-      }
-      // If network error, throw it so the user can retry
-      throw e;
-    }
-  }
-
-  throw new Error("All remove.bg API keys are exhausted or failed. Last error: " + (lastError?.message || "Unknown"));
+  return `data:image/png;base64,${data.result_b64}`;
 }
 
 
 export async function uploadToCloudinaryWithBgRemoval(
   fileUri: string,
 ): Promise<CloudinaryUploadResult> {
-  if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+  if (!CLOUD_NAME || !API_KEY) {
     throw new Error(
       "Cloudinary credentials are not properly configured in .env",
     );
@@ -89,7 +61,15 @@ export async function uploadToCloudinaryWithBgRemoval(
   const timestamp = Math.round(new Date().getTime() / 1000).toString();
 
   const paramsToSign = `timestamp=${timestamp}`;
-  const signature = CryptoJS.SHA1(paramsToSign + API_SECRET).toString();
+  const { data: sigData, error: sigError } = await supabase.functions.invoke("cloudinary-signature", {
+    body: { paramsToSign },
+  });
+
+  if (sigError || !sigData?.signature) {
+    throw new Error("Failed to generate Cloudinary signature via edge function");
+  }
+
+  const signature = sigData.signature;
 
   const formData = new FormData();
   formData.append("file", transparentImageUri as any); // Upload the base64 URI directly
@@ -144,14 +124,24 @@ export function extractPublicIdFromUrl(url: string): string | null {
 }
 
 export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
-  if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+  if (!CLOUD_NAME || !API_KEY) {
     console.warn("Cloudinary credentials are not properly configured");
     return false;
   }
 
   const timestamp = Math.round(new Date().getTime() / 1000).toString();
   const paramsToSign = `public_id=${publicId}&timestamp=${timestamp}`;
-  const signature = CryptoJS.SHA1(paramsToSign + API_SECRET).toString();
+  
+  const { data: sigData, error: sigError } = await supabase.functions.invoke("cloudinary-signature", {
+    body: { paramsToSign },
+  });
+
+  if (sigError || !sigData?.signature) {
+    console.error("Failed to generate delete signature via edge function");
+    return false;
+  }
+
+  const signature = sigData.signature;
 
   const formData = new FormData();
   formData.append("api_key", API_KEY);

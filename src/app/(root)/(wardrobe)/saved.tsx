@@ -7,9 +7,9 @@ import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useMemo, useState } from "react";
+import { FlashList } from "@shopify/flash-list";
 import {
   Dimensions,
-  FlatList,
   Modal,
   Pressable,
   ScrollView,
@@ -170,16 +170,17 @@ export default function SavedScreen() {
           </ScrollView>
         </View>
 
-        <FlatList
-          data={filteredOutfits}
-          extraData={isManaging}
-          keyExtractor={(item) => item.id}
-          renderItem={renderGridItem}
-          numColumns={NUM_COLUMNS}
-          columnWrapperStyle={{ gap: GRID_GAP }}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={{ flex: 1 }}>
+          <FlashList
+            data={filteredOutfits}
+            extraData={isManaging}
+            keyExtractor={(item) => item.id}
+            renderItem={renderGridItem}
+            numColumns={NUM_COLUMNS}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
       </SafeAreaView>
 
       {/* Image Viewer Modal */}

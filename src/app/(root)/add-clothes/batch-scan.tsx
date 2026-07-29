@@ -14,8 +14,6 @@ import {
   Alert,
   Animated,
   Dimensions,
-  FlatList,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -23,6 +21,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FlashList } from "@shopify/flash-list";
+import { Image as ExpoImage } from "expo-image";
 
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
@@ -379,9 +379,11 @@ function DetailView({
                   onPress={() => onOpenItem(index)}
                 >
                   <View style={styles.imageContainer}>
-                    <Image
+                    <ExpoImage
                       source={{ uri: item.cloudinaryUrl || item.originalUri }}
                       style={styles.itemImage}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
                     />
                   </View>
                   <View style={styles.itemDetails}>
@@ -414,7 +416,7 @@ function SimpleView({
   isLast,
   onUpdateItem,
 }: any) {
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<any>(null);
 
   useEffect(() => {
     if (flatListRef.current && items.length > 0) {
@@ -442,9 +444,11 @@ function SimpleView({
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
         >
           <View style={styles.carouselImageContainer}>
-            <Image
+            <ExpoImage
               source={{ uri: item.cloudinaryUrl || item.originalUri }}
               style={styles.carouselImage}
+              contentFit="contain"
+              cachePolicy="memory-disk"
             />
           </View>
 
@@ -568,7 +572,7 @@ function SimpleView({
 
   return (
     <View style={{ flex: 1 }}>
-      <FlatList
+      <FlashList
         ref={flatListRef}
         data={items}
         keyExtractor={(i) => i.id}
@@ -577,11 +581,6 @@ function SimpleView({
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleScroll}
         renderItem={renderItem}
-        getItemLayout={(data, index) => ({
-          length: SCREEN_WIDTH,
-          offset: SCREEN_WIDTH * index,
-          index,
-        })}
       />
 
       <View style={styles.bottomBar}>
@@ -781,7 +780,6 @@ const styles = StyleSheet.create({
   carouselImage: {
     width: "100%",
     height: "100%",
-    resizeMode: "contain",
   },
   carouselEditBtn: {
     position: "absolute",
