@@ -27,16 +27,16 @@ export interface BarcodeAnalysis {
 }
 
 export interface LabelAnalysis {
-  care_symbols: Array<{
+  care_symbols: {
     id: string;
     category: string;
     label: string;
     confidence: "high" | "medium" | "low";
-  }>;
-  fabric_composition: Array<{
+  }[];
+  fabric_composition: {
     material: string;
     percentage: number | null;
-  }>;
+  }[];
   brand: string | null;
   size: string | null;
   origin_text: string | null;
@@ -74,10 +74,16 @@ export interface FitCheckAnalysis {
     archetype: string;
     trendScore: number;
   };
-  actionableFixes: Array<{
+  actionableFixes: {
     problem: string;
     solution: string;
-  }>;
+  }[];
+  outfitPieces: {
+    top: string | null;
+    bottom: string | null;
+    footwear: string | null;
+    accessories: string | null;
+  };
   error?: string;
 }
 
@@ -121,10 +127,10 @@ async function callGeminiVision(
         ],
       },
     ],
-    generationConfig: { 
-      temperature: 0.2, 
+    generationConfig: {
+      temperature: 0.2,
       maxOutputTokens: 1024,
-      responseMimeType: "application/json" 
+      responseMimeType: "application/json",
     },
   };
 
@@ -273,7 +279,6 @@ export async function analyzeBarcodeImage(
 export async function analyzeClothLabel(
   imageUri: string,
 ): Promise<LabelAnalysis> {
-
   let base64Image: string;
   try {
     base64Image = await uriToBase64(imageUri);
@@ -295,9 +300,12 @@ export async function analyzeClothLabel(
   }
 
   try {
-    const { data, error: edgeError } = await supabase.functions.invoke("cloth-label-scan", {
-      body: { base64Image },
-    });
+    const { data, error: edgeError } = await supabase.functions.invoke(
+      "cloth-label-scan",
+      {
+        body: { base64Image },
+      },
+    );
 
     if (edgeError) {
       console.error(`Edge function failed:`, edgeError);
@@ -362,7 +370,13 @@ Return ONLY a valid JSON:
   "actionableFixes": [
     { "problem": "What is wrong (e.g., 'Chest area tight')", "solution": "How to fix it (e.g., 'Size up or try relaxed fit')" },
     { "problem": "Another issue", "solution": "Another fix" }
-  ]
+  ],
+  "outfitPieces": {
+    "top": "Name of top piece, e.g., 'White oxford shirt' or null if none",
+    "bottom": "Name of bottom piece, e.g., 'Navy chinos' or null if none",
+    "footwear": "Name of footwear, e.g., 'White sneakers' or null if none",
+    "accessories": "Name of accessories, e.g., 'Silver watch' or null if none"
+  }
 }
 Be constructive and highly specific. Return only valid JSON. No markdown.`;
 
@@ -405,5 +419,11 @@ export async function analyzeFitCheck(
         solution: "Consider tucking in your shirt for a more polished look",
       },
     ],
+    outfitPieces: {
+      top: "White oxford shirt",
+      bottom: "Navy chinos",
+      footwear: "White sneakers",
+      accessories: null,
+    },
   });
 }

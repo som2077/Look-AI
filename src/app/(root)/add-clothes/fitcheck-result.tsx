@@ -3,10 +3,12 @@ import { FitCheckAnalysis } from "@/features/scanning/api/gemini-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import {
   IconArrowLeft,
+  IconBolt,
+  IconBookmark,
   IconCircleX,
   IconDotsVertical,
+  IconSparkles,
 } from "@tabler/icons-react-native";
-import { BlurView } from "expo-blur";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
@@ -27,53 +29,8 @@ type FitCheckParams = {
   outfitIndex?: string;
 };
 
-const DEFAULT_RESULT: FitCheckAnalysis = {
-  fitScore: 75,
-  ratingTitle: "Good Look ✨",
-  ratingSubtitle: "A solid outfit with room for minor tweaks.",
-  silhouette: {
-    bodyShape: "Unknown",
-    waistBalance: "Standard Balance",
-    topRatio: 50,
-    bottomRatio: 50,
-    explanation: "Balanced proportions.",
-  },
-  fitPrecision: {
-    shoulderFit: { status: "Perfect", text: "Shoulders fit well" },
-    sleeveLength: { status: "Perfect", text: "Sleeves are correct length" },
-    trouserBreak: { status: "Perfect", text: "Good break length" },
-  },
-  colorTheory: {
-    hexColors: ["#1D1A27", "#F9FAFB", "#E9EBF8"],
-    harmony: "Neutral",
-    contrastExplanation: "Medium contrast tonal look.",
-  },
-  styleCategory: {
-    archetype: "Casual",
-    trendScore: 70,
-  },
-  actionableFixes: [
-    {
-      problem: "Outfit lacks personal touch",
-      solution: "Try adding a statement accessory",
-    },
-  ],
-};
-
-function getScoreColor(score: number): string {
-  if (score >= 80) return "#10B981"; // Vibrant Green
-  if (score >= 60) return "#F59E0B"; // Amber
-  return "#EF4444"; // Red
-}
-
-function getStatusColor(status: string): string {
-  if (status === "Perfect") return "#10B981";
-  if (status === "Tight" || status === "Short") return "#EF4444";
-  return "#F59E0B"; // Loose or Long
-}
-
-// Custom Glass Card Component
-const GlassCard = ({
+// Outline Card Component for the new flat, clean aesthetic
+const OutlineCard = ({
   children,
   className = "",
 }: {
@@ -81,16 +38,87 @@ const GlassCard = ({
   className?: string;
 }) => (
   <View
-    className={`rounded-3xl overflow-hidden mb-6 border border-white/60 bg-white/40 ${className}`}
+    className={`rounded-[32px] border border-gray-200 bg-white p-5 mb-5 shadow-sm ${className}`}
   >
-    <BlurView
-      intensity={30}
-      tint="light"
-      style={StyleSheet.absoluteFillObject}
-    />
-    <View className="p-5">{children}</View>
+    {children}
   </View>
 );
+
+// Flexible Progress Ring Component
+const ProgressRing = ({
+  size,
+  progress,
+  innerTop,
+  innerBottom,
+  bottomText,
+  color,
+}: {
+  size: number;
+  progress: number;
+  innerTop: string;
+  innerBottom?: string;
+  bottomText?: string;
+  color: string;
+}) => {
+  const strokeWidth = size * 0.1;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (circumference * progress) / 100;
+
+  return (
+    <View className="items-center">
+      <View
+        style={{ width: size, height: size }}
+        className="items-center justify-center relative"
+      >
+        <Svg width={size} height={size}>
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#F3F4F6"
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <G rotation="-90" origin={`${size / 2}, ${size / 2}`}>
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={color}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeDasharray={`${circumference} ${circumference}`}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+            />
+          </G>
+        </Svg>
+        <View className="absolute items-center justify-center">
+          <Text
+            className="font-extrabold text-[#111827]"
+            style={{ fontSize: size * 0.22 }}
+          >
+            {innerTop}
+          </Text>
+          {innerBottom && (
+            <Text
+              className="text-gray-500 font-medium mt-0.5"
+              style={{ fontSize: size * 0.14 }}
+            >
+              {innerBottom}
+            </Text>
+          )}
+        </View>
+      </View>
+      {bottomText && (
+        <Text className="text-[11px] font-bold text-gray-700 mt-2">
+          {bottomText}
+        </Text>
+      )}
+    </View>
+  );
+};
 
 export default function FitCheckResultScreen() {
   const router = useRouter();
@@ -101,48 +129,66 @@ export default function FitCheckResultScreen() {
   const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
 
   const scan = scans.find((s) => s.id === params.scanId);
-  const result =
-    (scan?.result as unknown as FitCheckAnalysis) || DEFAULT_RESULT;
+  const result = scan?.result as unknown as FitCheckAnalysis;
+
+  if (!result || result.ratingTitle === "Not an Outfit") {
+    return (
+      <View className="flex-1 bg-white items-center justify-center p-5">
+        <StatusBar style="dark" />
+        <IconCircleX size={64} color="#EF4444" className="mb-4" />
+        <Text className="text-xl font-bold text-gray-900 mb-2">
+          Analysis Failed
+        </Text>
+        <Text className="text-gray-500 text-center mb-8">
+          {result?.actionableFixes?.[0]?.solution ||
+            "Please upload a clear, full-length photo of a person wearing an outfit."}
+        </Text>
+        <Pressable
+          onPress={() => router.back()}
+          className="bg-gray-900 px-6 py-3 rounded-full"
+        >
+          <Text className="text-white font-bold">Go Back</Text>
+        </Pressable>
+      </View>
+    );
+  }
   const photoUri = scan?.thumbnail;
 
-  const scoreColor = getScoreColor(result.fitScore || 75);
-
-  const CIRCUMFERENCE = 2 * Math.PI * 40;
-  const strokeDashoffset =
-    CIRCUMFERENCE - (CIRCUMFERENCE * (result.fitScore || 75)) / 100;
-
   return (
-    <View className="flex-1 bg-[#F3F4F6]">
-      <StatusBar style="dark" />
-      {/* Soft gradient backgrounds behind the glass */}
-      <View className="absolute top-[-100] left-[-100] w-96 h-96 bg-blue-200/50 rounded-full blur-3xl opacity-50" />
-      <View className="absolute bottom-[-100] right-[-100] w-96 h-96 bg-pink-200/50 rounded-full blur-3xl opacity-50" />
+    <View className="flex-1 bg-black">
+      <StatusBar style="light" />
 
-      <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-        {/* Header */}
-        <View className="flex-row items-center justify-between px-5 py-4">
+      {/* Absolute Full-Screen Background Image */}
+      {photoUri ? (
+        <Image
+          source={{ uri: photoUri }}
+          style={StyleSheet.absoluteFillObject}
+          resizeMode="cover"
+        />
+      ) : (
+        <View
+          style={StyleSheet.absoluteFillObject}
+          className="bg-gray-800 items-center justify-center"
+        >
+          <Text className="text-gray-500 font-bold">NO PHOTO</Text>
+        </View>
+      )}
+
+      <SafeAreaView className="flex-1" edges={["top"]}>
+        {/* Floating Header */}
+        <View className="flex-row items-center justify-between px-5 z-10">
           <Pressable
             onPress={() => router.back()}
-            className="w-10 h-10 rounded-full bg-white/70 items-center justify-center border border-white/50"
-            style={{
-              shadowColor: "#000",
-              shadowOpacity: 0.05,
-              shadowRadius: 10,
-            }}
+            className="w-12 h-12 rounded-full bg-white items-center justify-center"
           >
             <IconArrowLeft size={22} color="#111827" />
           </Pressable>
-          <Text className="text-[#111827] font-bold tracking-widest text-[13px]">
-            FIT CHECK RESULT
+          <Text className="text-white font-extrabold  text-[20px] shadow-sm">
+            Fit Check
           </Text>
           <Pressable
             onPress={() => setShowMenu(true)}
-            className="w-10 h-10 rounded-full bg-white/70 items-center justify-center border border-white/50"
-            style={{
-              shadowColor: "#000",
-              shadowOpacity: 0.05,
-              shadowRadius: 10,
-            }}
+            className="w-12 h-12 rounded-full bg-white items-center justify-center "
           >
             <IconDotsVertical size={22} color="#111827" />
           </Pressable>
@@ -160,7 +206,7 @@ export default function FitCheckResultScreen() {
               <View
                 style={{
                   position: "absolute",
-                  top: 60,
+                  top: 100,
                   right: 20,
                   backgroundColor: "#fff",
                   borderRadius: 12,
@@ -171,8 +217,6 @@ export default function FitCheckResultScreen() {
                   elevation: 8,
                   minWidth: 140,
                   paddingVertical: 4,
-                  borderWidth: 1,
-                  borderColor: "#F3F4F6",
                 }}
               >
                 <Pressable
@@ -184,17 +228,11 @@ export default function FitCheckResultScreen() {
                     router.replace("/(root)/(tabs)" as never);
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: "#1D1A27",
-                      fontWeight: "500",
-                    }}
-                  >
+                  <Text className="text-[15px] font-medium text-[#1D1A27]">
                     Save
                   </Text>
                 </Pressable>
-                <View style={{ height: 1, backgroundColor: "#F3F4F6" }} />
+                <View className="h-px bg-gray-100" />
                 <Pressable
                   style={{ paddingVertical: 12, paddingHorizontal: 16 }}
                   onPress={() => {
@@ -205,13 +243,7 @@ export default function FitCheckResultScreen() {
                     router.replace("/(root)/(tabs)" as never);
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: "#EF4444",
-                      fontWeight: "500",
-                    }}
-                  >
+                  <Text className="text-[15px] font-medium text-red-500">
                     Delete
                   </Text>
                 </Pressable>
@@ -220,251 +252,175 @@ export default function FitCheckResultScreen() {
           </Modal>
         )}
 
+        {/* Scrollable Content with Bottom Sheet */}
         <ScrollView
-          className="flex-1 px-5"
+          className="flex-1"
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
         >
-          {/* Main Photo Card */}
-          <GlassCard className="mt-2 p-0">
-            {photoUri ? (
-              <Image
-                source={{ uri: photoUri }}
-                style={{ width: "100%", height: 380, borderRadius: 24 }}
-                resizeMode="cover"
+          {/* Spacer to show the full image */}
+          <View className="h-[400px]" />
+
+          {/* Bottom Sheet Container */}
+          <View className="flex-1 bg-white rounded-t-[30px] px-5 pt-6 pb-32 shadow-2xl">
+            {/* Grab handle indicator */}
+            <View className="w-12 h-1.5 bg-black rounded-full self-center absolute top-3" />
+
+            {/* Top Row: Time & Category Pills */}
+            <View className="flex-row justify-between items-end mb-5 mt-3 px-1">
+              <View className="flex-col items-start gap-y-2.5">
+                <View className="bg-gray-100 px-3.5 py-1.5 rounded-full ml-3">
+                  <Text className="text-[11px] font-bold text-gray-700">
+                    {new Date().toLocaleTimeString([], {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </Text>
+                </View>
+                <View className="bg-black px-5 py-2.5 rounded-full">
+                  <Text className="text-[13px] font-bold text-white">
+                    {result.styleCategory?.archetype || "Business casual"}
+                  </Text>
+                </View>
+              </View>
+              <Pressable className="pb-2 pr-2">
+                <IconBookmark size={24} color="#111827" strokeWidth={1.5} />
+              </Pressable>
+            </View>
+
+            {/* Card 1: Overall Progress */}
+            <OutlineCard className="flex-row items-center justify-between">
+              <View className="flex-1 pr-4">
+                <Text className="text-[14px] font-bold text-gray-500 mb-0.5">
+                  Fitcheck score
+                </Text>
+                <Text className="text-[22px] font-extrabold text-[#111827] leading-tight mb-2">
+                  Overall Progress
+                </Text>
+                <Text className="text-[13px] text-gray-500 leading-tight mb-4 pr-2">
+                  {result.ratingSubtitle}
+                </Text>
+                <View className="bg-[#111827] self-start px-6 py-4 rounded-full">
+                  <Text className="text-white text-xs font-bold">
+                    {result.ratingTitle}
+                  </Text>
+                </View>
+              </View>
+              <ProgressRing
+                size={100}
+                progress={result.fitScore || 75}
+                innerTop={`${result.fitScore || 75}/100`}
+                color="#111827"
               />
-            ) : (
-              <View className="w-full h-[380px] bg-gray-200/50 items-center justify-center rounded-3xl">
-                <Text className="text-gray-400 font-bold">
-                  FULL-LENGTH PHOTO
-                </Text>
-              </View>
-            )}
-          </GlassCard>
+            </OutlineCard>
 
-          {/* Score & Rating Section */}
-          <View className="flex-row items-center mb-10 px-2">
-            <View className="relative w-[90px] h-[90px] items-center justify-center mr-5">
-              <Svg width={90} height={90}>
-                <Circle
-                  cx={45}
-                  cy={45}
-                  r={40}
-                  stroke="#E5E7EB"
-                  strokeWidth={8}
-                  fill="none"
-                />
-                <G rotation="-90" origin="45, 45">
-                  <Circle
-                    cx={45}
-                    cy={45}
-                    r={40}
-                    stroke={scoreColor}
-                    strokeWidth={8}
-                    fill="none"
-                    strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-                    strokeDashoffset={strokeDashoffset}
-                    strokeLinecap="round"
-                  />
-                </G>
-              </Svg>
-              <View className="absolute items-center justify-center">
-                <Text className="font-extrabold text-[#111827] text-2xl">
-                  {result.fitScore}
-                </Text>
-                <Text className="text-[10px] text-gray-500 font-bold mt-[-2px]">
-                  /100
-                </Text>
-              </View>
-            </View>
-            <View className="flex-1">
-              <Text className="text-xl font-bold text-[#111827] mb-1">
-                {result.ratingTitle}
-              </Text>
-              <Text className="text-sm text-gray-600 leading-5">
-                {result.ratingSubtitle}
-              </Text>
-            </View>
-          </View>
-
-          {/* Section 1: Silhouette */}
-          <Text className="text-xs font-bold text-gray-400 tracking-widest mb-4 ml-2">
-            1. SILHOUETTE & PROPORTION
-          </Text>
-          <GlassCard>
-            <View className="flex-row gap-3 mb-5">
-              <View className="bg-white/60 px-4 py-2 rounded-full border border-gray-100">
-                <Text className="text-[#10B981] font-bold text-sm">
-                  {result.silhouette?.bodyShape || "Body Shape"}
-                </Text>
-              </View>
-              <View className="bg-white/60 px-4 py-2 rounded-full border border-gray-100">
-                <Text className="text-gray-700 font-bold text-sm">
-                  {result.silhouette?.waistBalance || "Waist Balance"}
-                </Text>
-              </View>
-            </View>
-
-            <View className="flex-row justify-between items-end mb-2">
-              <Text className="text-xs font-bold text-gray-400 tracking-wider">
-                TOP : BOTTOM RATIO
-              </Text>
-            </View>
-
-            <View className="h-8 rounded-full overflow-hidden flex-row mb-3 bg-gray-200">
-              <View
-                style={{
-                  width: `${result.silhouette?.topRatio || 50}%`,
-                  backgroundColor: "#10B981",
-                }}
-                className="h-full items-center justify-center"
-              >
-                <Text className="text-white font-bold text-xs">
-                  {result.silhouette?.topRatio || 50}
-                </Text>
-              </View>
-              <View
-                style={{
-                  width: `${result.silhouette?.bottomRatio || 50}%`,
-                  backgroundColor: "#374151",
-                }}
-                className="h-full items-center justify-center"
-              >
-                <Text className="text-white font-bold text-xs">
-                  {result.silhouette?.bottomRatio || 50}
-                </Text>
-              </View>
-            </View>
-
-            <Text className="text-sm text-gray-600 leading-5">
-              {result.silhouette?.explanation}
-            </Text>
-          </GlassCard>
-
-          {/* Section 2: Fit Precision */}
-          <Text className="text-xs font-bold text-gray-400 tracking-widest mb-4 ml-2">
-            2. FIT PRECISION
-          </Text>
-          <GlassCard>
-            {[
-              { label: "Shoulder Fit", data: result.fitPrecision?.shoulderFit },
-              {
-                label: "Sleeve Length",
-                data: result.fitPrecision?.sleeveLength,
-              },
-              {
-                label: "Trouser Break",
-                data: result.fitPrecision?.trouserBreak,
-              },
-            ].map((item, idx) => (
-              <View
-                key={idx}
-                className="flex-row items-center justify-between py-3 border-b border-gray-100/50"
-              >
-                <Text className="text-[#374151] font-medium text-[15px]">
-                  {item.label}
-                </Text>
-                <View className="flex-row items-center">
-                  <View
-                    className="w-2.5 h-2.5 rounded-full mr-2"
-                    style={{
-                      backgroundColor: getStatusColor(
-                        item.data?.status || "Perfect",
-                      ),
-                    }}
-                  />
-                  <Text className="text-[#111827] font-bold text-[15px]">
-                    {item.data?.status || "Perfect"}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </GlassCard>
-
-          {/* Section 3: Color Theory */}
-          <Text className="text-xs font-bold text-gray-400 tracking-widest mb-4 ml-2">
-            3. COLOR THEORY
-          </Text>
-          <GlassCard>
-            <View className="flex-row gap-3 mb-5">
-              {result.colorTheory?.hexColors?.map((color, idx) => (
-                <View
-                  key={idx}
-                  className="w-14 h-14 rounded-2xl border border-gray-200"
-                  style={{
-                    backgroundColor: color,
-                    shadowColor: color,
-                    shadowOpacity: 0.2,
-                    shadowRadius: 8,
-                  }}
-                />
-              ))}
-            </View>
-            <View className="bg-white/60 self-start px-4 py-2 rounded-full border border-gray-100 mb-5">
-              <Text className="text-[#10B981] font-bold text-sm">
-                {result.colorTheory?.harmony || "Harmony"}
-              </Text>
-            </View>
-            <Text className="text-sm text-gray-600 leading-5">
-              {result.colorTheory?.contrastExplanation}
-            </Text>
-          </GlassCard>
-
-          {/* Section 4: Style Category */}
-          <Text className="text-xs font-bold text-gray-400 tracking-widest mb-4 ml-2">
-            4. STYLE ARCHETYPE
-          </Text>
-          <GlassCard className="bg-emerald-50/50 border-emerald-100">
-            <Text className="text-2xl font-extrabold text-[#111827] mb-2">
-              {result.styleCategory?.archetype || "Minimalist"}
-            </Text>
-            <View className="mb-2">
-              <Text className="text-xs font-bold text-gray-400 tracking-wider mb-2">
-                TREND RELEVANCE
-              </Text>
-              <View className="h-2 rounded-full bg-gray-200 w-full overflow-hidden">
-                <View
-                  className="h-full bg-[#10B981] rounded-full"
-                  style={{
-                    width: `${result.styleCategory?.trendScore || 50}%`,
-                  }}
+            {/* Card 2: Body Proportions */}
+            <OutlineCard className="flex-row items-center p-4">
+              <View className="w-[100px] items-center justify-center mr-2">
+                <Image
+                  // Currently defaulting to female proportions. In the future, tie this to user gender state.
+                  source={require("../../../../assets/fitImage/female-proportions-clean.jpg")}
+                  style={{ width: 90, height: 160 }}
+                  resizeMode="contain"
                 />
               </View>
-              <View className="flex-row justify-between mt-1">
-                <Text className="text-[10px] text-gray-400">Dated</Text>
-                <Text className="text-[10px] text-gray-400">Trending Now</Text>
-              </View>
-            </View>
-          </GlassCard>
+              <View className="flex-1">
+                <Text className="text-[11px] font-bold text-gray-500 mb-0.5">
+                  Body Proportions
+                </Text>
+                <Text className="text-lg font-extrabold text-[#111827] mb-1">
+                  {result.silhouette?.bodyShape || "Well-Balanced"}
+                </Text>
+                <Text className="text-[11px] text-gray-500 leading-tight mb-4">
+                  {result.silhouette?.explanation ||
+                    "A solid outfit with room for minor tweaks."}
+                </Text>
 
-          {/* Section 5: Actionable Fixes */}
-          <Text className="text-xs font-bold text-gray-400 tracking-widest mb-4 ml-2">
-            5. ACTIONABLE FIXES
-          </Text>
-          <View className="mb-10">
-            {result.actionableFixes?.map((fix, idx) => (
-              <GlassCard key={idx} className="mb-3 p-4">
-                <View className="flex-row items-start mb-2 opacity-60">
-                  <IconCircleX
-                    size={16}
-                    color="#EF4444"
-                    className="mr-2 mt-0.5"
+                <View className="flex-row items-center justify-between">
+                  <ProgressRing
+                    size={64}
+                    progress={result.fitScore || 85}
+                    innerTop={`${result.fitScore || 85}/100`}
+                    innerBottom="Overall"
+                    bottomText="Sharp tier"
+                    color="#EF4444" // Red stroke as in mockup
                   />
-                  <Text className="text-gray-500 line-through text-sm flex-1">
-                    {fix.problem}
+                  <ProgressRing
+                    size={64}
+                    progress={result.silhouette?.topRatio || 50}
+                    innerTop={`${result.silhouette?.topRatio || 50}%`}
+                    innerBottom="Torso"
+                    bottomText="Physical fit"
+                    color="#111827"
+                  />
+                  <ProgressRing
+                    size={64}
+                    progress={result.silhouette?.bottomRatio || 50}
+                    innerTop={`${result.silhouette?.bottomRatio || 50}%`}
+                    innerBottom="Legs"
+                    bottomText="Look & Color"
+                    color="#111827"
+                  />
+                </View>
+              </View>
+            </OutlineCard>
+
+            {/* Card 4: Analysis & Quick Fixes (Light Themed) */}
+            <OutlineCard className="p-5">
+              <View className="mb-6 gap-y-3">
+                {[
+                  result.fitPrecision?.shoulderFit?.text,
+                  result.fitPrecision?.sleeveLength?.text,
+                  result.fitPrecision?.trouserBreak?.text,
+                ]
+                  .filter(Boolean)
+                  .map((text, idx) => (
+                    <View key={idx} className="flex-row items-start">
+                      <View className="w-1.5 h-1.5 rounded-full bg-[#10B981] mt-2 mr-3" />
+                      <Text className="text-gray-700 text-[14px] leading-5 flex-1 font-medium">
+                        {text}
+                      </Text>
+                    </View>
+                  ))}
+              </View>
+
+              {result.actionableFixes?.[0] && (
+                <View className="bg-orange-50 border border-orange-200/60 rounded-2xl p-4">
+                  <View className="flex-row items-center mb-1">
+                    <IconBolt size={18} color="#F59E0B" className="mr-2" />
+                    <Text className="text-[#F59E0B] font-bold text-sm">
+                      Quick fix
+                    </Text>
+                  </View>
+                  <Text className="text-gray-600 text-sm leading-5 pl-6">
+                    {result.actionableFixes[0].solution}
                   </Text>
                 </View>
-                <View className="flex-row items-start pl-6">
-                  <Text className="text-[#10B981] font-bold text-lg mr-2 mt-[-3px]">
-                    ↳
-                  </Text>
-                  <Text className="text-[#111827] font-bold text-[15px] flex-1 leading-5">
-                    {fix.solution}
-                  </Text>
-                </View>
-              </GlassCard>
-            ))}
+              )}
+            </OutlineCard>
           </View>
         </ScrollView>
+
+        {/* Fixed Bottom Footer */}
+        <View className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-4 pb-8 border-t border-gray-100 flex-row gap-4 z-20">
+          <Pressable
+            className="flex-1 h-14 rounded-full border border-gray-300 items-center justify-center flex-row active:bg-gray-50"
+            onPress={() => {
+              // TODO: Implement fix scan logic
+            }}
+          >
+            <IconSparkles size={20} color="#111827" className="mr-2" />
+            <Text className="text-[#111827] font-bold text-[15px]">
+              Fix Scan
+            </Text>
+          </Pressable>
+          <Pressable
+            className="flex-1 h-14 rounded-full bg-[#0F172A] items-center justify-center active:bg-black"
+            onPress={() => router.replace("/(root)/(tabs)" as never)}
+          >
+            <Text className="text-white font-bold text-[15px]">Done</Text>
+          </Pressable>
+        </View>
       </SafeAreaView>
     </View>
   );

@@ -1,9 +1,9 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import { LabelAnalysis } from "@/features/scanning/api/gemini-scan";
 import { saveLabelToDatabase } from "@/features/scanning/api/save-label";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useSavedStore } from "@/features/wardrobe/model/saved-store";
-import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useAuth } from "@clerk/clerk-expo";
 import {
@@ -188,9 +188,9 @@ export default function LabelResultScreen() {
         <Pressable
           onPress={() => router.back()}
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
             backgroundColor: "#FFFFFF",
             alignItems: "center",
             justifyContent: "center",
@@ -204,9 +204,9 @@ export default function LabelResultScreen() {
         <Pressable
           onPress={() => setShowMenu(true)}
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
+            width: 45,
+            height: 45,
+            borderRadius: 25,
             backgroundColor: "#FFFFFF",
             alignItems: "center",
             justifyContent: "center",
@@ -391,7 +391,7 @@ export default function LabelResultScreen() {
             <View
               style={{
                 marginBottom: 16,
-                backgroundColor: "#FEF2F2",
+                backgroundColor: "#FEF2F2",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
                 padding: 16,
                 borderRadius: 16,
                 flexDirection: "row",
