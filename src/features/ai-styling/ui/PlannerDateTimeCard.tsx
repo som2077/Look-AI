@@ -238,7 +238,7 @@ export default function PlannerDateTimeCard({
         {/* Far future note */}
         {selectedDate && (selectedDate.getTime() - today.getTime()) > 14 * 86400000 && (
           <Text style={styles.estimateNote}>
-            That's a while out — I'll give a seasonal estimate for now and refresh closer to the date.
+            That&apos;s a while out — I&apos;ll give a seasonal estimate for now and refresh closer to the date.
           </Text>
         )}
 

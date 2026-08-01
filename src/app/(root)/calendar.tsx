@@ -1,4 +1,3 @@
-import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import * as Calendar from "expo-calendar";
@@ -17,99 +16,151 @@ import {
   Dimensions,
   Modal,
   PanResponder,
+  Pressable,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+  View
 } from "react-native";
 import { Calendar as RNCalendar } from "react-native-calendars";
+import { Gesture } from "react-native-gesture-handler";
+import { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
-  IconArrowLeft,
-  IconCalendarEvent,
+  IconCalendar,
+  IconCalendarPlus,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconEdit,
-  IconPlus,
+  IconCloudRain
 } from "@tabler/icons-react-native";
 
-// ─── Constants & Types ────────────────────────────────────────────────────────
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CELL_GAP = 7;
-const PADDING = 20;
-const CELL_WIDTH = (SCREEN_WIDTH - PADDING * 2 - CELL_GAP * 6) / 7;
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
-const DAY_LABELS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+// â”€â”€â”€ Constants & Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface LoggedOutfit {
   title: string;
   wornTime: string;
-  itemsWorn: string;
+  itemsWorn: any[];
   itemCount: number;
   score: number;
   description: string;
-  weather?: { condition: string; temp: string };
-  imageUri?: string;
-  isPlanned?: boolean;
+  weather?: { condition: string; temp: number };
+  imageUri: string;
+  isPlanned: boolean;
 }
 
-// Predefined mock outfit logs mapping date string to details
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+const DAY_LABELS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const isSameDay = (d1: Date, d2: Date) =>
+  d1.getFullYear() === d2.getFullYear() &&
+  d1.getMonth() === d2.getMonth() &&
+  d1.getDate() === d2.getDate();
 
-// Helper checks if dates represent same calendar day
-const isSameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const CELL_GAP = 7;
+const PADDING = 20;
+const CELL_WIDTH = (SCREEN_WIDTH - PADDING * 2 - CELL_GAP * 6) / 7;
 
-// Generates actual Date grids padding previous and next months
-function buildCalendarDays(year: number, month: number): Date[] {
-  const firstDay = new Date(year, month, 1);
-  const startOffset = firstDay.getDay(); // Sunday = 0
+// Reusable Bottom Sheet
+function BottomSheet({
+  visible,
+  onClose,
+  children,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
-  const days: Date[] = [];
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: visible ? 0 : SCREEN_HEIGHT,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  }, [visible, slideAnim]);
 
-  // Padding previous month's final days
-  for (let i = startOffset - 1; i >= 0; i--) {
-    days.push(new Date(year, month, -i));
-  }
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_: any, gestureState: any) => {
+        return (
+          gestureState.dy > 0 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
+        );
+      },
+      onPanResponderMove: (_: any, gestureState: any) => {
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_: any, gestureState: any) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          Animated.timing(slideAnim, {
+            toValue: SCREEN_HEIGHT,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            onClose();
+          });
+        } else {
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
-  // Current month days
-  const lastDay = new Date(year, month + 1, 0);
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    days.push(new Date(year, month, d));
-  }
-
-  // Padding next month's starting days
-  const remaining = 7 - (days.length % 7);
-  if (remaining < 7) {
-    for (let d = 1; d <= remaining; d++) {
-      days.push(new Date(year, month + 1, d));
-    }
-  }
-
-  return days;
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+    >
+      <Pressable
+        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)" }}
+        onPress={onClose}
+      />
+      <Animated.View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          paddingBottom: 40,
+          transform: [{ translateY: slideAnim }],
+        }}
+      >
+        <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
+          <View
+            style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: "#E2E2EA",
+              }}
+            />
+          </View>
+        </View>
+        {children}
+      </Animated.View>
+    </Modal>
+  );
 }
-
-// ─── Main Calendar Screen ─────────────────────────────────────────────────────
 
 export default function CalendarScreen() {
   const router = useRouter();
@@ -117,6 +168,67 @@ export default function CalendarScreen() {
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selected, setSelected] = useState<Date>(today);
+
+  // Drag and drop logic
+  const HOUR_HEIGHT = 72;
+  const [draftEvent, setDraftEvent] = useState<{ id: string; start: number; end: number; title: string; } | null>(null);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const startY = useSharedValue(0);
+  const eventHeight = useSharedValue(0);
+
+  const createEventAtY = (y: number) => {
+    const snapY = Math.floor(y / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2);
+    const startHour = snapY / HOUR_HEIGHT;
+    startY.value = snapY;
+    eventHeight.value = Math.max(HOUR_HEIGHT, HOUR_HEIGHT);
+    setDraftEvent({ id: 'draft', start: startHour, end: startHour + 1, title: '(No title)' });
+  };
+
+  const handleTap = Gesture.Tap().onEnd((e) => {
+    runOnJS(createEventAtY)(e.y);
+  });
+
+  const updateDraftFromShared = () => {
+    if (draftEvent) {
+      setDraftEvent({ ...draftEvent, start: startY.value / HOUR_HEIGHT, end: (startY.value + eventHeight.value) / HOUR_HEIGHT });
+    }
+  };
+
+  const panBody = Gesture.Pan()
+    .onBegin(() => { runOnJS(setScrollEnabled)(false); })
+    .onUpdate((e) => {
+      const snapY = Math.round((startY.value + e.translationY) / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2);
+      if (snapY >= 0 && snapY + eventHeight.value <= 24 * HOUR_HEIGHT) startY.value = snapY;
+    })
+    .onFinalize(() => { runOnJS(updateDraftFromShared)(); runOnJS(setScrollEnabled)(true); });
+
+  const panBottomHandle = Gesture.Pan()
+    .onBegin(() => { runOnJS(setScrollEnabled)(false); })
+    .onUpdate((e) => {
+      const newHeight = eventHeight.value + e.translationY;
+      const snapHeight = Math.max(HOUR_HEIGHT / 2, Math.round(newHeight / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2));
+      if (startY.value + snapHeight <= 24 * HOUR_HEIGHT) eventHeight.value = snapHeight;
+    })
+    .onFinalize(() => { runOnJS(updateDraftFromShared)(); runOnJS(setScrollEnabled)(true); });
+
+  const panTopHandle = Gesture.Pan()
+    .onBegin(() => { runOnJS(setScrollEnabled)(false); })
+    .onUpdate((e) => {
+      const newY = startY.value + e.translationY;
+      const snapY = Math.max(0, Math.round(newY / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2));
+      const endY = startY.value + eventHeight.value;
+      if (snapY < endY - (HOUR_HEIGHT / 2) + 1) {
+        startY.value = snapY;
+        eventHeight.value = endY - snapY;
+      }
+    })
+    .onFinalize(() => { runOnJS(updateDraftFromShared)(); runOnJS(setScrollEnabled)(true); });
+
+  const animatedEventStyle = useAnimatedStyle(() => ({
+    top: startY.value,
+    height: eventHeight.value,
+  }));
+
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
   const [deviceEvents, setDeviceEvents] = useState<Calendar.Event[]>([]);
   const dateStripRef = useRef<any>(null); // Type as any or ScrollView to fix TS error
@@ -180,116 +292,34 @@ export default function CalendarScreen() {
       }
     };
 
-    if (supabase) {
-      fetchOutfits();
-    }
-
-    return () => {
-      isMounted = false;
-    };
+    if (supabase) { fetchOutfits(); }
+    return () => { isMounted = false; };
   }, [viewYear, viewMonth, supabase]);
 
-  const plannedOutfits = useUserOutfitsStore((state) => state.outfits);
-
-  const combinedOutfitsData = useMemo(() => {
-    const combined = { ...loggedOutfitsData };
-    plannedOutfits.forEach((outfit) => {
-      if (outfit.scheduledDate) {
-        // Find if date exists in combined, otherwise format it
-        // The calendar uses JS Date(dateStr).toDateString() keys
-        const parts = outfit.scheduledDate.split("-");
-        // Create date at noon to avoid timezone shift issues
-        const dateKey = new Date(
-          parseInt(parts[0]),
-          parseInt(parts[1]) - 1,
-          parseInt(parts[2]),
-          12,
-        ).toDateString();
-        combined[dateKey] = {
-          title: outfit.name || "Plan your outfit",
-          description: outfit.notes || "",
-          wornTime: outfit.scheduledTime || "Anytime",
-          itemsWorn: outfit.items?.length + " items",
-          itemCount: outfit.items?.length || 0,
-          score: 0,
-          imageUri: outfit.imageUri,
-          isPlanned: true,
-        };
-      }
-    });
-    return combined;
-  }, [loggedOutfitsData, plannedOutfits]);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Calendar.requestCalendarPermissionsAsync();
-      if (status === "granted") {
-        fetchDeviceEvents();
-      }
-    })();
-  }, [viewYear, viewMonth]);
-
-  const fetchDeviceEvents = async () => {
-    try {
-      const calendars = await Calendar.getCalendarsAsync(
-        Calendar.EntityTypes.EVENT,
-      );
-      const visibleCalendars = calendars.filter(
-        (c) => c.allowsModifications || c.source.type !== "local",
-      );
-      const calendarIds = visibleCalendars.map((c) => c.id);
-
-      if (calendarIds.length > 0) {
-        const startDate = new Date(viewYear, viewMonth, 1);
-        const endDate = new Date(viewYear, viewMonth + 1, 0);
-
-        const events = await Calendar.getEventsAsync(
-          calendarIds,
-          startDate,
-          endDate,
-        );
-        setDeviceEvents(events);
-      }
-    } catch (e) {
-      console.log("Error fetching calendar events:", e);
-    }
-  };
 
   const days = useMemo(
-    () => buildCalendarDays(viewYear, viewMonth),
+    () => {
+      const year = viewYear;
+      const month = viewMonth;
+      const firstDay = new Date(year, month, 1);
+      const startOffset = firstDay.getDay();
+      const days = [];
+      for (let i = startOffset - 1; i >= 0; i--) {
+        days.push(new Date(year, month, -i));
+      }
+      const lastDay = new Date(year, month + 1, 0);
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        days.push(new Date(year, month, d));
+      }
+      const remaining = 7 - (days.length % 7);
+      if (remaining < 7) {
+        for (let d = 1; d <= remaining; d++) {
+          days.push(new Date(year, month + 1, d));
+        }
+      }
+      return days;
+    },
     [viewYear, viewMonth],
-  );
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          return (
-            Math.abs(gestureState.dx) > 30 &&
-            Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
-          );
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (gestureState.dx > 50) {
-            // swipe right -> previous month
-            if (viewMonth === 0) {
-              setViewMonth(11);
-              setViewYear(viewYear - 1);
-            } else {
-              setViewMonth(viewMonth - 1);
-            }
-          } else if (gestureState.dx < -50) {
-            // swipe left -> next month
-            if (viewMonth === 11) {
-              setViewMonth(0);
-              setViewYear(viewYear + 1);
-            } else {
-              setViewMonth(viewMonth + 1);
-            }
-          }
-        },
-      }),
-    [viewMonth, viewYear],
   );
 
   const handleDaySelect = useCallback((date: Date) => {
@@ -298,447 +328,248 @@ export default function CalendarScreen() {
     setViewMonth(date.getMonth());
   }, []);
 
-  const selectedLog = useMemo(() => {
-    return combinedOutfitsData[selected.toDateString()];
-  }, [selected, combinedOutfitsData]);
+  const combinedOutfitsData = loggedOutfitsData;
 
-  const selectedDayEvents = useMemo(() => {
-    return deviceEvents.filter((e) =>
-      isSameDay(new Date(e.startDate), selected),
-    );
-  }, [selected, deviceEvents]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         <StatusBar style="dark" />
 
-        {/* Unified Top Header Row */}
+        {/* Top Header Row */}
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingHorizontal: 24,
-            // paddingVertical: 10
+            paddingHorizontal: 20,
+            paddingTop: 10,
+            paddingBottom: 20,
           }}
         >
-          {/* Back Button */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            activeOpacity={0.8}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 22,
-              backgroundColor: "#F9F9FB",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <IconArrowLeft size={20} color="#111827" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+            {/* Back Button */}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <IconChevronLeft size={24} color="#111827" />
+            </TouchableOpacity>
 
-          {/* Title */}
-          <Text style={{ fontSize: 18, fontWeight: "600", color: "#111827" }}>
-            Planner
-          </Text>
-
-          {/* Plus Add Button / Bookmark Button placeholder per request */}
-          {/* Request: "time kya right end ma bookmark ka button lagao is say 3dots ma save ha uska replace hai , working same ho" */}
-          {/* We'll add the bookmark button instead of the 3 dots. Wait, the 3 dots was in the Outfit detail. Here in Planner, the user said "time kya right end ma bookmark ka button lagao...". We'll put it here or wherever they meant. The plus button is here now. Let's just keep the Plus button as planner add for now, or use Bookmark if they meant here. */}
-          <TouchableOpacity
-            onPress={() =>
-              router.push("/(root)/(ai-features)/planner-chat" as never)
-            }
-            activeOpacity={0.8}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 22,
-              backgroundColor: "#F9F9FB",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <IconPlus size={20} color="#111827" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Horizontal Weekly Date Picker */}
-        <View
-          style={{
-            backgroundColor: "#F9F9FB90",
-            borderRadius: 20,
-            marginHorizontal: 20,
-            marginTop: 20,
-            marginBottom: 10,
-            paddingVertical: 16,
-            borderWidth: 1,
-            borderColor: "#F3F4F6",
-            // shadowColor: "#000",
-            // shadowOpacity: 0.04,
-            // shadowRadius: 8,
-            // shadowOffset: { width: 0, height: 4 },
-            // elevation: 1,
-          }}
-        >
-          {/* Top Bar: Month/Year & Controls */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingHorizontal: 16,
-              marginBottom: 16,
-            }}
-          >
+            {/* Title / Date Selector */}
             <TouchableOpacity
               onPress={() => setIsCalendarModalVisible(true)}
               style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
             >
-              <ExpoImage
-                source={{
-                  uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
-                }}
-                style={{ width: 19, height: 19 }}
-                contentFit="contain"
-              />
-              <Text
-                style={{ fontSize: 15, fontWeight: "600", color: "#4B5563" }}
-              >
+              <IconCalendar size={20} color="#111827" />
+              <Text style={{ fontSize: 16, fontWeight: "600", color: "#4B5563" }}>
                 {MONTH_NAMES[viewMonth]} {viewYear}
               </Text>
-              <IconChevronDown size={20} color="#9CA3AF" />
+              <IconChevronDown size={18} color="#9CA3AF" />
             </TouchableOpacity>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
-            >
-              <TouchableOpacity
-                onPress={() => {
-                  let newMonth = viewMonth - 1;
-                  let newYear = viewYear;
-                  if (newMonth < 0) {
-                    newMonth = 11;
-                    newYear -= 1;
-                  }
-                  setViewMonth(newMonth);
-                  setViewYear(newYear);
-                }}
-              >
-                <IconChevronLeft size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  const today = new Date();
-                  handleDaySelect(today);
-                  setTimeout(() => {
-                    const index = today.getDate() - 1;
-                    const offset = Math.max(0, index * 54 - 30);
-                    if (dateStripRef.current) {
-                      dateStripRef.current.scrollTo({ x: offset, animated: true });
-                    }
-                  }, 100);
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "700",
-                    color: "#111827",
-                  }}
-                >
-                  Today
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  let newMonth = viewMonth + 1;
-                  let newYear = viewYear;
-                  if (newMonth > 11) {
-                    newMonth = 0;
-                    newYear += 1;
-                  }
-                  setViewMonth(newMonth);
-                  setViewYear(newYear);
-                }}
-              >
-                <IconChevronRight size={20} color="#9CA3AF" />
-              </TouchableOpacity>
-            </View>
           </View>
 
-          {/* Date Strip */}
-          <View>
-            <Animated.ScrollView
-              ref={dateStripRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
+          {/* Today navigator */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <TouchableOpacity
+              onPress={() => {
+                let newMonth = viewMonth - 1;
+                let newYear = viewYear;
+                if (newMonth < 0) {
+                  newMonth = 11;
+                  newYear -= 1;
+                }
+                setViewMonth(newMonth);
+                setViewYear(newYear);
+              }}
             >
-              {Array.from(
-                { length: new Date(viewYear, viewMonth + 1, 0).getDate() },
-                (_, i) => new Date(viewYear, viewMonth, i + 1),
-              ).map((d) => {
-                const isSelected = isSameDay(d, selected);
-                return (
-                  <TouchableOpacity
-                    key={d.toISOString()}
-                    onPress={() => handleDaySelect(d)}
-                    activeOpacity={0.8}
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 44,
-                      height: 72,
-                      borderRadius: 22,
-                      backgroundColor: isSelected ? "#000000" : "transparent",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "600",
-                        color: isSelected ? "#FFFFFF" : "#6B7280",
-                        marginBottom: 8,
-                      }}
-                    >
-                      {DAY_LABELS_SHORT[d.getDay()]}
-                    </Text>
-                    {isSelected ? (
-                      <View
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 16,
-                          backgroundColor: "#FFFFFF",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            fontWeight: "700",
-                            color: "#000000",
-                          }}
-                        >
-                          {d.getDate()}
-                        </Text>
-                      </View>
-                    ) : (
-                      <View
-                        style={{
-                          width: 32,
-                          height: 32,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            fontWeight: "700",
-                            color: "#111827",
-                          }}
-                        >
-                          {d.getDate()}
-                        </Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </Animated.ScrollView>
+              <IconChevronLeft size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                const t = new Date();
+                handleDaySelect(t);
+                setTimeout(() => {
+                  const index = t.getDate() - 1;
+                  const offset = Math.max(0, index * 82 - 30);
+                  if (dateStripRef.current) {
+                    dateStripRef.current.scrollTo({ x: offset, animated: true });
+                  }
+                }, 100);
+              }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "600", color: "#111827" }}>
+                Today
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                let newMonth = viewMonth + 1;
+                let newYear = viewYear;
+                if (newMonth > 11) {
+                  newMonth = 0;
+                  newYear += 1;
+                }
+                setViewMonth(newMonth);
+                setViewYear(newYear);
+              }}
+            >
+              <IconChevronRight size={18} color="#9CA3AF" />
+            </TouchableOpacity>
           </View>
         </View>
 
-        <Animated.ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 32 }}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true },
-          )}
-          scrollEventThrottle={16}
-        >
-          {/* Timeline Section */}
-          <View style={{ paddingRight: 20 }}>
-            {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
-              const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-              const amPm = hour >= 12 ? "pm" : "am";
-
-              const outfitForThisHour = hour === 8 ? selectedLog : null;
+        {/* Date Strip */}
+        <View>
+          <Animated.ScrollView
+            ref={dateStripRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+          >
+            {days.map((d) => {
+              const isToday = isSameDay(d, new Date());
+              const isSelected = isSameDay(d, selected);
+              const dayName = isToday ? "Today" : DAY_LABELS_SHORT[d.getDay()];
+              const monthStr = MONTH_NAMES[d.getMonth()].substring(0, 3);
+              const dateStr = `${monthStr} ${d.getDate()}`;
+              const hasOutfit = !!combinedOutfitsData[d.toDateString()];
+              const log = combinedOutfitsData[d.toDateString()];
 
               return (
-                <View
-                  key={hour}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "flex-start",
-                  }}
+                <TouchableOpacity
+                  key={d.toISOString()}
+                  onPress={() => handleDaySelect(d)}
+                  activeOpacity={0.8}
+                  style={{ alignItems: "center", width: 76 }}
                 >
-                  {/* Left Column Time marker */}
-                  <View
-                    style={{
-                      width: 65,
-                      alignItems: "flex-end",
-                      paddingRight: 10,
-                      marginTop: -3,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: "500",
-                        color: "#000000",
-                      }}
-                    >
-                      {displayHour} {amPm}
-                    </Text>
-                  </View>
-
-                  {/* Hour Slot */}
-                  <View
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#F9F9FB",
-                      borderRadius: 10,
-                      height: 70,
-                      marginBottom: 2,
-                      // borderWidth:0.1
-                      // marginTop:10
-                    }}
-                  >
-                    {/* Outfit Card if event exists */}
-                    {outfitForThisHour && (
-                      <View
-                        style={{
-                          marginTop: 6,
-                          marginHorizontal: 8,
-                          backgroundColor: "#F9FAFB",
-                          borderRadius: 10,
-                          padding: 8,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          borderWidth: 1,
-                          borderColor: "#F3F4F6",
-                        }}
-                      >
-                        {outfitForThisHour.imageUri ? (
-                          <ExpoImage
-                            source={{ uri: outfitForThisHour.imageUri }}
-                            style={{
-                              width: 54,
-                              height: 54,
-                              borderRadius: 12,
-                              backgroundColor: "#F3F4F6",
-                            }}
-                            contentFit="cover"
-                          />
-                        ) : (
-                          <View
-                            style={{
-                              width: 54,
-                              height: 54,
-                              borderRadius: 12,
-                              backgroundColor: "#E5E7EB",
-                            }}
-                          />
-                        )}
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                          <Text
-                            style={{
-                              fontSize: 15,
-                              fontWeight: "600",
-                              color: "#111827",
-                            }}
-                          >
-                            {outfitForThisHour.title}
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: 12,
-                              color: "#6B7280",
-                              marginTop: 4,
-                            }}
-                          >
-                            🔥 {outfitForThisHour.score || 0}% •{" "}
-                            {outfitForThisHour.itemsWorn}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 16,
-                            backgroundColor: "#F3F4F6",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <IconEdit size={16} color="#6B7280" />
-                        </TouchableOpacity>
-                      </View>
+                  {/* Dot indicator for Today */}
+                  <View style={{ height: 8, marginBottom: 4, alignItems: "center", justifyContent: "center" }}>
+                    {isToday && (
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#111827" }} />
                     )}
                   </View>
-                </View>
+
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: isToday ? "700" : "500",
+                      color: isToday ? "#111827" : "#6B7280",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {dayName}
+                  </Text>
+                  <Text style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 8 }}>
+                    {dateStr}
+                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10 }}>
+                    <IconCloudRain size={14} color="#9CA3AF" />
+                    <Text style={{ fontSize: 12, color: "#111827", fontWeight: "600" }}>28°</Text>
+                    <Text style={{ fontSize: 12, color: "#9CA3AF" }}>26°</Text>
+                  </View>
+
+                  {/* Card */}
+                  <View
+                    style={{
+                      width: 76,
+                      height: 120,
+                      borderRadius: 18,
+                      backgroundColor: isToday ? "#FFFFFF" : "#F3F4F6",
+                      borderWidth: isToday ? 1 : 0,
+                      borderColor: "#E5E7EB",
+                      shadowColor: isToday ? "#000" : "transparent",
+                      shadowOpacity: isToday ? 0.08 : 0,
+                      shadowRadius: 12,
+                      shadowOffset: { width: 0, height: 4 },
+                      elevation: isToday ? 4 : 0,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {hasOutfit && log.imageUri ? (
+                      <ExpoImage source={{ uri: log.imageUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                    ) : (
+                      <IconCalendarPlus size={26} color="#C4C4C4" strokeWidth={1.5} />
+                    )}
+                  </View>
+                </TouchableOpacity>
               );
             })}
-          </View>
-        </Animated.ScrollView>
+          </Animated.ScrollView>
+        </View>
 
-        {/* Custom Calendar Modal */}
-        <Modal
+        {/* Empty State Body */}
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontSize: 16, color: "#000000", fontWeight: "500" }}>
+            nothing here!
+          </Text>
+        </View>
+
+        {/* Calendar Bottom Sheet */}
+        <BottomSheet
           visible={isCalendarModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsCalendarModalVisible(false)}
+          onClose={() => setIsCalendarModalVisible(false)}
         >
-          <TouchableWithoutFeedback
-            onPress={() => setIsCalendarModalVisible(false)}
-          >
+          <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+            {/* Header */}
             <View
               style={{
-                flex: 1,
-                backgroundColor: "rgba(0,0,0,0.5)",
-                justifyContent: "center",
+                flexDirection: "row",
                 alignItems: "center",
+                justifyContent: "space-between",
+                paddingBottom: 16,
               }}
             >
-              <TouchableWithoutFeedback>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
+                Choose the date of wear
+              </Text>
+            </View>
+
+            {/* Calendar */}
+            <RNCalendar
+              current={selected.toISOString().split("T")[0]}
+              onDayPress={(day: any) => {
+                const newDate = new Date(day.timestamp);
+                setSelected(newDate);
+                handleDaySelect(newDate);
+                setIsCalendarModalVisible(false);
+              }}
+              theme={{
+                todayTextColor: "#1D1A27",
+                selectedDayBackgroundColor: "#1D1A27",
+                selectedDayTextColor: "#ffffff",
+                arrowColor: "#1D1A27",
+                textDayFontWeight: "600",
+                textMonthFontWeight: "800",
+                textDayHeaderFontWeight: "500",
+                textSectionTitleColor: "#9CA3AF",
+                monthTextColor: "#1D1A27",
+              }}
+              enableSwipeMonths={true}
+              hideExtraDays={true}
+              firstDay={1}
+              renderArrow={(direction: any) => (
                 <View
                   style={{
-                    width: "90%",
-                    backgroundColor: "#FFF",
-                    borderRadius: 20,
-                    overflow: "hidden",
-                    padding: 16,
+                    backgroundColor: "#F3F4F6",
+                    borderRadius: 16,
+                    padding: 6,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  <RNCalendar
-                    current={selected.toISOString().split("T")[0]}
-                    onDayPress={(day: any) => {
-                      const newDate = new Date(day.timestamp);
-                      setSelected(newDate);
-                      handleDaySelect(newDate);
-                      setIsCalendarModalVisible(false);
-                    }}
-                    theme={{
-                      todayTextColor: "#4F46E5",
-                      selectedDayBackgroundColor: "#4F46E5",
-                      selectedDayTextColor: "#ffffff",
-                      arrowColor: "#111827",
-                    }}
-                    enableSwipeMonths={true}
-                    hideExtraDays={true}
-                  />
+                  {direction === "left" ? (
+                    <IconChevronLeft size={16} color="#4B5563" />
+                  ) : (
+                    <IconChevronRight size={16} color="#4B5563" />
+                  )}
                 </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+              )}
+            />
+          </View>
+        </BottomSheet>
       </SafeAreaView>
     </View>
   );

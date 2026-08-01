@@ -23,7 +23,7 @@ export default function OccasionPicker({
 }: OccasionPickerProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>What's the occasion?</Text>
+      <Text style={styles.label}>What&apos;s the occasion?</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
