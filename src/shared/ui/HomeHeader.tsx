@@ -7,7 +7,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 export const HomeHeader = React.memo(function HomeHeader() {
   const router = useRouter();
-  const { currentStreak } = useStreakStore();
+  const currentStreak = useStreakStore((state) => state.currentStreak);
 
   return (
     <View

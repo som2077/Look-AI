@@ -10,8 +10,9 @@ import {
   Link2,
 } from "lucide-react-native";
 import React, { useMemo } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
 import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
 
 export default function PublicUserProfileScreen() {

@@ -1,7 +1,7 @@
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { AppState } from "react-native";
-import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 
 export default function RootLayout() {
   const checkStreakValidity = useStreakStore((state) => state.checkStreakValidity);
@@ -26,7 +26,7 @@ export default function RootLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: "#0c0c0c" },
+        contentStyle: { backgroundColor: "#ffffff" },
       }}
     >
       <Stack.Screen name="(tabs)" />

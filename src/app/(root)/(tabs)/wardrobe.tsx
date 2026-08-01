@@ -44,6 +44,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FlashList } from "@shopify/flash-list";
+
+const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 
 // Types
 type CategoryId =
@@ -571,7 +574,7 @@ export default function WardrobeScreen() {
     rating: 0,
   });
   const [activeSort, setActiveSort] = useState<SortId>("recently_added");
-  const { outfits } = useSavedStore();
+  const outfits = useSavedStore((state) => state.outfits);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [tempSort, setTempSort] = useState<SortId>("recently_added");
@@ -613,7 +616,23 @@ export default function WardrobeScreen() {
     [userItems],
   );
 
-  const filteredItems = useMemo(() => {
+  const renderGridItem = useCallback(({ item }: { item: any }) => (
+    <View style={{ padding: GRID_GAP / 2 }}>
+      <BentoCard
+        item={item}
+        width={ITEM_WIDTH}
+        height={ITEM_HEIGHT}
+        onPress={
+          item.category.startsWith("saved_")
+            ? () => setSelectedSavedImage(item.image ?? null)
+            : undefined
+        }
+      />
+    </View>
+  ), [setSelectedSavedImage]);
+
+  // Combine and sort
+  const combinedData = useMemo(() => {
     if (activeFilters.category.startsWith("saved_")) {
       const categoryLabel = activeFilters.category
         .replace("saved_", "")
@@ -974,45 +993,34 @@ export default function WardrobeScreen() {
         </View>
 
         {/* Grid */}
-        <Animated.ScrollView
-          key="grid-view"
-          showsVerticalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true, listener: hideTabBarOnScroll },
-          )}
-          scrollEventThrottle={16}
-          contentContainerStyle={{ paddingBottom: 140, paddingTop: 10 }}
-        >
-          <View style={{ zIndex: 1, position: "relative" }}>
-            {filteredItems.length === 0 ? (
+        <View style={{ flex: 1, zIndex: 1 }}>
+          {combinedData.length === 0 ? (
+            <Animated.ScrollView
+              showsVerticalScrollIndicator={false}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: true, listener: hideTabBarOnScroll },
+              )}
+              scrollEventThrottle={16}
+            >
               <EmptyState onAdd={handleAddClothesGallery} />
-            ) : (
-              <View
-                style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  paddingHorizontal: GRID_PADDING,
-                  gap: GRID_GAP,
-                }}
-              >
-                {filteredItems.map((item) => (
-                  <BentoCard
-                    key={item.id}
-                    item={item}
-                    width={ITEM_WIDTH}
-                    height={ITEM_HEIGHT}
-                    onPress={
-                      item.category.startsWith("saved_")
-                        ? () => setSelectedSavedImage(item.image ?? null)
-                        : undefined
-                    }
-                  />
-                ))}
-              </View>
-            )}
-          </View>
-        </Animated.ScrollView>
+            </Animated.ScrollView>
+          ) : (
+            <AnimatedFlashList
+              data={combinedData}
+              key="grid-view"
+              showsVerticalScrollIndicator={false}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: true, listener: hideTabBarOnScroll },
+              )}
+              scrollEventThrottle={16}
+              contentContainerStyle={{ paddingBottom: 140, paddingTop: 10, paddingHorizontal: GRID_PADDING }}
+              numColumns={NUM_COLUMNS}
+              renderItem={renderGridItem}
+            />
+          )}
+        </View>
       </SafeAreaView>
       {/* </PremiumGradientBackground> */}
       {/* <AppGradientBackground> */}

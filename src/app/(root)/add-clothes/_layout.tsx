@@ -3,11 +3,11 @@ import { View } from "react-native";
 
 export default function AddClothesLayout() {
   return (
-    <View className="flex-1 bg-[#0c0c0c]">
+    <View className="flex-1 bg-[#ffffff]">
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#0c0c0c" },
+          contentStyle: { backgroundColor: "#ffffff" },
           animation: "slide_from_right",
           gestureEnabled: true,
         }}

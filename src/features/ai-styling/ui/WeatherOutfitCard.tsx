@@ -16,13 +16,20 @@ import {
 } from "@tabler/icons-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
-  Easing,
   Pressable,
   StyleSheet,
   Text,
   View,
+  Animated as RNAnimated,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  withRepeat,
+  withTiming,
+  withSequence,
+  Easing,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
 
 // ─── Comfort Ring ─────────────────────────────────────────────────────────────
@@ -33,13 +40,13 @@ const RADIUS = (RING_SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 function ComfortRing({ score }: { score: number }) {
-  const progress = useRef(new Animated.Value(0)).current;
+  const progress = useRef(new RNAnimated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(progress, {
+    RNAnimated.timing(progress, {
       toValue: score / 100,
       duration: 1200,
-      easing: Easing.out(Easing.cubic),
+      easing: Easing.out(Easing.cubic) as any,
       useNativeDriver: false,
     }).start();
   }, [score]);
@@ -70,7 +77,7 @@ function AnimatedArc({
   radius,
   stroke,
 }: {
-  progress: Animated.Value;
+  progress: RNAnimated.Value;
   center: number;
   circumference: number;
   radius: number;
@@ -115,15 +122,11 @@ function AnimatedArc({
 
 function WeatherIcon({
   iconCode,
-  spinAnim,
+  spinStyle,
 }: {
   iconCode: string;
-  spinAnim: Animated.Value;
+  spinStyle: any;
 }) {
-  const spin = spinAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
 
   const isNight = iconCode.endsWith("n");
   const code = iconCode.slice(0, 2);
@@ -132,7 +135,7 @@ function WeatherIcon({
     return isNight ? (
       <IconMoon size={54} color="#7C8FAB" strokeWidth={1.5} />
     ) : (
-      <Animated.View style={{ transform: [{ rotate: spin }] }}>
+      <Animated.View style={spinStyle}>
         <IconSun size={54} color="#F5A623" strokeWidth={1.5} />
       </Animated.View>
     );
@@ -150,7 +153,7 @@ function WeatherIcon({
     return <IconCloudSnow size={54} color="#BAE6FD" strokeWidth={1.5} />;
   }
   return (
-    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+    <Animated.View style={spinStyle}>
       <IconSun size={54} color="#F5A623" strokeWidth={1.5} />
     </Animated.View>
   );
@@ -183,40 +186,36 @@ function StatChip({
 export const WeatherOutfitCard = React.memo(function WeatherOutfitCard() {
   const { data, loading, error, fetchWeather } = useWeatherStore();
 
-  const spinAnim = useRef(new Animated.Value(0)).current;
-  const blinkAnim = useRef(new Animated.Value(1)).current;
+  const spin = useSharedValue(0);
+  const blink = useSharedValue(1);
 
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.timing(spinAnim, {
-        toValue: 1,
-        duration: 12000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
+    spin.value = withRepeat(
+      withTiming(360, { duration: 12000, easing: Easing.linear }),
+      -1,
+      false
     );
-    anim.start();
-    return () => anim.stop();
-  }, [spinAnim]);
+    blink.value = withRepeat(
+      withSequence(
+        withTiming(0.2, { duration: 800 }),
+        withTiming(1, { duration: 800 })
+      ),
+      -1,
+      true
+    );
+  }, []);
 
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(blinkAnim, {
-          toValue: 0.2,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(blinkAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [blinkAnim]);
+  const spinStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${spin.value}deg` }],
+    };
+  });
+
+  const blinkStyle = useAnimatedStyle(() => {
+    return {
+      opacity: blink.value,
+    };
+  });
 
   useEffect(() => {
     fetchWeather();
@@ -261,7 +260,7 @@ export const WeatherOutfitCard = React.memo(function WeatherOutfitCard() {
         <View style={styles.topRow}>
           {/* Weather icon */}
           <View style={styles.iconBox}>
-            <WeatherIcon iconCode={data.weatherIcon} spinAnim={spinAnim} />
+            <WeatherIcon iconCode={data.weatherIcon} spinStyle={spinStyle} />
             <Text style={styles.conditionText} numberOfLines={1}>
               {data.condition}
             </Text>
@@ -278,7 +277,7 @@ export const WeatherOutfitCard = React.memo(function WeatherOutfitCard() {
               {data.isLive && (
                 <>
                   <Animated.View
-                    style={[styles.liveDot, { opacity: blinkAnim }]}
+                    style={[styles.liveDot, blinkStyle]}
                   />
                   <Text style={styles.liveText}>Live</Text>
                 </>

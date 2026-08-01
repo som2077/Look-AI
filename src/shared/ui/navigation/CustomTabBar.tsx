@@ -14,10 +14,15 @@ import React, {
   ReactNode,
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from "react";
-import { Animated, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUIStore } from "../ui-store";
 import { AddActionMenu } from "./AddActionMenu";
@@ -44,30 +49,26 @@ const AnimatedTabButton = React.memo(function AnimatedTabButton({
   label?: string;
   testID?: string;
 }) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(1);
 
   const animateIn = useCallback(() => {
-    Animated.spring(scale, {
-      toValue: 0.93,
-      useNativeDriver: true,
-      speed: 24,
-      bounciness: 7,
-    }).start();
-  }, [scale]);
+    scale.value = withSpring(0.93, { damping: 10, stiffness: 400 });
+  }, []);
 
   const animateOut = useCallback(() => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 24,
-      bounciness: 5,
-    }).start();
-  }, [scale]);
+    scale.value = withSpring(1, { damping: 12, stiffness: 400 });
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+      flex: 1,
+      alignItems: "center",
+    };
+  });
 
   return (
-    <Animated.View
-      style={{ transform: [{ scale }], flex: 1, alignItems: "center" }}
-    >
+    <Animated.View style={animatedStyle}>
       <View style={{ borderRadius: 999, overflow: "hidden", width: "100%" }}>
         <Pressable
           testID={testID}
@@ -120,15 +121,23 @@ export function CustomTabBar({
   const { user } = useUser();
   const [menuVisible, setMenuVisible] = useState(false);
   const isTabBarVisible = useUIStore((state) => state.isTabBarVisible);
-  const translateY = useRef(new Animated.Value(0)).current;
+  const translateY = useSharedValue(0);
 
   useEffect(() => {
-    Animated.timing(translateY, {
-      toValue: isTabBarVisible ? 0 : 150,
-      duration: 250,
-      useNativeDriver: true,
-    }).start();
-  }, [isTabBarVisible, translateY]);
+    translateY.value = withTiming(isTabBarVisible ? 0 : 150, { duration: 250 });
+  }, [isTabBarVisible]);
+
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    return {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: -50,
+      backgroundColor: "#2C2C2E",
+      paddingBottom: 50,
+      transform: [{ translateY: translateY.value }],
+    };
+  });
 
   const handleNavigate = useCallback(
     (route: string) => {
@@ -140,15 +149,7 @@ export function CustomTabBar({
   return (
     <Animated.View
       pointerEvents={isTabBarVisible ? "box-none" : "none"}
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: -50,
-        backgroundColor: "#2C2C2E",
-        paddingBottom: 50,
-        transform: [{ translateY }],
-      }}
+      style={animatedContainerStyle}
     >
       {/* Dark background strip */}
       <View

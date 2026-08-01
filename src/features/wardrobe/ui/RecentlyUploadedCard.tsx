@@ -22,7 +22,8 @@ export const RecentlyUploadedHeading = React.memo(
 );
 
 export const NotifyBanner = React.memo(function NotifyBanner() {
-  const { isAnalyzing, lastOutfits } = useOutfitAnalysisStore();
+  const isAnalyzing = useOutfitAnalysisStore((s) => s.isAnalyzing);
+  const lastOutfits = useOutfitAnalysisStore((s) => s.lastOutfits);
   const [isDismissed, setIsDismissed] = React.useState(false);
   const opacity = React.useRef(new Animated.Value(1)).current;
 
@@ -64,7 +65,7 @@ export const NotifyBanner = React.memo(function NotifyBanner() {
 });
 
 export const ErrorBanner = React.memo(function ErrorBanner() {
-  const { error } = useOutfitAnalysisStore();
+  const error = useOutfitAnalysisStore((s) => s.error);
   const [isDismissed, setIsDismissed] = React.useState(false);
   const opacity = React.useRef(new Animated.Value(1)).current;
 
@@ -110,7 +111,8 @@ export const ErrorBanner = React.memo(function ErrorBanner() {
 });
 
 export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
-  const { isAnalyzing, lastOutfits } = useOutfitAnalysisStore();
+  const isAnalyzing = useOutfitAnalysisStore((s) => s.isAnalyzing);
+  const lastOutfits = useOutfitAnalysisStore((s) => s.lastOutfits);
   const pendingBatchItems = usePendingBatchStore((s) => s.items);
 
   // Show banner only when no analysis and no completed outfits and no pending batch items

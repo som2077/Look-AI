@@ -364,15 +364,13 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
 
 export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
   const router = useRouter();
-  const {
-    isAnalyzing,
-    isDone,
-    imageUri,
-    progress,
-    currentMode,
-    lastOutfits,
-    cleanupDaily,
-  } = useOutfitAnalysisStore();
+  const isAnalyzing = useOutfitAnalysisStore((state) => state.isAnalyzing);
+  const isDone = useOutfitAnalysisStore((state) => state.isDone);
+  const imageUri = useOutfitAnalysisStore((state) => state.imageUri);
+  const progress = useOutfitAnalysisStore((state) => state.progress);
+  const currentMode = useOutfitAnalysisStore((state) => state.currentMode);
+  const lastOutfits = useOutfitAnalysisStore((state) => state.lastOutfits);
+  const cleanupDaily = useOutfitAnalysisStore((state) => state.cleanupDaily);
 
   const prevIsDoneRef = useRef(false);
   const notifyComplete = useAnalysisCompleteNotification();

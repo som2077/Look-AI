@@ -1,15 +1,18 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  Animated,
+  Dimensions,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   StyleSheet,
-  Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  ScrollView,
+  Text,
+  View,
 } from "react-native";
+import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -25,8 +28,8 @@ interface SwipeableTabsProps {
 
 export const SwipeableTabs: React.FC<SwipeableTabsProps> = ({ tabs }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollX = useSharedValue(0);
+  const scrollViewRef = useRef<any>(null);
 
   const TAB_WIDTH = SCREEN_WIDTH / tabs.length;
 
@@ -34,11 +37,9 @@ export const SwipeableTabs: React.FC<SwipeableTabsProps> = ({ tabs }) => {
   const handleTabPress = useCallback(
     (index: number) => {
       setActiveIndex(index);
-      const node = scrollViewRef.current as any;
+      const node = scrollViewRef.current;
       if (node?.scrollTo) {
         node.scrollTo({ x: index * SCREEN_WIDTH, animated: true });
-      } else if (node?.getNode?.()?.scrollTo) {
-        node.getNode().scrollTo({ x: index * SCREEN_WIDTH, animated: true });
       }
     },
     []
@@ -56,11 +57,21 @@ export const SwipeableTabs: React.FC<SwipeableTabsProps> = ({ tabs }) => {
     }
   };
 
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollX.value = event.contentOffset.x;
+    },
+  });
+
   // Animate the bottom indicator line
-  const indicatorTranslateX = scrollX.interpolate({
-    inputRange: tabs.map((_, i) => i * SCREEN_WIDTH),
-    outputRange: tabs.map((_, i) => i * TAB_WIDTH),
-    extrapolate: "clamp",
+  const indicatorStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: (scrollX.value / SCREEN_WIDTH) * TAB_WIDTH,
+        },
+      ],
+    };
   });
 
   return (
@@ -93,10 +104,8 @@ export const SwipeableTabs: React.FC<SwipeableTabsProps> = ({ tabs }) => {
         <Animated.View
           style={[
             styles.indicator,
-            {
-              width: TAB_WIDTH,
-              transform: [{ translateX: indicatorTranslateX }],
-            },
+            { width: TAB_WIDTH },
+            indicatorStyle,
           ]}
         />
       </View>
@@ -112,10 +121,7 @@ export const SwipeableTabs: React.FC<SwipeableTabsProps> = ({ tabs }) => {
         snapToAlignment="center"
         decelerationRate="fast"
         directionalLockEnabled={true}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: true }
-        )}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         onScrollEndDrag={handleMomentumScrollEnd}

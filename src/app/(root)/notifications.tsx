@@ -2,8 +2,9 @@ import { IconArrowLeft } from "@tabler/icons-react-native";
 import { ResizeMode, Video } from "expo-av";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
-import { ActivityIndicator, FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
 import { useNotifications, NotificationItem } from "@/features/social/api/useNotifications";
 import { useIsFocused } from "@react-navigation/native";
 

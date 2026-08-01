@@ -52,7 +52,9 @@ export const useErrorStore = create<ErrorState>((set) => ({
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export function ErrorStateView({ onRetry }: { onRetry: () => Promise<void> }) {
-  const { isOffline, isServerError, resetAll } = useErrorStore();
+  const isOffline = useErrorStore((state) => state.isOffline);
+  const isServerError = useErrorStore((state) => state.isServerError);
+  const resetAll = useErrorStore((state) => state.resetAll);
   const [retrying, setRetrying] = useState(false);
 
   const handleRetry = useCallback(async () => {

@@ -17,7 +17,6 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Keyboard,
   Modal,
   Platform,
@@ -27,8 +26,11 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image as RNImage,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { FlashList } from "@shopify/flash-list";
+import { Image } from "expo-image";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -74,10 +76,10 @@ const PostCard = React.memo(function PostCard({
   const [aspectRatio, setAspectRatio] = useState<number>(4 / 3);
 
   useEffect(() => {
-    if (post.image_url) {
-      Image.getSize(
+    if (typeof post.image_url === "string") {
+      RNImage.getSize(
         post.image_url,
-        (width, height) => {
+        (width: number, height: number) => {
           if (width && height) setAspectRatio(width / height);
         },
         () => {
@@ -410,24 +412,11 @@ function FeedTab() {
     }
   };
 
-  // ✂️ PONYTAIL: Pure JS Masonry. No native dependencies (@shopify/flash-list).
-  // Approximates heights: images are tall (~250), text only is short (~100 + text length).
-  // Perfectly balances columns with zero native crashing.
-  const leftColumn: any[] = [];
-  const rightColumn: any[] = [];
-  let leftHeight = 0;
-  let rightHeight = 0;
-
-  posts.forEach((post) => {
-    const estHeight = post.image_url ? 250 : 100 + (post.caption?.length || 0);
-    if (leftHeight <= rightHeight) {
-      leftColumn.push(post);
-      leftHeight += estHeight;
-    } else {
-      rightColumn.push(post);
-      rightHeight += estHeight;
-    }
-  });
+  const renderMasonryItem = React.useCallback(({ item }: { item: any }) => (
+    <View style={{ padding: 3.5 }}>
+      <PostCard post={item} toggleReaction={toggleReaction} />
+    </View>
+  ), [toggleReaction]);
 
   const previousPostsLength = useRef(posts.length);
 
@@ -512,23 +501,7 @@ function FeedTab() {
         </View>
       </View>
 
-      <ScrollView
-        ref={scrollRef as any}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        onContentSizeChange={() => {
-          if (posts.length !== previousPostsLength.current) {
-            scrollRef.current?.scrollToEnd({ animated: true });
-            previousPostsLength.current = posts.length;
-          }
-        }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingBottom: 40,
-        }}
-      >
+      <View style={{ flex: 1, paddingHorizontal: 16 }}>
         {loading ? (
           <View
             style={{
@@ -563,28 +536,18 @@ function FeedTab() {
             No posts yet. Be the first to share something!
           </Text>
         ) : (
-          <View style={{ flexDirection: "row", gap: 7 }}>
-            <View style={{ flex: 1, gap: 7 }}>
-              {leftColumn.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  toggleReaction={toggleReaction}
-                />
-              ))}
-            </View>
-            <View style={{ flex: 1, gap: 7 }}>
-              {rightColumn.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  toggleReaction={toggleReaction}
-                />
-              ))}
-            </View>
-          </View>
+          <FlashList
+            data={posts}
+            numColumns={2}
+            renderItem={renderMasonryItem}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            contentContainerStyle={{ paddingBottom: 40 }}
+          />
         )}
-      </ScrollView>
+      </View>
 
       {/* Input Bar */}
       {isComposing && (

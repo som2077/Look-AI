@@ -12,7 +12,7 @@ import {
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useMemo } from "react";
 import { FlashList } from "@shopify/flash-list";
 import {
   Alert,
@@ -158,12 +158,18 @@ const HistoryCard = React.memo(function HistoryCard({
 
 export default function ScanHistoryScreen() {
   const router = useRouter();
-  const { scans, removeScan, toggleFavorite, clearAll } = useScanHistoryStore();
+  const scans = useScanHistoryStore((state) => state.scans);
+  const removeScan = useScanHistoryStore((state) => state.removeScan);
+  const toggleFavorite = useScanHistoryStore((state) => state.toggleFavorite);
+  const clearAll = useScanHistoryStore((state) => state.clearAll);
+  
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 
-  const filtered = activeFilter === "all"
-    ? scans
-    : scans.filter((s) => s.type === activeFilter);
+  const filtered = useMemo(() => {
+    return activeFilter === "all"
+      ? scans
+      : scans.filter((s) => s.type === activeFilter);
+  }, [scans, activeFilter]);
 
   const handleDelete = useCallback(
     (id: string) => {

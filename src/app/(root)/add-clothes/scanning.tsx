@@ -3,7 +3,8 @@ import { useAnalysisCompleteNotification } from "@/shared/notifications/notifica
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
-import { Dimensions, Image, Text, View } from "react-native";
+import { Dimensions, Text, View } from "react-native";
+import { Image } from "expo-image";
 import Animated, {
   Easing,
   FadeIn,

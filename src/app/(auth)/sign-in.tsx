@@ -7,13 +7,19 @@ import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Image,
   Platform,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  withRepeat,
+  withTiming,
+  useAnimatedStyle,
+  Easing,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -41,21 +47,23 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const animatedValue = useRef(new Animated.Value(0)).current;
+  const xOffset = useSharedValue(-300);
 
   useEffect(() => {
-    Animated.loop(
-      Animated.timing(animatedValue, {
-        toValue: 1,
-        duration: 3500,
-        useNativeDriver: true,
-      }),
-    ).start();
-  }, [animatedValue]);
+    xOffset.value = withRepeat(
+      withTiming(300, { duration: 3500, easing: Easing.linear }),
+      -1,
+      false
+    );
+  }, []);
 
-  const translateX = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-300, 300],
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      flex: 1,
+      width: "300%",
+      marginLeft: "-100%",
+      transform: [{ translateX: xOffset.value }],
+    };
   });
 
   useEffect(() => {
@@ -126,14 +134,7 @@ export default function SignIn() {
               </View>
             }
           >
-            <Animated.View
-              style={{
-                flex: 1,
-                width: "300%",
-                marginLeft: "-100%",
-                transform: [{ translateX }],
-              }}
-            >
+            <Animated.View style={animatedStyle}>
               <LinearGradient
                 colors={[
                   "#F35E44",

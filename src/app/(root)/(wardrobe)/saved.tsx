@@ -177,7 +177,7 @@ export default function SavedScreen() {
             keyExtractor={(item) => item.id}
             renderItem={renderGridItem}
             numColumns={NUM_COLUMNS}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ padding: GRID_GAP / 2, paddingBottom: 120 }}
             showsVerticalScrollIndicator={false}
           />
         </View>

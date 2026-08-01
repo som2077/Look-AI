@@ -158,9 +158,12 @@ export default function OutfitLogDetailScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ index: string }>();
   const outfitIndex = parseInt(params.index ?? "0", 10);
-  const { lastOutfits, removeOutfit, toggleSaved, updateOutfit } =
-    useOutfitAnalysisStore();
-  const { addSavedItem, removeSavedItem } = useSavedStore();
+  const lastOutfits = useOutfitAnalysisStore((state) => state.lastOutfits);
+  const removeOutfit = useOutfitAnalysisStore((state) => state.removeOutfit);
+  const toggleSaved = useOutfitAnalysisStore((state) => state.toggleSaved);
+  const updateOutfit = useOutfitAnalysisStore((state) => state.updateOutfit);
+  const addSavedItem = useSavedStore((state) => state.addSavedItem);
+  const removeSavedItem = useSavedStore((state) => state.removeSavedItem);
   const outfit = lastOutfits[outfitIndex];
 
   // Fade entrance animation
