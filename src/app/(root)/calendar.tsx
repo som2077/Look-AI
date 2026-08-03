@@ -1,6 +1,9 @@
 import { useSupabase } from "@/shared/supabase/use-supabase";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+import { useFocusEffect } from "@react-navigation/native";
+import { ResizeMode, Video } from "expo-av";
 import * as Calendar from "expo-calendar";
+import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -14,16 +17,23 @@ import React, {
 import {
   Animated,
   Dimensions,
+  InteractionManager,
   Modal,
   PanResponder,
   Pressable,
+  Switch,
   Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { Calendar as RNCalendar } from "react-native-calendars";
 import { Gesture } from "react-native-gesture-handler";
-import { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -32,7 +42,9 @@ import {
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconCloudRain
+  IconClock,
+  IconCloudRain,
+  IconPlus,
 } from "@tabler/icons-react-native";
 
 // â”€â”€â”€ Constants & Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -50,8 +62,18 @@ interface LoggedOutfit {
 }
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 const DAY_LABELS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const isSameDay = (d1: Date, d2: Date) =>
@@ -69,10 +91,12 @@ function BottomSheet({
   visible,
   onClose,
   children,
+  backgroundColor = "#FFFFFF",
 }: {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  backgroundColor?: string;
 }) {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
@@ -135,9 +159,9 @@ function BottomSheet({
           bottom: 0,
           left: 0,
           right: 0,
-          backgroundColor: "#FFFFFF",
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
+          backgroundColor,
+          borderTopLeftRadius: 32,
+          borderTopRightRadius: 32,
           paddingBottom: 40,
           transform: [{ translateY: slideAnim }],
         }}
@@ -169,9 +193,33 @@ export default function CalendarScreen() {
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selected, setSelected] = useState<Date>(today);
 
+  useFocusEffect(
+    useCallback(() => {
+      const t = new Date();
+      setSelected(t);
+      setViewYear(t.getFullYear());
+      setViewMonth(t.getMonth());
+      setTimeout(() => {
+        const index = t.getDate() - 1 + 5; // +5 for buffer days
+        const offset = Math.max(0, index * 84);
+        if (dateStripRef.current) {
+          dateStripRef.current.scrollTo({
+            x: offset,
+            animated: false,
+          });
+        }
+      }, 50);
+    }, []),
+  );
+
   // Drag and drop logic
   const HOUR_HEIGHT = 72;
-  const [draftEvent, setDraftEvent] = useState<{ id: string; start: number; end: number; title: string; } | null>(null);
+  const [draftEvent, setDraftEvent] = useState<{
+    id: string;
+    start: number;
+    end: number;
+    title: string;
+  } | null>(null);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const startY = useSharedValue(0);
   const eventHeight = useSharedValue(0);
@@ -181,7 +229,12 @@ export default function CalendarScreen() {
     const startHour = snapY / HOUR_HEIGHT;
     startY.value = snapY;
     eventHeight.value = Math.max(HOUR_HEIGHT, HOUR_HEIGHT);
-    setDraftEvent({ id: 'draft', start: startHour, end: startHour + 1, title: '(No title)' });
+    setDraftEvent({
+      id: "draft",
+      start: startHour,
+      end: startHour + 1,
+      title: "(No title)",
+    });
   };
 
   const handleTap = Gesture.Tap().onEnd((e) => {
@@ -190,39 +243,68 @@ export default function CalendarScreen() {
 
   const updateDraftFromShared = () => {
     if (draftEvent) {
-      setDraftEvent({ ...draftEvent, start: startY.value / HOUR_HEIGHT, end: (startY.value + eventHeight.value) / HOUR_HEIGHT });
+      setDraftEvent({
+        ...draftEvent,
+        start: startY.value / HOUR_HEIGHT,
+        end: (startY.value + eventHeight.value) / HOUR_HEIGHT,
+      });
     }
   };
 
   const panBody = Gesture.Pan()
-    .onBegin(() => { runOnJS(setScrollEnabled)(false); })
-    .onUpdate((e) => {
-      const snapY = Math.round((startY.value + e.translationY) / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2);
-      if (snapY >= 0 && snapY + eventHeight.value <= 24 * HOUR_HEIGHT) startY.value = snapY;
+    .onBegin(() => {
+      runOnJS(setScrollEnabled)(false);
     })
-    .onFinalize(() => { runOnJS(updateDraftFromShared)(); runOnJS(setScrollEnabled)(true); });
+    .onUpdate((e) => {
+      const snapY =
+        Math.round((startY.value + e.translationY) / (HOUR_HEIGHT / 2)) *
+        (HOUR_HEIGHT / 2);
+      if (snapY >= 0 && snapY + eventHeight.value <= 24 * HOUR_HEIGHT)
+        startY.value = snapY;
+    })
+    .onFinalize(() => {
+      runOnJS(updateDraftFromShared)();
+      runOnJS(setScrollEnabled)(true);
+    });
 
   const panBottomHandle = Gesture.Pan()
-    .onBegin(() => { runOnJS(setScrollEnabled)(false); })
+    .onBegin(() => {
+      runOnJS(setScrollEnabled)(false);
+    })
     .onUpdate((e) => {
       const newHeight = eventHeight.value + e.translationY;
-      const snapHeight = Math.max(HOUR_HEIGHT / 2, Math.round(newHeight / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2));
-      if (startY.value + snapHeight <= 24 * HOUR_HEIGHT) eventHeight.value = snapHeight;
+      const snapHeight = Math.max(
+        HOUR_HEIGHT / 2,
+        Math.round(newHeight / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2),
+      );
+      if (startY.value + snapHeight <= 24 * HOUR_HEIGHT)
+        eventHeight.value = snapHeight;
     })
-    .onFinalize(() => { runOnJS(updateDraftFromShared)(); runOnJS(setScrollEnabled)(true); });
+    .onFinalize(() => {
+      runOnJS(updateDraftFromShared)();
+      runOnJS(setScrollEnabled)(true);
+    });
 
   const panTopHandle = Gesture.Pan()
-    .onBegin(() => { runOnJS(setScrollEnabled)(false); })
+    .onBegin(() => {
+      runOnJS(setScrollEnabled)(false);
+    })
     .onUpdate((e) => {
       const newY = startY.value + e.translationY;
-      const snapY = Math.max(0, Math.round(newY / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2));
+      const snapY = Math.max(
+        0,
+        Math.round(newY / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2),
+      );
       const endY = startY.value + eventHeight.value;
-      if (snapY < endY - (HOUR_HEIGHT / 2) + 1) {
+      if (snapY < endY - HOUR_HEIGHT / 2 + 1) {
         startY.value = snapY;
         eventHeight.value = endY - snapY;
       }
     })
-    .onFinalize(() => { runOnJS(updateDraftFromShared)(); runOnJS(setScrollEnabled)(true); });
+    .onFinalize(() => {
+      runOnJS(updateDraftFromShared)();
+      runOnJS(setScrollEnabled)(true);
+    });
 
   const animatedEventStyle = useAnimatedStyle(() => ({
     top: startY.value,
@@ -230,8 +312,26 @@ export default function CalendarScreen() {
   }));
 
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
+  const [isAddOutfitModalVisible, setIsAddOutfitModalVisible] = useState(false);
+  const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
+  const [caption, setCaption] = useState("");
   const [deviceEvents, setDeviceEvents] = useState<Calendar.Event[]>([]);
   const dateStripRef = useRef<any>(null); // Type as any or ScrollView to fix TS error
+  const dateStripScrollX = useRef(new Animated.Value(0)).current;
+
+  const lastHapticIndex = useRef(-1);
+  useEffect(() => {
+    const listenerId = dateStripScrollX.addListener(({ value }) => {
+      const index = Math.round(value / 84); // 84 is ITEM_PITCH
+      if (index !== lastHapticIndex.current && index >= 0) {
+        lastHapticIndex.current = index;
+        Haptics.selectionAsync();
+      }
+    });
+    return () => {
+      dateStripScrollX.removeListener(listenerId);
+    };
+  }, [dateStripScrollX]);
   const scrollY = useRef(new Animated.Value(0)).current;
   const clampedScrollY = useMemo(
     () =>
@@ -292,35 +392,38 @@ export default function CalendarScreen() {
       }
     };
 
-    if (supabase) { fetchOutfits(); }
-    return () => { isMounted = false; };
+    if (supabase) {
+      InteractionManager.runAfterInteractions(() => {
+        fetchOutfits();
+      });
+    }
+    return () => {
+      isMounted = false;
+    };
   }, [viewYear, viewMonth, supabase]);
 
+  const days = useMemo(() => {
+    const year = viewYear;
+    const month = viewMonth;
+    const days = [];
 
-  const days = useMemo(
-    () => {
-      const year = viewYear;
-      const month = viewMonth;
-      const firstDay = new Date(year, month, 1);
-      const startOffset = firstDay.getDay();
-      const days = [];
-      for (let i = startOffset - 1; i >= 0; i--) {
-        days.push(new Date(year, month, -i));
-      }
-      const lastDay = new Date(year, month + 1, 0);
-      for (let d = 1; d <= lastDay.getDate(); d++) {
-        days.push(new Date(year, month, d));
-      }
-      const remaining = 7 - (days.length % 7);
-      if (remaining < 7) {
-        for (let d = 1; d <= remaining; d++) {
-          days.push(new Date(year, month + 1, d));
-        }
-      }
-      return days;
-    },
-    [viewYear, viewMonth],
-  );
+    // Add 5 buffer days from previous month to fill empty space
+    for (let i = 5; i > 0; i--) {
+      days.push(new Date(year, month, 1 - i));
+    }
+
+    const lastDay = new Date(year, month + 1, 0);
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      days.push(new Date(year, month, d));
+    }
+
+    // Add 5 buffer days from next month
+    for (let i = 1; i <= 5; i++) {
+      days.push(new Date(year, month + 1, i));
+    }
+
+    return days;
+  }, [viewYear, viewMonth]);
 
   const handleDaySelect = useCallback((date: Date) => {
     setSelected(date);
@@ -329,7 +432,6 @@ export default function CalendarScreen() {
   }, []);
 
   const combinedOutfitsData = loggedOutfitsData;
-
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -361,8 +463,16 @@ export default function CalendarScreen() {
               onPress={() => setIsCalendarModalVisible(true)}
               style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
             >
-              <IconCalendar size={20} color="#111827" />
-              <Text style={{ fontSize: 16, fontWeight: "600", color: "#4B5563" }}>
+              <ExpoImage
+                source={{
+                  uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
+                }}
+                style={{ width: 19, height: 19 }}
+                contentFit="contain"
+              />
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", color: "#4B5563" }}
+              >
                 {MONTH_NAMES[viewMonth]} {viewYear}
               </Text>
               <IconChevronDown size={18} color="#9CA3AF" />
@@ -370,7 +480,7 @@ export default function CalendarScreen() {
           </View>
 
           {/* Today navigator */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <TouchableOpacity
               onPress={() => {
                 let newMonth = viewMonth - 1;
@@ -390,15 +500,20 @@ export default function CalendarScreen() {
                 const t = new Date();
                 handleDaySelect(t);
                 setTimeout(() => {
-                  const index = t.getDate() - 1;
-                  const offset = Math.max(0, index * 82 - 30);
+                  const index = t.getDate() - 1 + 5; // +5 for buffer days
+                  const offset = Math.max(0, index * 84);
                   if (dateStripRef.current) {
-                    dateStripRef.current.scrollTo({ x: offset, animated: true });
+                    dateStripRef.current.scrollTo({
+                      x: offset,
+                      animated: true,
+                    });
                   }
                 }, 100);
               }}
             >
-              <Text style={{ fontSize: 14, fontWeight: "600", color: "#111827" }}>
+              <Text
+                style={{ fontSize: 14, fontWeight: "600", color: "#111827" }}
+              >
                 Today
               </Text>
             </TouchableOpacity>
@@ -425,9 +540,19 @@ export default function CalendarScreen() {
             ref={dateStripRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+            contentContainerStyle={{
+              paddingHorizontal: Dimensions.get("window").width / 2 - 42,
+              alignItems: "flex-end",
+            }}
+            snapToInterval={84}
+            decelerationRate="fast"
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: dateStripScrollX } } }],
+              { useNativeDriver: true },
+            )}
+            scrollEventThrottle={16}
           >
-            {days.map((d) => {
+            {days.map((d, index) => {
               const isToday = isSameDay(d, new Date());
               const isSelected = isSameDay(d, selected);
               const dayName = isToday ? "Today" : DAY_LABELS_SHORT[d.getDay()];
@@ -436,74 +561,191 @@ export default function CalendarScreen() {
               const hasOutfit = !!combinedOutfitsData[d.toDateString()];
               const log = combinedOutfitsData[d.toDateString()];
 
+              const ITEM_PITCH = 84;
+              const inputRange = [
+                (index - 2) * ITEM_PITCH,
+                (index - 1) * ITEM_PITCH,
+                index * ITEM_PITCH,
+                (index + 1) * ITEM_PITCH,
+                (index + 2) * ITEM_PITCH,
+              ];
+
+              const scale = dateStripScrollX.interpolate({
+                inputRange,
+                outputRange: [1, 1, 1.15, 1, 1],
+                extrapolate: "clamp",
+              });
+
+              const translateX = dateStripScrollX.interpolate({
+                inputRange,
+                outputRange: [5.7, 5.7, 0, -5.7, -5.7],
+                extrapolate: "clamp",
+              });
+
               return (
-                <TouchableOpacity
+                <Animated.View
                   key={d.toISOString()}
-                  onPress={() => handleDaySelect(d)}
-                  activeOpacity={0.8}
-                  style={{ alignItems: "center", width: 76 }}
+                  style={{
+                    alignItems: "center",
+                    width: 78,
+                    marginHorizontal: 3,
+                    marginTop: 20,
+                    // alignItems: "center",
+                    justifyContent: "center",
+                    transform: [{ translateX }],
+                  }}
                 >
-                  {/* Dot indicator for Today */}
-                  <View style={{ height: 8, marginBottom: 4, alignItems: "center", justifyContent: "center" }}>
-                    {isToday && (
-                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#111827" }} />
-                    )}
-                  </View>
-
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: isToday ? "700" : "500",
-                      color: isToday ? "#111827" : "#6B7280",
-                      marginBottom: 2,
+                  <TouchableOpacity
+                    onPress={() => {
+                      handleDaySelect(d);
+                      dateStripRef.current?.scrollTo({
+                        x: index * ITEM_PITCH,
+                        animated: true,
+                      });
+                      if (!hasOutfit) {
+                        setIsAddOutfitModalVisible(true);
+                      }
                     }}
+                    activeOpacity={0.8}
+                    style={{ alignItems: "center", width: 78 }}
                   >
-                    {dayName}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 8 }}>
-                    {dateStr}
-                  </Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10 }}>
-                    <IconCloudRain size={14} color="#9CA3AF" />
-                    <Text style={{ fontSize: 12, color: "#111827", fontWeight: "600" }}>28°</Text>
-                    <Text style={{ fontSize: 12, color: "#9CA3AF" }}>26°</Text>
-                  </View>
+                    {/* Dot indicator for Today */}
+                    <View
+                      style={{
+                        height: 8,
+                        // marginBottom: 4,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {isToday && (
+                        <View
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: "#111827",
+                          }}
+                        />
+                      )}
+                    </View>
 
-                  {/* Card */}
-                  <View
-                    style={{
-                      width: 76,
-                      height: 120,
-                      borderRadius: 18,
-                      backgroundColor: isToday ? "#FFFFFF" : "#F3F4F6",
-                      borderWidth: isToday ? 1 : 0,
-                      borderColor: "#E5E7EB",
-                      shadowColor: isToday ? "#000" : "transparent",
-                      shadowOpacity: isToday ? 0.08 : 0,
-                      shadowRadius: 12,
-                      shadowOffset: { width: 0, height: 4 },
-                      elevation: isToday ? 4 : 0,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {hasOutfit && log.imageUri ? (
-                      <ExpoImage source={{ uri: log.imageUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-                    ) : (
-                      <IconCalendarPlus size={26} color="#C4C4C4" strokeWidth={1.5} />
-                    )}
-                  </View>
-                </TouchableOpacity>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: isToday ? "700" : "500",
+                        color: isToday ? "#111827" : "#6B7280",
+                        marginBottom: 2,
+                      }}
+                    >
+                      {dayName}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        color: "#9CA3AF",
+                        marginBottom: 8,
+                      }}
+                    >
+                      {dateStr}
+                    </Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        marginBottom: 10,
+                      }}
+                    >
+                      <IconCloudRain
+                        size={14}
+                        color={isToday ? "#111827" : "#9CA3AF"}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#111827",
+                          fontWeight: "600",
+                        }}
+                      >
+                        29°
+                      </Text>
+                      <Text style={{ fontSize: 12, color: "#9CA3AF" }}>
+                        26°
+                      </Text>
+                    </View>
+
+                    {/* Card */}
+                    <Animated.View
+                      style={{
+                        width: 80,
+                        height: 120,
+                        marginTop: 4,
+                        borderRadius: 13,
+                        backgroundColor: isToday ? "#FFFFFF" : "#F8F8FA",
+                        borderWidth: isToday ? 0.5 : 0,
+                        borderColor: "#E5E7EB",
+                        shadowColor: isToday ? "#000" : "transparent",
+                        shadowOpacity: isToday ? 0.08 : 0,
+                        shadowRadius: 12,
+                        shadowOffset: { width: 0, height: 2 },
+                        elevation: isToday ? 2 : 0,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        marginBottom: 20,
+                        transform: [{ scale }],
+                      }}
+                    >
+                      {hasOutfit && log.imageUri ? (
+                        <ExpoImage
+                          source={{ uri: log.imageUri }}
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <IconCalendarPlus
+                          size={26}
+                          color="#00000080"
+                          strokeWidth={1.5}
+                        />
+                      )}
+                    </Animated.View>
+                  </TouchableOpacity>
+                </Animated.View>
               );
             })}
           </Animated.ScrollView>
         </View>
 
         {/* Empty State Body */}
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ fontSize: 16, color: "#000000", fontWeight: "500" }}>
-            nothing here!
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: -200,
+          }}
+        >
+          <Video
+            source={require("../../../assets/planner_empty.webm")}
+            style={{ width: 250, height: 250 }}
+            shouldPlay
+            isLooping={false}
+            resizeMode={ResizeMode.CONTAIN}
+          />
+          <Text
+            style={{
+              fontSize: 14,
+              lineHeight: 20,
+              color: "#666666",
+              fontWeight: "400",
+              marginTop: -45,
+              textAlign: "center",
+              paddingHorizontal: 20,
+            }}
+          >
+            No plans yet. {`\n`} Tap a date to style your day.
           </Text>
         </View>
 
@@ -512,62 +754,346 @@ export default function CalendarScreen() {
           visible={isCalendarModalVisible}
           onClose={() => setIsCalendarModalVisible(false)}
         >
-          <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+          <View style={{ paddingHorizontal: 35, paddingBottom: 10 }}>
             {/* Header */}
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                paddingBottom: 16,
+                // paddingBottom: 1,
               }}
             >
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
+              {/* <Text
+                style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}
+              >
                 Choose the date of wear
-              </Text>
+              </Text> */}
             </View>
 
             {/* Calendar */}
-            <RNCalendar
-              current={selected.toISOString().split("T")[0]}
-              onDayPress={(day: any) => {
-                const newDate = new Date(day.timestamp);
-                setSelected(newDate);
-                handleDaySelect(newDate);
-                setIsCalendarModalVisible(false);
+            {isCalendarModalVisible && (
+              <View style={{ minHeight: 370 }}>
+                <RNCalendar
+                  current={selected.toISOString().split("T")[0]}
+                  onDayPress={(day: any) => {
+                    const newDate = new Date(day.timestamp);
+                    setSelected(newDate);
+                    handleDaySelect(newDate);
+                    setIsCalendarModalVisible(false);
+                  }}
+                  theme={{
+                    todayTextColor: "#ffffff",
+                    todayBackgroundColor: "#000000",
+                    selectedDayBackgroundColor: "#1D1A27",
+                    selectedDayTextColor: "#ffffff",
+                    arrowColor: "#1D1A27",
+                    textDayFontWeight: "600",
+                    textMonthFontWeight: "800",
+                    textDayHeaderFontWeight: "500",
+                    textSectionTitleColor: "#9CA3AF",
+                    monthTextColor: "#1D1A27",
+                  }}
+                  enableSwipeMonths={true}
+                  hideExtraDays={false}
+                  firstDay={1}
+                  renderArrow={(direction: any) => (
+                    <View
+                      style={{
+                        backgroundColor: "#F3F4F6",
+                        borderRadius: 16,
+                        padding: 6,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {direction === "left" ? (
+                        <IconChevronLeft size={16} color="#4B5563" />
+                      ) : (
+                        <IconChevronRight size={16} color="#4B5563" />
+                      )}
+                    </View>
+                  )}
+                />
+              </View>
+            )}
+          </View>
+        </BottomSheet>
+
+        {/* Add Outfit Bottom Sheet */}
+        <BottomSheet
+          visible={isAddOutfitModalVisible}
+          onClose={() => setIsAddOutfitModalVisible(false)}
+          backgroundColor="#F3F4F6"
+        >
+          <View style={{ paddingHorizontal: 24 }}>
+            {/* Header: Date and Weather */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 28,
               }}
-              theme={{
-                todayTextColor: "#1D1A27",
-                selectedDayBackgroundColor: "#1D1A27",
-                selectedDayTextColor: "#ffffff",
-                arrowColor: "#1D1A27",
-                textDayFontWeight: "600",
-                textMonthFontWeight: "800",
-                textDayHeaderFontWeight: "500",
-                textSectionTitleColor: "#9CA3AF",
-                monthTextColor: "#1D1A27",
+            >
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "#FFFFFF",
+                  paddingVertical: 10,
+                  paddingHorizontal: 16,
+                  borderRadius: 100,
+                }}
+              >
+                <IconCalendar
+                  size={18}
+                  color="#111827"
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: "#111827",
+                    marginRight: 4,
+                  }}
+                >
+                  {MONTH_NAMES[selected.getMonth()]} {selected.getFullYear()}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "#FFFFFF",
+                  paddingVertical: 10,
+                  paddingHorizontal: 16,
+                  borderRadius: 100,
+                }}
+              >
+                <IconCloudRain
+                  size={18}
+                  color="#111827"
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "700",
+                    color: "#111827",
+                    marginRight: 4,
+                  }}
+                >
+                  28°
+                </Text>
+                <Text
+                  style={{ fontSize: 14, fontWeight: "500", color: "#9CA3AF" }}
+                >
+                  26°
+                </Text>
+              </View>
+            </View>
+
+            {/* Image Placeholder */}
+            <TouchableOpacity
+              style={{
+                width: 110,
+                height: 110,
+                backgroundColor: "#E5E7EB",
+                borderRadius: 28,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 24,
               }}
-              enableSwipeMonths={true}
-              hideExtraDays={true}
-              firstDay={1}
-              renderArrow={(direction: any) => (
+            >
+              <Text
+                style={{
+                  color: "#9CA3AF",
+                  fontSize: 14,
+                  fontWeight: "700",
+                  marginBottom: 2,
+                  letterSpacing: 2,
+                }}
+              >
+                ...
+              </Text>
+              <IconPlus size={26} color="#111827" strokeWidth={2} />
+            </TouchableOpacity>
+
+            {/* Caption Input */}
+            <TextInput
+              placeholder="add caption..."
+              placeholderTextColor="#111827"
+              value={caption}
+              onChangeText={setCaption}
+              style={{
+                fontSize: 18,
+                fontWeight: "600",
+                color: "#111827",
+                marginBottom: 16,
+                padding: 0,
+              }}
+            />
+
+            {/* Occasion Pill */}
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#E5E7EB",
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 100,
+                alignSelf: "flex-start",
+                marginBottom: 32,
+              }}
+            >
+              <Text
+                style={{ fontSize: 14, fontWeight: "600", color: "#111827" }}
+              >
+                occasion
+              </Text>
+            </TouchableOpacity>
+
+            {/* Date and Time Dark Card */}
+            <View
+              style={{
+                backgroundColor: "#1C1C1E",
+                borderRadius: 24,
+                padding: 20,
+                flexDirection: "row",
+                marginBottom: 28,
+              }}
+            >
+              <View style={{ flex: 1, paddingRight: 16 }}>
                 <View
                   style={{
-                    backgroundColor: "#F3F4F6",
-                    borderRadius: 16,
-                    padding: 6,
-                    justifyContent: "center",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  <IconCalendar
+                    size={14}
+                    color="#34C759"
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={{
+                      color: "#8E8E93",
+                      fontSize: 13,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Date
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
                     alignItems: "center",
                   }}
                 >
-                  {direction === "left" ? (
-                    <IconChevronLeft size={16} color="#4B5563" />
-                  ) : (
-                    <IconChevronRight size={16} color="#4B5563" />
-                  )}
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 16,
+                      fontWeight: "500",
+                    }}
+                  >
+                    dd/mm/yy
+                  </Text>
+                  <IconChevronDown size={18} color="#636366" />
                 </View>
-              )}
-            />
+              </View>
+
+              <View
+                style={{
+                  width: 1,
+                  backgroundColor: "#3A3A3C",
+                  marginVertical: 4,
+                }}
+              />
+
+              <View style={{ flex: 1, paddingLeft: 16 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  <IconClock
+                    size={14}
+                    color="#34C759"
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={{
+                      color: "#8E8E93",
+                      fontSize: 13,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Time
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 16,
+                      fontWeight: "500",
+                    }}
+                  >
+                    hh:mm
+                  </Text>
+                  <IconChevronDown size={18} color="#636366" />
+                </View>
+              </View>
+            </View>
+
+            {/* Notification Toggle */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}
+              >
+                notification
+              </Text>
+              <Switch
+                value={isNotificationEnabled}
+                onValueChange={setIsNotificationEnabled}
+                trackColor={{ false: "#D1D5DB", true: "#000000" }}
+                thumbColor={"#FFFFFF"}
+                ios_backgroundColor="#D1D5DB"
+              />
+            </View>
+            <Text
+              style={{
+                fontSize: 14,
+                color: "#6B7280",
+                fontWeight: "500",
+                paddingRight: 40,
+                lineHeight: 20,
+              }}
+            >
+              message show ho likho ki planner notifi kerdeyga 20min pehlay he
+            </Text>
           </View>
         </BottomSheet>
       </SafeAreaView>

@@ -1,4 +1,10 @@
 import {
+  ScanHistoryItem,
+  ScanType,
+  useScanHistoryStore,
+} from "@/features/scanning/model/scan-history-store";
+import { FlashList } from "@shopify/flash-list";
+import {
   IconBarcode,
   IconHeart,
   IconHeartFilled,
@@ -12,16 +18,9 @@ import {
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useState, useMemo } from "react";
-import { FlashList } from "@shopify/flash-list";
-import {
-  Alert,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { Alert, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScanHistoryItem, ScanType, useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,7 +34,10 @@ const FILTER_TABS: { id: FilterTab; label: string }[] = [
   { id: "fit-check", label: "Fit Check" },
 ];
 
-const TYPE_META: Record<ScanType, { label: string; color: string; Icon: React.ComponentType<any> }> = {
+const TYPE_META: Record<
+  ScanType,
+  { label: string; color: string; Icon: React.ComponentType<any> }
+> = {
   cloth: { label: "Cloth Scan", color: "#7C6AFF", Icon: IconShirt },
   barcode: { label: "Barcode", color: "#FEC466", Icon: IconBarcode },
   label: { label: "Care Label", color: "#01B3F7", Icon: IconTag },
@@ -46,7 +48,11 @@ const TYPE_META: Record<ScanType, { label: string; color: string; Icon: React.Co
 
 function formatDate(isoString: string): string {
   const d = new Date(isoString);
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function getResultSummary(item: ScanHistoryItem): string {
@@ -102,7 +108,9 @@ const HistoryCard = React.memo(function HistoryCard({
             cachePolicy="memory"
           />
         ) : (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
             <Icon size={28} color={meta.color} />
           </View>
         )}
@@ -128,14 +136,31 @@ const HistoryCard = React.memo(function HistoryCard({
           </Text>
         </View>
 
-        <Text style={{ color: "#FFFFFF", fontSize: 13, fontWeight: "600", marginBottom: 4 }} numberOfLines={2}>
+        <Text
+          style={{
+            color: "#FFFFFF",
+            fontSize: 13,
+            fontWeight: "600",
+            marginBottom: 4,
+          }}
+          numberOfLines={2}
+        >
           {getResultSummary(item)}
         </Text>
-        <Text style={{ color: "#555", fontSize: 11 }}>{formatDate(item.createdAt)}</Text>
+        <Text style={{ color: "#555", fontSize: 11 }}>
+          {formatDate(item.createdAt)}
+        </Text>
       </View>
 
       {/* Actions */}
-      <View style={{ paddingRight: 12, paddingTop: 12, gap: 8, alignItems: "center" }}>
+      <View
+        style={{
+          paddingRight: 12,
+          paddingTop: 12,
+          gap: 8,
+          alignItems: "center",
+        }}
+      >
         <Pressable onPress={() => onToggleFavorite(item.id)} hitSlop={8}>
           {item.isFavorite ? (
             <IconHeartFilled size={20} color="#FF6B6B" />
@@ -143,10 +168,7 @@ const HistoryCard = React.memo(function HistoryCard({
             <IconHeart size={20} color="#555" />
           )}
         </Pressable>
-        <Pressable
-          onPress={() => onDelete(item.id)}
-          hitSlop={8}
-        >
+        <Pressable onPress={() => onDelete(item.id)} hitSlop={8}>
           <IconTrash size={18} color="#555" />
         </Pressable>
       </View>
@@ -162,7 +184,7 @@ export default function ScanHistoryScreen() {
   const removeScan = useScanHistoryStore((state) => state.removeScan);
   const toggleFavorite = useScanHistoryStore((state) => state.toggleFavorite);
   const clearAll = useScanHistoryStore((state) => state.clearAll);
-  
+
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
 
   const filtered = useMemo(() => {
@@ -216,7 +238,15 @@ export default function ScanHistoryScreen() {
           >
             <IconX size={18} color="#FFFFFF" />
           </Pressable>
-          <Text style={{ color: "#FFFFFF", fontSize: 20, fontWeight: "800", flex: 1, marginLeft: 12 }}>
+          <Text
+            style={{
+              color: "#FFFFFF",
+              fontSize: 20,
+              fontWeight: "800",
+              flex: 1,
+              marginLeft: 12,
+            }}
+          >
             Scan History
           </Text>
           {scans.length > 0 && (
@@ -264,12 +294,34 @@ export default function ScanHistoryScreen() {
 
         {/* List */}
         {filtered.length === 0 ? (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 80 }}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingBottom: 80,
+            }}
+          >
             <IconRefresh size={48} color="#2A2840" />
-            <Text style={{ color: "#555", fontSize: 16, fontWeight: "600", marginTop: 16 }}>
+            <Text
+              style={{
+                color: "#555",
+                fontSize: 16,
+                fontWeight: "600",
+                marginTop: 16,
+              }}
+            >
               No scans yet
             </Text>
-            <Text style={{ color: "#444", fontSize: 13, marginTop: 6, textAlign: "center", paddingHorizontal: 40 }}>
+            <Text
+              style={{
+                color: "#444",
+                fontSize: 13,
+                marginTop: 6,
+                textAlign: "center",
+                paddingHorizontal: 40,
+              }}
+            >
               Use the camera to scan clothing items, barcodes, or labels
             </Text>
           </View>

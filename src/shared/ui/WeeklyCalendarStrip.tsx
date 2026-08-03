@@ -140,7 +140,9 @@ export function WeeklyCalendarStrip({
           dateAtMidnight.setHours(0, 0, 0, 0);
 
           const diffTime = dateAtMidnight.getTime() - today.getTime();
-          const diffDaysFromToday = Math.round(diffTime / (1000 * 60 * 60 * 24));
+          const diffDaysFromToday = Math.round(
+            diffTime / (1000 * 60 * 60 * 24),
+          );
 
           let streakStatus: "streak" | "missed" | "future";
           if (diffDaysFromToday > 0) {
@@ -154,7 +156,8 @@ export function WeeklyCalendarStrip({
               const lastActive = new Date(lastActiveDate);
               lastActive.setHours(0, 0, 0, 0);
               const diffFromLastActive = Math.round(
-                (dateAtMidnight.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)
+                (dateAtMidnight.getTime() - lastActive.getTime()) /
+                  (1000 * 60 * 60 * 24),
               );
 
               if (diffFromLastActive > 0) {
