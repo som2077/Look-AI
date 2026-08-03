@@ -5,6 +5,7 @@ import { ResizeMode, Video } from "expo-av";
 import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, {
@@ -17,17 +18,18 @@ import React, {
 import {
   Animated,
   Dimensions,
+  Image,
   InteractionManager,
   Modal,
   PanResponder,
   Pressable,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { Calendar as RNCalendar } from "react-native-calendars";
+import DatePicker from "react-native-date-picker";
 import { Gesture } from "react-native-gesture-handler";
 import {
   runOnJS,
@@ -37,17 +39,20 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
-  IconCalendar,
+  IconBell,
   IconCalendarPlus,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconClock,
   IconCloudRain,
+  IconInfoCircle,
   IconPlus,
+  IconTag,
+  IconX,
 } from "@tabler/icons-react-native";
 
-// â”€â”€â”€ Constants & Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ——————————————————————————————————————————————————————————————————————————————————————————————————
 
 interface LoggedOutfit {
   title: string;
@@ -312,7 +317,13 @@ export default function CalendarScreen() {
   }));
 
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
+  const [isOutfitModalClosing, setIsOutfitModalClosing] = useState(false);
+  const [plannedOutfit, setPlannedOutfit] = useState<any>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isAddOutfitModalVisible, setIsAddOutfitModalVisible] = useState(false);
+  const [isTimePickerModalVisible, setIsTimePickerModalVisible] =
+    useState(false);
+  const [selectedTime, setSelectedTime] = useState(new Date());
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
   const [caption, setCaption] = useState("");
   const [deviceEvents, setDeviceEvents] = useState<Calendar.Event[]>([]);
@@ -718,36 +729,146 @@ export default function CalendarScreen() {
           </Animated.ScrollView>
         </View>
 
-        {/* Empty State Body */}
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            marginTop: -200,
-          }}
-        >
-          <Video
-            source={require("../../../assets/planner_empty.webm")}
-            style={{ width: 250, height: 250 }}
-            shouldPlay
-            isLooping={false}
-            resizeMode={ResizeMode.CONTAIN}
-          />
-          <Text
+        {/* Empty State or Planned Outfit */}
+        {plannedOutfit ? (
+          <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
+            <View
+              style={{
+                backgroundColor: "#FFFFFF",
+                borderRadius: 24,
+                padding: 16,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 10,
+                elevation: 2,
+              }}
+            >
+              <View style={{ flexDirection: "row", flex: 1 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginRight: 16,
+                  }}
+                >
+                  {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
+                    plannedOutfit.images.map((uri: string, index: number) => (
+                      <Image
+                        key={index}
+                        source={{ uri }}
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 32,
+                          borderWidth: 2,
+                          borderColor: "#FFFFFF",
+                          marginLeft: index === 0 ? 0 : -28,
+                          zIndex: 10 - index,
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <View
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: 32,
+                        backgroundColor: "#E5E7EB",
+                      }}
+                    />
+                  )}
+                </View>
+
+                <View style={{ flex: 1, justifyContent: "center" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "700",
+                      color: "#111827",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {plannedOutfit.caption || "Batch Scan"}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "500",
+                      color: "#9CA3AF",
+                      marginBottom: 8,
+                    }}
+                  >
+                    {plannedOutfit.images ? plannedOutfit.images.length : 0}{" "}
+                    Items
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: "#111827",
+                    }}
+                  >
+                    Analysis complete and ready to view.
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={{
+                  backgroundColor: "#F9FAFB",
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                }}
+              >
+                <Text
+                  style={{ fontSize: 12, fontWeight: "500", color: "#6B7280" }}
+                >
+                  {plannedOutfit.time
+                    ? plannedOutfit.time.toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : "4:23 PM"}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View
             style={{
-              fontSize: 14,
-              lineHeight: 20,
-              color: "#666666",
-              fontWeight: "400",
-              marginTop: -45,
-              textAlign: "center",
-              paddingHorizontal: 20,
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: -200,
             }}
           >
-            No plans yet. {`\n`} Tap a date to style your day.
-          </Text>
-        </View>
+            <Video
+              source={require("../../../assets/planner_empty.webm")}
+              style={{ width: 250, height: 250 }}
+              shouldPlay
+              isLooping={false}
+              resizeMode={ResizeMode.CONTAIN}
+            />
+            <Text
+              style={{
+                fontSize: 14,
+                lineHeight: 20,
+                color: "#666666",
+                fontWeight: "400",
+                marginTop: -45,
+                textAlign: "center",
+                paddingHorizontal: 20,
+              }}
+            >
+              No plans yet. {`\n`} Tap a date to style your day.
+            </Text>
+          </View>
+        )}
 
         {/* Calendar Bottom Sheet */}
         <BottomSheet
@@ -824,103 +945,114 @@ export default function CalendarScreen() {
         <BottomSheet
           visible={isAddOutfitModalVisible}
           onClose={() => setIsAddOutfitModalVisible(false)}
-          backgroundColor="#F3F4F6"
+          backgroundColor="#FFFFFF"
         >
           <View style={{ paddingHorizontal: 24 }}>
-            {/* Header: Date and Weather */}
-            <View
+            {/* Date and Time Header */}
+            <TouchableOpacity
+              onPress={() => setIsTimePickerModalVisible(true)}
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 28,
+                backgroundColor: "#FFFFFF",
+                // borderWidth: 1,
+                // borderColor: "#D1D5DB",
+                paddingVertical: 12,
+                paddingHorizontal: 10,
+                // borderRadius: 16,
+                marginBottom: 10,
               }}
             >
-              <TouchableOpacity
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "#FFFFFF",
-                  paddingVertical: 10,
-                  paddingHorizontal: 16,
-                  borderRadius: 100,
-                }}
-              >
-                <IconCalendar
-                  size={18}
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconClock
+                  size={20}
                   color="#111827"
-                  style={{ marginRight: 6 }}
+                  strokeWidth={1.5}
+                  style={{ marginRight: 8 }}
                 />
                 <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: "#111827",
-                    marginRight: 4,
-                  }}
+                  style={{ fontSize: 16, fontWeight: "400", color: "#111827" }}
                 >
-                  {MONTH_NAMES[selected.getMonth()]} {selected.getFullYear()}
-                </Text>
-                <IconChevronDown size={16} color="#9CA3AF" />
-              </TouchableOpacity>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "#FFFFFF",
-                  paddingVertical: 10,
-                  paddingHorizontal: 16,
-                  borderRadius: 100,
-                }}
-              >
-                <IconCloudRain
-                  size={18}
-                  color="#111827"
-                  style={{ marginRight: 6 }}
-                />
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: "#111827",
-                    marginRight: 4,
-                  }}
-                >
-                  28°
-                </Text>
-                <Text
-                  style={{ fontSize: 14, fontWeight: "500", color: "#9CA3AF" }}
-                >
-                  26°
+                  {DAY_LABELS_SHORT[selected.getDay()]}, {selected.getDate()}{" "}
+                  {MONTH_NAMES[selected.getMonth()].substring(0, 3)}{" "}
+                  {selected.getFullYear()}
                 </Text>
               </View>
-            </View>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "400", color: "#4B5563" }}
+                >
+                  {selectedTime
+                    .toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })
+                    .toLowerCase()}
+                </Text>
+                <IconChevronDown
+                  size={18}
+                  color="#9CA3AF"
+                  style={{ marginLeft: 6 }}
+                />
+              </View>
+            </TouchableOpacity>
 
-            {/* Image Placeholder */}
+            {/* Image Selection Area */}
             <TouchableOpacity
+              onPress={async () => {
+                let result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  allowsMultipleSelection: true,
+                  selectionLimit: 5,
+                  quality: 0.8,
+                });
+
+                if (!result.canceled) {
+                  const newUris = result.assets.map((asset) => asset.uri);
+                  setSelectedImages(newUris.slice(0, 5));
+                }
+              }}
+              activeOpacity={0.8}
               style={{
-                width: 110,
-                height: 110,
-                backgroundColor: "#E5E7EB",
-                borderRadius: 28,
-                alignItems: "center",
-                justifyContent: "center",
                 marginBottom: 24,
+                flexDirection: "row",
+                alignItems: "center",
               }}
             >
-              <Text
-                style={{
-                  color: "#9CA3AF",
-                  fontSize: 14,
-                  fontWeight: "700",
-                  marginBottom: 2,
-                  letterSpacing: 2,
-                }}
-              >
-                ...
-              </Text>
-              <IconPlus size={26} color="#111827" strokeWidth={2} />
+              {selectedImages.length === 0 ? (
+                <View
+                  style={{
+                    width: 110,
+                    height: 110,
+                    backgroundColor: "#E5E7EB",
+                    borderRadius: 100,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconPlus size={26} color="#111827" strokeWidth={2} />
+                </View>
+              ) : (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  {selectedImages.map((uri, index) => (
+                    <Image
+                      key={index}
+                      source={{ uri }}
+                      style={{
+                        width: 110,
+                        height: 110,
+                        borderRadius: 100,
+                        borderWidth: 3,
+                        borderColor: "#FFFFFF",
+                        marginLeft: index === 0 ? 0 : -40,
+                        zIndex: 10 - index,
+                      }}
+                    />
+                  ))}
+                </View>
+              )}
             </TouchableOpacity>
 
             {/* Caption Input */}
@@ -938,164 +1070,294 @@ export default function CalendarScreen() {
               }}
             />
 
-            {/* Occasion Pill */}
+            {/* Occasion Row */}
             <TouchableOpacity
-              style={{
-                backgroundColor: "#E5E7EB",
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderRadius: 100,
-                alignSelf: "flex-start",
-                marginBottom: 32,
-              }}
-            >
-              <Text
-                style={{ fontSize: 14, fontWeight: "600", color: "#111827" }}
-              >
-                occasion
-              </Text>
-            </TouchableOpacity>
-
-            {/* Date and Time Dark Card */}
-            <View
-              style={{
-                backgroundColor: "#1C1C1E",
-                borderRadius: 24,
-                padding: 20,
-                flexDirection: "row",
-                marginBottom: 28,
-              }}
-            >
-              <View style={{ flex: 1, paddingRight: 16 }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 8,
-                  }}
-                >
-                  <IconCalendar
-                    size={14}
-                    color="#34C759"
-                    style={{ marginRight: 6 }}
-                  />
-                  <Text
-                    style={{
-                      color: "#8E8E93",
-                      fontSize: 13,
-                      fontWeight: "600",
-                    }}
-                  >
-                    Date
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontSize: 16,
-                      fontWeight: "500",
-                    }}
-                  >
-                    dd/mm/yy
-                  </Text>
-                  <IconChevronDown size={18} color="#636366" />
-                </View>
-              </View>
-
-              <View
-                style={{
-                  width: 1,
-                  backgroundColor: "#3A3A3C",
-                  marginVertical: 4,
-                }}
-              />
-
-              <View style={{ flex: 1, paddingLeft: 16 }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 8,
-                  }}
-                >
-                  <IconClock
-                    size={14}
-                    color="#34C759"
-                    style={{ marginRight: 6 }}
-                  />
-                  <Text
-                    style={{
-                      color: "#8E8E93",
-                      fontSize: 13,
-                      fontWeight: "600",
-                    }}
-                  >
-                    Time
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontSize: 16,
-                      fontWeight: "500",
-                    }}
-                  >
-                    hh:mm
-                  </Text>
-                  <IconChevronDown size={18} color="#636366" />
-                </View>
-              </View>
-            </View>
-
-            {/* Notification Toggle */}
-            <View
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 8,
+                marginBottom: 32,
+                paddingHorizontal: 4,
               }}
             >
-              <Text
-                style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconTag
+                  size={20}
+                  color="#4B5563"
+                  style={{ marginRight: 12 }}
+                />
+                <Text
+                  style={{ fontSize: 16, fontWeight: "400", color: "#6B7280" }}
+                >
+                  Occasion
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "500",
+                    color: "#111827",
+                    marginRight: 4,
+                  }}
+                >
+                  Casual
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </TouchableOpacity>
+
+            {/* Notification Section */}
+            <View style={{ marginBottom: 24 }}>
+              {/* Header Row */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                  paddingHorizontal: 4,
+                }}
               >
-                notification
-              </Text>
-              <Switch
-                value={isNotificationEnabled}
-                onValueChange={setIsNotificationEnabled}
-                trackColor={{ false: "#D1D5DB", true: "#000000" }}
-                thumbColor={"#FFFFFF"}
-                ios_backgroundColor="#D1D5DB"
-              />
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <IconBell
+                    size={20}
+                    color="#4B5563"
+                    style={{ marginRight: 12 }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "400",
+                      color: "#111827",
+                    }}
+                  >
+                    Notification
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() =>
+                    setIsNotificationEnabled(!isNotificationEnabled)
+                  }
+                  style={{
+                    width: 44,
+                    height: 24,
+                    borderRadius: 12,
+                    backgroundColor: isNotificationEnabled
+                      ? "#1D1A27"
+                      : "#D1D5DB",
+                    justifyContent: "center",
+                    paddingHorizontal: 2,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: "#FFFFFF",
+                      alignSelf: isNotificationEnabled
+                        ? "flex-end"
+                        : "flex-start",
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.04,
+                      shadowRadius: 2,
+                    }}
+                  />
+                </Pressable>
+              </View>
+
+              {/* Info Card */}
+              <View
+                style={{
+                  backgroundColor: "#E5E7EB",
+                  borderRadius: 16,
+                  padding: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <IconInfoCircle
+                  size={20}
+                  color="#111827"
+                  style={{ marginRight: 12 }}
+                />
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#111827",
+                    fontWeight: "500",
+                  }}
+                >
+                  Planner will notify you 20 mins before
+                </Text>
+              </View>
             </View>
-            <Text
+
+            {/* Add plan Button */}
+            <TouchableOpacity
+              onPress={() => {
+                setPlannedOutfit({
+                  images: selectedImages,
+                  caption: caption || "Batch Scan",
+                  time: selectedTime,
+                });
+                setIsAddOutfitModalVisible(false);
+              }}
               style={{
-                fontSize: 14,
-                color: "#6B7280",
-                fontWeight: "500",
-                paddingRight: 40,
-                lineHeight: 20,
+                backgroundColor: "#111827",
+                borderRadius: 16,
+                paddingVertical: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 24,
               }}
             >
-              message show ho likho ki planner notifi kerdeyga 20min pehlay he
-            </Text>
+              <IconCalendarPlus
+                size={20}
+                color="#FFFFFF"
+                style={{ marginRight: 8 }}
+              />
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", color: "#FFFFFF" }}
+              >
+                Add plan
+              </Text>
+            </TouchableOpacity>
           </View>
         </BottomSheet>
+
+        {/* Time Picker Centered Modal */}
+        <Modal
+          visible={isTimePickerModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsTimePickerModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            activeOpacity={1}
+            onPress={() => setIsTimePickerModalVisible(false)}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              style={{
+                backgroundColor: "#FFFFFF",
+                borderRadius: 24,
+                width: "85%",
+                overflow: "hidden",
+              }}
+            >
+              {/* Header */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: 20,
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#F3F4F6",
+                }}
+              >
+                <Text
+                  style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}
+                >
+                  Choose time
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setIsTimePickerModalVisible(false)}
+                >
+                  <IconX size={20} color="#4B5563" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Body */}
+              <View style={{ padding: 5, alignItems: "center" }}>
+                <View
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      width: "80%",
+                      height: 52,
+                      borderRadius: 12,
+                      borderWidth: 2,
+                      borderColor: "#111827",
+                      pointerEvents: "none",
+                      zIndex: 1,
+                    }}
+                  />
+                  <DatePicker
+                    date={selectedTime}
+                    onDateChange={setSelectedTime}
+                    mode="time"
+                    theme="light"
+                    locale="en-US"
+                    is24hourSource="locale"
+                  />
+                </View>
+              </View>
+
+              {/* Footer */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  padding: 20,
+                  borderTopWidth: 1,
+                  borderTopColor: "#F3F4F6",
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => setIsTimePickerModalVisible(false)}
+                  style={{ marginRight: 24 }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "600",
+                      color: "#4B5563",
+                    }}
+                  >
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setIsTimePickerModalVisible(false)}
+                  style={{
+                    backgroundColor: "#1C1C1E",
+                    paddingVertical: 12,
+                    paddingHorizontal: 20,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "600",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    Save
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
       </SafeAreaView>
     </View>
   );
