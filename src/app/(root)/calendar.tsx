@@ -6,7 +6,7 @@ import * as Calendar from "expo-calendar";
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, {
   useCallback,
@@ -20,9 +20,12 @@ import {
   Dimensions,
   Image,
   InteractionManager,
+  KeyboardAvoidingView,
   Modal,
   PanResponder,
+  Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -46,6 +49,7 @@ import {
   IconChevronRight,
   IconClock,
   IconCloudRain,
+  IconDots,
   IconInfoCircle,
   IconPlus,
   IconTag,
@@ -154,45 +158,57 @@ function BottomSheet({
       animationType="none"
       onRequestClose={onClose}
     >
-      <Pressable
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)" }}
-        onPress={onClose}
-      />
-      <Animated.View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor,
-          borderTopLeftRadius: 32,
-          borderTopRightRadius: 32,
-          paddingBottom: 40,
-          transform: [{ translateY: slideAnim }],
-        }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
-          <View
-            style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}
-          >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)" }}
+          onPress={onClose}
+        />
+        <Animated.View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            maxHeight: "85%",
+            backgroundColor,
+            borderTopLeftRadius: 32,
+            borderTopRightRadius: 32,
+            paddingBottom: 40,
+            transform: [{ translateY: slideAnim }],
+          }}
+        >
+          <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
             <View
-              style={{
-                width: 40,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: "#E2E2EA",
-              }}
-            />
+              style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: "#E2E2EA",
+                }}
+              />
+            </View>
           </View>
-        </View>
-        {children}
-      </Animated.View>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {children}
+          </ScrollView>
+        </Animated.View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 export default function CalendarScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -323,6 +339,21 @@ export default function CalendarScreen() {
   const [isAddOutfitModalVisible, setIsAddOutfitModalVisible] = useState(false);
   const [isTimePickerModalVisible, setIsTimePickerModalVisible] =
     useState(false);
+
+  useEffect(() => {
+    if (params.selectedImages) {
+      try {
+        const images = JSON.parse(params.selectedImages as string);
+        if (images && images.length > 0) {
+          setSelectedImages(images);
+          setIsAddOutfitModalVisible(true);
+        }
+      } catch (e) {
+        console.error("Failed to parse selectedImages", e);
+      }
+    }
+  }, [params.selectedImages]);
+
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
   const [caption, setCaption] = useState("");
@@ -614,7 +645,7 @@ export default function CalendarScreen() {
                         animated: true,
                       });
                       if (!hasOutfit) {
-                        setIsAddOutfitModalVisible(true);
+                        router.push("/wardrobe-selection");
                       }
                     }}
                     activeOpacity={0.8}
@@ -694,12 +725,12 @@ export default function CalendarScreen() {
                         marginTop: 4,
                         borderRadius: 13,
                         backgroundColor: isToday ? "#FFFFFF" : "#F8F8FA",
-                        borderWidth: isToday ? 0.5 : 0,
+                        borderWidth: isToday ? 0.5 : 0.5,
                         borderColor: "#E5E7EB",
-                        shadowColor: isToday ? "#000" : "transparent",
+                        shadowColor: isToday ? "#00000090" : "transparent",
                         shadowOpacity: isToday ? 0.08 : 0,
                         shadowRadius: 12,
-                        shadowOffset: { width: 0, height: 2 },
+                        shadowOffset: { width: 0, height: 1 },
                         elevation: isToday ? 2 : 0,
                         alignItems: "center",
                         justifyContent: "center",
@@ -738,103 +769,121 @@ export default function CalendarScreen() {
                 borderRadius: 24,
                 padding: 16,
                 flexDirection: "row",
-                alignItems: "flex-start",
+                alignItems: "center",
                 justifyContent: "space-between",
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.05,
                 shadowRadius: 10,
                 elevation: 2,
+                position: "relative",
               }}
             >
-              <View style={{ flexDirection: "row", flex: 1 }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginRight: 16,
-                  }}
-                >
-                  {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
-                    plannedOutfit.images.map((uri: string, index: number) => (
-                      <Image
-                        key={index}
-                        source={{ uri }}
-                        style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: 32,
-                          borderWidth: 2,
-                          borderColor: "#FFFFFF",
-                          marginLeft: index === 0 ? 0 : -28,
-                          zIndex: 10 - index,
-                        }}
-                      />
-                    ))
-                  ) : (
-                    <View
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 32,
-                        backgroundColor: "#E5E7EB",
-                      }}
-                    />
-                  )}
-                </View>
+              {/* Top Right Dots */}
+              <TouchableOpacity
+                style={{ position: "absolute", top: 12, right: 16, padding: 4 }}
+              >
+                <IconDots size={20} color="#111827" />
+              </TouchableOpacity>
 
-                <View style={{ flex: 1, justifyContent: "center" }}>
-                  <Text
+              {/* Left Big Circle */}
+              <View style={{ marginRight: 16, marginTop: 4 }}>
+                {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
+                  <Image
+                    source={{ uri: plannedOutfit.images[0] }}
                     style={{
-                      fontSize: 18,
-                      fontWeight: "700",
-                      color: "#111827",
-                      marginBottom: 4,
+                      width: 70,
+                      height: 70,
+                      borderRadius: 35,
+                      backgroundColor: "#E5E7EB",
                     }}
-                  >
-                    {plannedOutfit.caption || "Batch Scan"}
-                  </Text>
-                  <Text
+                  />
+                ) : (
+                  <View
                     style={{
-                      fontSize: 14,
-                      fontWeight: "500",
-                      color: "#9CA3AF",
-                      marginBottom: 8,
+                      width: 70,
+                      height: 70,
+                      borderRadius: 35,
+                      backgroundColor: "#E5E7EB",
                     }}
-                  >
-                    {plannedOutfit.images ? plannedOutfit.images.length : 0}{" "}
-                    Items
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      fontWeight: "600",
-                      color: "#111827",
-                    }}
-                  >
-                    Analysis complete and ready to view.
-                  </Text>
-                </View>
+                  />
+                )}
               </View>
 
-              <View
-                style={{
-                  backgroundColor: "#F9FAFB",
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 12,
-                }}
-              >
+              {/* Middle Text Content */}
+              <View style={{ flex: 1, justifyContent: "center", marginTop: 4 }}>
                 <Text
-                  style={{ fontSize: 12, fontWeight: "500", color: "#6B7280" }}
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "500",
+                    color: "#111827",
+                    marginBottom: 6,
+                  }}
                 >
+                  {selected.toLocaleDateString("en-GB")} .{" "}
                   {plannedOutfit.time
                     ? plannedOutfit.time.toLocaleTimeString([], {
                         hour: "numeric",
                         minute: "2-digit",
                       })
-                    : "4:23 PM"}
+                    : "3:00AM"}{" "}
+                  . {plannedOutfit.occasion || "Casual"}
                 </Text>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "600", color: "#111827" }}
+                  numberOfLines={1}
+                >
+                  {plannedOutfit.caption || "hangout with friends..."}
+                </Text>
+              </View>
+
+              {/* Right Small Circles Cluster */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginLeft: 12,
+                  marginTop: 4,
+                }}
+              >
+                {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
+                  plannedOutfit.images
+                    .slice(0, 4)
+                    .map((uri: string, index: number) => (
+                      <Image
+                        key={index}
+                        source={{ uri }}
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 22,
+                          borderWidth: 2,
+                          borderColor: "#FFFFFF",
+                          marginLeft: index === 0 ? 0 : -20,
+                          zIndex: 10 - index,
+                          backgroundColor: "#E5E7EB",
+                        }}
+                      />
+                    ))
+                ) : (
+                  <View style={{ flexDirection: "row" }}>
+                    {[1, 2, 3, 4].map((_, index) => (
+                      <View
+                        key={index}
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 22,
+                          borderWidth: 2,
+                          borderColor: "#FFFFFF",
+                          marginLeft: index === 0 ? 0 : -20,
+                          zIndex: 10 - index,
+                          backgroundColor: "#E5E7EB",
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -958,8 +1007,8 @@ export default function CalendarScreen() {
                 backgroundColor: "#FFFFFF",
                 // borderWidth: 1,
                 // borderColor: "#D1D5DB",
-                paddingVertical: 12,
-                paddingHorizontal: 10,
+                paddingVertical: 10,
+                // paddingHorizontal: 10,
                 // borderRadius: 16,
                 marginBottom: 10,
               }}
@@ -1026,10 +1075,13 @@ export default function CalendarScreen() {
                   style={{
                     width: 110,
                     height: 110,
-                    backgroundColor: "#E5E7EB",
+                    borderWidth: 2,
+                    borderStyle: "dashed",
+                    backgroundColor: "#E5E7EB70",
                     borderRadius: 100,
                     alignItems: "center",
                     justifyContent: "center",
+                    // marginLeft: 12,
                   }}
                 >
                   <IconPlus size={26} color="#111827" strokeWidth={2} />
@@ -1043,10 +1095,11 @@ export default function CalendarScreen() {
                       style={{
                         width: 110,
                         height: 110,
+                        // marginLeft:12,
                         borderRadius: 100,
                         borderWidth: 3,
                         borderColor: "#FFFFFF",
-                        marginLeft: index === 0 ? 0 : -40,
+                        marginLeft: index === 0 ? 0 : -45,
                         zIndex: 10 - index,
                       }}
                     />
@@ -1058,7 +1111,7 @@ export default function CalendarScreen() {
             {/* Caption Input */}
             <TextInput
               placeholder="add caption..."
-              placeholderTextColor="#111827"
+              placeholderTextColor="#11182780"
               value={caption}
               onChangeText={setCaption}
               style={{
@@ -1171,22 +1224,22 @@ export default function CalendarScreen() {
               {/* Info Card */}
               <View
                 style={{
-                  backgroundColor: "#E5E7EB",
+                  backgroundColor: "#E5E7EB50",
                   borderRadius: 16,
-                  padding: 16,
+                  padding: 14,
                   flexDirection: "row",
                   alignItems: "center",
                 }}
               >
                 <IconInfoCircle
                   size={20}
-                  color="#111827"
+                  color="#11182780"
                   style={{ marginRight: 12 }}
                 />
                 <Text
                   style={{
-                    fontSize: 15,
-                    color: "#111827",
+                    fontSize: 14,
+                    color: "#11182780",
                     fontWeight: "500",
                   }}
                 >
@@ -1200,8 +1253,9 @@ export default function CalendarScreen() {
               onPress={() => {
                 setPlannedOutfit({
                   images: selectedImages,
-                  caption: caption || "Batch Scan",
+                  caption: caption || "hangout with friends...",
                   time: selectedTime,
+                  occasion: "Casual", // This should use actual occasion state if added later
                 });
                 setIsAddOutfitModalVisible(false);
               }}
