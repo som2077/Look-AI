@@ -1,19 +1,30 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { Image as ExpoImage } from "expo-image";
-import { Image } from "react-native";
-import { IconClock, IconTag, IconDots, IconEdit, IconTrash } from "@tabler/icons-react-native";
+import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
 import { getOccasionIcon } from "@/shared/constants/occasions";
-import { useCalendarPlanStore, CalendarPlan } from "@/features/calendar/model/calendar-plan-store";
+import {
+  IconClock,
+  IconDots,
+  IconEdit,
+  IconTag,
+  IconTrash,
+} from "@tabler/icons-react-native";
+import { Image as ExpoImage } from "expo-image";
+import React, { useState } from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
-export function CalendarPlanBanner({ onEdit, title }: { onEdit?: () => void, title?: string }) {
+export function CalendarPlanBanner({
+  onEdit,
+  title,
+}: {
+  onEdit?: () => void;
+  title?: string;
+}) {
   const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
   const [isPlanDropdownVisible, setIsPlanDropdownVisible] = useState(false);
 
   if (!plannedOutfit) return null;
 
   return (
-    <View style={{ paddingHorizontal: 20, marginTop: title ? 20 : 0 }}>
+    <View style={{ paddingHorizontal: 10, marginTop: title ? 20 : 0 }}>
       {title && (
         <Text
           style={{
@@ -58,7 +69,7 @@ export function CalendarPlanBanner({ onEdit, title }: { onEdit?: () => void, tit
               {getOccasionIcon(
                 plannedOutfit.occasion?.split(",")[0].trim() || "Occasion",
                 "#111827",
-                32
+                32,
               ) || <IconTag size={32} color="#111827" />}
             </View>
           </View>
@@ -103,48 +114,97 @@ export function CalendarPlanBanner({ onEdit, title }: { onEdit?: () => void, tit
                     }}
                   >
                     {plannedOutfit.createdAt
-                      ? new Date(plannedOutfit.createdAt).toLocaleTimeString('en-US', {
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
+                      ? new Date(plannedOutfit.createdAt).toLocaleTimeString(
+                          "en-US",
+                          {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          },
+                        )
                       : "12:42 PM"}
                   </Text>
                 </View>
-                <View style={{ position: 'relative', zIndex: 50 }}>
-                  <TouchableOpacity onPress={() => setIsPlanDropdownVisible(!isPlanDropdownVisible)}>
+                <View style={{ position: "relative", zIndex: 50 }}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setIsPlanDropdownVisible(!isPlanDropdownVisible)
+                    }
+                  >
                     <IconDots size={20} color="#111827" />
                   </TouchableOpacity>
                   {isPlanDropdownVisible && (
-                    <View style={{
-                      position: 'absolute',
-                      top: 25,
-                      right: 0,
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: 8,
-                      padding: 8,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                      elevation: 3,
-                      zIndex: 50,
-                      width: 130
-                    }}>
-                      <TouchableOpacity 
-                        style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8 }}
-                        onPress={() => { setIsPlanDropdownVisible(false); onEdit?.(); }}
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 25,
+                        right: 0,
+                        backgroundColor: "#FFFFFF",
+                        borderRadius: 8,
+                        padding: 8,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 4,
+                        elevation: 3,
+                        zIndex: 50,
+                        width: 130,
+                      }}
+                    >
+                      <TouchableOpacity
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          paddingVertical: 8,
+                          paddingHorizontal: 8,
+                        }}
+                        onPress={() => {
+                          setIsPlanDropdownVisible(false);
+                          onEdit?.();
+                        }}
                       >
                         <IconEdit size={18} color="#4B5563" />
-                        <Text style={{ marginLeft: 8, fontSize: 14, color: "#4B5563", fontWeight: "500" }}>Edit</Text>
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            fontSize: 14,
+                            color: "#4B5563",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Edit
+                        </Text>
                       </TouchableOpacity>
-                      <View style={{ height: 1, backgroundColor: '#F3F4F6', marginVertical: 2 }} />
-                      <TouchableOpacity 
-                        style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8 }}
-                        onPress={() => { setIsPlanDropdownVisible(false); setPlannedOutfit(null); }}
+                      <View
+                        style={{
+                          height: 1,
+                          backgroundColor: "#F3F4F6",
+                          marginVertical: 2,
+                        }}
+                      />
+                      <TouchableOpacity
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          paddingVertical: 8,
+                          paddingHorizontal: 8,
+                        }}
+                        onPress={() => {
+                          setIsPlanDropdownVisible(false);
+                          setPlannedOutfit(null);
+                        }}
                       >
                         <IconTrash size={18} color="#EF4444" />
-                        <Text style={{ marginLeft: 8, fontSize: 14, color: "#EF4444", fontWeight: "500" }}>Remove</Text>
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            fontSize: 14,
+                            color: "#EF4444",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Remove
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -211,11 +271,11 @@ export function CalendarPlanBanner({ onEdit, title }: { onEdit?: () => void, tit
                   }}
                 >
                   {plannedOutfit.time
-                    ? new Date(plannedOutfit.time).toLocaleTimeString('en-US', {
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
+                    ? new Date(plannedOutfit.time).toLocaleTimeString("en-US", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      })
                     : "3:00 AM"}
                 </Text>
               </View>
@@ -235,7 +295,7 @@ export function CalendarPlanBanner({ onEdit, title }: { onEdit?: () => void, tit
                           borderRadius: 16,
                           borderWidth: 2,
                           borderColor: "#F3F4F6",
-                          marginLeft: index === 0 ? 0 : -12,
+                          marginLeft: index === 0 ? 0 : -15,
                           zIndex: 10 - index,
                           backgroundColor: "#D1D5DB",
                         }}
