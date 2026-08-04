@@ -28,11 +28,11 @@ export function CalendarPlanBanner({
       {title && (
         <Text
           style={{
-            fontSize: 18,
+            fontSize: 19,
             fontWeight: "700",
             color: "#1D1A27",
             marginBottom: 10,
-            marginLeft: 10,
+            marginLeft: 25,
           }}
         >
           {title}
