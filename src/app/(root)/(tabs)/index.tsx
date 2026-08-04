@@ -25,6 +25,7 @@ import { LookAIBanner } from "@/shared/ui/LookAIBanner";
 import { PlannedOutfitBanner } from "@/shared/ui/PlannedOutfitBanner";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
+import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
@@ -315,8 +316,7 @@ export default function HomeScreen() {
               <NotifyBanner />
               <EmptyStyleBanner />
               <OutfitAnalyzingCard />
-              <PlannedOutfitBanner date={selectedDate} />
-              <UpcomingEvents date={selectedDate} showAISuggestion={false} />
+              <CalendarPlanBanner title="Upcoming event" />
               <AddClothesCTA />
             </View>
           </Animated.ScrollView>

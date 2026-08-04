@@ -1,4 +1,5 @@
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import { OCCASIONS, Occasion, getOccasionIcon } from "@/shared/constants/occasions";
 import { getMockWardrobeItemById } from "@/shared/testing/mock-wardrobe-items";
 import {
   IconArrowLeft,
@@ -76,27 +77,7 @@ type CategoryId =
   | "Swimwear"
   | "Loungewear";
 
-type Occasion =
-  | "Casual"
-  | "Smart Casual"
-  | "Business Casual"
-  | "Formal"
-  | "Office"
-  | "College"
-  | "Party"
-  | "Wedding"
-  | "Festive"
-  | "Traditional"
-  | "Date Night"
-  | "Travel"
-  | "Beach"
-  | "Gym"
-  | "Sports"
-  | "Outdoor"
-  | "Lounge"
-  | "Sleepwear"
-  | "Interview"
-  | "All Occasion";
+
 type Season =
   | "Spring"
   | "Summer"
@@ -143,28 +124,7 @@ const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "Loungewear", label: "Loungewear" },
 ];
 
-const OCCASIONS: Occasion[] = [
-  "Casual",
-  "Smart Casual",
-  "Business Casual",
-  "Formal",
-  "Office",
-  "College",
-  "Party",
-  "Wedding",
-  "Festive",
-  "Traditional",
-  "Date Night",
-  "Travel",
-  "Beach",
-  "Gym",
-  "Sports",
-  "Outdoor",
-  "Lounge",
-  "Sleepwear",
-  "Interview",
-  "All Occasion",
-];
+
 const SEASONS: Season[] = [
   "Spring",
   "Summer",
@@ -344,34 +304,7 @@ const getCategoryIcon = (label: string, color: string) => {
   }
 };
 
-const getOccasionIcon = (label: string, color: string) => {
-  const size = 16;
-  switch (label.toLowerCase()) {
-    case "all occasions":
-      return <IconHanger size={size} color={color} />;
-    case "gym":
-    case "sports":
-    case "outdoor":
-      return <IconRun size={size} color={color} />;
-    case "beach":
-    case "travel":
-      return <IconBeach size={size} color={color} />;
-    case "sleepwear":
-    case "lounge":
-      return <IconMoon size={size} color={color} />;
-    case "office":
-    case "interview":
-    case "business casual":
-      return <IconBuilding size={size} color={color} />;
-    case "party":
-    case "wedding":
-    case "date night":
-    case "festive":
-      return <IconDiamond size={size} color={color} />;
-    default:
-      return null;
-  }
-};
+
 
 const getSeasonIcon = (label: string, color: string) => {
   const size = 16;

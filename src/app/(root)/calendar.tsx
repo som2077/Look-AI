@@ -1,5 +1,12 @@
 import { useSupabase } from "@/shared/supabase/use-supabase";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
+import {
+  OCCASIONS,
+  Occasion,
+  getOccasionIcon,
+} from "@/shared/constants/occasions";
+import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
 import { useFocusEffect } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
 import * as Calendar from "expo-calendar";
@@ -49,7 +56,6 @@ import {
   IconChevronRight,
   IconClock,
   IconCloudRain,
-  IconDots,
   IconInfoCircle,
   IconPlus,
   IconTag,
@@ -334,11 +340,15 @@ export default function CalendarScreen() {
 
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
   const [isOutfitModalClosing, setIsOutfitModalClosing] = useState(false);
-  const [plannedOutfit, setPlannedOutfit] = useState<any>(null);
+  const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isAddOutfitModalVisible, setIsAddOutfitModalVisible] = useState(false);
   const [isTimePickerModalVisible, setIsTimePickerModalVisible] =
     useState(false);
+  const [isOccasionModalVisible, setIsOccasionModalVisible] = useState(false);
+  const [selectedOccasions, setSelectedOccasions] = useState<Occasion[]>([
+    "Casual",
+  ]);
 
   useEffect(() => {
     if (params.selectedImages) {
@@ -734,218 +744,10 @@ export default function CalendarScreen() {
 
         {/* Empty State or Planned Outfit */}
         {plannedOutfit ? (
-          <View style={{ paddingHorizontal: 10 }}>
-            <View
-              style={{
-                backgroundColor: "#F8F8FA",
-                borderRadius: 24,
-                padding: 16,
-                flexDirection: "row",
-                position: "relative",
-              }}
-            >
-              {/* Left Big Circle */}
-              <View
-                style={{
-                  marginRight: 16,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
-                  <Image
-                    source={{ uri: plannedOutfit.images[0] }}
-                    style={{
-                      width: 70,
-                      height: 70,
-                      borderRadius: 35,
-                      backgroundColor: "#E5E7EB",
-                    }}
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: 70,
-                      height: 70,
-                      borderRadius: 35,
-                      backgroundColor: "#FFFFFF",
-                    }}
-                  />
-                )}
-              </View>
-
-              {/* Content Column */}
-              <View style={{ flex: 1, paddingRight: 4 }}>
-                {/* Row 1: Title + Pill + Dots */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 7,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      fontWeight: "500",
-                      color: "#111827",
-                      flex: 1,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {plannedOutfit.caption || "Hangout with friends"}
-                  </Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginLeft: 8,
-                    }}
-                  >
-                    <View
-                      style={{
-                        backgroundColor: "#FFFFFF",
-                        borderRadius: 12,
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        marginRight: 8,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontWeight: "600",
-                          color: "#111827",
-                        }}
-                      >
-                        {plannedOutfit.time
-                          ? plannedOutfit.time
-                              .toLocaleTimeString([], {
-                                hour: "numeric",
-                                minute: "2-digit",
-                              })
-                              .replace(" ", "")
-                          : "12:42PM"}
-                      </Text>
-                    </View>
-                    <IconDots size={20} color="#111827" />
-                  </View>
-                </View>
-
-                {/* Row 2: Occasion */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 5,
-                  }}
-                >
-                  <IconTag size={16} color="#111827" />
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      fontWeight: "600",
-                      color: "#111827",
-                      marginLeft: 6,
-                    }}
-                  >
-                    {plannedOutfit.occasion || "Occasion"}
-                  </Text>
-                </View>
-
-                {/* Row 3: Date/Time + Cluster */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <ExpoImage
-                      source={{
-                        uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
-                      }}
-                      style={{ width: 15, height: 15 }}
-                      contentFit="contain"
-                    />
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "500",
-                        color: "#111827",
-                        marginLeft: 4,
-                        marginRight: 12,
-                      }}
-                    >
-                      {selected.toLocaleDateString("en-GB")}
-                    </Text>
-
-                    <IconClock size={16} color="#111827" />
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "500",
-                        color: "#111827",
-                        marginLeft: 4,
-                      }}
-                    >
-                      {plannedOutfit.time
-                        ? plannedOutfit.time
-                            .toLocaleTimeString([], {
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })
-                            .replace(" ", "")
-                        : "3:00AM"}
-                    </Text>
-                  </View>
-
-                  {/* Cluster */}
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
-                      plannedOutfit.images
-                        .slice(0, 5)
-                        .map((uri: string, index: number) => (
-                          <Image
-                            key={index}
-                            source={{ uri }}
-                            style={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: 16,
-                              borderWidth: 2,
-                              borderColor: "#F3F4F6",
-                              marginLeft: index === 0 ? 0 : -12,
-                              zIndex: 10 - index,
-                              backgroundColor: "#D1D5DB",
-                            }}
-                          />
-                        ))
-                    ) : (
-                      <View style={{ flexDirection: "row" }}>
-                        {[1, 2, 3, 4, 5].map((_, index) => (
-                          <View
-                            key={index}
-                            style={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: 16,
-                              borderWidth: 2,
-                              borderColor: "#F3F4F6",
-                              marginLeft: index === 0 ? 0 : -12,
-                              zIndex: 10 - index,
-                              backgroundColor: "#D1D5DB",
-                            }}
-                          />
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                </View>
-              </View>
-            </View>
+          <View style={{ marginTop: 10 }}>
+            <CalendarPlanBanner
+              onEdit={() => setIsAddOutfitModalVisible(true)}
+            />
           </View>
         ) : (
           <View
@@ -1174,6 +976,7 @@ export default function CalendarScreen() {
               placeholderTextColor="#11182780"
               value={caption}
               onChangeText={setCaption}
+              multiline={true}
               style={{
                 fontSize: 18,
                 fontWeight: "600",
@@ -1185,6 +988,7 @@ export default function CalendarScreen() {
 
             {/* Occasion Row */}
             <TouchableOpacity
+              onPress={() => setIsOccasionModalVisible(true)}
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
@@ -1214,7 +1018,9 @@ export default function CalendarScreen() {
                     marginRight: 4,
                   }}
                 >
-                  Casual
+                  {selectedOccasions.length > 0
+                    ? selectedOccasions.join(", ")
+                    : "Select"}
                 </Text>
                 <IconChevronDown size={16} color="#9CA3AF" />
               </View>
@@ -1315,7 +1121,11 @@ export default function CalendarScreen() {
                   images: selectedImages,
                   caption: caption || "Hangout with friends...",
                   time: selectedTime,
-                  occasion: "Casual", // This should use actual occasion state if added later
+                  occasion:
+                    selectedOccasions.length > 0
+                      ? selectedOccasions.join(", ")
+                      : "Casual",
+                  createdAt: new Date(),
                 });
                 setIsAddOutfitModalVisible(false);
               }}
@@ -1338,6 +1148,99 @@ export default function CalendarScreen() {
                 style={{ fontSize: 16, fontWeight: "600", color: "#FFFFFF" }}
               >
                 Add plan
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </BottomSheet>
+
+        {/* Occasion Selection Bottom Sheet */}
+        <BottomSheet
+          visible={isOccasionModalVisible}
+          onClose={() => setIsOccasionModalVisible(false)}
+        >
+          <View style={{ paddingHorizontal: 24, paddingBottom: 24 }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "700",
+                color: "#111827",
+                marginBottom: 20,
+              }}
+            >
+              Select Occasion
+            </Text>
+
+            <ScrollView
+              style={{ maxHeight: 400 }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  gap: 10,
+                }}
+              >
+                {OCCASIONS.map((o) => {
+                  const isSelected = selectedOccasions.includes(o);
+                  return (
+                    <Pressable
+                      key={o}
+                      onPress={() => {
+                        if (isSelected) {
+                          setSelectedOccasions(
+                            selectedOccasions.filter((x) => x !== o),
+                          );
+                        } else {
+                          if (selectedOccasions.length < 2) {
+                            setSelectedOccasions([...selectedOccasions, o]);
+                          }
+                        }
+                      }}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 6,
+                        paddingHorizontal: 18,
+                        paddingVertical: 10,
+                        borderRadius: 999,
+                        backgroundColor: isSelected ? "#1D1A27" : "#fff",
+                        borderWidth: 1,
+                        borderColor: isSelected ? "#1D1A27" : "#E5E7EB",
+                      }}
+                    >
+                      {getOccasionIcon(o, isSelected ? "#fff" : "#6B7280")}
+                      <Text
+                        style={{
+                          color: isSelected ? "#fff" : "#6B7280",
+                          fontSize: 14,
+                          fontWeight: "500",
+                        }}
+                      >
+                        {o}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity
+              onPress={() => setIsOccasionModalVisible(false)}
+              style={{
+                backgroundColor: "#111827",
+                borderRadius: 16,
+                paddingVertical: 16,
+                alignItems: "center",
+                marginTop: 20,
+              }}
+            >
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", color: "#FFFFFF" }}
+              >
+                Save
               </Text>
             </TouchableOpacity>
           </View>
