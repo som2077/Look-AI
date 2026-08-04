@@ -151,37 +151,41 @@ export function CalendarPlanBanner({
                         width: 130,
                       }}
                     >
-                      <TouchableOpacity
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          paddingVertical: 8,
-                          paddingHorizontal: 8,
-                        }}
-                        onPress={() => {
-                          setIsPlanDropdownVisible(false);
-                          onEdit?.();
-                        }}
-                      >
-                        <IconEdit size={18} color="#4B5563" />
-                        <Text
-                          style={{
-                            marginLeft: 8,
-                            fontSize: 14,
-                            color: "#4B5563",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Edit
-                        </Text>
-                      </TouchableOpacity>
-                      <View
-                        style={{
-                          height: 1,
-                          backgroundColor: "#F3F4F6",
-                          marginVertical: 2,
-                        }}
-                      />
+                      {onEdit && (
+                        <>
+                          <TouchableOpacity
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              paddingVertical: 8,
+                              paddingHorizontal: 8,
+                            }}
+                            onPress={() => {
+                              setIsPlanDropdownVisible(false);
+                              onEdit();
+                            }}
+                          >
+                            <IconEdit size={18} color="#4B5563" />
+                            <Text
+                              style={{
+                                marginLeft: 8,
+                                fontSize: 14,
+                                color: "#4B5563",
+                                fontWeight: "500",
+                              }}
+                            >
+                              Edit
+                            </Text>
+                          </TouchableOpacity>
+                          <View
+                            style={{
+                              height: 1,
+                              backgroundColor: "#F3F4F6",
+                              marginVertical: 2,
+                            }}
+                          />
+                        </>
+                      )}
                       <TouchableOpacity
                         style={{
                           flexDirection: "row",

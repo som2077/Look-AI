@@ -2,7 +2,7 @@ import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
 import { useNotifications } from "@/features/social/api/useNotifications";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
-
+// Removed FlashList import
 import {
   IconBell,
   IconMoodPlus,
@@ -12,6 +12,8 @@ import {
   IconX,
 } from "@tabler/icons-react-native";
 import { ResizeMode, Video } from "expo-av";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
@@ -21,16 +23,13 @@ import {
   Modal,
   Platform,
   RefreshControl,
+  Image as RNImage,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Image as RNImage,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { FlashList } from "@shopify/flash-list";
-import { Image } from "expo-image";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -412,11 +411,14 @@ function FeedTab() {
     }
   };
 
-  const renderMasonryItem = React.useCallback(({ item }: { item: any }) => (
-    <View style={{ padding: 3.5 }}>
-      <PostCard post={item} toggleReaction={toggleReaction} />
-    </View>
-  ), [toggleReaction]);
+  const renderMasonryItem = React.useCallback(
+    ({ item }: { item: any }) => (
+      <View style={{ padding: 3.5 }}>
+        <PostCard post={item} toggleReaction={toggleReaction} />
+      </View>
+    ),
+    [toggleReaction],
+  );
 
   const previousPostsLength = useRef(posts.length);
 
@@ -536,16 +538,32 @@ function FeedTab() {
             No posts yet. Be the first to share something!
           </Text>
         ) : (
-          <FlashList
-            data={posts}
-            numColumns={2}
-            renderItem={renderMasonryItem}
+          <ScrollView
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
             contentContainerStyle={{ paddingBottom: 40 }}
-          />
+          >
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <View style={{ flex: 1, paddingRight: 4 }}>
+                {posts
+                  .filter((_, i) => i % 2 === 0)
+                  .map((item) => (
+                    <View key={item.id}>{renderMasonryItem({ item })}</View>
+                  ))}
+              </View>
+              <View style={{ flex: 1, paddingLeft: 4 }}>
+                {posts
+                  .filter((_, i) => i % 2 !== 0)
+                  .map((item) => (
+                    <View key={item.id}>{renderMasonryItem({ item })}</View>
+                  ))}
+              </View>
+            </View>
+          </ScrollView>
         )}
       </View>
 
