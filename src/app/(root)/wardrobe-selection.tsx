@@ -1,9 +1,9 @@
+import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import {
   IconArrowLeft,
   IconCheck,
   IconPhoto,
 } from "@tabler/icons-react-native";
-import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
