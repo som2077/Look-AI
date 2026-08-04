@@ -19,6 +19,7 @@ export async function checkRateLimit(identifier: string) {
     };
   } catch (error) {
     console.error("Rate limiting error:", error);
-    return { success: true, limit: 10, remaining: 10, reset: 0 };
+    // Fail closed: deny on error to prevent abuse when rate limiter is unavailable
+    return { success: false, limit: 10, remaining: 0, reset: 0 };
   }
 }

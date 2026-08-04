@@ -88,12 +88,14 @@ ALTER TABLE entitlements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "entitlement_select_own" ON entitlements FOR SELECT
 USING (auth.jwt() ->> 'sub' = user_id);
 
--- Only service role (Edge Function) can insert/update
+-- Only service role (Edge Function) can insert/update.
+-- auth.role() = 'service_role' is only true when the service-role key is used
+-- (i.e. from a trusted Edge Function), never from a client anon/JWT call.
 CREATE POLICY "entitlement_service_insert" ON entitlements FOR INSERT
-WITH CHECK (true);
+WITH CHECK (auth.role() = 'service_role');
 
 CREATE POLICY "entitlement_service_update" ON entitlements FOR UPDATE
-USING (true);
+USING (auth.role() = 'service_role');
 
 -- purchase_tokens: audit log of every verified token (prevents replay attacks)
 DROP TABLE IF EXISTS purchase_tokens;
@@ -110,7 +112,7 @@ CREATE TABLE purchase_tokens (
 ALTER TABLE purchase_tokens ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "tokens_service_insert" ON purchase_tokens FOR INSERT
-WITH CHECK (true);
+WITH CHECK (auth.role() = 'service_role');
 
 CREATE POLICY "tokens_select_own" ON purchase_tokens FOR SELECT
 USING (auth.jwt() ->> 'sub' = user_id);
@@ -130,7 +132,7 @@ CREATE TABLE billing_events (
 ALTER TABLE billing_events ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "billing_events_service_insert" ON billing_events FOR INSERT
-WITH CHECK (true);
+WITH CHECK (auth.role() = 'service_role');
 
 CREATE POLICY "billing_events_select_own" ON billing_events FOR SELECT
 USING (auth.jwt() ->> 'sub' = user_id);
@@ -187,7 +189,7 @@ CREATE TABLE wardrobe_items (
   user_id TEXT NOT NULL REFERENCES user_profiles(user_id),
   custom_name TEXT,
   brand TEXT,
-  
+
   -- Core Visual Attributes
   category TEXT NOT NULL,
   sub_category TEXT,
@@ -198,25 +200,25 @@ CREATE TABLE wardrobe_items (
   fit TEXT,
   sleeve_type TEXT,
   neck_type TEXT,
-  
+
   -- Styling Intelligence
   style TEXT[],
   season TEXT[],
   occasion TEXT[],
   formality_score INTEGER,
   versatility_tags TEXT[],
-  
+
   -- Metadata
   image_url TEXT,
   original_image_url TEXT,
   confidence NUMERIC(3,2),
   source TEXT,
-  
+
   -- Editable/Tracking
   is_favorite BOOLEAN DEFAULT false,
   wear_count INTEGER DEFAULT 0,
   last_worn_date DATE,
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -259,4 +261,3 @@ USING (auth.jwt() ->> 'sub' = user_id);
 
 CREATE POLICY "insert_own_wear_logs" ON wear_logs FOR INSERT
 WITH CHECK (auth.jwt() ->> 'sub' = user_id);
-

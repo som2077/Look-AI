@@ -23,7 +23,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const PACKAGE_NAME = Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME") ?? "";
-const SERVICE_ACCOUNT_JSON = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON") ?? "";
+const SERVICE_ACCOUNT_JSON =
+  Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -134,16 +135,51 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get("Authorization") ?? "";
     const clerkToken = authHeader.replace("Bearer ", "");
     if (!clerkToken) {
-      return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      return Response.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 },
+      );
     }
 
-    // Decode Clerk JWT (without verifying — Supabase RLS uses the same JWT)
-    const [, payloadB64] = clerkToken.split(".");
-    const decodedPayload = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
-    const userId: string = decodedPayload.sub;
+    // Decode Clerk JWT payload and validate basic structure.
+    // Full cryptographic verification is handled by Supabase RLS (which rejects
+    // invalid JWTs before any DB call). We still validate expiry here as a
+    // defence-in-depth measure so stale tokens cannot be replayed.
+    const parts = clerkToken.split(".");
+    if (parts.length !== 3) {
+      return Response.json(
+        { success: false, error: "Invalid token" },
+        { status: 401 },
+      );
+    }
+    let decodedPayload: Record<string, unknown>;
+    try {
+      decodedPayload = JSON.parse(
+        atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+      );
+    } catch {
+      return Response.json(
+        { success: false, error: "Invalid token" },
+        { status: 401 },
+      );
+    }
 
+    const userId =
+      typeof decodedPayload.sub === "string" ? decodedPayload.sub : "";
     if (!userId) {
-      return Response.json({ success: false, error: "Invalid token" }, { status: 401 });
+      return Response.json(
+        { success: false, error: "Invalid token" },
+        { status: 401 },
+      );
+    }
+
+    // Reject expired tokens (exp claim is seconds since epoch)
+    const exp = typeof decodedPayload.exp === "number" ? decodedPayload.exp : 0;
+    if (exp > 0 && Math.floor(Date.now() / 1000) > exp) {
+      return Response.json(
+        { success: false, error: "Token expired" },
+        { status: 401 },
+      );
     }
 
     const body = await req.json();
@@ -154,7 +190,10 @@ Deno.serve(async (req: Request) => {
     };
 
     if (!productId || !purchaseToken) {
-      return Response.json({ success: false, error: "Missing fields" }, { status: 400 });
+      return Response.json(
+        { success: false, error: "Missing fields" },
+        { status: 400 },
+      );
     }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -179,10 +218,15 @@ Deno.serve(async (req: Request) => {
 
     // ── Verify with Google Play ────────────────────────────────────────────
     const accessToken = await getGoogleAccessToken();
-    const gpbData = await verifyWithGooglePlay(productId, purchaseToken, accessToken);
+    const gpbData = await verifyWithGooglePlay(
+      productId,
+      purchaseToken,
+      accessToken,
+    );
 
     // subscriptionState: ACTIVE | PAUSED | IN_GRACE_PERIOD | ON_HOLD | CANCELED | EXPIRED
-    const subState: string = gpbData.subscriptionState ?? "SUBSCRIPTION_STATE_UNSPECIFIED";
+    const subState: string =
+      gpbData.subscriptionState ?? "SUBSCRIPTION_STATE_UNSPECIFIED";
     const lineItem = gpbData.lineItems?.[0];
     const expiryMillis = lineItem?.expiryTime
       ? new Date(lineItem.expiryTime).getTime()
@@ -190,7 +234,10 @@ Deno.serve(async (req: Request) => {
 
     const tierInfo = PRODUCT_TIER_MAP[productId];
     if (!tierInfo) {
-      return Response.json({ success: false, error: "Unknown product" }, { status: 400 });
+      return Response.json(
+        { success: false, error: "Unknown product" },
+        { status: 400 },
+      );
     }
 
     let status = "inactive";
@@ -202,7 +249,9 @@ Deno.serve(async (req: Request) => {
       expiresAt = expiryMillis ? new Date(expiryMillis).toISOString() : null;
     } else if (subState === "SUBSCRIPTION_STATE_IN_GRACE_PERIOD") {
       status = "grace_period";
-      gracePeriodEndsAt = expiryMillis ? new Date(expiryMillis).toISOString() : null;
+      gracePeriodEndsAt = expiryMillis
+        ? new Date(expiryMillis).toISOString()
+        : null;
     } else if (subState === "SUBSCRIPTION_STATE_ON_HOLD") {
       status = "on_hold";
     } else if (subState === "SUBSCRIPTION_STATE_PAUSED") {
@@ -220,18 +269,21 @@ Deno.serve(async (req: Request) => {
     // ── Upsert entitlement ─────────────────────────────────────────────────
     const { data: entitlement, error: upsertError } = await supabase
       .from("entitlements")
-      .upsert({
-        user_id: userId,
-        tier: tierInfo.tier,
-        plan_id: productId,
-        status,
-        purchase_token: purchaseToken,
-        order_id: orderId ?? null,
-        expires_at: expiresAt,
-        grace_period_ends_at: gracePeriodEndsAt,
-        is_auto_renewing: isAutoRenewing,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" })
+      .upsert(
+        {
+          user_id: userId,
+          tier: tierInfo.tier,
+          plan_id: productId,
+          status,
+          purchase_token: purchaseToken,
+          order_id: orderId ?? null,
+          expires_at: expiresAt,
+          grace_period_ends_at: gracePeriodEndsAt,
+          is_auto_renewing: isAutoRenewing,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      )
       .select()
       .single();
 

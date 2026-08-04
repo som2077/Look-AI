@@ -3,7 +3,6 @@ import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useFocusEffect } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
 import * as Calendar from "expo-calendar";
-import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -18,6 +17,7 @@ import React, {
 import {
   Animated,
   Dimensions,
+  FlatList,
   Image,
   InteractionManager,
   KeyboardAvoidingView,
@@ -224,8 +224,8 @@ export default function CalendarScreen() {
         const index = t.getDate() - 1 + 5; // +5 for buffer days
         const offset = Math.max(0, index * 84);
         if (dateStripRef.current) {
-          dateStripRef.current.scrollTo({
-            x: offset,
+          dateStripRef.current.scrollToOffset({
+            offset: offset,
             animated: false,
           });
         }
@@ -362,18 +362,8 @@ export default function CalendarScreen() {
   const dateStripScrollX = useRef(new Animated.Value(0)).current;
 
   const lastHapticIndex = useRef(-1);
-  useEffect(() => {
-    const listenerId = dateStripScrollX.addListener(({ value }) => {
-      const index = Math.round(value / 84); // 84 is ITEM_PITCH
-      if (index !== lastHapticIndex.current && index >= 0) {
-        lastHapticIndex.current = index;
-        Haptics.selectionAsync();
-      }
-    });
-    return () => {
-      dateStripScrollX.removeListener(listenerId);
-    };
-  }, [dateStripScrollX]);
+  // ponytail: Removed heavy scrollX listener that tracked 30 elements on every frame.
+  // Ceiling: Haptics on scroll snap might be missing. Upgrade path: use onViewableItemsChanged in FlatList to trigger haptics when center item changes.
   const scrollY = useRef(new Animated.Value(0)).current;
   const clampedScrollY = useMemo(
     () =>
@@ -545,8 +535,8 @@ export default function CalendarScreen() {
                   const index = t.getDate() - 1 + 5; // +5 for buffer days
                   const offset = Math.max(0, index * 84);
                   if (dateStripRef.current) {
-                    dateStripRef.current.scrollTo({
-                      x: offset,
+                    dateStripRef.current.scrollToOffset({
+                      offset: offset,
                       animated: true,
                     });
                   }
@@ -578,9 +568,13 @@ export default function CalendarScreen() {
 
         {/* Date Strip */}
         <View>
-          <Animated.ScrollView
-            ref={dateStripRef}
+          {/* ponytail: Swapped heavy Animated ScrollView for a simple FlatList without scroll-driven scaling. */}
+          {/* Ceiling: No physics-driven scaling. Upgrade path: React Native Reanimated useSharedValue if requested. */}
+          <FlatList
+            ref={dateStripRef as any}
             horizontal
+            data={days}
+            keyExtractor={(d) => d.toISOString()}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
               paddingHorizontal: Dimensions.get("window").width / 2 - 42,
@@ -588,13 +582,14 @@ export default function CalendarScreen() {
             }}
             snapToInterval={84}
             decelerationRate="fast"
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { x: dateStripScrollX } } }],
-              { useNativeDriver: true },
-            )}
-            scrollEventThrottle={16}
-          >
-            {days.map((d, index) => {
+            initialNumToRender={7}
+            windowSize={5}
+            getItemLayout={(data, index) => ({
+              length: 84,
+              offset: 84 * index,
+              index,
+            })}
+            renderItem={({ item: d, index }) => {
               const isToday = isSameDay(d, new Date());
               const isSelected = isSameDay(d, selected);
               const dayName = isToday ? "Today" : DAY_LABELS_SHORT[d.getDay()];
@@ -604,45 +599,24 @@ export default function CalendarScreen() {
               const log = combinedOutfitsData[d.toDateString()];
 
               const ITEM_PITCH = 84;
-              const inputRange = [
-                (index - 2) * ITEM_PITCH,
-                (index - 1) * ITEM_PITCH,
-                index * ITEM_PITCH,
-                (index + 1) * ITEM_PITCH,
-                (index + 2) * ITEM_PITCH,
-              ];
-
-              const scale = dateStripScrollX.interpolate({
-                inputRange,
-                outputRange: [1, 1, 1.15, 1, 1],
-                extrapolate: "clamp",
-              });
-
-              const translateX = dateStripScrollX.interpolate({
-                inputRange,
-                outputRange: [5.7, 5.7, 0, -5.7, -5.7],
-                extrapolate: "clamp",
-              });
 
               return (
-                <Animated.View
-                  key={d.toISOString()}
+                <View
                   style={{
                     alignItems: "center",
                     width: 78,
                     marginHorizontal: 3,
                     marginTop: 20,
-                    // alignItems: "center",
                     justifyContent: "center",
-                    transform: [{ translateX }],
                   }}
                 >
                   <TouchableOpacity
                     onPress={() => {
                       handleDaySelect(d);
-                      dateStripRef.current?.scrollTo({
-                        x: index * ITEM_PITCH,
+                      dateStripRef.current?.scrollToIndex({
+                        index,
                         animated: true,
+                        viewPosition: 0.5,
                       });
                       if (!hasOutfit) {
                         router.push("/wardrobe-selection");
@@ -655,7 +629,6 @@ export default function CalendarScreen() {
                     <View
                       style={{
                         height: 8,
-                        // marginBottom: 4,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
@@ -718,7 +691,7 @@ export default function CalendarScreen() {
                     </View>
 
                     {/* Card */}
-                    <Animated.View
+                    <View
                       style={{
                         width: 80,
                         height: 120,
@@ -736,7 +709,6 @@ export default function CalendarScreen() {
                         justifyContent: "center",
                         overflow: "hidden",
                         marginBottom: 20,
-                        transform: [{ scale }],
                       }}
                     >
                       {hasOutfit && log.imageUri ? (
@@ -752,42 +724,34 @@ export default function CalendarScreen() {
                           strokeWidth={1.5}
                         />
                       )}
-                    </Animated.View>
+                    </View>
                   </TouchableOpacity>
-                </Animated.View>
+                </View>
               );
-            })}
-          </Animated.ScrollView>
+            }}
+          />
         </View>
 
         {/* Empty State or Planned Outfit */}
         {plannedOutfit ? (
-          <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
+          <View style={{ paddingHorizontal: 10 }}>
             <View
               style={{
-                backgroundColor: "#FFFFFF",
+                backgroundColor: "#F8F8FA",
                 borderRadius: 24,
                 padding: 16,
                 flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 10,
-                elevation: 2,
                 position: "relative",
               }}
             >
-              {/* Top Right Dots */}
-              <TouchableOpacity
-                style={{ position: "absolute", top: 12, right: 16, padding: 4 }}
-              >
-                <IconDots size={20} color="#111827" />
-              </TouchableOpacity>
-
               {/* Left Big Circle */}
-              <View style={{ marginRight: 16, marginTop: 4 }}>
+              <View
+                style={{
+                  marginRight: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
                   <Image
                     source={{ uri: plannedOutfit.images[0] }}
@@ -804,86 +768,182 @@ export default function CalendarScreen() {
                       width: 70,
                       height: 70,
                       borderRadius: 35,
-                      backgroundColor: "#E5E7EB",
+                      backgroundColor: "#FFFFFF",
                     }}
                   />
                 )}
               </View>
 
-              {/* Middle Text Content */}
-              <View style={{ flex: 1, justifyContent: "center", marginTop: 4 }}>
-                <Text
+              {/* Content Column */}
+              <View style={{ flex: 1, paddingRight: 4 }}>
+                {/* Row 1: Title + Pill + Dots */}
+                <View
                   style={{
-                    fontSize: 13,
-                    fontWeight: "500",
-                    color: "#111827",
-                    marginBottom: 6,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 7,
                   }}
                 >
-                  {selected.toLocaleDateString("en-GB")} .{" "}
-                  {plannedOutfit.time
-                    ? plannedOutfit.time.toLocaleTimeString([], {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })
-                    : "3:00AM"}{" "}
-                  . {plannedOutfit.occasion || "Casual"}
-                </Text>
-                <Text
-                  style={{ fontSize: 18, fontWeight: "600", color: "#111827" }}
-                  numberOfLines={1}
-                >
-                  {plannedOutfit.caption || "hangout with friends..."}
-                </Text>
-              </View>
-
-              {/* Right Small Circles Cluster */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginLeft: 12,
-                  marginTop: 4,
-                }}
-              >
-                {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
-                  plannedOutfit.images
-                    .slice(0, 4)
-                    .map((uri: string, index: number) => (
-                      <Image
-                        key={index}
-                        source={{ uri }}
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "500",
+                      color: "#111827",
+                      flex: 1,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {plannedOutfit.caption || "Hangout with friends"}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginLeft: 8,
+                    }}
+                  >
+                    <View
+                      style={{
+                        backgroundColor: "#FFFFFF",
+                        borderRadius: 12,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        marginRight: 8,
+                      }}
+                    >
+                      <Text
                         style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 22,
-                          borderWidth: 2,
-                          borderColor: "#FFFFFF",
-                          marginLeft: index === 0 ? 0 : -20,
-                          zIndex: 10 - index,
-                          backgroundColor: "#E5E7EB",
+                          fontSize: 12,
+                          fontWeight: "600",
+                          color: "#111827",
                         }}
-                      />
-                    ))
-                ) : (
-                  <View style={{ flexDirection: "row" }}>
-                    {[1, 2, 3, 4].map((_, index) => (
-                      <View
-                        key={index}
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 22,
-                          borderWidth: 2,
-                          borderColor: "#FFFFFF",
-                          marginLeft: index === 0 ? 0 : -20,
-                          zIndex: 10 - index,
-                          backgroundColor: "#E5E7EB",
-                        }}
-                      />
-                    ))}
+                      >
+                        {plannedOutfit.time
+                          ? plannedOutfit.time
+                              .toLocaleTimeString([], {
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })
+                              .replace(" ", "")
+                          : "12:42PM"}
+                      </Text>
+                    </View>
+                    <IconDots size={20} color="#111827" />
                   </View>
-                )}
+                </View>
+
+                {/* Row 2: Occasion */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 5,
+                  }}
+                >
+                  <IconTag size={16} color="#111827" />
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "600",
+                      color: "#111827",
+                      marginLeft: 6,
+                    }}
+                  >
+                    {plannedOutfit.occasion || "Occasion"}
+                  </Text>
+                </View>
+
+                {/* Row 3: Date/Time + Cluster */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <ExpoImage
+                      source={{
+                        uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
+                      }}
+                      style={{ width: 15, height: 15 }}
+                      contentFit="contain"
+                    />
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: "500",
+                        color: "#111827",
+                        marginLeft: 4,
+                        marginRight: 12,
+                      }}
+                    >
+                      {selected.toLocaleDateString("en-GB")}
+                    </Text>
+
+                    <IconClock size={16} color="#111827" />
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "500",
+                        color: "#111827",
+                        marginLeft: 4,
+                      }}
+                    >
+                      {plannedOutfit.time
+                        ? plannedOutfit.time
+                            .toLocaleTimeString([], {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })
+                            .replace(" ", "")
+                        : "3:00AM"}
+                    </Text>
+                  </View>
+
+                  {/* Cluster */}
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
+                      plannedOutfit.images
+                        .slice(0, 5)
+                        .map((uri: string, index: number) => (
+                          <Image
+                            key={index}
+                            source={{ uri }}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              borderWidth: 2,
+                              borderColor: "#F3F4F6",
+                              marginLeft: index === 0 ? 0 : -12,
+                              zIndex: 10 - index,
+                              backgroundColor: "#D1D5DB",
+                            }}
+                          />
+                        ))
+                    ) : (
+                      <View style={{ flexDirection: "row" }}>
+                        {[1, 2, 3, 4, 5].map((_, index) => (
+                          <View
+                            key={index}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              borderWidth: 2,
+                              borderColor: "#F3F4F6",
+                              marginLeft: index === 0 ? 0 : -12,
+                              zIndex: 10 - index,
+                              backgroundColor: "#D1D5DB",
+                            }}
+                          />
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </View>
               </View>
             </View>
           </View>
@@ -1253,7 +1313,7 @@ export default function CalendarScreen() {
               onPress={() => {
                 setPlannedOutfit({
                   images: selectedImages,
-                  caption: caption || "hangout with friends...",
+                  caption: caption || "Hangout with friends...",
                   time: selectedTime,
                   occasion: "Casual", // This should use actual occasion state if added later
                 });

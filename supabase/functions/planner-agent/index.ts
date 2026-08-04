@@ -4,12 +4,17 @@ declare const Deno: any;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 const MODELS = ["gemini-1.5-flash", "gemini-2.0-flash"];
 
-async function callGemini(geminiKey: string, prompt: string, jsonMode = false): Promise<string> {
+async function callGemini(
+  geminiKey: string,
+  prompt: string,
+  jsonMode = false,
+): Promise<string> {
   let lastErr = "";
   for (const model of MODELS) {
     try {
@@ -24,7 +29,11 @@ async function callGemini(geminiKey: string, prompt: string, jsonMode = false): 
 
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
       );
 
       if (res.ok) {
@@ -34,7 +43,9 @@ async function callGemini(geminiKey: string, prompt: string, jsonMode = false): 
       const errText = await res.text();
       // If we get a rate limit error (429), throw it immediately so the user sees it
       if (res.status === 429) {
-        throw new Error(`Rate limit exceeded (${model}): Please wait 60 seconds before trying again.`);
+        throw new Error(
+          `Rate limit exceeded (${model}): Please wait 60 seconds before trying again.`,
+        );
       }
       // Only continue to the next model for 503s or other generic errors
       if (res.status !== 503) throw new Error(`${model}: ${errText}`);
@@ -47,7 +58,17 @@ async function callGemini(geminiKey: string, prompt: string, jsonMode = false): 
 }
 
 serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS")
+    return new Response("ok", { headers: corsHeaders });
+
+  // Auth check
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const { step, context = {}, user_message = "" } = await req.json();
@@ -74,13 +95,22 @@ serve(async (req: Request) => {
       case "parse_occasion": {
         const prompt = `Extract the occasion from: "${user_message}"\n\nRespond with ONLY valid JSON:\n{"occasion": "<Casual|Work|Formal|Party|Date|Wedding|Workout|Travel|Beach>"}\n\nRules: wedding→Wedding, work→Work, party→Party, date→Date, workout→Workout, travel→Travel, beach→Beach, formal→Formal, else→Casual`;
         const raw = await callGemini(geminiKey, prompt, true);
-        try { result = JSON.parse(raw.trim()); } catch { result = { occasion: "Casual" }; }
+        try {
+          result = JSON.parse(raw.trim());
+        } catch {
+          result = { occasion: "Casual" };
+        }
         break;
       }
 
       case "suggest_outfit": {
-        const clothesSummary = (context.clothes ?? []).slice(0, 6)
-          .map((c: any) => `${c.category ?? "item"} (${c.primary_color ?? c.primaryColor ?? c.color ?? ""})`).join(", ");
+        const clothesSummary = (context.clothes ?? [])
+          .slice(0, 6)
+          .map(
+            (c: any) =>
+              `${c.category ?? "item"} (${c.primary_color ?? c.primaryColor ?? c.color ?? ""})`,
+          )
+          .join(", ");
         const prompt = `You are a friendly AI fashion stylist. Always respond in English.\n\nPlan: ${context.date} at ${context.time}, Occasion: ${context.occasion}, Weather: ${wx}\nAvailable: ${clothesSummary || "general wardrobe items"}\n\nWrite 2-3 short enthusiastic sentences presenting the outfit. Be specific about why it works. End with: "Try this out — it'll look absolutely perfect! 🔥"`;
         result.text = await callGemini(geminiKey, prompt);
         break;
@@ -109,7 +139,10 @@ serve(async (req: Request) => {
     console.error("[planner-agent]", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });
