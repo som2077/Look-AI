@@ -10,6 +10,7 @@ import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
 import { useFocusEffect } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
 import * as Calendar from "expo-calendar";
+import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -24,7 +25,6 @@ import React, {
 import {
   Animated,
   Dimensions,
-  FlatList,
   Image,
   InteractionManager,
   KeyboardAvoidingView,
@@ -228,10 +228,9 @@ export default function CalendarScreen() {
       setViewMonth(t.getMonth());
       setTimeout(() => {
         const index = t.getDate() - 1 + 5; // +5 for buffer days
-        const offset = Math.max(0, index * 84);
         if (dateStripRef.current) {
           dateStripRef.current.scrollToOffset({
-            offset: offset,
+            offset: index * 100,
             animated: false,
           });
         }
@@ -543,10 +542,9 @@ export default function CalendarScreen() {
                 handleDaySelect(t);
                 setTimeout(() => {
                   const index = t.getDate() - 1 + 5; // +5 for buffer days
-                  const offset = Math.max(0, index * 84);
                   if (dateStripRef.current) {
                     dateStripRef.current.scrollToOffset({
-                      offset: offset,
+                      offset: index * 100,
                       animated: true,
                     });
                   }
@@ -580,23 +578,54 @@ export default function CalendarScreen() {
         <View>
           {/* ponytail: Swapped heavy Animated ScrollView for a simple FlatList without scroll-driven scaling. */}
           {/* Ceiling: No physics-driven scaling. Upgrade path: React Native Reanimated useSharedValue if requested. */}
-          <FlatList
+          <Animated.FlatList
             ref={dateStripRef as any}
             horizontal
             data={days}
             keyExtractor={(d) => d.toISOString()}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
-              paddingHorizontal: Dimensions.get("window").width / 2 - 42,
+              paddingHorizontal: Dimensions.get("window").width / 2 - 50,
               alignItems: "flex-end",
             }}
-            snapToInterval={84}
+            snapToInterval={100}
             decelerationRate="fast"
-            initialNumToRender={7}
+            initialNumToRender={15}
             windowSize={5}
+            onLayout={() => {
+              const t = new Date();
+              const index = t.getDate() - 1 + 5;
+              if (dateStripRef.current) {
+                dateStripRef.current.scrollToOffset({
+                  offset: index * 100,
+                  animated: false,
+                });
+              }
+            }}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: dateStripScrollX } } }],
+              {
+                useNativeDriver: true,
+                listener: (e: any) => {
+                  const offsetX = e.nativeEvent.contentOffset.x;
+                  const index = Math.round(offsetX / 100);
+                  if (lastHapticIndex.current !== index) {
+                    lastHapticIndex.current = index;
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                },
+              },
+            )}
+            onMomentumScrollEnd={(e) => {
+              const offsetX = e.nativeEvent.contentOffset.x;
+              const index = Math.round(offsetX / 100);
+              if (days[index]) {
+                handleDaySelect(days[index]);
+              }
+            }}
             getItemLayout={(data, index) => ({
-              length: 84,
-              offset: 84 * index,
+              length: 100,
+              offset: 100 * index,
               index,
             })}
             renderItem={({ item: d, index }) => {
@@ -608,14 +637,23 @@ export default function CalendarScreen() {
               const hasOutfit = !!combinedOutfitsData[d.toDateString()];
               const log = combinedOutfitsData[d.toDateString()];
 
-              const ITEM_PITCH = 84;
+              const ITEM_PITCH = 100;
+              const scale = dateStripScrollX.interpolate({
+                inputRange: [
+                  (index - 1) * ITEM_PITCH,
+                  index * ITEM_PITCH,
+                  (index + 1) * ITEM_PITCH,
+                ],
+                outputRange: [1, 1.15, 1],
+                extrapolate: "clamp",
+              });
 
               return (
                 <View
                   style={{
                     alignItems: "center",
-                    width: 78,
-                    marginHorizontal: 3,
+                    width: 80,
+                    marginHorizontal: 10,
                     marginTop: 20,
                     justifyContent: "center",
                   }}
@@ -633,7 +671,7 @@ export default function CalendarScreen() {
                       }
                     }}
                     activeOpacity={0.8}
-                    style={{ alignItems: "center", width: 78 }}
+                    style={{ alignItems: "center", width: 80 }}
                   >
                     {/* Dot indicator for Today */}
                     <View
@@ -701,24 +739,25 @@ export default function CalendarScreen() {
                     </View>
 
                     {/* Card */}
-                    <View
+                    <Animated.View
                       style={{
                         width: 80,
                         height: 120,
                         marginTop: 4,
                         borderRadius: 13,
-                        backgroundColor: isToday ? "#FFFFFF" : "#F8F8FA",
-                        borderWidth: isToday ? 0.5 : 0.5,
-                        borderColor: "#E5E7EB",
-                        shadowColor: isToday ? "#00000090" : "transparent",
-                        shadowOpacity: isToday ? 0.08 : 0,
+                        backgroundColor: isSelected ? "#F8F8FA" : "#F8F8FA",
+                        borderWidth: isSelected ? 0.5 : 0.5,
+                        borderColor: isSelected ? "#E5E7EB" : "#E5E7EB",
+                        shadowColor: isSelected ? "#00000090" : "transparent",
+                        shadowOpacity: isSelected ? 0.08 : 0,
                         shadowRadius: 12,
                         shadowOffset: { width: 0, height: 1 },
-                        elevation: isToday ? 2 : 0,
+                        elevation: isSelected ? 2 : 0,
                         alignItems: "center",
                         justifyContent: "center",
                         overflow: "hidden",
                         marginBottom: 20,
+                        transform: [{ scale }],
                       }}
                     >
                       {hasOutfit && log.imageUri ? (
@@ -734,15 +773,13 @@ export default function CalendarScreen() {
                           strokeWidth={1.5}
                         />
                       )}
-                    </View>
+                    </Animated.View>
                   </TouchableOpacity>
                 </View>
               );
             }}
           />
         </View>
-
-        {/* Empty State or Planned Outfit */}
         {plannedOutfit ? (
           <View style={{ marginTop: 10 }}>
             <CalendarPlanBanner
