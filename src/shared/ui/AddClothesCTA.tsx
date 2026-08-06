@@ -2,7 +2,18 @@ import { Image as ExpoImage } from "expo-image";
 import React from "react";
 import { Text, View } from "react-native";
 
+import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
+import { usePendingBatchStore } from "@/features/wardrobe/model/usePendingBatchStore";
+import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+
 export function AddClothesCTA() {
+  const isAnalyzing = useOutfitAnalysisStore((s: any) => s.isAnalyzing);
+  const lastOutfits = useOutfitAnalysisStore((s: any) => s.lastOutfits);
+  const pendingBatchItems = usePendingBatchStore((s: any) => s.items);
+  const plannedOutfit = useCalendarPlanStore((s: any) => s.plannedOutfit);
+
+  if (isAnalyzing || (lastOutfits && lastOutfits.length > 0) || (pendingBatchItems && pendingBatchItems.length > 0) || plannedOutfit) return null;
+
   return (
     <View className=" p-5 items-center   relative  mx-6 ">
       <Text

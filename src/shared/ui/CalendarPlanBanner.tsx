@@ -1,4 +1,4 @@
-import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
+import { CalendarPlan } from "@/features/calendar/model/calendar-plan-store";
 import { getOccasionIcon } from "@/shared/constants/occasions";
 import {
   IconClock,
@@ -9,22 +9,31 @@ import {
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import React, { useState } from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 
 export function CalendarPlanBanner({
   onEdit,
+  onRemove,
   title,
+  plan,
 }: {
   onEdit?: () => void;
+  onRemove?: () => void;
   title?: string;
+  plan: CalendarPlan;
 }) {
-  const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
   const [isPlanDropdownVisible, setIsPlanDropdownVisible] = useState(false);
 
-  if (!plannedOutfit) return null;
+  if (!plan) return null;
 
   return (
-    <View style={{ paddingHorizontal: 10, marginTop: title ? 20 : 0 }}>
+    <View
+      style={{
+        paddingHorizontal: 10,
+        marginTop: title ? 20 : 0,
+        marginBottom: 9,
+      }}
+    >
       {title && (
         <Text
           style={{
@@ -67,7 +76,7 @@ export function CalendarPlanBanner({
               }}
             >
               {getOccasionIcon(
-                plannedOutfit.occasion?.split(",")[0].trim() || "Occasion",
+                plan.occasion?.split(",")[0].trim() || "Occasion",
                 "#111827",
                 32,
               ) || <IconTag size={32} color="#111827" />}
@@ -94,7 +103,7 @@ export function CalendarPlanBanner({
                   marginRight: 8,
                 }}
               >
-                {plannedOutfit.caption || "Hangout with friends..."}
+                {plan.caption || "Hangout with friends..."}
               </Text>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <View
@@ -113,15 +122,12 @@ export function CalendarPlanBanner({
                       color: "#111827",
                     }}
                   >
-                    {plannedOutfit.createdAt
-                      ? new Date(plannedOutfit.createdAt).toLocaleTimeString(
-                          "en-US",
-                          {
-                            hour: "numeric",
-                            minute: "2-digit",
-                            hour12: true,
-                          },
-                        )
+                    {plan.createdAt
+                      ? new Date(plan.createdAt).toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
                       : "12:42 PM"}
                   </Text>
                 </View>
@@ -195,7 +201,7 @@ export function CalendarPlanBanner({
                         }}
                         onPress={() => {
                           setIsPlanDropdownVisible(false);
-                          setPlannedOutfit(null);
+                          if (onRemove) onRemove();
                         }}
                       >
                         <IconTrash size={18} color="#EF4444" />
@@ -233,7 +239,7 @@ export function CalendarPlanBanner({
                   marginLeft: 6,
                 }}
               >
-                {plannedOutfit.occasion || "Occasion"}
+                {plan.occasion || "Occasion"}
               </Text>
             </View>
 
@@ -262,7 +268,7 @@ export function CalendarPlanBanner({
                     marginRight: 12,
                   }}
                 >
-                  {new Date(plannedOutfit.time).toLocaleDateString("en-GB")}
+                  {new Date(plan.time).toLocaleDateString("en-GB")}
                 </Text>
 
                 <IconClock size={16} color="#111827" />
@@ -274,8 +280,8 @@ export function CalendarPlanBanner({
                     marginLeft: 4,
                   }}
                 >
-                  {plannedOutfit.time
-                    ? new Date(plannedOutfit.time).toLocaleTimeString("en-US", {
+                  {plan.time
+                    ? new Date(plan.time).toLocaleTimeString("en-US", {
                         hour: "numeric",
                         minute: "2-digit",
                         hour12: true,
@@ -286,25 +292,24 @@ export function CalendarPlanBanner({
 
               {/* Cluster */}
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                {plannedOutfit.images && plannedOutfit.images.length > 0 ? (
-                  plannedOutfit.images
-                    .slice(0, 5)
-                    .map((uri: string, index: number) => (
-                      <Image
-                        key={index}
-                        source={{ uri }}
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 16,
-                          borderWidth: 2,
-                          borderColor: "#F3F4F6",
-                          marginLeft: index === 0 ? 0 : -15,
-                          zIndex: 10 - index,
-                          backgroundColor: "#D1D5DB",
-                        }}
-                      />
-                    ))
+                {plan.images && plan.images.length > 0 ? (
+                  plan.images.slice(0, 5).map((uri: string, index: number) => (
+                    <ExpoImage
+                      key={index}
+                      source={{ uri }}
+                      contentFit="cover"
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
+                        borderWidth: 2,
+                        borderColor: "#F3F4F6",
+                        marginLeft: index === 0 ? 0 : -15,
+                        zIndex: 10 - index,
+                        backgroundColor: "#D1D5DB",
+                      }}
+                    />
+                  ))
                 ) : (
                   <View style={{ flexDirection: "row" }}>
                     {[1, 2, 3, 4, 5].map((_, index) => (

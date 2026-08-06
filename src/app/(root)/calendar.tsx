@@ -10,7 +10,6 @@ import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
 import { useFocusEffect } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
 import * as Calendar from "expo-calendar";
-import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -25,7 +24,6 @@ import React, {
 import {
   Animated,
   Dimensions,
-  Image,
   InteractionManager,
   KeyboardAvoidingView,
   Modal,
@@ -55,7 +53,6 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconClock,
-  IconCloudRain,
   IconInfoCircle,
   IconPlus,
   IconTag,
@@ -74,6 +71,7 @@ interface LoggedOutfit {
   weather?: { condition: string; temp: number };
   imageUri: string;
   isPlanned: boolean;
+  occasion?: string;
 }
 
 const MONTH_NAMES = [
@@ -125,10 +123,10 @@ function BottomSheet({
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_: any, gestureState: any) => {
         return (
-          gestureState.dy > 0 &&
+          gestureState.dy > 5 &&
           Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
         );
       },
@@ -349,6 +347,36 @@ export default function CalendarScreen() {
     "Casual",
   ]);
 
+  const [editingPlanIndex, setEditingPlanIndex] = useState<number | null>(null);
+
+  const openAddPlanModal = () => {
+    setEditingPlanIndex(null);
+    setSelectedImages([]);
+    setCaption("");
+    setSelectedOccasions(["Casual"]);
+    setSelectedTime(new Date());
+    setIsAddOutfitModalVisible(true);
+  };
+
+  const openEditPlanModal = (index: number, log: any) => {
+    setEditingPlanIndex(index);
+    if (log.itemsWorn && log.itemsWorn.length > 0) {
+      setSelectedImages(log.itemsWorn.map((i: any) => i.image_url));
+    } else if (log.imageUri) {
+      setSelectedImages([log.imageUri]);
+    } else {
+      setSelectedImages([]);
+    }
+    setCaption(log.title || log.description || "");
+    setSelectedOccasions(log.occasion ? log.occasion.split(", ") : ["Casual"]);
+    if (log.wornTime) {
+      setSelectedTime(new Date(log.wornTime)); // Since it's stored as an ISO string
+    } else {
+      setSelectedTime(new Date());
+    }
+    setIsAddOutfitModalVisible(true);
+  };
+
   useEffect(() => {
     if (params.selectedImages) {
       try {
@@ -386,7 +414,7 @@ export default function CalendarScreen() {
 
   const { supabase } = useSupabase();
   const [loggedOutfitsData, setLoggedOutfitsData] = useState<
-    Record<string, LoggedOutfit>
+    Record<string, LoggedOutfit[]>
   >({});
   const [isLoadingOutfits, setIsLoadingOutfits] = useState(false);
 
@@ -407,10 +435,11 @@ export default function CalendarScreen() {
         if (error) throw error;
 
         if (isMounted && data) {
-          const formatted: Record<string, LoggedOutfit> = {};
+          const formatted: Record<string, LoggedOutfit[]> = {};
           data.forEach((row: any) => {
             const dateStr = new Date(row.date).toDateString();
-            formatted[dateStr] = {
+            if (!formatted[dateStr]) formatted[dateStr] = [];
+            formatted[dateStr].push({
               title: row.title,
               wornTime: row.worn_time,
               itemsWorn: row.items_worn,
@@ -422,7 +451,8 @@ export default function CalendarScreen() {
                 : undefined,
               imageUri: row.image_url,
               isPlanned: row.is_planned,
-            };
+              occasion: row.occasion,
+            });
           });
           setLoggedOutfitsData(formatted);
         }
@@ -604,17 +634,7 @@ export default function CalendarScreen() {
             }}
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { x: dateStripScrollX } } }],
-              {
-                useNativeDriver: true,
-                listener: (e: any) => {
-                  const offsetX = e.nativeEvent.contentOffset.x;
-                  const index = Math.round(offsetX / 100);
-                  if (lastHapticIndex.current !== index) {
-                    lastHapticIndex.current = index;
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                },
-              },
+              { useNativeDriver: true },
             )}
             onMomentumScrollEnd={(e) => {
               const offsetX = e.nativeEvent.contentOffset.x;
@@ -634,8 +654,8 @@ export default function CalendarScreen() {
               const dayName = isToday ? "Today" : DAY_LABELS_SHORT[d.getDay()];
               const monthStr = MONTH_NAMES[d.getMonth()].substring(0, 3);
               const dateStr = `${monthStr} ${d.getDate()}`;
-              const hasOutfit = !!combinedOutfitsData[d.toDateString()];
-              const log = combinedOutfitsData[d.toDateString()];
+              const hasOutfit = !!combinedOutfitsData[d.toDateString()]?.length;
+              const log = combinedOutfitsData[d.toDateString()]?.[0];
 
               const ITEM_PITCH = 100;
               const scale = dateStripScrollX.interpolate({
@@ -647,6 +667,9 @@ export default function CalendarScreen() {
                 outputRange: [1, 1.15, 1],
                 extrapolate: "clamp",
               });
+              const hasPlan = combinedOutfitsData[d.toDateString()]?.some(
+                (log) => log.isPlanned,
+              );
 
               return (
                 <View
@@ -660,25 +683,31 @@ export default function CalendarScreen() {
                 >
                   <TouchableOpacity
                     onPress={() => {
-                      handleDaySelect(d);
-                      dateStripRef.current?.scrollToIndex({
-                        index,
-                        animated: true,
-                        viewPosition: 0.5,
-                      });
-                      if (!hasOutfit) {
-                        router.push("/wardrobe-selection");
+                      if (isSelected) {
+                        openAddPlanModal();
+                      } else {
+                        handleDaySelect(d);
+                        dateStripRef.current?.scrollToIndex({
+                          index,
+                          animated: true,
+                          viewPosition: 0.5,
+                        });
+                        if (!hasOutfit) {
+                          router.push("/wardrobe-selection");
+                        }
                       }
                     }}
                     activeOpacity={0.8}
                     style={{ alignItems: "center", width: 80 }}
                   >
-                    {/* Dot indicator for Today */}
+                    {/* Dot indicators (Today and Plans) */}
                     <View
                       style={{
                         height: 8,
+                        flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "center",
+                        gap: 4,
                       }}
                     >
                       {isToday && (
@@ -691,52 +720,42 @@ export default function CalendarScreen() {
                           }}
                         />
                       )}
+                      {hasPlan && (
+                        <View
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: "#22c55e",
+                          }}
+                        />
+                      )}
                     </View>
 
                     <Text
                       style={{
                         fontSize: 14,
                         fontWeight: isToday ? "700" : "500",
-                        color: isToday ? "#111827" : "#6B7280",
-                        marginBottom: 2,
+                        color: isToday
+                          ? "#111827"
+                          : isSelected
+                            ? "#111827"
+                            : "#6B7280",
+                        marginTop: 4,
                       }}
                     >
                       {dayName}
                     </Text>
                     <Text
                       style={{
-                        fontSize: 13,
+                        fontSize: 12,
+                        fontWeight: "500",
                         color: "#9CA3AF",
                         marginBottom: 8,
                       }}
                     >
                       {dateStr}
                     </Text>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                        marginBottom: 10,
-                      }}
-                    >
-                      <IconCloudRain
-                        size={14}
-                        color={isToday ? "#111827" : "#9CA3AF"}
-                      />
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: "#111827",
-                          fontWeight: "600",
-                        }}
-                      >
-                        29°
-                      </Text>
-                      <Text style={{ fontSize: 12, color: "#9CA3AF" }}>
-                        26°
-                      </Text>
-                    </View>
 
                     {/* Card */}
                     <Animated.View
@@ -760,7 +779,7 @@ export default function CalendarScreen() {
                         transform: [{ scale }],
                       }}
                     >
-                      {hasOutfit && log.imageUri ? (
+                      {hasOutfit && log.imageUri && !log.isPlanned ? (
                         <ExpoImage
                           source={{ uri: log.imageUri }}
                           style={{ width: "100%", height: "100%" }}
@@ -780,12 +799,47 @@ export default function CalendarScreen() {
             }}
           />
         </View>
-        {plannedOutfit ? (
-          <View style={{ marginTop: 10 }}>
-            <CalendarPlanBanner
-              onEdit={() => setIsAddOutfitModalVisible(true)}
-            />
-          </View>
+        {combinedOutfitsData[selected.toDateString()]?.filter(
+          (log) => log.isPlanned,
+        ).length > 0 ? (
+          <ScrollView
+            style={{ flex: 1, marginTop: 10 }}
+            contentContainerStyle={{ paddingBottom: 40 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {combinedOutfitsData[selected.toDateString()]
+              .map((log, originalIndex) => ({ log, originalIndex }))
+              .filter(({ log }) => log.isPlanned)
+              .map(({ log, originalIndex }) => (
+                <CalendarPlanBanner
+                  key={originalIndex}
+                  plan={{
+                    images: log.itemsWorn
+                      ? log.itemsWorn.map((i: any) => i.image_url)
+                      : log.imageUri
+                        ? [log.imageUri]
+                        : [],
+                    caption: log.title || log.description || "Plan",
+                    time: new Date(
+                      selected.toDateString() + " " + (log.wornTime || "12:00"),
+                    ),
+                    occasion: log.occasion || "Casual",
+                    createdAt: new Date(
+                      selected.toDateString() + " " + (log.wornTime || "12:00"),
+                    ),
+                  }}
+                  onEdit={() => openEditPlanModal(originalIndex, log)}
+                  onRemove={() => {
+                    setLoggedOutfitsData((prev) => ({
+                      ...prev,
+                      [selected.toDateString()]: prev[
+                        selected.toDateString()
+                      ].filter((_, i) => i !== originalIndex),
+                    }));
+                  }}
+                />
+              ))}
+          </ScrollView>
         ) : (
           <View
             style={{
@@ -959,7 +1013,6 @@ export default function CalendarScreen() {
                   mediaTypes: ImagePicker.MediaTypeOptions.Images,
                   allowsMultipleSelection: true,
                   selectionLimit: 5,
-                  quality: 0.8,
                 });
 
                 if (!result.canceled) {
@@ -993,13 +1046,13 @@ export default function CalendarScreen() {
               ) : (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   {selectedImages.map((uri, index) => (
-                    <Image
+                    <ExpoImage
                       key={index}
                       source={{ uri }}
+                      contentFit="cover"
                       style={{
                         width: 110,
                         height: 110,
-                        // marginLeft:12,
                         borderRadius: 100,
                         borderWidth: 3,
                         borderColor: "#FFFFFF",
@@ -1159,17 +1212,69 @@ export default function CalendarScreen() {
             {/* Add plan Button */}
             <TouchableOpacity
               onPress={() => {
+                setLoggedOutfitsData((prev) => {
+                  const existing = prev[selected.toDateString()] || [];
+                  const combinedTime = new Date(selected);
+                  combinedTime.setHours(
+                    selectedTime.getHours(),
+                    selectedTime.getMinutes(),
+                    0,
+                    0,
+                  );
+
+                  const newPlan = {
+                    imageUri: selectedImages[0] || "",
+                    itemsWorn: selectedImages.map((uri) => ({
+                      image_url: uri,
+                    })),
+                    title: caption || "Plan",
+                    wornTime: combinedTime.toISOString(),
+                    description: caption,
+                    isPlanned: true,
+                    itemCount: selectedImages.length,
+                    score: 0,
+                    occasion:
+                      selectedOccasions.length > 0
+                        ? selectedOccasions.join(", ")
+                        : "Casual",
+                  };
+
+                  if (editingPlanIndex !== null) {
+                    const updated = [...existing];
+                    updated[editingPlanIndex] = newPlan;
+                    return { ...prev, [selected.toDateString()]: updated };
+                  }
+
+                  return {
+                    ...prev,
+                    [selected.toDateString()]: [...existing, newPlan],
+                  };
+                });
+
+                const combinedTimeForStore = new Date(selected);
+                combinedTimeForStore.setHours(
+                  selectedTime.getHours(),
+                  selectedTime.getMinutes(),
+                  0,
+                  0,
+                );
+
                 setPlannedOutfit({
-                  images: selectedImages,
-                  caption: caption || "Hangout with friends...",
-                  time: selectedTime,
+                  images:
+                    selectedImages.length > 0
+                      ? selectedImages
+                      : [selectedImages[0] || ""],
+                  caption: caption || "Plan",
+                  time: combinedTimeForStore,
                   occasion:
                     selectedOccasions.length > 0
                       ? selectedOccasions.join(", ")
                       : "Casual",
                   createdAt: new Date(),
                 });
+
                 setIsAddOutfitModalVisible(false);
+                setEditingPlanIndex(null);
               }}
               style={{
                 backgroundColor: "#111827",

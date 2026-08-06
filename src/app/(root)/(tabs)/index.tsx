@@ -21,6 +21,8 @@ import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { HomeHeader } from "@/shared/ui/HomeHeader";
+
+import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
 import { LookAIBanner } from "@/shared/ui/LookAIBanner";
 import { PlannedOutfitBanner } from "@/shared/ui/PlannedOutfitBanner";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
@@ -169,6 +171,7 @@ export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const { currentStreak, hasIncrementedToday, dismissIncrement } =
     useStreakStore();
+  const plannedOutfit = useCalendarPlanStore((state) => state.plannedOutfit);
 
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)
 
@@ -316,7 +319,12 @@ export default function HomeScreen() {
               <NotifyBanner />
               <EmptyStyleBanner />
               <OutfitAnalyzingCard />
-              <CalendarPlanBanner title="Upcoming event" />
+              {plannedOutfit && (
+                <CalendarPlanBanner
+                  title="Upcoming event"
+                  plan={plannedOutfit as any}
+                />
+              )}
               <AddClothesCTA />
             </View>
           </Animated.ScrollView>

@@ -110,13 +110,16 @@ export const ErrorBanner = React.memo(function ErrorBanner() {
   );
 });
 
+import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
+
 export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
   const isAnalyzing = useOutfitAnalysisStore((s) => s.isAnalyzing);
   const lastOutfits = useOutfitAnalysisStore((s) => s.lastOutfits);
   const pendingBatchItems = usePendingBatchStore((s) => s.items);
+  const plannedOutfit = useCalendarPlanStore((s) => s.plannedOutfit);
 
-  // Show banner only when no analysis and no completed outfits and no pending batch items
-  if (isAnalyzing || lastOutfits.length > 0 || pendingBatchItems.length > 0) return null;
+  // Show banner only when no analysis and no completed outfits, no pending batch items, and no upcoming plans
+  if (isAnalyzing || lastOutfits.length > 0 || pendingBatchItems.length > 0 || plannedOutfit) return null;
 
   return (
     <View className="mx-6 mt-3  items-center justify-center bg-[#F8F7FC80] border-[0.5px] border-[#E9EBF8] rounded-[24px] px-4 py-6">
