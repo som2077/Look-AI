@@ -262,7 +262,7 @@ export default function PlanOutfitScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
+        <Pressable onPress={() => router.replace("/(root)/(tabs)")} style={{ padding: 4 }}>
           <IconArrowLeft size={24} color="#1D1A27" />
         </Pressable>
         <Text style={styles.headerTitle}>Publish Outfit</Text>
@@ -301,7 +301,14 @@ export default function PlanOutfitScreen() {
         <View style={styles.secondaryActionsGroup}>
           <Pressable
             style={styles.listButton}
-            onPress={() => setIsModalVisible(true)}
+            onPress={() => {
+              if (imageUri) {
+                router.push({
+                  pathname: "/(root)/calendar",
+                  params: { selectedImages: JSON.stringify([imageUri]) }
+                });
+              }
+            }}
           >
             <View style={styles.listButtonLeft}>
               <IconCalendarEvent size={22} color="#1D1A27" />

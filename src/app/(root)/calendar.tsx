@@ -494,7 +494,7 @@ export default function CalendarScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
             {/* Back Button */}
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => router.navigate("/(root)/(tabs)")}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <IconChevronLeft size={24} color="#111827" />
@@ -860,22 +860,20 @@ export default function CalendarScreen() {
         >
           <View style={{ paddingHorizontal: 24 }}>
             {/* Date and Time Header */}
-            <TouchableOpacity
-              onPress={() => setIsTimePickerModalVisible(true)}
+            <View
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
                 backgroundColor: "#FFFFFF",
-                // borderWidth: 1,
-                // borderColor: "#D1D5DB",
                 paddingVertical: 10,
-                // paddingHorizontal: 10,
-                // borderRadius: 16,
                 marginBottom: 10,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity
+                style={{ flexDirection: "row", alignItems: "center" }}
+                onPress={() => setIsCalendarModalVisible(true)}
+              >
                 <IconClock
                   size={20}
                   color="#111827"
@@ -889,8 +887,15 @@ export default function CalendarScreen() {
                   {MONTH_NAMES[selected.getMonth()].substring(0, 3)}{" "}
                   {selected.getFullYear()}
                 </Text>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingLeft: 10,
+                }}
+                onPress={() => setIsTimePickerModalVisible(true)}
+              >
                 <Text
                   style={{ fontSize: 16, fontWeight: "400", color: "#4B5563" }}
                 >
@@ -907,8 +912,8 @@ export default function CalendarScreen() {
                   color="#9CA3AF"
                   style={{ marginLeft: 6 }}
                 />
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
 
             {/* Image Selection Area */}
             <TouchableOpacity

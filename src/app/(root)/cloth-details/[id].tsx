@@ -1,5 +1,9 @@
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
-import { OCCASIONS, Occasion, getOccasionIcon } from "@/shared/constants/occasions";
+import {
+  OCCASIONS,
+  Occasion,
+  getOccasionIcon,
+} from "@/shared/constants/occasions";
 import { getMockWardrobeItemById } from "@/shared/testing/mock-wardrobe-items";
 import {
   IconArrowLeft,
@@ -77,7 +81,6 @@ type CategoryId =
   | "Swimwear"
   | "Loungewear";
 
-
 type Season =
   | "Spring"
   | "Summer"
@@ -123,7 +126,6 @@ const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "Swimwear", label: "Swimwear" },
   { id: "Loungewear", label: "Loungewear" },
 ];
-
 
 const SEASONS: Season[] = [
   "Spring",
@@ -303,8 +305,6 @@ const getCategoryIcon = (label: string, color: string) => {
       return null;
   }
 };
-
-
 
 const getSeasonIcon = (label: string, color: string) => {
   const size = 16;
