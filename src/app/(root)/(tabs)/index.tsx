@@ -315,7 +315,7 @@ export default function HomeScreen() {
 
               <RecentlyUploadedHeading />
               <PendingBatchBanner />
-              <ErrorBanner />
+              {/* <ErrorBanner /> */}
               <NotifyBanner />
               <EmptyStyleBanner />
               <OutfitAnalyzingCard />

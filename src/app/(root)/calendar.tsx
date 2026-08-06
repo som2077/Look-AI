@@ -121,37 +121,31 @@ function BottomSheet({
     }).start();
   }, [visible, slideAnim]);
 
-  const panResponder = useRef(
+  const dismiss = (dy: number, vy: number) => {
+    if (dy > 80 || vy > 0.5) {
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => onClose());
+    } else {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  // Drag handle pan — always works regardless of scroll position
+  const handlePan = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_: any, gestureState: any) => {
-        return (
-          gestureState.dy > 5 &&
-          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
-        );
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_: any, g: any) =>
+        Math.abs(g.dy) > Math.abs(g.dx),
+      onPanResponderMove: (_: any, g: any) => {
+        if (g.dy > 0) slideAnim.setValue(g.dy);
       },
-      onPanResponderMove: (_: any, gestureState: any) => {
-        if (gestureState.dy > 0) {
-          slideAnim.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_: any, gestureState: any) => {
-        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
-          Animated.timing(slideAnim, {
-            toValue: SCREEN_HEIGHT,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => {
-            onClose();
-          });
-        } else {
-          Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 250,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
+      onPanResponderRelease: (_: any, g: any) => dismiss(g.dy, g.vy),
     }),
   ).current;
 
@@ -184,20 +178,22 @@ function BottomSheet({
             transform: [{ translateY: slideAnim }],
           }}
         >
-          <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
+          {/* Drag handle — pan here to dismiss */}
+          <View
+            {...handlePan.panHandlers}
+            style={{ paddingBottom: 8, paddingTop: 14, alignItems: "center" }}
+          >
             <View
-              style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}
-            >
-              <View
-                style={{
-                  width: 40,
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor: "#E2E2EA",
-                }}
-              />
-            </View>
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: "#E2E2EA",
+              }}
+            />
           </View>
+
+          {/* Scrollable content — no pan interference */}
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -1275,6 +1271,7 @@ export default function CalendarScreen() {
 
                 setIsAddOutfitModalVisible(false);
                 setEditingPlanIndex(null);
+                router.navigate("/(root)/(tabs)");
               }}
               style={{
                 backgroundColor: "#111827",

@@ -1,11 +1,22 @@
-import { IconArrowLeft, IconX } from '@tabler/icons-react-native';
-import { useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { IconArrowLeft, IconX } from "@tabler/icons-react-native";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useState } from "react";
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -40,10 +51,10 @@ export default function CalendarPrototypeScreen() {
     eventHeight.value = HOUR_HEIGHT; // Default 1 hour
 
     setDraftEvent({
-      id: 'draft',
+      id: "draft",
       start: startHour,
       end: startHour + 1,
-      title: '(No title)',
+      title: "(No title)",
     });
   };
 
@@ -57,7 +68,9 @@ export default function CalendarPrototypeScreen() {
       runOnJS(setScrollEnabled)(false);
     })
     .onUpdate((e) => {
-      const snapY = Math.round((startY.value + e.translationY) / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2);
+      const snapY =
+        Math.round((startY.value + e.translationY) / (HOUR_HEIGHT / 2)) *
+        (HOUR_HEIGHT / 2);
       if (snapY >= 0 && snapY + eventHeight.value <= 24 * HOUR_HEIGHT) {
         startY.value = snapY;
       }
@@ -74,7 +87,10 @@ export default function CalendarPrototypeScreen() {
     })
     .onUpdate((e) => {
       const newHeight = eventHeight.value + e.translationY;
-      const snapHeight = Math.max(HOUR_HEIGHT / 2, Math.round(newHeight / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2));
+      const snapHeight = Math.max(
+        HOUR_HEIGHT / 2,
+        Math.round(newHeight / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2),
+      );
 
       if (startY.value + snapHeight <= 24 * HOUR_HEIGHT) {
         eventHeight.value = snapHeight;
@@ -92,10 +108,14 @@ export default function CalendarPrototypeScreen() {
     })
     .onUpdate((e) => {
       const newY = startY.value + e.translationY;
-      const snapY = Math.max(0, Math.round(newY / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2));
+      const snapY = Math.max(
+        0,
+        Math.round(newY / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2),
+      );
       const endY = startY.value + eventHeight.value;
 
-      if (snapY < endY - (HOUR_HEIGHT / 2) + 1) { // keep minimum 30 mins
+      if (snapY < endY - HOUR_HEIGHT / 2 + 1) {
+        // keep minimum 30 mins
         startY.value = snapY;
         eventHeight.value = endY - snapY;
       }
@@ -123,25 +143,30 @@ export default function CalendarPrototypeScreen() {
   });
 
   const formatTime = (hourNum: number) => {
-    if (hourNum === 0 || hourNum === 24) return '12 AM';
-    if (hourNum === 12) return '12 PM';
+    if (hourNum === 0 || hourNum === 24) return "12 AM";
+    if (hourNum === 12) return "12 PM";
     const isHalf = hourNum % 1 !== 0;
     const baseHour = Math.floor(hourNum);
-    const suffix = baseHour < 12 ? 'AM' : 'PM';
+    const suffix = baseHour < 12 ? "AM" : "PM";
     const displayHour = baseHour % 12 === 0 ? 12 : baseHour % 12;
-    const displayMin = isHalf ? ':30' : '';
+    const displayMin = isHalf ? ":30" : "";
     return `${displayHour}${displayMin} ${suffix}`;
   };
 
   return (
     <View className="flex-1 bg-white">
       <StatusBar style="dark" />
-      <SafeAreaView edges={['top']} className="bg-white z-10 shadow-sm">
+      <SafeAreaView edges={["top"]} className="bg-white z-10 shadow-sm">
         <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-          <Pressable onPress={() => router.back()} className="mr-4 p-2 rounded-full active:bg-gray-100">
+          <Pressable
+            onPress={() => router.back()}
+            className="mr-4 p-2 rounded-full active:bg-gray-100"
+          >
             <IconArrowLeft size={24} color="#111827" />
           </Pressable>
-          <Text className="text-xl font-bold text-gray-900">Outfit Calendar</Text>
+          <Text className="text-xl font-bold text-gray-900">
+            Outfit Calendar
+          </Text>
         </View>
       </SafeAreaView>
 
@@ -154,7 +179,11 @@ export default function CalendarPrototypeScreen() {
           {/* Time Column */}
           <View className="w-16 border-r border-gray-100 items-center pt-3">
             {HOURS.map((hour) => (
-              <View key={hour} style={{ height: HOUR_HEIGHT }} className="w-full pr-2 items-end">
+              <View
+                key={hour}
+                style={{ height: HOUR_HEIGHT }}
+                className="w-full pr-2 items-end"
+              >
                 {hour !== 0 && (
                   <Text className="text-xs text-gray-500 font-medium -mt-2.5">
                     {formatTime(hour)}
@@ -178,10 +207,7 @@ export default function CalendarPrototypeScreen() {
               {/* Draft Event Block */}
               {draftEvent && (
                 <Animated.View
-                  style={[
-                    styles.eventBlock,
-                    animatedEventStyle
-                  ]}
+                  style={[styles.eventBlock, animatedEventStyle]}
                   className="absolute left-1 right-2 bg-blue-50 border border-blue-400 rounded-md shadow-sm"
                 >
                   <GestureDetector gesture={panBody}>
@@ -190,7 +216,8 @@ export default function CalendarPrototypeScreen() {
                         {draftEvent.title}
                       </Text>
                       <Text className="text-blue-700 text-xs mt-0.5">
-                        {formatTime(draftEvent.start)} - {formatTime(draftEvent.end)}
+                        {formatTime(draftEvent.start)} -{" "}
+                        {formatTime(draftEvent.end)}
                       </Text>
                     </Animated.View>
                   </GestureDetector>
@@ -222,7 +249,9 @@ export default function CalendarPrototypeScreen() {
             onPress={() => setModalVisible(true)}
             className="bg-gray-900 px-6 py-4 rounded-full shadow-lg flex-row items-center"
           >
-            <Text className="text-white font-bold text-[15px]">Create Event</Text>
+            <Text className="text-white font-bold text-[15px]">
+              Create Event
+            </Text>
           </Pressable>
         </View>
       )}
@@ -233,7 +262,10 @@ export default function CalendarPrototypeScreen() {
           <View className="bg-white rounded-t-3xl p-6 min-h-[50%]">
             <View className="flex-row justify-between items-center mb-6">
               <Text className="text-2xl font-extrabold">Add title</Text>
-              <Pressable onPress={() => setModalVisible(false)} className="p-2 bg-gray-100 rounded-full">
+              <Pressable
+                onPress={() => setModalVisible(false)}
+                className="p-2 bg-gray-100 rounded-full"
+              >
                 <IconX size={20} color="#111827" />
               </Pressable>
             </View>
@@ -249,7 +281,9 @@ export default function CalendarPrototypeScreen() {
 
             {draftEvent && (
               <View className="mb-6">
-                <Text className="text-gray-500 mb-1 font-medium text-sm">Time</Text>
+                <Text className="text-gray-500 mb-1 font-medium text-sm">
+                  Time
+                </Text>
                 <Text className="text-lg font-bold text-gray-900">
                   {formatTime(draftEvent.start)} - {formatTime(draftEvent.end)}
                 </Text>
@@ -276,36 +310,36 @@ export default function CalendarPrototypeScreen() {
 const styles = StyleSheet.create({
   eventBlock: {
     zIndex: 10,
-    overflow: 'visible', // allow handles to overflow
+    overflow: "visible", // allow handles to overflow
   },
   topHandle: {
-    position: 'absolute',
+    position: "absolute",
     top: -10,
     left: 0,
     right: 0,
     height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 20,
   },
   bottomHandle: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -10,
     left: 0,
     right: 0,
     height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 20,
   },
   handleDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#3B82F6', // blue-500
+    backgroundColor: "#3B82F6", // blue-500
     borderWidth: 2,
-    borderColor: '#FFF',
-    shadowColor: '#000',
+    borderColor: "#FFF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1,
