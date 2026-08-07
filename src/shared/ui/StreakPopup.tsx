@@ -1,9 +1,9 @@
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { IconFlameFilled, IconFlameOff } from "@tabler/icons-react-native";
 import LottieView from "lottie-react-native";
 import React from "react";
 import { Animated, Modal, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 
 interface StreakPopupProps {
   visible: boolean;
@@ -113,24 +113,31 @@ export function StreakPopup({
                 <View className="flex-row justify-between w-full px-2">
                   {weekDays.map((_, i) => {
                     const isFuture = i > currentDay;
-                    
+
                     let isStreak = false;
                     if (!isFuture && lastActiveDate) {
                       const today = new Date();
                       today.setHours(0, 0, 0, 0);
-                      
+
                       const lastActive = new Date(lastActiveDate);
                       lastActive.setHours(0, 0, 0, 0);
-                      
+
                       // i is the day index (0 = Mon, 1 = Tue... wait weekDays might be different)
                       // wait, `currentDay` is the index of today.
                       // `currentDay - i` is how many days ago it was from today.
                       const daysAgoFromToday = currentDay - i;
-                      
-                      const diffFromLastActiveToToday = Math.round((today.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
-                      const daysAgoFromLastActive = daysAgoFromToday - diffFromLastActiveToToday;
 
-                      if (daysAgoFromLastActive >= 0 && daysAgoFromLastActive < streakCount) {
+                      const diffFromLastActiveToToday = Math.round(
+                        (today.getTime() - lastActive.getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      );
+                      const daysAgoFromLastActive =
+                        daysAgoFromToday - diffFromLastActiveToToday;
+
+                      if (
+                        daysAgoFromLastActive >= 0 &&
+                        daysAgoFromLastActive < streakCount
+                      ) {
                         isStreak = true;
                       }
                     }
