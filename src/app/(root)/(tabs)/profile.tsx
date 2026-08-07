@@ -3,6 +3,7 @@ import {
   deleteFromCloudinary,
   extractPublicIdFromUrl,
 } from "@/features/scanning/api/cloudinary-upload";
+import { getFCMToken, requestUserPermission } from "@/shared/notifications/firebase-service";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
@@ -19,10 +20,11 @@ import {
   IconUser,
   IconUserMinus,
 } from "@tabler/icons-react-native";
+import * as Application from "expo-application";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { getFCMToken, requestUserPermission } from "@/shared/notifications/firebase-service";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -585,6 +587,20 @@ const ProfileScreenUI = ({
             hasBorder={false}
           />
         </CardContainer>
+
+        {/* Version Display */}
+        <View style={{ alignItems: "center", marginTop: 12 }}>
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: "400",
+              color: "#00000080",
+              letterSpacing: 0.2,
+            }}
+          >
+            Version {Constants.expoConfig?.version ?? Application.nativeApplicationVersion ?? "4.2.9"}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -613,7 +629,7 @@ export default function ProfileScreen() {
         .select("notifications_enabled")
         .eq("user_id", user.id)
         .single();
-      
+
       // We check undefined because the column might not exist yet
       if (data && data.notifications_enabled !== undefined && data.notifications_enabled !== null) {
         setNotificationsEnabled(data.notifications_enabled);
