@@ -404,9 +404,9 @@ const StatsCard = React.memo(function StatsCard({
   const cy = r1 + 10; // = 80
   const arcH = 160;
 
-  // Opens at bottom — 70° gap, 290° span
-  const START_DEG = 235; // lower-left
-  const TOTAL_DEG = -290; // CW in Cartesian
+  // Full rings starting from top
+  const START_DEG = 90; // Top (12 o'clock)
+  const TOTAL_DEG = -359.99; // Almost 360 for SVG arc
 
   const f1 = Math.max(
     0.0001,
@@ -442,238 +442,105 @@ const StatsCard = React.memo(function StatsCard({
 
   return (
     <View style={{ marginHorizontal: 20, marginBottom: 6 }}>
-      {/* Time Filter Tabs */}
+      {/* ── Main Stats Card (Integrated Filters + Stats + Rings) ── */}
       <View
         style={{
-          flexDirection: "row",
-          backgroundColor: "#F8F7FC",
-          // borderColor: "#E9EBF8",
-          // borderWidth: 0.5,
-          borderRadius: 13,
-
-          padding: 1,
-          // marginTop: ,
-          marginBottom: 5,
-          shadowColor: "#000000",
+          flexDirection: "column",
+          paddingVertical: 24,
+          paddingHorizontal: 20,
+          backgroundColor: "#FFFFFF",
+          borderRadius: 24,
+          shadowColor: "#000",
           shadowOpacity: 0.05,
-          shadowRadius: 3,
-          shadowOffset: { width: 0, height: 1.5 },
-          elevation: 1,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 4,
           borderWidth: 0.5,
-          borderColor: "#EBEBEB",
+          borderColor: "rgba(0,0,0,0.03)",
         }}
       >
-        {TIME_FILTERS.map((filter) => (
-          <Pressable
-            key={filter}
-            onPress={() => setActiveFilter(filter)}
+        {/* ── Stats and Rings Row ── */}
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}>
+          {/* ── Left Column: Stats ── */}
+          <View
             style={{
-              flex: 1,
-              paddingVertical: 10,
-              borderRadius: 12,
-              backgroundColor:
-                activeFilter === filter ? "#FFFFFF" : "transparent",
-              borderColor: activeFilter === filter ? "#EBEBEB" : "transparent",
-              alignItems: "center",
-              borderWidth: 0.5,
-
-              shadowColor: activeFilter === filter ? "#000" : "transparent",
-              shadowOpacity: activeFilter === filter ? 0.05 : 0,
-              shadowRadius: activeFilter === filter ? 10 : 0,
-              shadowOffset: {
-                width: 0,
-                height: activeFilter === filter ? 2 : 0,
-              },
-              elevation: activeFilter === filter ? 1 : 0,
+              flex: 1.1,
+              justifyContent: "space-between",
             }}
           >
-            <Text
-              style={{
-                // fontSize: 14,
-                fontSize: 14,
-                fontFamily: "TikTokSans16pt-Medium",
-                // color: "#1C1C1E",
-                fontWeight: activeFilter === filter ? "700" : "400",
-                color: "#1D1A27",
-              }}
-            >
-              {filter}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      {/* ── Two Cards Row ── */}
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 5,
-          backgroundColor: "#FFFFFF",
-          borderWidth: 1,
-          borderColor: "#EBEBEB",
-          // shadowColor: "#FFFFFF",
-          borderRadius: 24,
-          // shadowOpacity: 0.05,
-          // shadowRadius: 10,
-          // shadowOffset: { width: 0, height: 3 },
-          // elevation: 2,
-          shadowColor: "#000",
-          shadowOpacity: 0.02,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 1,
-        }}
-      >
-        {/* ── Right Card: Stats Column ── */}
-        <View
-          style={{
-            flex: 24,
-            // backgroundColor: "#FFFFFF90",
-            // borderRadius: 24,
-            // paddingVertical: 10,
-            // width: "20%",
-            // paddingHorizontal: -15,
-            justifyContent: "space-between",
-            // alignItems: "center",
-            // justifyContent: "center",
-            // marginLeft: 10,
-            // borderWidth: 1,
-          }}
-        >
-          {/* Worn */}
-          <View style={{ marginLeft: 25, marginTop: 20 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                marginBottom: 2,
-              }}
-            >
-              <View
-                style={{
-                  width: 15,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#FF1200",
-                }}
-              />
-              <Text style={{ fontSize: 13, color: "#666", fontWeight: "600" }}>
-                Worn items
+            {/* Worn */}
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ fontFamily: "TikTokSans16pt-Medium", fontSize: 13, color: "#8E8E93", marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Worn
               </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 32, color: "#FA4D22", lineHeight: 36 }}>
+                  {displayWorn}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Medium",
+                    fontSize: 15,
+                    color: "#FA4D22",
+                    marginLeft: 4,
+                  }}
+                >
+                  / {displayTotal} items
+                </Text>
+              </View>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-              <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>
-                {displayWorn}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: "#666",
-                  fontWeight: "500",
-                  marginLeft: 2,
-                }}
-              >
-                /{displayTotal} items
-              </Text>
-            </View>
-          </View>
 
-          {/* Usage */}
-          <View style={{ marginLeft: 25, paddingVertical: 5 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                marginBottom: 2,
-              }}
-            >
-              <View
-                style={{
-                  width: 15,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#FFB020",
-                }}
-              />
-              <Text style={{ fontSize: 13, color: "#666", fontWeight: "600" }}>
+            {/* Usage */}
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ fontFamily: "TikTokSans16pt-Medium", fontSize: 13, color: "#8E8E93", marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Usage
               </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 32, color: "#33E181", lineHeight: 36 }}>
+                  {displayUsage}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Medium",
+                    fontSize: 15,
+                    color: "#33E181",
+                    marginLeft: 4,
+                  }}
+                >
+                  %
+                </Text>
+              </View>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-              <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>
-                {displayUsage}
+
+            {/* Unworn */}
+            <View>
+              <Text style={{ fontFamily: "TikTokSans16pt-Medium", fontSize: 13, color: "#8E8E93", marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Unworn
               </Text>
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: "#666",
-                  fontWeight: "500",
-                  marginLeft: 2,
-                }}
-              >
-                %
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text style={{ fontFamily: "TikTokSans16pt-Bold", fontSize: 32, color: "#9263FE", lineHeight: 36 }}>
+                  {displayUnworn}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "TikTokSans16pt-Medium",
+                    fontSize: 15,
+                    color: "#9263FE",
+                    marginLeft: 4,
+                  }}
+                >
+                  / {displayTotal} items
+                </Text>
+              </View>
             </View>
           </View>
 
-          {/* Unworn */}
-          <View style={{ marginLeft: 25, marginBottom: 15 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                marginBottom: 2,
-              }}
-            >
-              <View
-                style={{
-                  width: 15,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#1E88E5",
-                }}
-              />
-              <Text style={{ fontSize: 13, color: "#666", fontWeight: "600" }}>
-                Unworn items
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-              <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>
-                {displayUnworn}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: "#666",
-                  fontWeight: "500",
-                  marginLeft: 2,
-                }}
-              >
-                /{displayTotal} items
-              </Text>
-            </View>
-          </View>
-        </View>
-        {/* ── Left Card: Rings ── */}
-        <View
-          style={{
-            flex: 30,
-            // backgroundColor: "#FFFFFF90",
-            // borderRadius: 24,
-            // paddingVertical: 0,
-            alignItems: "center",
-            // width: "-10%",
+          {/* ── Right Column: Rings ── */}
+          <View
+            style={{
+              flex: 1,
+            alignItems: "flex-end",
             justifyContent: "center",
-            // borderWidth: 1,
-            // marginRight: -10,
-            // borderColor: "#EBEBEB",
-            // shadowColor: "#FFFFFF",
-            // shadowOpacity: 0.05,
-            // shadowRadius: 10,
-            // shadowOffset: { width: 0, height: 3 },
-            // elevation: 2,
           }}
         >
           <Svg width={arcW} height={arcH}>
@@ -686,9 +553,8 @@ const StatsCard = React.memo(function StatsCard({
                 y2={0}
                 gradientUnits="userSpaceOnUse"
               >
-                <Stop offset="0%" stopColor="#2C242F10" stopOpacity={1} />
-                <Stop offset="50%" stopColor="#2C242F10" stopOpacity={1} />
-                <Stop offset="100%" stopColor="#2C242F10" stopOpacity={1} />
+                <Stop offset="0%" stopColor="#FA4D22" stopOpacity={1} />
+                <Stop offset="100%" stopColor="#FF7A59" stopOpacity={1} />
               </LinearGradient>
               <LinearGradient
                 id="wrdMiddle"
@@ -698,46 +564,46 @@ const StatsCard = React.memo(function StatsCard({
                 y2={0}
                 gradientUnits="userSpaceOnUse"
               >
-                <Stop offset="0%" stopColor="#2C242F" stopOpacity={1} />
-                <Stop offset="50%" stopColor="#2C242F" stopOpacity={1} />
-                <Stop offset="100%" stopColor="#2C242F" stopOpacity={1} />
+                <Stop offset="0%" stopColor="#33E181" stopOpacity={1} />
+                <Stop offset="100%" stopColor="#6AFB9B" stopOpacity={1} />
               </LinearGradient>
               <LinearGradient
                 id="wrdInner"
                 x1={0}
-                y1={cy - r3}
-                x2={0}
-                y2={cy + r3}
+                y1={0}
+                x2={arcW}
+                y2={0}
                 gradientUnits="userSpaceOnUse"
               >
-                <Stop offset="0%" stopColor="#2C242F" stopOpacity={1} />
-                <Stop offset="100%" stopColor="#2C242F" stopOpacity={1} />
+                <Stop offset="0%" stopColor="#9263FE" stopOpacity={1} />
+                <Stop offset="100%" stopColor="#B693FF" stopOpacity={1} />
               </LinearGradient>
             </Defs>
 
             {/* Background Tracks */}
-            <Path
-              d={makeArc(r1)}
+            <Circle
+              cx={cx}
+              cy={cy}
+              r={r1}
               fill="none"
-              stroke="#F8F7FC"
-              // color="#EBEB"
-              // borderWidth={0.5}
+              stroke="rgba(250, 77, 34, 0.15)"
               strokeWidth={thickness}
-              strokeLinecap="round"
             />
-            <Path
-              d={makeArc(r2)}
+            <Circle
+              cx={cx}
+              cy={cy}
+              r={r2}
               fill="none"
-              stroke="#F8F7FC"
+              stroke="rgba(51, 225, 129, 0.15)"
               strokeWidth={thickness}
-              strokeLinecap="round"
             />
-            <Path
-              d={makeArc(r3)}
+            <Circle
+              cx={cx}
+              cy={cy}
+              r={r3}
               fill="none"
-              stroke="#F8F7FC"
+              stroke="rgba(146, 99, 254, 0.15)"
               strokeWidth={thickness}
-              strokeLinecap="round"
             />
 
             {/* Outer ring — Red to Orange */}
@@ -749,7 +615,7 @@ const StatsCard = React.memo(function StatsCard({
               strokeLinecap="round"
             />
 
-            {/* Middle ring — Yellow to Orange */}
+            {/* Middle ring — Green */}
             <Path
               d={makeArc(r2, f2)}
               fill="none"
@@ -758,7 +624,7 @@ const StatsCard = React.memo(function StatsCard({
               strokeLinecap="round"
             />
 
-            {/* Inner ring — Blue */}
+            {/* Inner ring — Blue to Purple */}
             <Path
               d={makeArc(r3, f3)}
               fill="none"
@@ -767,109 +633,97 @@ const StatsCard = React.memo(function StatsCard({
               strokeLinecap="round"
             />
 
-            {/* ── Flame icon ── */}
+            {/* ── Outer icon (arrow >) ── */}
             <G
               transform={`translate(${flamePos.x.toFixed(1)}, ${flamePos.y.toFixed(1)})`}
             >
-              <Circle cx={0} cy={0} r={thickness / 2} fill="#FF1200" />
-              <G transform="scale(0.6)">
-                <Path
-                  d="M 0,-8 C 4,-5 5,0 3,5 C 2,7 -2,7 -3,5 C -5,0 -4,-5 0,-8 Z"
-                  fill="white"
-                  opacity={0.95}
-                />
-                <Path
-                  d="M 0,-2 C 2,0 2,4 0,5.5 C -2,4 -2,0 0,-2 Z"
-                  fill="#FF5200"
-                  opacity={0.7}
-                />
-              </G>
+              <Circle cx={0} cy={0} r={thickness / 2} fill="#D93A1F" />
+              <Path
+                d="M -1.5,-3.5 L 1.5,0 L -1.5,3.5"
+                stroke="white"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
             </G>
 
-            {/* ── Runner icon ── */}
+            {/* ── Middle icon (arrow >>) ── */}
             <G
               transform={`translate(${runnerPos.x.toFixed(1)}, ${runnerPos.y.toFixed(1)})`}
             >
-              <Circle cx={0} cy={0} r={thickness / 2} fill="#FF9500" />
-              <G transform="scale(0.6)">
-                <Circle cx={2} cy={-7} r={3} fill="white" />
-                <Path
-                  d="M 1,-4 L 2,2"
-                  stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 1.5,-3 L 6,-1"
-                  stroke="white"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 1.5,-3 L -3,0"
-                  stroke="white"
-                  strokeWidth={1.8}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 2,2 L 6,7"
-                  stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 2,2 L -1,5 L 0,8"
-                  stroke="white"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-              </G>
+              <Circle cx={0} cy={0} r={thickness / 2} fill="#1A9E53" />
+              <Path
+                d="M -2.5,-3 L 0,0 L -2.5,3 M 0.5,-3 L 3,0 L 0.5,3"
+                stroke="white"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
             </G>
 
-            {/* ── Person (stand) icon ── */}
+            {/* ── Inner icon (arrow ^) ── */}
             <G
               transform={`translate(${personPos.x.toFixed(1)}, ${personPos.y.toFixed(1)})`}
             >
-              <Circle cx={0} cy={0} r={thickness / 2} fill="#1E88E5" />
-              <G transform="scale(0.6)">
-                <Circle cx={0} cy={-7} r={3} fill="white" />
-                <Path
-                  d="M 0,-4 L 0,2"
-                  stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M -5,-7 L 0,-3 L 5,-7"
-                  stroke="white"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 0,2 L -3,8"
-                  stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <Path
-                  d="M 0,2 L 3,8"
-                  stroke="white"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-              </G>
+              <Circle cx={0} cy={0} r={thickness / 2} fill="#6642BE" />
+              <Path
+                d="M -3,1.5 L 0,-1.5 L 3,1.5"
+                stroke="white"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
             </G>
           </Svg>
+        </View>
+      </View>
+
+        {/* Time Filter Tabs */}
+        <View
+          style={{
+            flexDirection: "row",
+            backgroundColor: "#F8F7FC",
+            borderRadius: 13,
+            padding: 3,
+            marginTop: 4, // Spacing above tabs
+          }}
+        >
+          {TIME_FILTERS.map((filter) => (
+            <Pressable
+              key={filter}
+              onPress={() => setActiveFilter(filter)}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                borderRadius: 10,
+                backgroundColor:
+                  activeFilter === filter ? "#FFFFFF" : "transparent",
+                alignItems: "center",
+                shadowColor: activeFilter === filter ? "#000" : "transparent",
+                shadowOpacity: activeFilter === filter ? 0.05 : 0,
+                shadowRadius: activeFilter === filter ? 8 : 0,
+                shadowOffset: {
+                  width: 0,
+                  height: activeFilter === filter ? 2 : 0,
+                },
+                elevation: activeFilter === filter ? 1 : 0,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontFamily: "TikTokSans16pt-Medium",
+                  fontWeight: activeFilter === filter ? "700" : "500",
+                  color: activeFilter === filter ? "#1D1A27" : "#8E8E93",
+                }}
+              >
+                {filter}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       </View>
     </View>
