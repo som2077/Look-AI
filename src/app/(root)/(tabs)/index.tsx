@@ -1,33 +1,30 @@
 import { OutfitAnalyzingCard } from "@/features/ai-styling/ui/OutfitAnalyzingCard";
 import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
+import {
+  usePremiumLimits,
+  WARDROBE_LIMIT,
+} from "@/features/payments/model/usePremiumLimits";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { useRingStats } from "@/features/wardrobe/api/useRingStats";
 import { PendingBatchBanner } from "@/features/wardrobe/ui/PendingBatchBanner";
 import {
   EmptyStyleBanner,
-  ErrorBanner,
   NotifyBanner,
-  RecentlyUploadedHeading,
+  RecentlyUploadedHeading
 } from "@/features/wardrobe/ui/RecentlyUploadedCard";
 import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
 import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
 import type { RingProgressSegment } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
 import { WardrobeRingSummaryCard } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
 import { useWeatherStore } from "@/features/weather/model/weather-store";
-import {
-  usePremiumLimits,
-  WARDROBE_LIMIT,
-} from "@/features/payments/model/usePremiumLimits";
-import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { HomeHeader } from "@/shared/ui/HomeHeader";
 
 import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
-import { LookAIBanner } from "@/shared/ui/LookAIBanner";
-import { PlannedOutfitBanner } from "@/shared/ui/PlannedOutfitBanner";
-import { StreakPopup } from "@/shared/ui/StreakPopup";
-import { UpcomingEvents } from "@/shared/ui/UpcomingEvents";
 import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
+import { LookAIBanner } from "@/shared/ui/LookAIBanner";
+import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";

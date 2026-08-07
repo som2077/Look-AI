@@ -2,9 +2,9 @@ import { Image as ExpoImage } from "expo-image";
 import React from "react";
 import { Text, View } from "react-native";
 
+import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
 import { usePendingBatchStore } from "@/features/wardrobe/model/usePendingBatchStore";
-import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 
 export function AddClothesCTA() {
   const isAnalyzing = useOutfitAnalysisStore((s: any) => s.isAnalyzing);
