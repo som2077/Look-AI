@@ -18,6 +18,7 @@
  *   SUPABASE_URL
  */
 
+// eslint-disable-next-line import/no-unresolved
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RTDN_BEARER = Deno.env.get("RTDN_BEARER_TOKEN") ?? "";

@@ -1,0 +1,487 @@
+import { Image as ExpoImage } from "expo-image";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Dimensions, FlatList, Pressable, Text, View } from "react-native";
+import Svg, { Circle, G } from "react-native-svg";
+
+import {
+  LastOutfit,
+  useOutfitAnalysisStore,
+} from "@/features/ai-styling/model/outfit-analysis-store";
+import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
+import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
+import { useRouter } from "expo-router";
+
+const SVG_SIZE = 72;
+const STROKE_WIDTH = 4.5;
+const RADIUS = (SVG_SIZE - STROKE_WIDTH) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const CENTER = SVG_SIZE / 2;
+
+const CARD_H_MARGIN = 20;
+const CARD_WIDTH = Dimensions.get("window").width - CARD_H_MARGIN * 2;
+
+// ─── Slide type: either a completed outfit or the in-progress analysis ───────
+
+interface AnalyzingSlide {
+  type: "analyzing";
+  imageUri: string;
+  progress: number;
+}
+
+interface CompletedSlide {
+  type: "completed";
+  outfit: LastOutfit;
+  outfitIndex: number;
+}
+
+type CardSlide = AnalyzingSlide | CompletedSlide;
+
+// ─── Sub-component: single completed outfit slide ────────────────────────────
+
+const CompletedCardSlide = React.memo(function CompletedCardSlide({
+  outfit,
+  outfitIndex,
+  onViewDetails,
+}: {
+  outfit: LastOutfit;
+  outfitIndex: number;
+  onViewDetails: (i: number) => void;
+}) {
+  return (
+    <Pressable
+      style={{ width: CARD_WIDTH }}
+      onPress={() => onViewDetails(outfitIndex)}
+    >
+      <View className="flex-row rounded-[24px] border-[0.8px] border-[#E9EBF8] bg-[#F3F2F770] overflow-hidden h-40">
+        <View
+          className="justify-center items-center rounded-[24px]"
+          style={{
+            width: 135,
+            height: 140,
+            backgroundColor: "#FFFFFF",
+          }}
+        >
+          <ExpoImage
+            source={{ uri: outfit.imageUri }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="contain"
+            cachePolicy="memory"
+          />
+        </View>
+
+        <View className="flex-1 justify-between">
+          <View className="px-2 pt-3 pb-1 ml-1">
+            <View className="flex-row items-start justify-between mb-1">
+              <Text
+                className="text-[#1D1A27] font-bold flex-1 mr-2"
+                style={{ fontSize: 17, fontFamily: "TikTokSans16pt-Bold" }}
+                numberOfLines={1}
+              >
+                {outfit.name}
+              </Text>
+              <Text
+                style={{
+                  color: "#00000090",
+                  fontSize: 11,
+                  marginTop: 2,
+                  marginRight: 7,
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 30,
+                  paddingVertical: 3,
+                  paddingHorizontal: 8,
+                  fontFamily: "TikTokSans16pt-Medium",
+                }}
+              >
+                {outfit.time}
+              </Text>
+            </View>
+            <Text
+              style={{
+                color: "#9B9BAF",
+                fontSize: 12,
+                marginBottom: 8,
+                marginTop: 2,
+                fontFamily: "TikTokSans16pt-Regular",
+              }}
+            >
+              {outfit.subtitle}
+            </Text>
+            <View className="flex-row flex-wrap gap-[6px]">
+              {outfit.tags.slice(0, 2).map((tag) => (
+                <View
+                  key={tag}
+                  className="rounded-[6px] px-5 py-[5px]"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "#E9EBF8",
+                    backgroundColor: "#000000",
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#ffffff",
+                      fontSize: 11,
+                      fontFamily: "TikTokSans16pt-Medium",
+                    }}
+                  >
+                    {tag}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* View Details button */}
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 6,
+              marginHorizontal: 10,
+              marginBottom: 10,
+              marginTop: -4,
+            }}
+          >
+            <Pressable
+              onPress={() => onViewDetails(outfitIndex)}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color: "#000000",
+                  fontSize: 13,
+                  fontFamily: "TikTokSans16pt-Bold",
+                }}
+              >
+                Analysis complete and ready to view.
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+});
+
+// ─── Sub-component: single analyzing slide ───
+
+const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
+  imageUri,
+  progress,
+  strokeDashoffset,
+}: {
+  imageUri: string;
+  progress: number;
+  strokeDashoffset: number;
+}) {
+  return (
+    <View style={{ width: CARD_WIDTH }}>
+      <View className="flex-row rounded-[24px] border-[0.8px] border-[#E9EBF8] bg-[#F3F2F770] overflow-hidden h-40">
+        <View
+          style={{ width: 135, height: 140 }}
+          className="overflow-hidden justify-center items-center rounded-[24px]"
+        >
+          <ExpoImage
+            source={{ uri: imageUri }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+            blurRadius={5}
+            cachePolicy="memory"
+          />
+          <View
+            className="absolute inset-0 items-center justify-center "
+            style={{ backgroundColor: "rgba(0,0,0,0.38)" }}
+          >
+            <Svg width={SVG_SIZE} height={SVG_SIZE}>
+              <Circle
+                cx={CENTER}
+                cy={CENTER}
+                r={RADIUS}
+                stroke="rgba(255,255,255,0.22)"
+                strokeWidth={STROKE_WIDTH}
+                fill="none"
+              />
+              <G rotation="-90" origin={`${CENTER}, ${CENTER}`}>
+                <Circle
+                  cx={CENTER}
+                  cy={CENTER}
+                  r={RADIUS}
+                  stroke="#ffffff"
+                  strokeWidth={STROKE_WIDTH}
+                  fill="none"
+                  strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                />
+              </G>
+            </Svg>
+            <Text
+              className="absolute text-white font-bold"
+              style={{ fontSize: 13 }}
+            >
+              {`${Math.round(progress)}%`}
+            </Text>
+          </View>
+        </View>
+
+        <View className="flex-1 justify-center px-3 ml-1">
+          <Text
+            className="text-[#1D1A27] font-bold mb-2"
+            style={{ fontSize: 16 }}
+          >
+            Analyzing cloth...
+          </Text>
+          <View className="h-[9px] rounded-full bg-[#EDEDF260] w-4/5 mb-[7px]" />
+          <View className="h-[9px] rounded-full bg-[#EDEDF260] w-3/5 mb-[7px]" />
+          <View className="h-[9px] rounded-full bg-[#EDEDF260] w-2/5 mb-[10px]" />
+          <Text className="text-[#000000] font-sans" style={{ fontSize: 11 }}>
+            {"We'll notify you when done!"}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+});
+
+const MODE_LABELS: Record<string, string> = {
+  "scan-cloth": "Scan Cloths",
+  barcode: "Barcode",
+  label: "Cloth Label",
+  "fit-check": "Fit Check",
+};
+
+const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
+  mode,
+  slides,
+  strokeDashoffset,
+  handleViewDetails,
+}: {
+  mode: string;
+  slides: CardSlide[];
+  strokeDashoffset: number;
+  handleViewDetails: (index: number) => void;
+}) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef<FlatList<CardSlide>>(null);
+
+  // Auto-scroll to analyzing slide (index 0) if one is active
+  useEffect(() => {
+    const hasAnalyzing = slides.some((s) => s.type === "analyzing");
+    if (hasAnalyzing && slides.length > 1) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index: 0, animated: true });
+      }, 200);
+    }
+  }, [slides.length, slides]);
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: { index: number | null }[] }) => {
+      if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+        setActiveIndex(viewableItems[0].index);
+      }
+    },
+  ).current;
+
+  const viewabilityConfig = useRef({
+    viewAreaCoveragePercentThreshold: 50,
+  }).current;
+
+  const keyExtractor = useCallback((item: CardSlide, i: number) => {
+    if (item.type === "analyzing") return `analyzing-${item.imageUri}`;
+    return `completed-${item.outfitIndex}`;
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: CardSlide }) => {
+      if (item.type === "analyzing") {
+        return (
+          <AnalyzingCardSlide
+            imageUri={item.imageUri}
+            progress={item.progress}
+            strokeDashoffset={strokeDashoffset}
+          />
+        );
+      }
+      return (
+        <CompletedCardSlide
+          outfit={item.outfit}
+          outfitIndex={item.outfitIndex}
+          onViewDetails={handleViewDetails}
+        />
+      );
+    },
+    [strokeDashoffset, handleViewDetails],
+  );
+
+  const safeIndex = Math.min(activeIndex, slides.length - 1);
+
+  return (
+    <View className="mb-2">
+      <FlatList
+        ref={flatListRef}
+        data={slides}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 10 }}
+        snapToInterval={CARD_WIDTH + 10}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        style={{ flexGrow: 0, marginHorizontal: CARD_H_MARGIN }}
+      />
+
+      {slides.length > 1 && (
+        <View className="flex-row justify-center items-center mt-2 gap-[5px]">
+          {slides.map((_, i) => (
+            <View
+              key={i}
+              style={{
+                width: i === safeIndex ? 8 : 6,
+                height: i === safeIndex ? 8 : 6,
+                borderRadius: 5,
+                backgroundColor: i === safeIndex ? "#1C1C1E" : "#C7C7C7",
+              }}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+});
+
+export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
+  const router = useRouter();
+  const isAnalyzing = useOutfitAnalysisStore((state) => state.isAnalyzing);
+  const isDone = useOutfitAnalysisStore((state) => state.isDone);
+  const imageUri = useOutfitAnalysisStore((state) => state.imageUri);
+  const progress = useOutfitAnalysisStore((state) => state.progress);
+  const currentMode = useOutfitAnalysisStore((state) => state.currentMode);
+  const lastOutfits = useOutfitAnalysisStore((state) => state.lastOutfits);
+  const cleanupDaily = useOutfitAnalysisStore((state) => state.cleanupDaily);
+
+  const prevIsDoneRef = useRef(false);
+  const notifyComplete = useAnalysisCompleteNotification();
+
+  // Check for 3 AM cleanup on mount
+  useEffect(() => {
+    cleanupDaily();
+  }, [cleanupDaily]);
+
+  // Play chime when analysis finishes
+  useEffect(() => {
+    if (isDone && !prevIsDoneRef.current) {
+      notifyComplete();
+    }
+    prevIsDoneRef.current = isDone;
+  }, [isDone, notifyComplete]);
+
+  const strokeDashoffset = useMemo(
+    () => CIRCUMFERENCE * (1 - Math.min(progress, 100) / 100),
+    [progress],
+  );
+
+  const handleViewDetails = useCallback(
+    (index: number) => {
+      const outfit = lastOutfits[index];
+      if (outfit && outfit.mode === "scan-cloth") {
+        const aiData = outfit.clothingData;
+        router.push({
+          pathname: "/(root)/add-clothes/form",
+          params: {
+            mode: "scanned",
+            photoUri: outfit.imageUri,
+            name: outfit.name,
+            category: aiData?.category,
+            color: aiData?.primaryColor,
+            occasion: aiData?.occasion?.[0] || "Casual",
+            season: aiData?.season?.[0] || "All",
+            brand: aiData?.brand || "",
+            careInstructions: aiData?.careInstructions || "",
+            notes: aiData?.notes || "",
+            outfitIndex: index.toString(),
+          },
+        } as never);
+      } else if (outfit && outfit.mode === "label") {
+        const scanId = useScanHistoryStore.getState().addScan({
+          type: "label",
+          thumbnail: outfit.imageUri,
+          date: new Date().toISOString(),
+          result: outfit.clothingData as Record<string, unknown>,
+          isFavorite: false,
+        });
+        router.push({
+          pathname: "/(root)/add-clothes/label-result",
+          params: { scanId, outfitIndex: index.toString() },
+        } as never);
+      } else if (outfit && outfit.mode === "fit-check") {
+        const scanId = useScanHistoryStore.getState().addScan({
+          type: "fit-check",
+          thumbnail: outfit.imageUri,
+          date: new Date().toISOString(),
+          result: outfit.clothingData as Record<string, unknown>,
+          isFavorite: false,
+        });
+        router.push({
+          pathname: "/(root)/add-clothes/fitcheck-result",
+          params: { scanId, outfitIndex: index.toString() },
+        } as never);
+      } else {
+        router.push(`/(root)/outfit-log-detail?index=${index}` as never);
+      }
+    },
+    [router, lastOutfits],
+  );
+
+  const groupedSlides = useMemo(() => {
+    const groups: Record<string, CardSlide[]> = {};
+
+    // Add completed outfits to their respective mode groups
+    lastOutfits.forEach((outfit, i) => {
+      const mode = outfit.mode || "scan-cloth";
+      if (!groups[mode]) groups[mode] = [];
+      groups[mode].unshift({
+        type: "completed" as const,
+        outfit,
+        outfitIndex: i,
+      });
+    });
+
+    // Add analyzing outfit to its mode group at the TOP
+    if (isAnalyzing && imageUri) {
+      const mode = currentMode || "scan-cloth";
+      if (!groups[mode]) groups[mode] = [];
+      groups[mode].unshift({ type: "analyzing" as const, imageUri, progress });
+    }
+
+    return groups;
+  }, [lastOutfits, isAnalyzing, imageUri, progress, currentMode]);
+
+  if (Object.keys(groupedSlides).length === 0) return null;
+
+  return (
+    <View className="mt-3 mb-1">
+      {Object.entries(groupedSlides).map(([mode, slides]) => (
+        <ModeGroupCarousel
+          key={mode}
+          mode={mode}
+          slides={slides}
+          strokeDashoffset={strokeDashoffset}
+          handleViewDetails={handleViewDetails}
+        />
+      ))}
+    </View>
+  );
+});
