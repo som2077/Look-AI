@@ -1,5 +1,6 @@
 import { OutfitAnalyzingCard } from "@/features/ai-styling/ui/OutfitAnalyzingCard";
 import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
+import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
 import {
   usePremiumLimits,
   WARDROBE_LIMIT,
@@ -19,10 +20,8 @@ import { WardrobeRingSummaryCard } from "@/features/wardrobe/ui/WardrobeRingSumm
 import { useWeatherStore } from "@/features/weather/model/weather-store";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
-import { HomeHeader } from "@/shared/ui/HomeHeader";
-
-import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
 import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
+import { HomeHeader } from "@/shared/ui/HomeHeader";
 import { LookAIBanner } from "@/shared/ui/LookAIBanner";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
@@ -168,7 +167,7 @@ export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const { currentStreak, hasIncrementedToday, dismissIncrement } =
     useStreakStore();
-  const plannedOutfit = useCalendarPlanStore((state) => state.plannedOutfit);
+  const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
 
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)
 
@@ -320,6 +319,7 @@ export default function HomeScreen() {
                 <CalendarPlanBanner
                   title="Upcoming event"
                   plan={plannedOutfit as any}
+                  onRemove={() => setPlannedOutfit(null)}
                 />
               )}
               <AddClothesCTA />

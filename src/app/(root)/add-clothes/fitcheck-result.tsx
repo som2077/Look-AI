@@ -288,32 +288,6 @@ export default function FitCheckResultScreen() {
               </Pressable>
             </View>
 
-            {/* Card 1: Overall Progress */}
-            <OutlineCard className="flex-row items-center justify-between">
-              <View className="flex-1 pr-4">
-                <Text className="text-[14px] font-bold text-gray-500 mb-0.5">
-                  Fitcheck score
-                </Text>
-                <Text className="text-[22px] font-extrabold text-[#111827] leading-tight mb-2">
-                  Overall Progress
-                </Text>
-                <Text className="text-[13px] text-gray-500 leading-tight mb-4 pr-2">
-                  {result.ratingSubtitle}
-                </Text>
-                <View className="bg-[#111827] self-start px-6 py-4 rounded-full">
-                  <Text className="text-white text-xs font-bold">
-                    {result.ratingTitle}
-                  </Text>
-                </View>
-              </View>
-              <ProgressRing
-                size={100}
-                progress={result.fitScore || 75}
-                innerTop={`${result.fitScore || 75}/100`}
-                color="#111827"
-              />
-            </OutlineCard>
-
             {/* Card 2: Body Proportions */}
             <OutlineCard className="flex-row items-center p-4">
               <View className="w-[100px] items-center justify-center mr-2">

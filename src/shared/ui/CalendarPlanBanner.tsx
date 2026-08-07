@@ -1,4 +1,7 @@
-import { CalendarPlan } from "@/features/calendar/model/calendar-plan-store";
+import {
+  CalendarPlan,
+  useCalendarPlanStore,
+} from "@/features/calendar/model/calendar-plan-store";
 import { getOccasionIcon } from "@/shared/constants/occasions";
 import {
   IconClock,
@@ -23,6 +26,7 @@ export function CalendarPlanBanner({
   plan: CalendarPlan;
 }) {
   const [isPlanDropdownVisible, setIsPlanDropdownVisible] = useState(false);
+  const setPlannedOutfit = useCalendarPlanStore((s) => s.setPlannedOutfit);
 
   if (!plan) return null;
 
@@ -124,10 +128,10 @@ export function CalendarPlanBanner({
                   >
                     {plan.createdAt
                       ? new Date(plan.createdAt).toLocaleTimeString("en-US", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      })
                       : "12:42 PM"}
                   </Text>
                 </View>
@@ -201,7 +205,11 @@ export function CalendarPlanBanner({
                         }}
                         onPress={() => {
                           setIsPlanDropdownVisible(false);
-                          if (onRemove) onRemove();
+                          if (onRemove) {
+                            onRemove();
+                          } else {
+                            setPlannedOutfit(null);
+                          }
                         }}
                       >
                         <IconTrash size={18} color="#EF4444" />
@@ -282,10 +290,10 @@ export function CalendarPlanBanner({
                 >
                   {plan.time
                     ? new Date(plan.time).toLocaleTimeString("en-US", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })
                     : "3:00 AM"}
                 </Text>
               </View>

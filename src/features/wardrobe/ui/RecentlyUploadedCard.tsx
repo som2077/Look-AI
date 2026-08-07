@@ -1,5 +1,4 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
-import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
 import { usePendingBatchStore } from "@/features/wardrobe/model/usePendingBatchStore";
 import { IconBell, IconX } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
@@ -79,14 +78,12 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
   const isAnalyzing = useOutfitAnalysisStore((s) => s.isAnalyzing);
   const lastOutfits = useOutfitAnalysisStore((s) => s.lastOutfits);
   const pendingBatchItems = usePendingBatchStore((s) => s.items);
-  const plannedOutfit = useCalendarPlanStore((s) => s.plannedOutfit);
 
-  // Show banner only when no analysis, no completed outfits, no pending batch items, and no upcoming plans
+  // Show banner when no analysis and no completed outfits (stays visible even if upcoming event plan exists)
   if (
     isAnalyzing ||
     lastOutfits.length > 0 ||
-    pendingBatchItems.length > 0 ||
-    plannedOutfit
+    pendingBatchItems.length > 0
   )
     return null;
 
