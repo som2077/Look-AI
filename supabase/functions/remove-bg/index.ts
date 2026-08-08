@@ -31,8 +31,15 @@ serve(async (req) => {
       throw new Error("Missing base64Image parameter");
     }
 
+    const cleanBase64 = base64Image.includes(",")
+      ? base64Image.split(",")[1].trim()
+      : base64Image.trim();
+
     const keysEnv =
-      Deno.env.get("REMOVEBG_API_KEYS") || Deno.env.get("REMOVEBG_API_KEY");
+      Deno.env.get("REMOVEBG_API_KEYS") ||
+      Deno.env.get("EXPO_PUBLIC_REMOVE_BG_API_KEYS") ||
+      Deno.env.get("REMOVEBG_API_KEY");
+
     if (!keysEnv) {
       throw new Error("Missing REMOVEBG_API_KEYS environment variable");
     }
@@ -41,18 +48,17 @@ serve(async (req) => {
       .split(",")
       .map((k: string) => k.trim())
       .filter((k: string) => k.length > 0);
+
     if (keys.length === 0) {
       throw new Error("No valid remove.bg API keys found");
     }
 
-    let currentKeyIndex = 0;
     let lastError: any = null;
 
-    while (currentKeyIndex < keys.length) {
-      const key = keys[currentKeyIndex];
-
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
       const formData = new FormData();
-      formData.append("image_file_b64", base64Image);
+      formData.append("image_file_b64", cleanBase64);
       formData.append("size", "auto");
       formData.append("format", "png");
       formData.append("response_type", "base64");
@@ -69,34 +75,26 @@ serve(async (req) => {
 
         if (response.ok) {
           const data = await response.json();
-          const b64 = data.data.result_b64;
-          return new Response(JSON.stringify({ result_b64: b64 }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
-        } else if (response.status === 402 || response.status === 429) {
-          console.warn(
-            `Remove.bg key ${currentKeyIndex + 1} failed. Trying next...`,
-          );
-          currentKeyIndex++;
+          const b64 = data.data?.result_b64;
+          if (b64) {
+            return new Response(JSON.stringify({ result_b64: b64 }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            });
+          }
         } else {
           const errText = await response.text();
-          throw new Error(
-            `Remove.bg API Error (${response.status}): ${errText}`,
-          );
+          console.warn(`[RemoveBG] Key ${i} failed (${response.status}): ${errText}`);
+          lastError = new Error(`Key ${i} failed: ${errText}`);
         }
       } catch (e: any) {
+        console.warn(`[RemoveBG] Key ${i} network error:`, e);
         lastError = e;
-        if (e.message && e.message.includes("Remove.bg API Error")) {
-          throw e; // Hard error
-        }
-        throw e; // Network error
       }
     }
 
     throw new Error(
-      "All remove.bg API keys are exhausted or failed. Last error: " +
-        (lastError?.message || "Unknown"),
+      "All remove.bg API keys failed. Last error: " + (lastError?.message || "Unknown"),
     );
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {

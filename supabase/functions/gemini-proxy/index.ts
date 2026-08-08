@@ -32,7 +32,10 @@ serve(async (req) => {
       throw new Error("Missing model or body parameters");
     }
 
-    const geminiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+    const geminiKey =
+      Deno.env.get("GOOGLE_GEMINI_API_KEY") ||
+      Deno.env.get("EXPO_PUBLIC_GEMINI_API_KEY");
+
     if (!geminiKey) {
       throw new Error("Missing GOOGLE_GEMINI_API_KEY environment variable");
     }

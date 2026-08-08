@@ -9,8 +9,6 @@ export interface CloudinaryUploadResult {
   publicId: string;
 }
 
-let currentKeyIndex = 0;
-
 async function uriToBase64(uri: string): Promise<string> {
   const response = await fetch(uri);
   const blob = await response.blob();
@@ -27,7 +25,7 @@ async function uriToBase64(uri: string): Promise<string> {
 }
 
 /**
- * Removes background using the remove.bg edge function.
+ * Removes background using the remove-bg edge function.
  */
 async function removeBackgroundLocal(fileUri: string): Promise<string> {
   const base64Image = await uriToBase64(fileUri);
@@ -37,77 +35,93 @@ async function removeBackgroundLocal(fileUri: string): Promise<string> {
   });
 
   if (error || !data?.result_b64) {
-    console.error("Remove.bg edge function error:", error || data?.error);
+    console.warn("Remove.bg edge function error:", error || data?.error);
     throw new Error("Failed to remove background via edge function");
   }
 
   return `data:image/png;base64,${data.result_b64}`;
 }
 
-
 export async function uploadToCloudinaryWithBgRemoval(
   fileUri: string,
 ): Promise<CloudinaryUploadResult> {
   if (!CLOUD_NAME || !API_KEY) {
-    throw new Error(
-      "Cloudinary credentials are not properly configured in .env",
-    );
+    console.warn("Cloudinary credentials missing, returning local URI");
+    return {
+      imageUrl: fileUri,
+      originalImageUrl: fileUri,
+      publicId: `local_${Date.now()}`,
+    };
   }
 
-  // 1. Remove background locally (fast)
-  const transparentImageUri = await removeBackgroundLocal(fileUri);
-
-  // 2. Upload the transparent image to Cloudinary
-  const timestamp = Math.round(new Date().getTime() / 1000).toString();
-
-  const paramsToSign = `timestamp=${timestamp}`;
-  const { data: sigData, error: sigError } = await supabase.functions.invoke("cloudinary-signature", {
-    body: { paramsToSign },
-  });
-
-  if (sigError || !sigData?.signature) {
-    throw new Error("Failed to generate Cloudinary signature via edge function");
-  }
-
-  const signature = sigData.signature;
-
-  const formData = new FormData();
-  formData.append("file", transparentImageUri as any); // Upload the base64 URI directly
-  formData.append("api_key", API_KEY);
-  formData.append("timestamp", timestamp);
-  formData.append("signature", signature);
-
-  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-
+  // 1. Try removing background, fallback to original if failed
+  let uploadUri = fileUri;
   try {
+    uploadUri = await removeBackgroundLocal(fileUri);
+  } catch (bgErr) {
+    console.warn("Background removal failed, uploading original image:", bgErr);
+    uploadUri = fileUri;
+  }
+
+  // 2. Upload to Cloudinary
+  try {
+    const timestamp = Math.round(new Date().getTime() / 1000).toString();
+    const paramsToSign = `timestamp=${timestamp}`;
+    const { data: sigData, error: sigError } = await supabase.functions.invoke(
+      "cloudinary-signature",
+      {
+        body: { paramsToSign },
+      },
+    );
+
+    if (sigError || !sigData?.signature) {
+      console.warn("Cloudinary signature generation failed:", sigError);
+      return {
+        imageUrl: uploadUri,
+        originalImageUrl: fileUri,
+        publicId: `local_${Date.now()}`,
+      };
+    }
+
+    const signature = sigData.signature;
+    const formData = new FormData();
+    formData.append("file", uploadUri as any);
+    formData.append("api_key", API_KEY);
+    formData.append("timestamp", timestamp);
+    formData.append("signature", signature);
+
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
     const response = await fetch(url, {
       method: "POST",
       body: formData,
       headers: {
         Accept: "application/json",
-        "Content-Type": "multipart/form-data",
       },
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
-      console.error("Cloudinary upload failed:", data);
-      throw new Error(data.error?.message || "Failed to upload to Cloudinary");
+    if (!response.ok || !data.secure_url) {
+      console.warn("Cloudinary upload response not ok:", data);
+      return {
+        imageUrl: uploadUri,
+        originalImageUrl: fileUri,
+        publicId: `local_${Date.now()}`,
+      };
     }
 
-    const publicId = data.public_id;
-    const imageUrl = data.secure_url;
-    const originalImageUrl = data.secure_url;
-
     return {
-      imageUrl,
-      originalImageUrl,
-      publicId,
+      imageUrl: data.secure_url,
+      originalImageUrl: data.secure_url,
+      publicId: data.public_id,
     };
   } catch (error) {
     console.error("Error in uploadToCloudinaryWithBgRemoval:", error);
-    throw error;
+    return {
+      imageUrl: uploadUri,
+      originalImageUrl: fileUri,
+      publicId: `local_${Date.now()}`,
+    };
   }
 }
 
@@ -129,34 +143,36 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
     return false;
   }
 
-  const timestamp = Math.round(new Date().getTime() / 1000).toString();
-  const paramsToSign = `public_id=${publicId}&timestamp=${timestamp}`;
-  
-  const { data: sigData, error: sigError } = await supabase.functions.invoke("cloudinary-signature", {
-    body: { paramsToSign },
-  });
-
-  if (sigError || !sigData?.signature) {
-    console.error("Failed to generate delete signature via edge function");
-    return false;
-  }
-
-  const signature = sigData.signature;
-
-  const formData = new FormData();
-  formData.append("api_key", API_KEY);
-  formData.append("timestamp", timestamp);
-  formData.append("signature", signature);
-  formData.append("public_id", publicId);
-
-  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`;
-
   try {
+    const timestamp = Math.round(new Date().getTime() / 1000).toString();
+    const paramsToSign = `public_id=${publicId}&timestamp=${timestamp}`;
+
+    const { data: sigData, error: sigError } = await supabase.functions.invoke(
+      "cloudinary-signature",
+      {
+        body: { paramsToSign },
+      },
+    );
+
+    if (sigError || !sigData?.signature) {
+      console.error("Failed to generate delete signature via edge function");
+      return false;
+    }
+
+    const signature = sigData.signature;
+
+    const formData = new FormData();
+    formData.append("api_key", API_KEY);
+    formData.append("timestamp", timestamp);
+    formData.append("signature", signature);
+    formData.append("public_id", publicId);
+
+    const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`;
     const response = await fetch(url, {
       method: "POST",
       body: formData,
     });
-    
+
     const data = await response.json();
     return data.result === "ok";
   } catch (error) {

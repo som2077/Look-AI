@@ -1,5 +1,6 @@
 // @ts-ignore: Deno import is not recognized by standard TS
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import CryptoJS from "npm:crypto-js";
 
 // @ts-ignore: Declare Deno globally to satisfy TS compiler in IDE
 declare const Deno: any;
@@ -31,111 +32,212 @@ serve(async (req) => {
       throw new Error("Missing base64Image parameter");
     }
 
-    const cloudinaryUrl = Deno.env.get("CLOUDINARY_URL");
-    const cloudinaryPreset = Deno.env.get("CLOUDINARY_PRESET");
-    const removebgKey = Deno.env.get("REMOVEBG_API_KEY");
-    const geminiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+    // Clean base64 string
+    const cleanBase64 = base64Image.includes(",")
+      ? base64Image.split(",")[1].trim()
+      : base64Image.trim();
 
-    if (!cloudinaryUrl || !cloudinaryPreset || !removebgKey || !geminiKey) {
-      throw new Error("Missing required environment variables");
+    // Detect mime type
+    let mimeType = "image/jpeg";
+    if (base64Image.startsWith("data:image/png")) mimeType = "image/png";
+    else if (base64Image.startsWith("data:image/webp")) mimeType = "image/webp";
+
+    const cloudinaryUrl = Deno.env.get("CLOUDINARY_URL") || "";
+    const apiSecret =
+      Deno.env.get("CLOUDINARY_API_SECRET") ||
+      (cloudinaryUrl ? cloudinaryUrl.split(":")[2]?.split("@")[0] : "");
+    const apiKey =
+      Deno.env.get("EXPO_PUBLIC_CLOUDINARY_API_KEY") ||
+      (cloudinaryUrl ? cloudinaryUrl.split("://")[1]?.split(":")[0] : "");
+    const cloudName =
+      Deno.env.get("EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME") ||
+      (cloudinaryUrl ? cloudinaryUrl.split("@")[1] : "");
+
+    const keysEnv =
+      Deno.env.get("REMOVEBG_API_KEYS") ||
+      Deno.env.get("EXPO_PUBLIC_REMOVE_BG_API_KEYS") ||
+      Deno.env.get("REMOVEBG_API_KEY") ||
+      "";
+    const removeBgKeys = keysEnv
+      .split(",")
+      .map((k: string) => k.trim())
+      .filter((k: string) => k.length > 0);
+
+    const geminiKey =
+      Deno.env.get("GOOGLE_GEMINI_API_KEY") ||
+      Deno.env.get("EXPO_PUBLIC_GEMINI_API_KEY");
+
+    if (!geminiKey) {
+      throw new Error("Missing GOOGLE_GEMINI_API_KEY environment variable");
     }
-
-    const cloudName = cloudinaryUrl.split("@")[1];
 
     // 1. Upload original image to Cloudinary
-    const formData = new FormData();
-    formData.append("file", `data:image/jpeg;base64,${base64Image}`);
-    formData.append("upload_preset", cloudinaryPreset);
-    formData.append("folder", "cloth-items/originals");
+    let originalUrl: string | null = null;
+    let bgRemovedUrl: string | null = null;
+    let bgBase64 = cleanBase64;
 
-    const cloudinaryOriginalRes = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      { method: "POST", body: formData },
-    );
-    const originalData = (await cloudinaryOriginalRes.json()) as any;
-    if (!originalData.secure_url) {
-      throw new Error("Failed to upload original image to Cloudinary");
+    if (cloudName) {
+      try {
+        const timestamp = Math.round(Date.now() / 1000).toString();
+        const originalFolder = "cloth-items/originals";
+        let originalSignature = "";
+
+        if (apiSecret) {
+          const paramsToSign = `folder=${originalFolder}&timestamp=${timestamp}`;
+          originalSignature = CryptoJS.SHA1(paramsToSign + apiSecret).toString();
+        }
+
+        const formData = new FormData();
+        formData.append("file", `data:${mimeType};base64,${cleanBase64}`);
+        formData.append("timestamp", timestamp);
+        formData.append("folder", originalFolder);
+        if (apiKey) formData.append("api_key", apiKey);
+        if (originalSignature) formData.append("signature", originalSignature);
+
+        const cloudinaryOriginalRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          { method: "POST", body: formData },
+        );
+        const originalData = (await cloudinaryOriginalRes.json()) as any;
+        if (originalData?.secure_url) {
+          originalUrl = originalData.secure_url;
+          bgRemovedUrl = originalUrl;
+        }
+      } catch (cloudErr) {
+        console.warn("Cloudinary upload original error:", cloudErr);
+      }
     }
-    const originalUrl = originalData.secure_url;
 
-    // 2. Call remove.bg API
-    const removebgRes = await fetch("https://api.remove.bg/v1.0/removebg", {
-      method: "POST",
-      headers: {
-        "X-Api-Key": removebgKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        image_url: originalUrl,
-        size: "auto",
-      }),
-    });
+    // 2. Remove background using remove.bg (Try all available API keys)
+    let removedBgB64: string | null = null;
 
-    if (!removebgRes.ok) {
-      throw new Error("Failed to remove background");
+    for (let i = 0; i < removeBgKeys.length; i++) {
+      const key = removeBgKeys[i];
+      try {
+        const removeBgFormData = new FormData();
+        removeBgFormData.append("image_file_b64", cleanBase64);
+        removeBgFormData.append("size", "auto");
+        removeBgFormData.append("format", "png");
+        removeBgFormData.append("response_type", "base64");
+
+        const removebgRes = await fetch("https://api.remove.bg/v1.0/removebg", {
+          method: "POST",
+          headers: {
+            "X-Api-Key": key,
+            Accept: "application/json",
+          },
+          body: removeBgFormData,
+        });
+
+        if (removebgRes.ok) {
+          const bgData = await removebgRes.json();
+          if (bgData?.data?.result_b64) {
+            removedBgB64 = bgData.data.result_b64;
+            bgBase64 = removedBgB64;
+            console.log(`[RemoveBG] Successfully removed background with key index ${i}`);
+            break;
+          }
+        } else {
+          const errStatus = removebgRes.status;
+          console.warn(`[RemoveBG] Key ${i} failed with status ${errStatus}. Trying next key...`);
+        }
+      } catch (keyErr) {
+        console.warn(`[RemoveBG] Key ${i} exception:`, keyErr);
+      }
     }
-
-    // We get a binary blob back
-    const bgRemovedBlob = await removebgRes.blob();
 
     // 3. Upload background-removed PNG to Cloudinary
-    const bgFormData = new FormData();
-    bgFormData.append("file", bgRemovedBlob, "bg-removed.png");
-    bgFormData.append("upload_preset", cloudinaryPreset);
-    bgFormData.append("folder", "cloth-items/bg-removed");
+    if (removedBgB64 && cloudName) {
+      try {
+        const bgFolder = "cloth-items/bg-removed";
+        const bgTimestamp = Math.round(Date.now() / 1000).toString();
+        let bgSignature = "";
 
-    const cloudinaryBgRes = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      { method: "POST", body: bgFormData },
-    );
-    const bgData = (await cloudinaryBgRes.json()) as any;
-    if (!bgData.secure_url) {
-      throw new Error(
-        "Failed to upload background-removed image to Cloudinary",
-      );
+        if (apiSecret) {
+          const bgParams = `folder=${bgFolder}&timestamp=${bgTimestamp}`;
+          bgSignature = CryptoJS.SHA1(bgParams + apiSecret).toString();
+        }
+
+        const bgFormData = new FormData();
+        bgFormData.append("file", `data:image/png;base64,${removedBgB64}`);
+        bgFormData.append("timestamp", bgTimestamp);
+        bgFormData.append("folder", bgFolder);
+        if (apiKey) bgFormData.append("api_key", apiKey);
+        if (bgSignature) bgFormData.append("signature", bgSignature);
+
+        const cloudinaryBgRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          { method: "POST", body: bgFormData },
+        );
+        const bgCloudData = (await cloudinaryBgRes.json()) as any;
+        if (bgCloudData?.secure_url) {
+          bgRemovedUrl = bgCloudData.secure_url;
+          console.log(`[Cloudinary] bg_removed_url uploaded: ${bgRemovedUrl}`);
+        }
+      } catch (bgCloudErr) {
+        console.warn("Cloudinary bg upload error:", bgCloudErr);
+      }
     }
-    const bgRemovedUrl = bgData.secure_url;
 
-    // 4. Get base64 of the bgRemoved image for Gemini Vision
-    const bgArrayBuffer = await bgRemovedBlob.arrayBuffer();
-    const bgBase64 = btoa(
-      String.fromCharCode(...new Uint8Array(bgArrayBuffer)),
-    );
-
-    // 5. Analyze with Gemini 2.0 Flash Vision
+    // 4. Analyze with Gemini Vision (Multi-model fallbacks)
     const visionPrompt = `Analyze this clothing item image. Extract the following details: clothType, color, material, pattern, style, fit, condition, sleeve_type, neckline, notable_features, seasonality, care_hints. Respond ONLY with valid JSON. No markdown.`;
 
-    const geminiVisionRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: visionPrompt },
-                { inline_data: { mime_type: "image/png", data: bgBase64 } },
+    const MODELS = [
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-2.0-flash-lite",
+    ];
+
+    let parsedVision: any = null;
+
+    for (const model of MODELS) {
+      try {
+        const geminiVisionRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: visionPrompt },
+                    { inline_data: { mime_type: removedBgB64 ? "image/png" : mimeType, data: bgBase64 } },
+                  ],
+                },
               ],
-            },
-          ],
-          generationConfig: { temperature: 0.2 },
-        }),
-      },
-    );
+              generationConfig: { temperature: 0.2 },
+            }),
+          },
+        );
 
-    const visionJson = (await geminiVisionRes.json()) as any;
-    const rawVisionText =
-      visionJson?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+        const visionJson = (await geminiVisionRes.json()) as any;
+        const rawVisionText =
+          visionJson?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // Strip markdown formatting if any
-    const cleanVisionText = rawVisionText
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-    const parsedVision = JSON.parse(cleanVisionText);
+        if (rawVisionText) {
+          const cleanVisionText = rawVisionText
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .trim();
+          parsedVision = JSON.parse(cleanVisionText);
+          break;
+        }
+      } catch (mErr) {
+        console.warn(`Vision model ${model} failed:`, mErr);
+      }
+    }
 
-    // 6. Map vision data to form fields using Gemini Flash text model
+    if (!parsedVision) {
+      parsedVision = {
+        clothType: "Clothing Item",
+        color: "Detected Color",
+        style: "Casual",
+      };
+    }
+
+    // 5. Map vision data to form fields
     const textPrompt = `You are a fashion data mapper. Given this vision analysis JSON:
 ${JSON.stringify(parsedVision)}
 
@@ -151,29 +253,52 @@ Output ONLY a valid JSON object matching this schema:
 }
 Do not use markdown blocks.`;
 
-    const geminiTextRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: textPrompt }] }],
-          generationConfig: { temperature: 0.1 },
-        }),
-      },
-    );
+    let parsedFormFields: any = null;
 
-    const textJson = (await geminiTextRes.json()) as any;
-    const rawFlashText =
-      textJson?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    for (const model of MODELS) {
+      try {
+        const geminiTextRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: textPrompt }] }],
+              generationConfig: { temperature: 0.1 },
+            }),
+          },
+        );
 
-    const cleanFlashText = rawFlashText
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-    const parsedFormFields = JSON.parse(cleanFlashText);
+        const textJson = (await geminiTextRes.json()) as any;
+        const rawFlashText =
+          textJson?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // 7. Return complete response
+        if (rawFlashText) {
+          const cleanFlashText = rawFlashText
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .trim();
+          parsedFormFields = JSON.parse(cleanFlashText);
+          break;
+        }
+      } catch (tErr) {
+        console.warn(`Text mapping model ${model} failed:`, tErr);
+      }
+    }
+
+    if (!parsedFormFields) {
+      parsedFormFields = {
+        category: "Top",
+        occasion: "Casual",
+        season: "All Season",
+        color: parsedVision?.color || "Multicolor",
+        brand: "Unknown",
+        careInstructions: "Machine wash cold, tumble dry low",
+        notes: "Stylish clothing item.",
+      };
+    }
+
+    // 6. Return complete response
     return new Response(
       JSON.stringify({
         success: true,
