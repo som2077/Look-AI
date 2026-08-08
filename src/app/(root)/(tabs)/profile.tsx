@@ -1,8 +1,5 @@
-import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
-import {
-  deleteFromCloudinary,
-  extractPublicIdFromUrl,
-} from "@/features/scanning/api/cloudinary-upload";
+import { useUserProfile } from "@/features/profile/api/useProfile";
+import { useDeleteAccount } from "@/features/profile/api/useDeleteAccount";
 import { getFCMToken, requestUserPermission } from "@/shared/notifications/firebase-service";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
@@ -368,9 +365,11 @@ const ProfileScreenUI = ({
   isDeletingAccount,
   onLogoutPress,
 }: any) => {
-  const { nickname, username } = useOnboardingState();
-  const displayName = nickname || user?.fullName || "Your Name";
-  const displayUsername = username || user?.username || "";
+  const { data: userProfile, isLoading } = useUserProfile();
+
+  const displayName = userProfile?.nickname || user?.fullName || "Your Name";
+  const displayUsername = userProfile?.username || user?.username || "";
+  const displayAvatar = userProfile?.avatar_url || user?.imageUrl;
   const displayInitial = displayName.charAt(0).toUpperCase();
 
   return (
@@ -411,9 +410,9 @@ const ProfileScreenUI = ({
             overflow: "hidden",
           }}
         >
-          {user?.imageUrl ? (
+          {displayAvatar ? (
             <Image
-              source={{ uri: user.imageUrl }}
+              source={{ uri: displayAvatar }}
               style={{ width: "100%", height: "100%" }}
             />
           ) : (
@@ -614,8 +613,8 @@ export default function ProfileScreen() {
   const { user } = useUser();
   const router = useRouter();
   const { supabase } = useSupabase();
+  const { deleteAccount, isDeleting: isDeletingAccount } = useDeleteAccount();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -691,57 +690,11 @@ export default function ProfileScreen() {
   const handleDeleteAccount = () => setShowDeleteModal(true);
 
   const confirmDeleteAccount = async () => {
-    if (!user) return;
     try {
-      setIsDeletingAccount(true);
-
-      // 1. Collect all Cloudinary URLs from database
-      const cloudinaryUrls: string[] = [];
-      const { data: outfits } = await supabase
-        .from("outfits")
-        .select("image_url")
-        .eq("user_id", user.id);
-      const { data: posts } = await supabase
-        .from("community_posts")
-        .select("image_url")
-        .eq("user_id", user.id);
-
-      if (outfits)
-        outfits.forEach(
-          (o: any) => o.image_url && cloudinaryUrls.push(o.image_url),
-        );
-      if (posts)
-        posts.forEach(
-          (p: any) => p.image_url && cloudinaryUrls.push(p.image_url),
-        );
-
-      // 2. Delete from Cloudinary
-      for (const url of cloudinaryUrls) {
-        const publicId = extractPublicIdFromUrl(url);
-        if (publicId) await deleteFromCloudinary(publicId);
-      }
-
-      // 3. Delete Supabase Storage bucket files (full-length-pics)
-      const { data: files } = await supabase.storage
-        .from("full-length-pics")
-        .list(user.id);
-      if (files && files.length > 0) {
-        const filePaths = files.map((file: any) => `${user.id}/${file.name}`);
-        await supabase.storage.from("full-length-pics").remove(filePaths);
-      }
-
-      // 4. Delete user data from Supabase (user_profiles etc)
-      await supabase.from("user_profiles").delete().eq("user_id", user.id);
-
-      // 5. Delete user from Clerk
-      await user.delete();
-
-      // Clerk will automatically handle the session termination and redirect
-    } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to delete account");
-    } finally {
-      setIsDeletingAccount(false);
+      await deleteAccount();
       setShowDeleteModal(false);
+    } catch (error: any) {
+      Alert.alert("Error", error?.message || "Failed to delete account");
     }
   };
 

@@ -191,8 +191,8 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
     post.user_id === user?.id || post.user_profiles?.user_id === user?.id;
 
   const displayNickname = isCurrentUser
-    ? nickname || username || user?.fullName || "User"
-    : post.user_profiles?.nickname || post.user_profiles?.username || "User";
+    ? nickname || user?.fullName || "User"
+    : post.user_profiles?.nickname || "User";
 
   const avatarUrl =
     isCurrentUser && user?.imageUrl
