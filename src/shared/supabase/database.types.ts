@@ -22,8 +22,6 @@ export interface Database {
           style_preferences: string[];
           referral_sources: string[];
           avatar_url: string | null;
-          bio: string | null;
-          about: string | null;
           full_length_photos: string[];
           notifications_enabled: boolean;
           is_active: boolean;
@@ -43,8 +41,6 @@ export interface Database {
           style_preferences?: string[];
           referral_sources?: string[];
           avatar_url?: string | null;
-          bio?: string | null;
-          about?: string | null;
           full_length_photos?: string[];
           notifications_enabled?: boolean;
           is_active?: boolean;
@@ -64,8 +60,6 @@ export interface Database {
           style_preferences?: string[];
           referral_sources?: string[];
           avatar_url?: string | null;
-          bio?: string | null;
-          about?: string | null;
           full_length_photos?: string[];
           notifications_enabled?: boolean;
           is_active?: boolean;

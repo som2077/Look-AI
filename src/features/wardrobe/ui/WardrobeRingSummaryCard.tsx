@@ -228,7 +228,7 @@ export function WardrobeRingSummaryCard({
   wearCount,
   neverCount,
   ringSegments,
-  streak = 1,
+  streak = 0,
   labels,
   statColors,
   showStreakIcon = true,

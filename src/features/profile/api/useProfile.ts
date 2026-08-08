@@ -12,8 +12,6 @@ export type UserProfile = {
   body_type: string;
   style_preferences: string[];
   avatar_url: string;
-  bio: string;
-  about: string;
 };
 
 export function useUserProfile() {
@@ -28,7 +26,7 @@ export function useUserProfile() {
       return;
     }
 
-    try {
+    try { 
       setIsLoading(true);
       const { data, error } = await supabase
         .from('user_profiles')

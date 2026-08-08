@@ -27,8 +27,6 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   style_preferences TEXT[] DEFAULT '{}',
   referral_sources TEXT[] DEFAULT '{}',
   avatar_url TEXT,
-  bio TEXT,
-  about TEXT,
   full_length_photos TEXT[] DEFAULT '{}',
   notifications_enabled BOOLEAN DEFAULT true,
   is_active BOOLEAN DEFAULT true,

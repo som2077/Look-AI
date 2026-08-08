@@ -23,8 +23,8 @@ const getTodayString = () => new Date().toISOString().split("T")[0];
 export const useStreakStore = create<StreakState>()(
   persist(
     (set, get) => ({
-      currentStreak: 1,
-      longestStreak: 1,
+      currentStreak: 0,
+      longestStreak: 0,
       lastActiveDate: null,
       hasIncrementedToday: false,
 
@@ -32,7 +32,12 @@ export const useStreakStore = create<StreakState>()(
         const today = getTodayString();
         const { lastActiveDate, currentStreak } = get();
 
-        if (!lastActiveDate) return;
+        if (!lastActiveDate) {
+          if (currentStreak !== 0) {
+            set({ currentStreak: 0 });
+          }
+          return;
+        }
 
         const lastDate = new Date(lastActiveDate);
         const currentDate = new Date(today);
@@ -45,7 +50,6 @@ export const useStreakStore = create<StreakState>()(
             currentStreak: 0,
             hasIncrementedToday: false,
             // we don't update lastActiveDate so it stays as the last actual active day
-            // wait, if we leave it, diffDays will always be > 1 until they do an action.
             // That's fine, incrementStreakAction handles diffDays > 1.
           });
         }
@@ -89,6 +93,7 @@ export const useStreakStore = create<StreakState>()(
           // Missed a day (or more), restart streak at 1
           set({
             currentStreak: 1,
+            longestStreak: Math.max(1, longestStreak),
             lastActiveDate: today,
             hasIncrementedToday: true,
           });
@@ -99,8 +104,8 @@ export const useStreakStore = create<StreakState>()(
 
       resetStreak: () => {
         set({
-          currentStreak: 1,
-          longestStreak: 1,
+          currentStreak: 0,
+          longestStreak: 0,
           lastActiveDate: null,
           hasIncrementedToday: false,
         });

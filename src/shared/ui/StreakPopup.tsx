@@ -14,7 +14,7 @@ interface StreakPopupProps {
 export function StreakPopup({
   visible,
   onClose,
-  streakCount = 1,
+  streakCount = 0,
 }: StreakPopupProps) {
   const lastActiveDate = useStreakStore((state) => state.lastActiveDate);
 
