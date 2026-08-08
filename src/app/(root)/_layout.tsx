@@ -1,25 +1,62 @@
-import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+﻿import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useUser } from "@clerk/clerk-expo";
 import { Stack } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
+
+const getTodayString = () => new Date().toISOString().split("T")[0];
+
+/** Logs an app_open event to streak_logs for today (once per day, fire-and-forget). */
+function useLogAppOpen() {
+  const { supabase } = useSupabase();
+  const { user } = useUser();
+  const loggedDateRef = useRef<string | null>(null);
+
+  const logOpen = async () => {
+    if (!supabase || !user?.id) return;
+    const today = getTodayString();
+    if (loggedDateRef.current === today) return; // already logged today in this session
+    loggedDateRef.current = today;
+
+    try {
+      await supabase.from("streak_logs").upsert(
+        {
+          user_id: user.id,
+          activity_date: today,
+          activity_type: "app_open",
+        },
+        { onConflict: "user_id,activity_date" }
+      );
+    } catch (err) {
+      console.warn("[AppOpen] streak_logs insert failed:", err);
+    }
+  };
+
+  return logOpen;
+}
 
 export default function RootLayout() {
   const checkStreakValidity = useStreakStore((state) => state.checkStreakValidity);
+  const logAppOpen = useLogAppOpen();
 
   useEffect(() => {
     // Initial check on mount
     checkStreakValidity();
+    logAppOpen();
 
     // Check when returning to foreground
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (nextAppState === "active") {
         checkStreakValidity();
+        logAppOpen();
       }
     });
 
     return () => {
       subscription.remove();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkStreakValidity]);
 
   return (

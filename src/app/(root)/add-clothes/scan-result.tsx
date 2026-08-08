@@ -6,7 +6,9 @@ import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-nati
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -93,7 +95,8 @@ export default function ScanResultScreen() {
   const hasItem = useUserWardrobeStore((s) => s.hasItem);
   const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
   const addScan = useScanHistoryStore((s) => s.addScan);
-  const incrementStreakAction = useStreakStore((s) => s.incrementStreakAction);
+  const { syncStreak } = useStreakSync();
+  const { hasIncrementedToday, dismissIncrement, currentStreak } = useStreakStore();
 
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -263,7 +266,7 @@ export default function ScanResultScreen() {
       advanceToNext();
     } else {
       setSaved(true);
-      incrementStreakAction();
+      syncStreak("scan_mode");
     }
   };
 
@@ -584,6 +587,11 @@ export default function ScanResultScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+      <StreakPopup
+        visible={hasIncrementedToday}
+        onClose={dismissIncrement}
+        streakCount={currentStreak}
+      />
     </View>
   );
 }

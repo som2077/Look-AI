@@ -1,4 +1,4 @@
-import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { useWeeklyActivity } from "@/features/streaks/api/useWeeklyActivity";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -106,8 +106,8 @@ export function WeeklyCalendarStrip({
     initialDate ?? new Date(),
   );
 
-  const currentStreak = useStreakStore((state) => state.currentStreak);
-  const lastActiveDate = useStreakStore((state) => state.lastActiveDate);
+  // Real DB data: Set of "YYYY-MM-DD" strings for days app was opened
+  const { activeDates } = useWeeklyActivity();
 
   const weekDates = useMemo(() => {
     const startOfWeek = getStartOfWeek(selectedDate);
@@ -144,33 +144,15 @@ export function WeeklyCalendarStrip({
             diffTime / (1000 * 60 * 60 * 24),
           );
 
+          // Logic: check real DB data instead of estimating from streak count
           let streakStatus: "streak" | "missed" | "future";
           if (diffDaysFromToday > 0) {
+            // Future day — not yet arrived
             streakStatus = "future";
           } else {
-            // Determine if the date is within the actual valid streak
-            // The streak goes back `currentStreak` days from `lastActiveDate`
-            if (!lastActiveDate) {
-              streakStatus = "missed";
-            } else {
-              const lastActive = new Date(lastActiveDate);
-              lastActive.setHours(0, 0, 0, 0);
-              const diffFromLastActive = Math.round(
-                (dateAtMidnight.getTime() - lastActive.getTime()) /
-                  (1000 * 60 * 60 * 24),
-              );
-
-              if (diffFromLastActive > 0) {
-                // E.g., today, but they haven't done the action yet (lastActiveDate is yesterday)
-                streakStatus = "missed";
-              } else if (-diffFromLastActive < currentStreak) {
-                // Within the streak window
-                streakStatus = "streak";
-              } else {
-                // Before the streak started
-                streakStatus = "missed";
-              }
-            }
+            // Past or today: check if user actually opened the app that day
+            const dateStr = dateAtMidnight.toISOString().split("T")[0];
+            streakStatus = activeDates.has(dateStr) ? "streak" : "missed";
           }
 
           return (

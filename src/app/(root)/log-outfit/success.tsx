@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
@@ -13,11 +14,13 @@ interface Stat {
 
 export default function SuccessScreen() {
   const router = useRouter();
-  const { currentStreak, incrementStreakAction } = useStreakStore();
+  const { currentStreak } = useStreakStore();
+  const { syncStreak } = useStreakSync();
 
   React.useEffect(() => {
-    incrementStreakAction();
-  }, [incrementStreakAction]);
+    syncStreak("outfit_logged");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const STATS: Stat[] = [
     { value: "9", label: "Blue kurta wears" },

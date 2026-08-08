@@ -1,5 +1,7 @@
 import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
+import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
   IconArrowLeft,
@@ -109,6 +111,8 @@ export default function OutfitScreen() {
 
   const { supabase } = useSupabase();
   const { isPro } = useRevenueCat();
+  const { syncStreak } = useStreakSync();
+  const { hasIncrementedToday, dismissIncrement, currentStreak } = useStreakStore();
   const [loading, setLoading] = useState(false);
   const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -232,7 +236,8 @@ export default function OutfitScreen() {
 
       if (data?.resultUrl) {
         setResultImageUrl(data.resultUrl);
-        useStreakStore.getState().incrementStreakAction();
+        // Increment local streak + sync to Supabase DB
+        syncStreak("virtual_try_on");
       } else {
         throw new Error("No result URL returned from AI");
       }
@@ -829,6 +834,11 @@ export default function OutfitScreen() {
           </View>
         )}
       </SafeAreaView>
+      <StreakPopup
+        visible={hasIncrementedToday}
+        onClose={dismissIncrement}
+        streakCount={currentStreak}
+      />
     </View>
   );
 }

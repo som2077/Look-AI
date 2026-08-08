@@ -208,8 +208,8 @@ export default function StreakScreen() {
   const { currentStreak, longestStreak } = useStreakStore();
 
   const earnedCount = useMemo(
-    () => MILESTONES.filter((m) => currentStreak >= m.days).length,
-    [currentStreak],
+    () => MILESTONES.filter((m) => longestStreak >= m.days).length,
+    [longestStreak],
   );
   const earnedPct = earnedCount / MILESTONES.length;
 
@@ -506,7 +506,7 @@ export default function StreakScreen() {
                   <MilestoneItem
                     key={m.id}
                     milestone={m}
-                    reached={currentStreak >= m.days}
+                    reached={longestStreak >= m.days}
                   />
                 ))}
               </View>
