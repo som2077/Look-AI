@@ -1,12 +1,12 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import * as SecureStore from "expo-secure-store";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 import {
   namespacedSecureStorage,
   registerStoreRehydration,
   registerStoreReset,
 } from "@/shared/storage/namespacedStorage";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import * as SecureStore from "expo-secure-store";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export type Gender = "Male" | "Female" | "";
 
