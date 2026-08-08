@@ -5,6 +5,7 @@ import {
   IconSquare,
   IconSquareCheck,
 } from "@tabler/icons-react-native";
+import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -14,6 +15,7 @@ import {
   Alert,
   Animated,
   Dimensions,
+  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -21,13 +23,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FlashList } from "@shopify/flash-list";
-import { Image as ExpoImage } from "expo-image";
 
-import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
-import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
+import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 
 import {
   BatchItem,
@@ -72,14 +72,15 @@ export default function BatchScanScreen() {
     }
   }, [params.uris]);
 
-  // Keep selectedIds in sync with items (select new items)
+  // Keep selectedIds in sync with items (select new items safely)
   useEffect(() => {
-    const newIds = items
-      .map((i) => i.id)
-      .filter((id) => !selectedIds.includes(id));
-    if (newIds.length > 0) {
-      setSelectedIds((prev) => [...prev, ...newIds]);
-    }
+    if (items.length === 0) return;
+    setSelectedIds((prev) => {
+      const existing = new Set(prev);
+      const newIds = items.map((i) => i.id).filter((id) => !existing.has(id));
+      if (newIds.length === 0) return prev;
+      return [...prev, ...newIds];
+    });
   }, [items]);
 
   const allInitialLoading =
@@ -416,21 +417,29 @@ function SimpleView({
   isLast,
   onUpdateItem,
 }: any) {
-  const flatListRef = useRef<any>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    if (flatListRef.current && items.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({
+    if (
+      flatListRef.current &&
+      items.length > 0 &&
+      currentIndex >= 0 &&
+      currentIndex < items.length
+    ) {
+      try {
+        flatListRef.current.scrollToIndex({
           index: currentIndex,
-          animated: false,
+          animated: true,
         });
-      }, 10);
+      } catch (e) {
+        // ignore scroll error
+      }
     }
-  }, [currentIndex, items.length]);
+  }, [currentIndex]);
 
   const handleScroll = (event: any) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
+    if (!slideSize) return;
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
     if (index !== currentIndex && index >= 0 && index < items.length) {
       onIndexChange(index);
@@ -439,9 +448,11 @@ function SimpleView({
 
   const renderItem = ({ item }: { item: BatchItem }) => {
     return (
-      <View style={{ width: SCREEN_WIDTH }}>
+      <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
         <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.carouselImageContainer}>
             <ExpoImage
@@ -572,7 +583,7 @@ function SimpleView({
 
   return (
     <View style={{ flex: 1 }}>
-      <FlashList
+      <FlatList
         ref={flatListRef}
         data={items}
         keyExtractor={(i) => i.id}
@@ -581,6 +592,20 @@ function SimpleView({
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleScroll}
         renderItem={renderItem}
+        getItemLayout={(_, index) => ({
+          length: SCREEN_WIDTH,
+          offset: SCREEN_WIDTH * index,
+          index,
+        })}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            flatListRef.current?.scrollToIndex({
+              index: info.index,
+              animated: false,
+            });
+          }, 50);
+        }}
+        style={{ flex: 1 }}
       />
 
       <View style={styles.bottomBar}>

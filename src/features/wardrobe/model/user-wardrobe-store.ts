@@ -45,6 +45,7 @@ export type UserClothingItem = {
   wearCount?: number;
   lastWornDate?: string;
   rating?: number;
+  annotations?: Record<string, any>;
 
   createdAt: string;
 };

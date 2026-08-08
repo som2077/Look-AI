@@ -1,9 +1,9 @@
-import { useAuth } from "@clerk/clerk-expo";
-import { useEffect, useState, useCallback } from "react";
-import { create } from "zustand";
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { uploadToCloudinary } from "@/shared/cloudinary/client";
 import { useSupabase } from "@/shared/supabase/use-supabase";
-import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
+import { useAuth } from "@clerk/clerk-expo";
+import { useCallback, useEffect, useState } from "react";
+import { create } from "zustand";
 
 export interface CommunityPost {
   id: string;
@@ -65,12 +65,12 @@ export function useCommunityPosts() {
           post_reactions(user_id, reaction_type)
         `
         )
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: true })
         .limit(50);
 
       if (error) throw error;
 
-      const backendPosts = (data ?? []).reverse() as any[];
+      const backendPosts = (data ?? []) as any[];
       const localMockPosts = usePostsStore
         .getState()
         .posts.filter((p) => p.id.includes("0."));
@@ -187,9 +187,9 @@ export function useCommunityPosts() {
 
   const toggleReaction = useCallback(async (postId: string, reactionType: string | null) => {
     if (!userId || !supabase) return;
-    
+
     const previousPosts = usePostsStore.getState().posts;
-    
+
     // Optimistic UI Update
     usePostsStore.setState((state) => ({
       posts: state.posts.map((post) => {

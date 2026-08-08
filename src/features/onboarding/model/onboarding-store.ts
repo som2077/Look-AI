@@ -128,7 +128,7 @@ export const useOnboardingState = create<OnboardingState>()(
               bio: state.bio,
               about: state.about,
               style_preferences: state.stylePreferences,
-              where_did_you_hear: state.whereDidYouHear,
+              referral_sources: state.whereDidYouHear,
               avatar_url: avatarUrl,
             },
             { onConflict: "user_id" },
