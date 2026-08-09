@@ -26,6 +26,23 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
+let currentGetToken: (() => Promise<string | null>) | undefined;
+let currentUserId: string | null = null;
+
+export const setSupabaseTokenGetter = (
+  getter: (() => Promise<string | null>) | undefined,
+) => {
+  currentGetToken = getter;
+};
+
+export const setSupabaseGlobalUserId = (userId: string | null) => {
+  currentUserId = userId;
+};
+
+export const getSupabaseGlobalUserId = (): string | null => {
+  return currentUserId;
+};
+
 export const createSupabaseClient = (
   getToken?: () => Promise<string | null>,
 ): SupabaseClient => {
@@ -42,10 +59,12 @@ export const createSupabaseClient = (
       },
     },
     accessToken: async () => {
-      const clerkToken = getToken ? await getToken() : null;
+      const fn = getToken || currentGetToken;
+      const clerkToken = fn ? await fn() : null;
       return clerkToken ?? null;
     },
   });
 };
 
 export const supabase = createSupabaseClient();
+

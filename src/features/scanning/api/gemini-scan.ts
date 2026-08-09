@@ -4,12 +4,11 @@
  */
 
 import { supabase } from "@/shared/supabase/client";
+import * as FileSystem from "expo-file-system";
 
 const MODELS = [
-  "gemini-2.5-flash-lite",
-  "gemini-2.5-flash",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -91,17 +90,45 @@ export interface FitCheckAnalysis {
 // ─── Core Gemini caller ───────────────────────────────────────────────────────
 
 async function uriToBase64(uri: string): Promise<string> {
-  const response = await fetch(uri);
-  const blob = await response.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      resolve(result.split(",")[1]);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+  if (!uri) return "";
+
+  if (uri.startsWith("data:image")) {
+    return uri.split(",")[1] || "";
+  }
+
+  if (
+    uri.startsWith("file://") ||
+    uri.startsWith("/") ||
+    uri.startsWith("content://") ||
+    uri.startsWith("ph://")
+  ) {
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: "base64",
+      });
+      if (base64) return base64;
+    } catch (fsErr) {
+      console.warn("[Gemini-Scan] FileSystem read failed, attempting fetch fallback:", fsErr);
+    }
+  }
+
+  try {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        const base64 = result.includes(",") ? result.split(",")[1] : result;
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.error("[Gemini-Scan] uriToBase64 failed:", err);
+    throw err;
+  }
 }
 
 async function callGeminiVision(
@@ -111,7 +138,8 @@ async function callGeminiVision(
   let base64: string;
   try {
     base64 = await uriToBase64(imageUri);
-  } catch {
+  } catch (err) {
+    console.error("[Gemini-Scan] Error converting image URI to base64:", err);
     return null;
   }
 
@@ -136,19 +164,67 @@ async function callGeminiVision(
   };
 
   for (const model of MODELS) {
+    let textResponse: string | null = null;
+    let invokeFailed = false;
+
     try {
       const { data, error } = await supabase.functions.invoke("gemini-proxy", {
         body: { model, body },
       });
-      if (error) continue;
+
+      if (error) {
+        console.warn(`[Gemini-Scan] Edge function failed for ${model}, attempting direct fetch...`, error);
+        invokeFailed = true;
+      } else {
+        const candidate = data?.candidates?.[0];
+        if (candidate?.finishReason === "SAFETY") {
+          return JSON.stringify({ error: "SAFETY_VIOLATION" });
+        }
+        textResponse = candidate?.content?.parts?.[0]?.text || null;
+      }
+    } catch (err) {
+      console.warn(`[Gemini-Scan] Invoke exception for ${model}, attempting direct fetch...`, err);
+      invokeFailed = true;
+    }
+
+    if (invokeFailed) {
+      // Fallback to direct fetch
+      const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+      if (!apiKey) {
+        console.error("[Gemini-Scan] No EXPO_PUBLIC_GEMINI_API_KEY available for fallback.");
+        continue;
+      }
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`[Gemini-Scan] Direct fetch failed for ${model}:`, res.status, errText);
+        continue;
+      }
+
+      const data = await res.json();
       const candidate = data?.candidates?.[0];
       if (candidate?.finishReason === "SAFETY") {
         return JSON.stringify({ error: "SAFETY_VIOLATION" });
       }
-      return candidate?.content?.parts?.[0]?.text ?? null;
-    } catch {
+      textResponse = candidate?.content?.parts?.[0]?.text || null;
+    }
+
+    if (!textResponse) {
+      console.warn(`[Gemini-Scan] Empty response from model ${model}`);
       continue;
     }
+
+    return textResponse;
   }
   return null;
 }

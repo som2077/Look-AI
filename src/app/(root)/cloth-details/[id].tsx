@@ -1,4 +1,8 @@
-import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import {
+  useUserWardrobeStore,
+  setWardrobeStoreUserId,
+} from "@/features/wardrobe/model/user-wardrobe-store";
+import { useAuth } from "@clerk/clerk-expo";
 import {
   OCCASIONS,
   Occasion,
@@ -31,7 +35,7 @@ import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -45,7 +49,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -327,15 +331,24 @@ const getSeasonIcon = (label: string, color: string) => {
 
 export default function ItemDetailsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { userId } = useAuth();
 
   const updateItem = useUserWardrobeStore((state) => state.updateItem);
+  const addItem = useUserWardrobeStore((state) => state.addItem);
   const items = useUserWardrobeStore((state) => state.items);
   const removeItem = useUserWardrobeStore((state) => state.removeItem);
   const userItem = useUserWardrobeStore((state) =>
     state.items.find((item) => item.id === id),
   );
   const mockItem = getMockWardrobeItemById(id);
+
+  useEffect(() => {
+    if (userId) {
+      setWardrobeStoreUserId(userId);
+    }
+  }, [userId]);
 
   const initialName = userItem?.customName ?? mockItem?.name ?? "Unknown item";
   const initialCategory = userItem?.category ?? mockItem?.category ?? "top";
@@ -392,7 +405,7 @@ export default function ItemDetailsScreen() {
     | null
   >(null);
 
-  const [rating, setRating] = useState<number>(0);
+  const [rating, setRating] = useState<number>(userItem?.rating ?? 5);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const panY = useRef(new Animated.Value(400)).current;
@@ -430,35 +443,47 @@ export default function ItemDetailsScreen() {
     }),
   ).current;
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
+    const updates = {
+      customName: name,
+      category,
+      brand,
+      careInstructions,
+      notes,
+      rating: rating || 5,
+      primaryColor: color,
+      colorHex,
+      imageUrl: localPhotoUri,
+      season: seasons.length > 0 ? seasons : undefined,
+      occasion: occasions.length > 0 ? occasions : undefined,
+    };
+
     if (userItem?.id) {
-      updateItem(userItem.id, {
-        customName: name,
-        category,
-        brand,
-        careInstructions,
-        notes,
-        primaryColor: color,
-        colorHex,
-        imageUrl: localPhotoUri,
-        season: seasons.length > 0 ? seasons : undefined,
-        occasion: occasions.length > 0 ? occasions : undefined,
+      await updateItem(userItem.id, updates);
+    } else {
+      addItem({
+        ...updates,
+        id: id && id.length > 10 ? id : undefined,
+        category: category || "top",
       });
     }
     router.back();
   }, [
     router,
+    id,
     name,
     category,
     brand,
     careInstructions,
     notes,
+    rating,
     color,
     colorHex,
     occasions,
     seasons,
     localPhotoUri,
     updateItem,
+    addItem,
     userItem,
   ]);
 
@@ -479,11 +504,11 @@ export default function ItemDetailsScreen() {
         >
           <Pressable
             onPress={() => {
-              handleConfirm();
+              router.push(`/(root)/create-outfit?itemId=${id}` as never);
             }}
             style={{ zIndex: 10 }}
           >
-            <IconArrowLeft size={24} color="#1D1A27" strokeWidth={2} />
+            <IconPentagonPlus size={24} color="#1D1A27" strokeWidth={1.5} />
           </Pressable>
           <View
             style={{
@@ -509,17 +534,9 @@ export default function ItemDetailsScreen() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 16,
               zIndex: 10,
             }}
           >
-            <Pressable
-              onPress={() =>
-                router.push(`/(root)/create-outfit?itemId=${id}` as never)
-              }
-            >
-              <IconPentagonPlus size={24} color="#1D1A27" strokeWidth={1.5} />
-            </Pressable>
             <Pressable onPress={() => setIsMenuOpen(true)}>
               <IconDotsVertical size={24} color="#1D1A27" />
             </Pressable>
@@ -558,9 +575,9 @@ export default function ItemDetailsScreen() {
               }}
             >
               <Pressable
-                onPress={() => {
+                onPress={async () => {
                   setIsMenuOpen(false);
-                  removeItem(id);
+                  await removeItem(id);
                   router.back();
                 }}
                 style={{
@@ -1024,6 +1041,53 @@ export default function ItemDetailsScreen() {
           </View>
         </ScrollView>
 
+        {/* ── Bottom CTA ── */}
+        <View
+          style={{
+            paddingHorizontal: 30,
+            // borderTopLeftRadius: 20,
+            // borderTopRightRadius: 20,
+            paddingTop: 8,
+            paddingBottom: Math.max(insets.bottom, 16) + 8,
+            backgroundColor: "rgba(255, 255, 255, 1)",
+          }}
+        >
+          <Pressable
+            onPress={handleConfirm}
+            style={({ pressed }) => ({
+              backgroundColor: "#1D1A27",
+              borderRadius: 999,
+              height: 56,
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.85 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+              shadowColor: "#000000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 10,
+              elevation: 4,
+            })}
+          >
+            <Text
+              style={{
+                color: "#ffffffff",
+                fontSize: 16,
+                fontWeight: "700",
+                letterSpacing: 0.3,
+                textAlign: "center",
+                // borderWidth: 1,
+                paddingVertical:14,
+                borderRadius:50,
+                backgroundColor:"#000000ff"
+              }}
+            >
+              Done
+            </Text>
+          </Pressable>
+        </View>
+
         {/* ── Category Bottom Sheet ── */}
         <Modal
           visible={activeSheet !== null}
@@ -1048,7 +1112,7 @@ export default function ItemDetailsScreen() {
                 {...panResponder.panHandlers}
                 style={{ transform: [{ translateY: panY }] }}
               >
-                <Pressable onPress={() => {}}>
+                <Pressable onPress={() => { }}>
                   <View
                     style={{
                       backgroundColor: "#fff",

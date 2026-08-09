@@ -1,7 +1,11 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { useSavedStore } from "@/features/wardrobe/model/saved-store";
-import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import {
+  useUserWardrobeStore,
+  subscribeToWardrobeRealtime,
+} from "@/features/wardrobe/model/user-wardrobe-store";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
+import { useAuth } from "@clerk/clerk-expo";
 // import { PremiumGradientBackground } from "@/shared/ui/PremiumGradientBackground";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
@@ -32,7 +36,7 @@ import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -557,9 +561,21 @@ const getSortIcon = (value: string, color: string) => {
 export default function WardrobeScreen() {
   const { onScroll: hideTabBarOnScroll } = useScrollToHideTabBar();
   const router = useRouter();
+  const { userId } = useAuth();
   const userItems = useUserWardrobeStore((state) => state.items);
+  const syncWithDatabase = useUserWardrobeStore((state) => state.syncWithDatabase);
   const scrollY = useRef(new Animated.Value(0)).current;
   const HEADER_HEIGHT = 50;
+
+  useEffect(() => {
+    if (userId) {
+      syncWithDatabase(userId);
+      const unsubscribe = subscribeToWardrobeRealtime(userId);
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [userId, syncWithDatabase]);
 
   const [activeFilters, setActiveFilters] = useState({
     category: "all",

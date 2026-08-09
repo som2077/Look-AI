@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
@@ -6,6 +5,16 @@ import {
   registerStoreRehydration,
   registerStoreReset,
 } from "@/shared/storage/namespacedStorage";
+import { supabase, getSupabaseGlobalUserId, setSupabaseGlobalUserId } from "@/shared/supabase/client";
+
+let globalUserId: string | null = null;
+
+export const setWardrobeStoreUserId = (uid: string | null) => {
+  globalUserId = uid;
+  if (uid) {
+    setSupabaseGlobalUserId(uid);
+  }
+};
 
 export type UserClothingItem = {
   id: string;
@@ -67,16 +76,156 @@ export type UserOutfit = {
   createdAt: string;
 };
 
+function generateUUID(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function isValidUUID(str: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+}
+
+function mapDbRowToUserItem(row: any): UserClothingItem {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    customName: row.custom_name,
+    brand: row.brand,
+    category: row.category,
+    subCategory: row.sub_category,
+    primaryColor: row.primary_color,
+    secondaryColors: row.secondary_colors || [],
+    pattern: row.pattern,
+    fabricGuess: row.fabric_guess,
+    fit: row.fit,
+    sleeveType: row.sleeve_type,
+    neckType: row.neck_type,
+    careInstructions: row.care_instructions,
+    notes: row.notes,
+    colorHex: row.color_hex,
+    style: row.style || [],
+    season: row.season || [],
+    occasion: row.occasion || [],
+    formalityScore: row.formality_score,
+    versatilityTags: row.versatility_tags || [],
+    imageUrl: row.image_url,
+    originalImageUrl: row.original_image_url,
+    confidence: row.confidence ? Number(row.confidence) : undefined,
+    source: row.source,
+    isFavorite: row.is_favorite,
+    wearCount: row.wear_count,
+    lastWornDate: row.last_worn_date,
+    rating: row.rating,
+    annotations: row.annotations,
+    createdAt: row.created_at || new Date().toISOString(),
+  };
+}
+
+function mapUserItemToDbRow(item: UserClothingItem, userId: string) {
+  return {
+    id: isValidUUID(item.id) ? item.id : undefined,
+    user_id: userId,
+    custom_name: item.customName || null,
+    brand: item.brand || null,
+    category: item.category || "Top",
+    sub_category: item.subCategory || null,
+    primary_color: item.primaryColor || null,
+    color_hex: item.colorHex || null,
+    secondary_colors: item.secondaryColors || [],
+    pattern: item.pattern || null,
+    fabric_guess: item.fabricGuess || null,
+    fit: item.fit || null,
+    sleeve_type: item.sleeveType || null,
+    neck_type: item.neckType || null,
+    style: item.style || [],
+    season: item.season || [],
+    occasion: item.occasion || [],
+    formality_score: item.formalityScore || null,
+    versatility_tags: item.versatilityTags || [],
+    rating: item.rating || 5,
+    care_instructions: item.careInstructions || null,
+    notes: item.notes || null,
+    image_url: item.imageUrl || item.originalImageUrl || "",
+    original_image_url: item.originalImageUrl || null,
+    annotations: item.annotations || {},
+    confidence: item.confidence || null,
+    source: item.source || "camera",
+    is_favorite: item.isFavorite || false,
+    wear_count: item.wearCount || 0,
+    last_worn_date: item.lastWornDate || null,
+  };
+}
+
 type UserWardrobeState = {
   items: UserClothingItem[];
   outfitLogs: UserOutfitLog[];
   outfits: UserOutfit[];
-  addItem: (item: Omit<UserClothingItem, "id" | "createdAt">) => string;
-  removeItem: (id: string) => void;
-  updateItem: (id: string, updates: Partial<UserClothingItem>) => void;
+  setItems: (items: UserClothingItem[]) => void;
+  addItem: (item: Omit<UserClothingItem, "id" | "createdAt"> & { id?: string }) => string;
+  removeItem: (id: string) => Promise<void>;
+  updateItem: (id: string, updates: Partial<UserClothingItem>) => Promise<void>;
   addOutfitLog: (log: Omit<UserOutfitLog, "id" | "createdAt">) => void;
   addOutfit: (outfit: Omit<UserOutfit, "id" | "createdAt">) => void;
   hasItem: (category: string, color: string) => boolean;
+  syncWithDatabase: (userId?: string) => Promise<void>;
+};
+
+let realtimeChannel: any = null;
+
+export const subscribeToWardrobeRealtime = (userId: string) => {
+  if (!userId) return () => {};
+
+  if (realtimeChannel) {
+    try {
+      supabase.removeChannel(realtimeChannel);
+    } catch (_) {}
+    realtimeChannel = null;
+  }
+
+  realtimeChannel = supabase
+    .channel(`public:wardrobe_items:${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "wardrobe_items",
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        const store = useUserWardrobeStore.getState();
+        if (payload.eventType === "INSERT") {
+          const newItem = mapDbRowToUserItem(payload.new);
+          store.setItems([
+            newItem,
+            ...store.items.filter((i) => i.id !== newItem.id),
+          ]);
+        } else if (payload.eventType === "UPDATE") {
+          const updated = mapDbRowToUserItem(payload.new);
+          store.setItems(
+            store.items.map((i) => (i.id === updated.id ? updated : i)),
+          );
+        } else if (payload.eventType === "DELETE") {
+          const oldId = (payload.old as any)?.id;
+          if (oldId) {
+            store.setItems(store.items.filter((i) => i.id !== oldId));
+          }
+        }
+      },
+    )
+    .subscribe();
+
+  return () => {
+    if (realtimeChannel) {
+      try {
+        supabase.removeChannel(realtimeChannel);
+      } catch (_) {}
+      realtimeChannel = null;
+    }
+  };
 };
 
 export const useUserWardrobeStore = create<UserWardrobeState>()(
@@ -86,27 +235,153 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
       outfitLogs: [],
       outfits: [],
 
+      setItems: (items) => set({ items }),
+
       addItem: (item) => {
-        const id = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const id = item.id && isValidUUID(item.id) ? item.id : generateUUID();
+        const newItem: UserClothingItem = {
+          ...item,
+          id,
+          createdAt: new Date().toISOString(),
+        };
+        
         set({
           items: [
-            ...get().items,
-            { ...item, id, createdAt: new Date().toISOString() },
+            ...get().items.filter((i) => i.id !== id),
+            newItem,
           ],
         });
+
+        // Sync to Supabase in real-time
+        (async () => {
+          try {
+            const uid = item.userId || globalUserId || getSupabaseGlobalUserId();
+            if (uid) {
+              // Ensure user_profiles has a row to satisfy fk_wardrobe_items_user
+              await supabase
+                .from("user_profiles")
+                .upsert({ user_id: uid }, { onConflict: "user_id" });
+
+              const row = mapUserItemToDbRow(newItem, uid);
+              const { error } = await supabase
+                .from("wardrobe_items")
+                .upsert(row, { onConflict: "id" });
+              if (error) {
+                console.error("[WardrobeStore] Supabase insert error:", error);
+              } else {
+                console.log("[WardrobeStore] Successfully saved wardrobe item to Supabase:", id);
+              }
+            } else {
+              console.warn("[WardrobeStore] No authenticated user ID available to persist wardrobe item.");
+            }
+          } catch (err) {
+            console.error("[WardrobeStore] Failed to save wardrobe item to Supabase:", err);
+          }
+        })();
+
         return id;
       },
 
-      removeItem: (id) => {
+      removeItem: async (id) => {
+        const itemToDelete = get().items.find((i) => i.id === id);
         set({ items: get().items.filter((i) => i.id !== id) });
+
+        // Sync deletion to Supabase
+        try {
+          if (isValidUUID(id)) {
+            const { error } = await supabase.from("wardrobe_items").delete().eq("id", id);
+            if (error) {
+              console.error("[WardrobeStore] Supabase delete error:", error);
+            } else {
+              console.log("[WardrobeStore] Successfully deleted item from Supabase:", id);
+            }
+          } else {
+            const uid = itemToDelete?.userId || globalUserId || getSupabaseGlobalUserId();
+            if (uid && itemToDelete?.customName) {
+              await supabase
+                .from("wardrobe_items")
+                .delete()
+                .eq("user_id", uid)
+                .eq("name", itemToDelete.customName);
+            }
+          }
+        } catch (err) {
+          console.warn("[WardrobeStore] Failed to delete item from Supabase:", err);
+        }
       },
 
-      updateItem: (id, updates) => {
+      updateItem: async (id, updates) => {
+        // 1. Optimistic update
         set({
           items: get().items.map((i) =>
             i.id === id ? { ...i, ...updates } : i,
           ),
         });
+
+        // 2. Real-time sync to Supabase
+        try {
+          const updatedItem = get().items.find((i) => i.id === id);
+          if (!updatedItem) return;
+
+          const uid = updatedItem.userId || globalUserId || getSupabaseGlobalUserId();
+          if (uid) {
+            await supabase
+              .from("user_profiles")
+              .upsert({ user_id: uid }, { onConflict: "user_id" });
+
+            const finalId = isValidUUID(id) ? id : generateUUID();
+            if (finalId !== id) {
+              set({
+                items: get().items.map((i) =>
+                  i.id === id ? { ...i, id: finalId } : i,
+                ),
+              });
+            }
+
+            const row = mapUserItemToDbRow({ ...updatedItem, id: finalId }, uid);
+            const { error } = await supabase
+              .from("wardrobe_items")
+              .upsert({ ...row, id: finalId }, { onConflict: "id" });
+
+            if (error) {
+              console.error("[WardrobeStore] Supabase update item error:", error);
+            } else {
+              console.log("[WardrobeStore] Real-time Supabase update successful for item:", finalId);
+            }
+          } else {
+            console.warn("[WardrobeStore] No user ID available for real-time Supabase update.");
+          }
+        } catch (err) {
+          console.error("[WardrobeStore] Failed to update item in Supabase:", err);
+        }
+      },
+
+      syncWithDatabase: async (explicitUserId?: string) => {
+        try {
+          const uid = explicitUserId || globalUserId || getSupabaseGlobalUserId();
+          if (!uid) return;
+
+          const { data, error } = await supabase
+            .from("wardrobe_items")
+            .select("*")
+            .eq("user_id", uid)
+            .order("created_at", { ascending: false });
+
+          if (error) {
+            console.warn("[WardrobeStore] Error fetching from Supabase:", error);
+            return;
+          }
+
+          if (data && data.length > 0) {
+            const dbItems = data.map(mapDbRowToUserItem);
+            const localItems = get().items;
+            const dbIds = new Set(dbItems.map((i) => i.id));
+            const nonSyncedLocal = localItems.filter((i) => !dbIds.has(i.id));
+            set({ items: [...dbItems, ...nonSyncedLocal] });
+          }
+        } catch (err) {
+          console.warn("[WardrobeStore] Error in syncWithDatabase:", err);
+        }
       },
 
       hasItem: (category: string, color: string) => {
@@ -144,3 +419,4 @@ registerStoreRehydration(() => useUserWardrobeStore.persist.rehydrate());
 registerStoreReset(() =>
   useUserWardrobeStore.setState({ items: [], outfits: [], outfitLogs: [] })
 );
+

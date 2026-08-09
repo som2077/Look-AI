@@ -40,12 +40,13 @@ serve(async (req) => {
       throw new Error("Missing GOOGLE_GEMINI_API_KEY environment variable");
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-goog-api-key": geminiKey,
       },
       body: JSON.stringify(geminiBody),
     });

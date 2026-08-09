@@ -2,7 +2,9 @@ import {
   ClothAnalysisResult,
   saveClothToWardrobe,
 } from "@/features/wardrobe/api/saveClothToWardrobe";
+import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useAuth } from "@clerk/clerk-expo";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -17,12 +19,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-// Assume user auth is handled somewhere, using a placeholder for now
-const CURRENT_USER_ID = "PLACEHOLDER_USER_ID";
 
 export default function ClothScanScreen() {
   const router = useRouter();
   const { supabase } = useSupabase();
+  const { userId } = useAuth();
+  const addItem = useUserWardrobeStore((s) => s.addItem);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   // States
@@ -103,6 +105,17 @@ export default function ClothScanScreen() {
   const handleSave = async () => {
     if (!analysisResult) return;
 
+    let targetUserId = userId;
+    if (!targetUserId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      targetUserId = user?.id;
+    }
+
+    if (!targetUserId) {
+      Alert.alert("Authentication Required", "Please log in to save items to your wardrobe.");
+      return;
+    }
+
     setIsLoading(true);
     setProgressText("Saving to Wardrobe...");
 
@@ -113,16 +126,48 @@ export default function ClothScanScreen() {
       supabase,
       finalResult,
       "camera", // or gallery depending on source
-      CURRENT_USER_ID,
+      targetUserId,
     );
 
     setIsLoading(false);
 
     if (success) {
-      Alert.alert("Success", "Item added to wardrobe!");
-      setAnalysisResult(null); // Reset
+      addItem({
+        id: itemId,
+        userId: targetUserId,
+        customName: formState.notes
+          ? `${formState.color ? formState.color + " " : ""}${formState.category || "Item"}`
+          : formState.brand
+          ? `${formState.brand} ${formState.category || "Item"}`
+          : formState.category || "Item",
+        brand: formState.brand,
+        category: formState.category || "Top",
+        primaryColor: formState.color,
+        season: formState.season ? [formState.season] : ["All Season"],
+        occasion: formState.occasion ? [formState.occasion] : ["Casual"],
+        careInstructions: formState.careInstructions,
+        notes: formState.notes,
+        imageUrl: analysisResult.bg_removed_url || analysisResult.original_url,
+        originalImageUrl: analysisResult.original_url,
+        confidence: 0.95,
+        source: "camera",
+      });
+
+      Alert.alert("Success", "Item added to wardrobe!", [
+        {
+          text: "View Wardrobe",
+          onPress: () => router.replace("/(root)/(tabs)/wardrobe" as never),
+        },
+        {
+          text: "Scan Another",
+          onPress: () => {
+            setAnalysisResult(null);
+            setFormState({});
+          },
+        },
+      ]);
     } else {
-      Alert.alert("Save Error", error);
+      Alert.alert("Save Error", error || "Failed to save cloth to database");
     }
   };
 

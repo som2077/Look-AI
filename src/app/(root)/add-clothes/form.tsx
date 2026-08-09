@@ -2,7 +2,8 @@ import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analy
 import { ScanningOverlay } from "@/features/scanning/ui/ScanningOverlay";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
-import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { useStreakSync } from "@/features/streaks/api/useStreakSync";
+import { useAuth } from "@clerk/clerk-expo";
 import {
   IconArrowLeft,
   IconChevronDown,
@@ -383,9 +384,10 @@ export default function AddClothesFormScreen() {
     }
   }, []);
 
+  const { userId } = useAuth();
   const addItem = useUserWardrobeStore((s) => s.addItem);
   const { canAddWardrobe, handleLimitReached } = usePremiumLimits();
-  const incrementStreakAction = useStreakStore((s) => s.incrementStreakAction);
+  const { syncStreak } = useStreakSync();
 
   const handleConfirm = useCallback(() => {
     if (!canAddWardrobe) {
@@ -393,6 +395,7 @@ export default function AddClothesFormScreen() {
       return;
     }
     addItem({
+      userId: userId || undefined,
       customName: name || "Untitled item",
       category,
       brand,
@@ -407,10 +410,11 @@ export default function AddClothesFormScreen() {
     if (params.outfitIndex !== undefined) {
       removeOutfit(parseInt(params.outfitIndex, 10));
     }
-    incrementStreakAction();
+    syncStreak("scan_mode");
     router.replace("/(root)/(tabs)/wardrobe" as never);
   }, [
     router,
+    userId,
     name,
     category,
     brand,
@@ -426,7 +430,7 @@ export default function AddClothesFormScreen() {
     handleLimitReached,
     params.outfitIndex,
     removeOutfit,
-    incrementStreakAction,
+    syncStreak,
   ]);
 
   const handleRetake = useCallback(() => {
@@ -437,7 +441,7 @@ export default function AddClothesFormScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <StatusBar style="dark" />
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         {/* ── Header ── */}
         <View
           style={{
@@ -902,8 +906,8 @@ export default function AddClothesFormScreen() {
         <View
           style={{
             paddingHorizontal: 20,
-            paddingBottom: 28,
-            paddingTop: 16,
+            paddingBottom: 12,
+            paddingTop: 12,
             backgroundColor: "#fff",
             borderTopWidth: 1,
             borderTopColor: "#F3F4F6",
@@ -986,7 +990,7 @@ export default function AddClothesFormScreen() {
                 {...panResponder.panHandlers}
                 style={{ transform: [{ translateY: panY }] }}
               >
-                <Pressable onPress={() => {}}>
+                <Pressable onPress={() => { }}>
                   <View
                     style={{
                       backgroundColor: "#fff",

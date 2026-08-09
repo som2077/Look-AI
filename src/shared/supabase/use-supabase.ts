@@ -1,6 +1,10 @@
-﻿import { useAuth } from "@clerk/clerk-expo";
+import { useAuth } from "@clerk/clerk-expo";
 import { useEffect, useRef, useState } from "react";
-import { createSupabaseClient } from "@/shared/supabase/client";
+import {
+  createSupabaseClient,
+  setSupabaseTokenGetter,
+  setSupabaseGlobalUserId,
+} from "@/shared/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const useSupabase = () => {
@@ -28,6 +32,9 @@ export const useSupabase = () => {
         const getSupabaseToken = isSignedIn
           ? () => getTokenRef.current({ template: "supabase" })
           : undefined;
+
+        setSupabaseTokenGetter(getSupabaseToken);
+        setSupabaseGlobalUserId(userId ?? null);
 
         if (!isMounted) {
           return;

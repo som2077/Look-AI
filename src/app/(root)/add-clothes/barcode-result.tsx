@@ -1,8 +1,9 @@
 import { BarcodeAnalysis, analyzeBarcodeImage } from "@/features/scanning/api/gemini-scan"
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store"
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store"
-import { useStreakStore } from "@/features/streaks/model/useStreakStore"
+import { useStreakSync } from "@/features/streaks/api/useStreakSync"
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits"
+import { useAuth } from "@clerk/clerk-expo"
 import {
   IconArrowLeft,
   IconBarcode,
@@ -72,11 +73,12 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default function BarcodeResultScreen() {
   const router = useRouter()
+  const { userId } = useAuth()
   const { canAddWardrobe, handleLimitReached } = usePremiumLimits()
   const params = useLocalSearchParams() as BarcodeResultParams
   const addItem = useUserWardrobeStore((s) => s.addItem)
   const addScan = useScanHistoryStore((s) => s.addScan)
-  const incrementStreakAction = useStreakStore((s) => s.incrementStreakAction)
+  const { syncStreak } = useStreakSync()
 
   const [saved, setSaved] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
@@ -126,6 +128,7 @@ const handleSave = () => {
       return
     }
     addItem({
+      userId: userId || undefined,
       customName: result.itemName || "Clothing Item",
       category: "top",
       primaryColor: result.color,
@@ -134,7 +137,7 @@ const handleSave = () => {
       brand: result.brand,
     })
     setSaved(true)
-    incrementStreakAction()
+    syncStreak("scan_mode")
   }
 
   const infoRows: Array<{ label: string; value: string }> = [

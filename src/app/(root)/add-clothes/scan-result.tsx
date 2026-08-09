@@ -4,6 +4,7 @@ import { useScanHistoryStore } from "@/features/scanning/model/scan-history-stor
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { useStreakSync } from "@/features/streaks/api/useStreakSync";
@@ -45,7 +46,10 @@ const DEFAULT_RESULT: FullClothingAnalysis = {
   occasion: ["Casual"],
   formalityScore: 5,
   versatilityTags: [],
-  confidence: 0.75,
+  colorHex: "#000000",
+  careInstructions: "Machine wash cold",
+  notes: "No special notes",
+  confidence: 0.9,
 };
 
 function ConfidenceBar({ confidence }: { confidence: number }) {
@@ -89,6 +93,7 @@ function ConfidenceBar({ confidence }: { confidence: number }) {
 
 export default function ScanResultScreen() {
   const router = useRouter();
+  const { userId } = useAuth();
   const params = useLocalSearchParams() as ScanResultParams;
   const { canAddWardrobe, handleLimitReached } = usePremiumLimits();
   const addItem = useUserWardrobeStore((s) => s.addItem);
@@ -232,6 +237,7 @@ export default function ScanResultScreen() {
     }
     setSaving(true);
     addItem({
+      userId: userId || undefined,
       customName,
       brand,
       category: result.category,

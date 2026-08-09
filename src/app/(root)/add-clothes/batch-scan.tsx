@@ -26,8 +26,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
-import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import { useAuth } from "@clerk/clerk-expo";
 
 import {
   BatchItem,
@@ -40,6 +41,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function BatchScanScreen() {
   const router = useRouter();
+  const { userId } = useAuth();
   const params = useLocalSearchParams<{ uris?: string }>();
   const [viewMode, setViewMode] = useState<ViewMode>("simple");
 
@@ -55,7 +57,7 @@ export default function BatchScanScreen() {
     usePremiumLimits();
   const addItem = useUserWardrobeStore((s) => s.addItem);
   const addScan = useScanHistoryStore((s) => s.addScan);
-  const incrementStreakAction = useStreakStore((s) => s.incrementStreakAction);
+  const { syncStreak } = useStreakSync();
 
   useEffect(() => {
     if (hasStarted.current) return;
@@ -166,6 +168,7 @@ export default function BatchScanScreen() {
       for (const item of itemsToSave) {
         const aiData = item.data!;
         addItem({
+          userId: userId || undefined,
           customName: item.customName,
           brand: item.brand,
           category: aiData.category,
@@ -195,7 +198,7 @@ export default function BatchScanScreen() {
       }
 
       clearBatch();
-      incrementStreakAction();
+      syncStreak("scan_mode");
       router.replace("/(root)/(tabs)/wardrobe");
     } catch (e) {
       console.error(e);
