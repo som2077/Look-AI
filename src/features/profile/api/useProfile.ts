@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/shared/supabase/client';
-import { useAuth } from '@clerk/clerk-expo';
+import { supabase } from "@/shared/supabase/client";
+import { useAuth } from "@clerk/clerk-expo";
+import { useCallback, useEffect, useState } from "react";
 
 export type UserProfile = {
   user_id: string;
@@ -26,18 +26,18 @@ export function useUserProfile() {
       return;
     }
 
-    try { 
+    try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
+        .from("user_profiles")
+        .select("*")
+        .eq("user_id", userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error && error.code !== "PGRST116") {
         throw error;
       }
-      
+
       setData(data as UserProfile | null);
     } catch (err: any) {
       setError(err);
@@ -60,14 +60,14 @@ export function useUpdateProfile() {
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!userId) throw new Error("No user found");
-    
+
     setIsUpdating(true);
     setError(null);
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from("user_profiles")
         .update(updates)
-        .eq('user_id', userId)
+        .eq("user_id", userId)
         .select()
         .single();
 
@@ -83,4 +83,3 @@ export function useUpdateProfile() {
 
   return { updateProfile, isUpdating, error };
 }
-
