@@ -3,7 +3,6 @@ import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
 import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
 import {
   usePremiumLimits,
-  WARDROBE_LIMIT,
 } from "@/features/payments/model/usePremiumLimits";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { useRingStats } from "@/features/wardrobe/api/useRingStats";
@@ -64,7 +63,7 @@ type CardKey = "wardrobe" | "blank1";
 // Only 2 cards needed — was wastefully creating 100 items
 const CARDS: CardKey[] = ["wardrobe", "blank1"];
 
-type FilterTab = "Days" | "Weeks" | "Months" | "All";
+type FilterTab = "Daily" | "Weekly" | "Monthly" | "90 Days";
 
 const HomeCard = React.memo(function HomeCard({
   item,
@@ -73,8 +72,10 @@ const HomeCard = React.memo(function HomeCard({
   stats,
   ringSegments,
   currentStreak,
+  timeframe,
   setTimeframe,
   weatherData,
+  wardrobeLimit,
 }: any) {
   const router = useRouter();
   return (
@@ -93,16 +94,16 @@ const HomeCard = React.memo(function HomeCard({
                 className="ml-3 text-[#991B1B] font-sans"
                 style={{ fontSize: 13, flex: 1, fontWeight: "600" }}
               >
-                Wardrobe limit reached ({wardrobeCount}/{WARDROBE_LIMIT}).
+                  Wardrobe limit reached ({wardrobeCount}/{wardrobeLimit}).
                 Upgrade to Pro to add more items.
               </Text>
             </Pressable>
           )}
           <WardrobeRingSummaryCard
-            wornPercentage={stats.usagePercent}
+            wornPercentage={wardrobeCount / wardrobeLimit}
             totalWorn={stats.raw.streakCount}
             wearCount={stats.raw.avgWears}
-            neverCount={stats.raw.totalItems}
+            neverCount={wardrobeCount}
             ringSegments={ringSegments}
             streak={stats.raw.streakCount}
             labels={{
@@ -131,7 +132,7 @@ const HomeCard = React.memo(function HomeCard({
               elevation: 10,
             }}
           >
-            <WardrobeFilterTabs onChange={setTimeframe} />
+            <WardrobeFilterTabs value={timeframe} onChange={setTimeframe} />
             <WardrobeMessageBar />
           </View>
         </>
@@ -149,39 +150,39 @@ const HomeCard = React.memo(function HomeCard({
 
 export default function HomeScreen() {
   const { user } = useUser();
-  const { canAddWardrobe, wardrobeCount } = usePremiumLimits();
+  const { canAddWardrobe, wardrobeCount, wardrobeLimit } = usePremiumLimits();
   const router = useRouter();
-  const [timeframe, setTimeframe] = useState<FilterTab>("Days");
+  const [timeframe, setTimeframe] = useState<FilterTab>("Daily");
   const period =
-    timeframe === "Days"
+    timeframe === "Daily"
       ? "daily"
-      : timeframe === "Weeks"
+      : timeframe === "Weekly"
         ? "weekly"
-        : timeframe === "Months"
+        : timeframe === "Monthly"
           ? "monthly"
-          : "all";
-  const { stats, isLoading } = useRingStats(period);
+          : "90_days";
   const weatherData = useWeatherStore((state) => state.data);
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
   const [selectedDate, setSelectedDate] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
   const { currentStreak, hasIncrementedToday, dismissIncrement } =
     useStreakStore();
+  const { stats, isLoading } = useRingStats(period, wardrobeCount, currentStreak, wardrobeLimit);
   const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
 
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)
 
   const ringSegments = useMemo<readonly RingProgressSegment[]>(() => {
     return [
-      { ...RING_SEGMENT_BASE[0], progress: clampRatio(stats.usagePercent) },
+      { ...RING_SEGMENT_BASE[0], progress: clampRatio(wardrobeCount / wardrobeLimit) },
       { ...RING_SEGMENT_BASE[1], progress: clampRatio(stats.avgWearsPercent) },
       { ...RING_SEGMENT_BASE[2], progress: clampRatio(stats.streakPercent) },
       {
         ...RING_SEGMENT_BASE[3],
-        progress: clampRatio(stats.totalItemsPercent),
+        progress: clampRatio(stats.usagePercent), // Move wardrobe utilization to innermost ring
       },
     ];
-  }, [stats]);
+  }, [stats, wardrobeCount, wardrobeLimit, currentStreak, timeframe]);
 
   const handleMomentumScrollEnd = useCallback((event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -207,6 +208,7 @@ export default function HomeScreen() {
         stats={stats}
         ringSegments={ringSegments}
         currentStreak={currentStreak}
+        timeframe={timeframe}
         setTimeframe={setTimeframe}
         weatherData={weatherData}
       />
@@ -215,8 +217,10 @@ export default function HomeScreen() {
       stats,
       ringSegments,
       currentStreak,
+      timeframe,
       canAddWardrobe,
       wardrobeCount,
+      wardrobeLimit,
       weatherData,
     ],
   );
@@ -282,6 +286,7 @@ export default function HomeScreen() {
                 maxToRenderPerBatch={1}
                 windowSize={2}
                 removeClippedSubviews={true}
+                extraData={{ stats, timeframe, currentStreak, canAddWardrobe, wardrobeCount, wardrobeLimit, weatherData }}
               />
 
               {/* Pagination dots */}

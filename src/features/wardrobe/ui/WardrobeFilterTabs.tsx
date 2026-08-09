@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-type FilterTab = "Days" | "Weeks" | "Months" | "All";
+type FilterTab = "Daily" | "Weekly" | "Monthly" | "90 Days";
 
-const TABS: FilterTab[] = ["Days", "Weeks", "Months", "All"];
+const TABS: FilterTab[] = ["Daily", "Weekly", "Monthly", "90 Days"];
 
 interface WardrobeFilterTabsProps {
+  value?: FilterTab;
   onChange?: (tab: FilterTab) => void;
 }
 
-export function WardrobeFilterTabs({ onChange }: WardrobeFilterTabsProps) {
-  const [active, setActive] = useState<FilterTab>("Days");
+export function WardrobeFilterTabs({ value, onChange }: WardrobeFilterTabsProps) {
+  // Use controlled value if provided, fallback to local state
+  const [localActive, setLocalActive] = useState<FilterTab>("Daily");
+  const active = value !== undefined ? value : localActive;
 
   const handlePress = (tab: FilterTab) => {
-    setActive(tab);
+    setLocalActive(tab);
     onChange?.(tab);
   };
 
@@ -68,7 +71,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   label: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontFamily: "TikTokSans16pt-Medium",
     color: "#1C1C1E",
   },
@@ -78,8 +81,3 @@ const styles = StyleSheet.create({
   },
 });
 
-// shadowColor: "#FFFFFF10",
-//         shadowOpacity: 0.02,
-//         shadowRadius: 10,
-//         shadowOffset: { width: 0, height: 4 },
-//         elevation: 10,

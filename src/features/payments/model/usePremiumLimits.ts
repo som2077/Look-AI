@@ -4,7 +4,8 @@ import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-st
 import { useRouter } from "expo-router";
 import { Alert } from "react-native";
 
-export const WARDROBE_LIMIT = 50;
+export const FREE_WARDROBE_LIMIT = 50;
+export const PRO_WARDROBE_LIMIT = 200;
 export const CLOTH_LABEL_LIMIT = 20;
 export const FIT_CHECK_LIMIT = 20;
 
@@ -21,7 +22,8 @@ export function usePremiumLimits() {
   
   const fitCheckCount = scans.filter((scan) => scan.type === "fit-check").length;
 
-  const canAddWardrobe = isPro || wardrobeCount < WARDROBE_LIMIT;
+  const wardrobeLimit = isPro ? PRO_WARDROBE_LIMIT : FREE_WARDROBE_LIMIT;
+  const canAddWardrobe = wardrobeCount < wardrobeLimit;
   const canAddClothLabel = isPro || clothLabelCount < CLOTH_LABEL_LIMIT;
   const canAddFitCheck = isPro || fitCheckCount < FIT_CHECK_LIMIT;
 
@@ -30,7 +32,7 @@ export function usePremiumLimits() {
     let feature = "";
 
     if (limitType === "wardrobe") {
-      limit = WARDROBE_LIMIT;
+      limit = wardrobeLimit;
       feature = "clothes/accessories";
     } else if (limitType === "cloth_label") {
       limit = CLOTH_LABEL_LIMIT;
@@ -56,6 +58,7 @@ export function usePremiumLimits() {
   return {
     isPro,
     wardrobeCount,
+    wardrobeLimit,
     clothLabelCount,
     fitCheckCount,
     canAddWardrobe,

@@ -15,15 +15,14 @@ export interface RingStats {
   };
 }
 
-const CLOSET_GOAL = 50;
 const AVG_WEARS_GOAL = 10;
 
 // Helper to get number of days in current period
-const getDaysInPeriod = (period: "daily" | "weekly" | "monthly" | "all"): number => {
+const getDaysInPeriod = (period: "daily" | "weekly" | "monthly" | "90_days"): number => {
   if (period === "daily") return 1;
   if (period === "weekly") return 7;
   if (period === "monthly") return 30;
-  return 365; // fallback for 'all' to show some progression
+  return 90; // for '90_days'
 };
 
 // Helper to check streak in Supabase logs
@@ -73,7 +72,12 @@ const getCurrentStreak = async (supabase: any, userId: string): Promise<number> 
   return streak;
 };
 
-export function useRingStats(period: "daily" | "weekly" | "monthly" | "all" = "weekly") {
+export function useRingStats(
+  period: "daily" | "weekly" | "monthly" | "90_days" = "weekly",
+  totalItems: number = 0,
+  currentStreak: number = 0,
+  wardrobeLimit: number = 50
+) {
   const { supabase } = useSupabase();
   const { user } = useUser();
   const [stats, setStats] = useState<RingStats>({
@@ -98,12 +102,7 @@ export function useRingStats(period: "daily" | "weekly" | "monthly" | "all" = "w
       setIsLoading(true);
 
       try {
-        // 1. Get total items in wardrobe (Lifetime)
-        const { count: totalItems } = await supabase
-          .from("wardrobe_items")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id);
-
+        // 1. Total items are now passed as a prop, no need to query
         const total = totalItems || 0;
 
         // 2. Set time filter based on period
@@ -117,7 +116,7 @@ export function useRingStats(period: "daily" | "weekly" | "monthly" | "all" = "w
         } else if (period === "monthly") {
           startTime.setDate(now.getDate() - 30);
         } else {
-          startTime.setTime(0); // Beginning of time
+          startTime.setDate(now.getDate() - 90);
         }
 
         // 3. Get wear logs for the period
@@ -137,8 +136,8 @@ export function useRingStats(period: "daily" | "weekly" | "monthly" | "all" = "w
         // 5. Calculate Avg Wears
         const avgWears = uniqueItemsWorn > 0 ? +(logs.length / uniqueItemsWorn).toFixed(1) : 0;
 
-        // 6. Calculate Streak
-        const streakCount = await getCurrentStreak(supabase, user.id);
+        // 6. Calculate Streak based on passed currentStreak
+        const streakCount = currentStreak;
         const daysInPeriod = getDaysInPeriod(period);
         // If daily and streak > 0, 100%. Otherwise normalize by period days.
         let streakPercent = 0;
@@ -153,7 +152,7 @@ export function useRingStats(period: "daily" | "weekly" | "monthly" | "all" = "w
             usagePercent: usagePercentNum / 100, // 0-1 for ring
             avgWearsPercent: Math.min(avgWears / AVG_WEARS_GOAL, 1),
             streakPercent,
-            totalItemsPercent: Math.min(total / CLOSET_GOAL, 1),
+            totalItemsPercent: Math.min(total / wardrobeLimit, 1),
             raw: {
               usagePercentNum,
               avgWears,
@@ -174,7 +173,7 @@ export function useRingStats(period: "daily" | "weekly" | "monthly" | "all" = "w
     return () => {
       isMounted = false;
     };
-  }, [supabase, user, period]);
+  }, [supabase, user, period, totalItems, currentStreak, wardrobeLimit]);
 
   return { stats, isLoading };
 }
