@@ -1,9 +1,10 @@
-﻿import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { useCallback } from "react";
+import { toLocalDateString } from "@/shared/utils/date";
 
-const getTodayString = () => new Date().toISOString().split("T")[0];
+const getTodayString = () => toLocalDateString();
 
 /**
  * Hook that increments local Zustand streak state AND syncs to Supabase.

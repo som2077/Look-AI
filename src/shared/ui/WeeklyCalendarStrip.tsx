@@ -1,4 +1,6 @@
 import { useWeeklyActivity } from "@/features/streaks/api/useWeeklyActivity";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { toLocalDateString } from "@/shared/utils/date";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -108,6 +110,8 @@ export function WeeklyCalendarStrip({
 
   // Real DB data: Set of "YYYY-MM-DD" strings for days app was opened
   const { activeDates } = useWeeklyActivity();
+  // Local instant state
+  const lastActiveDate = useStreakStore((state) => state.lastActiveDate);
 
   const weekDates = useMemo(() => {
     const startOfWeek = getStartOfWeek(selectedDate);
@@ -151,13 +155,13 @@ export function WeeklyCalendarStrip({
             streakStatus = "future";
           } else {
             // Past or today: check if user actually opened the app that day
-            const dateStr = dateAtMidnight.toISOString().split("T")[0];
-            streakStatus = activeDates.has(dateStr) ? "streak" : "missed";
+            const dateStr = toLocalDateString(dateAtMidnight);
+            streakStatus = (activeDates.has(dateStr) || lastActiveDate === dateStr) ? "streak" : "missed";
           }
 
           return (
             <DayCell
-              key={date.toISOString()}
+              key={toLocalDateString(date)}
               date={date}
               dayLabel={DAY_LABELS[index]}
               isActive={isSameDay(date, selectedDate)}

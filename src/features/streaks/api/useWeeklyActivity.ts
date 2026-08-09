@@ -1,7 +1,7 @@
-﻿import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
-
+import { toLocalDateString } from "@/shared/utils/date";
 /**
  * Fetches the current week (Mon-Sun) active days from Supabase streak_logs.
  *
@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
  *   isLoading   - true while fetching
  */
 
-const toDateString = (d: Date): string => d.toISOString().split("T")[0];
+const toDateString = (d: Date): string => toLocalDateString(d);
 
 /** Returns Monday of the week containing `date` */
 const getMonday = (date: Date): Date => {

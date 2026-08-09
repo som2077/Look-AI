@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { toLocalDateString } from "@/shared/utils/date";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
@@ -18,7 +19,7 @@ export interface StreakState {
   dismissIncrement: () => void; // dismiss popup flag
 }
 
-const getTodayString = () => new Date().toISOString().split("T")[0];
+const getTodayString = () => toLocalDateString();
 
 export const useStreakStore = create<StreakState>()(
   persist(
