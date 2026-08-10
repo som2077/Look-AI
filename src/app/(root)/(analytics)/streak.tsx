@@ -225,7 +225,7 @@ export default function StreakScreen() {
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <AppGradientBackground>
         <StatusBar style="dark" />
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
           {/* ── Header ── */}
           <View
             style={{

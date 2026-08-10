@@ -1,6 +1,7 @@
 import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
 import { useNotifications } from "@/features/social/api/useNotifications";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
+import { FlashList } from "@shopify/flash-list";
 import {
   IconArrowNarrowRight,
   IconBell,
@@ -20,18 +21,17 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Dimensions,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
-  Platform,
   RefreshControl,
   Image as RNImage,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View
 } from "react-native";
 import ImageViewer from "react-native-image-zoom-viewer";
@@ -50,7 +50,6 @@ function formatPostDateTime(dateString: string): string {
 }
 
 const POPULAR_REACTIONS = ["🔥", "👍", "😂", "❤️"];
-const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 // ─── Replies Bottom Sheet ─────────────────────────────────────────────────────
 
@@ -69,6 +68,7 @@ function RepliesBottomSheet({
   isMyPost: boolean;
   addComment: (postId: string, content: string) => Promise<boolean>;
 }) {
+  const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const [replyText, setReplyText] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
@@ -674,7 +674,8 @@ function FeedTab() {
   const [inputText, setInputText] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
+  const scrollViewRef = useRef<any>(null);
   const [isComposing, setIsComposing] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
 
@@ -776,6 +777,7 @@ function FeedTab() {
         }}
       >
         <Text
+          allowFontScaling={false}
           style={{
             fontSize: 24,
             fontWeight: "800",
@@ -887,24 +889,24 @@ function FeedTab() {
             </Text>
           </View>
         ) : (
-          <ScrollView
+          <FlashList
             ref={scrollViewRef}
+            data={sortedPosts}
+            keyExtractor={(item: any) => item.id}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
             contentContainerStyle={{ paddingBottom: 40 }}
-          >
-            {sortedPosts.map((post) => (
+            renderItem={({ item: post }: { item: any }) => (
               <TimelinePostCard
-                key={post.id}
                 post={post}
                 toggleReaction={toggleReaction}
                 deletePost={deletePost}
                 addComment={addComment}
               />
-            ))}
-          </ScrollView>
+            )}
+          />
         )}
       </View>
 
@@ -1038,7 +1040,7 @@ export default function ExploreScreen() {
       <StatusBar style="dark" />
       <SafeAreaView
         style={{ flex: 1, backgroundColor: "#FFFFFF" }}
-        edges={["top"]}
+        edges={["top", "bottom"]}
       >
         <FeedTab />
       </SafeAreaView>

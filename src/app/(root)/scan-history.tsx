@@ -213,7 +213,7 @@ export default function ScanHistoryScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#0F0E15" }}>
       <StatusBar style="light" />
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         {/* Header */}
         <View
           style={{

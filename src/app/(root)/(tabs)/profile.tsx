@@ -702,7 +702,7 @@ export default function ProfileScreen() {
     <SwipeTabWrapper tabIndex={3}>
       <AppGradientBackground>
         <StatusBar style="dark" />
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
           <ScrollView
             showsVerticalScrollIndicator={false}
             onScroll={onScroll}

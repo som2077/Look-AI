@@ -788,7 +788,7 @@ export default function WardrobeScreen() {
       <StatusBar style="dark" />
       <SafeAreaView
         style={{ flex: 1, backgroundColor: "#ffffff" }}
-        edges={["top"]}
+        edges={["top", "bottom"]}
       >
         {/* Header */}
         <View

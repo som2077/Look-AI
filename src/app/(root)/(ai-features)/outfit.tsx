@@ -263,7 +263,7 @@ export default function OutfitScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F9F9F9" }}>
       <StatusBar style="dark" />
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         {/* Header */}
         <View
           style={{

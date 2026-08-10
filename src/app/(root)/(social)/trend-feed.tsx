@@ -265,7 +265,7 @@ export default function TrendFeedScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }} edges={["top", "bottom"]}>
       <StatusBar style="dark" />
 
       {/* ── Header ── */}

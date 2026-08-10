@@ -41,7 +41,6 @@
         "foregroundImage": "./assets/android/playstore-icon-padded.png"
       },
       "edgeToEdgeEnabled": true,
-      "navigationBarColor": "#000000",
       "predictiveBackGestureEnabled": false,
       "enableProguardInReleaseBuilds": true,
       "enableShrinkResourcesInReleaseBuilds": true,

@@ -285,7 +285,7 @@ export default function ScoreScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F8F7FC" }}>
         <StatusBar style="dark" />
-        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
           
           <ScrollView
             showsVerticalScrollIndicator={false}
