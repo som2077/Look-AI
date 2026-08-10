@@ -348,7 +348,7 @@ export default function PlanOutfitScreen() {
       >
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={"height"}
         >
           <SafeAreaView style={styles.modalContainer}>
             <View style={styles.modalHeader}>

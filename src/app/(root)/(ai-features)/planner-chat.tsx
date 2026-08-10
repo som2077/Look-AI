@@ -353,8 +353,8 @@ export default function PlannerChatScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        behavior={undefined}
+        keyboardVerticalOffset={0}
       >
         {/* Chat area */}
         <ScrollView

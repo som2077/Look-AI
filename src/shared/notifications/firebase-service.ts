@@ -24,21 +24,8 @@ Notifications.setNotificationHandler({
 
 export async function requestUserPermission() {
   try {
-    if (Platform.OS === "ios") {
-      const authStatus = await messaging().requestPermission();
-      const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-      if (enabled) {
-        console.log("Authorization status:", authStatus);
-        return true;
-      }
-      return false;
-    } else {
-      const { status } = await Notifications.requestPermissionsAsync();
-      return status === "granted";
-    }
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === "granted";
   } catch (error) {
     console.log("Firebase not initialized yet or error requesting permission", error);
     return false;

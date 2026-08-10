@@ -975,7 +975,7 @@ export default function AddClothesFormScreen() {
           statusBarTranslucent
         >
           <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            behavior={"height"}
             style={{ flex: 1 }}
           >
             <Pressable

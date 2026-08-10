@@ -53,7 +53,7 @@ export default function CreateOutfitScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={undefined}
         >
           {/* Header */}
           <View

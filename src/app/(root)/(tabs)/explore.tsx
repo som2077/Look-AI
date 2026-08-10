@@ -2,14 +2,14 @@ import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
 import { useNotifications } from "@/features/social/api/useNotifications";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import {
+  IconArrowNarrowRight,
   IconBell,
   IconDots,
   IconMoodPlus,
   IconPhoto,
   IconPlus,
-  IconSend,
   IconTrash,
-  IconX,
+  IconX
 } from "@tabler/icons-react-native";
 import { ResizeMode, Video } from "expo-av";
 import { Image } from "expo-image";
@@ -132,7 +132,7 @@ function RepliesBottomSheet({
               backgroundColor: "#FFFFFF",
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
-              paddingBottom: Platform.OS === "ios" ? 40 : 20,
+              paddingBottom: 20,
               maxHeight: SCREEN_HEIGHT * 0.8,
               transform: [{ translateY: slideAnim }],
             }}
@@ -333,14 +333,15 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: 4,
+            marginBottom: 1,
+            marginTop: -4
           }}
         >
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 8,
+              gap: 10,
             }}
           >
             <Text
@@ -375,8 +376,8 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                 <View
                   style={{
                     position: "absolute",
-                    top: 32,
-                    right: 0,
+                    top: 30,
+                    right: 1,
                     backgroundColor: "#FFFFFF",
                     borderRadius: 12,
                     padding: 4,
@@ -384,8 +385,8 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.1,
                     shadowRadius: 12,
-                    elevation: 5,
-                    width: 140,
+                    elevation: 1,
+                    width: 115,
                     zIndex: 100,
                     borderWidth: 1,
                     borderColor: "#F3F4F6",
@@ -549,20 +550,21 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
         {showReactions && (
           <View
             style={{
+              alignSelf: "flex-start",
               flexDirection: "row",
               flexWrap: "wrap",
-              gap: 6,
+              gap: 3,
               backgroundColor: "#FFFFFF",
               borderColor: "#E5E7EB",
               borderWidth: 1,
-              borderRadius: 16,
-              padding: 8,
+              borderRadius: 50,
+              padding: 5,
               marginTop: 8,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.08,
               shadowRadius: 6,
-              elevation: 3,
+              elevation: 2,
             }}
           >
             {POPULAR_REACTIONS.map((emoji) => (
@@ -574,7 +576,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                   setShowReactions(false);
                 }}
                 style={{
-                  padding: 6,
+                  padding: 7,
                   borderRadius: 8,
                   backgroundColor:
                     myReactions.includes(emoji) ? "#EFF6FF" : "transparent",
@@ -604,8 +606,8 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                   key={index}
                   source={{ uri: url }}
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     borderRadius: 12,
                     borderWidth: 2,
                     borderColor: "#FFFFFF",
@@ -620,7 +622,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
 
           <Text
             style={{
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: "500",
               color: "#3B82F6",
             }}
@@ -630,7 +632,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
 
           <Text
             style={{
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: "500",
               color: "#6B7280",
               marginLeft: "auto",
@@ -690,11 +692,11 @@ function FeedTab() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
     const showSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      "keyboardDidShow",
       (e) => setKeyboardHeight(e.endCoordinates.height)
     );
     const hideSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      "keyboardDidHide",
       () => setKeyboardHeight(0)
     );
     return () => {
@@ -920,12 +922,13 @@ function FeedTab() {
             shadowOpacity: 0.05,
             shadowRadius: 6,
             elevation: 4,
+            // marginBottom: 10,
           }}
         >
           {imageUri && (
             <View
               style={{
-                marginBottom: 12,
+                marginBottom: 10,
                 position: "relative",
                 alignSelf: "flex-start",
               }}
@@ -940,10 +943,10 @@ function FeedTab() {
                   position: "absolute",
                   top: -8,
                   right: -8,
-                  backgroundColor: "#FF3B30",
+                  backgroundColor: "#000000ff",
                   borderRadius: 12,
-                  width: 24,
-                  height: 24,
+                  width: 34,
+                  height: 34,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
@@ -957,7 +960,7 @@ function FeedTab() {
               flexDirection: "row",
               alignItems: "center",
               gap: 12,
-              marginBottom: 12,
+              marginBottom: 23,
             }}
           >
             <TouchableOpacity
@@ -966,12 +969,12 @@ function FeedTab() {
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: "#F3F4F6",
+                backgroundColor: "#000000ff",
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <IconPhoto size={20} color="#4B5563" />
+              <IconPhoto size={20} color="#ffffffff" />
             </TouchableOpacity>
 
             <TextInput
@@ -990,6 +993,7 @@ function FeedTab() {
                 color: "#1D1A27",
                 borderWidth: 1,
                 borderColor: "#E5E7EB",
+                // textAlign:"center"
               }}
             />
 
@@ -1012,7 +1016,8 @@ function FeedTab() {
                   color={inputText.trim() || imageUri ? "#FFFFFF" : "#9CA3AF"}
                 />
               ) : (
-                <IconSend
+                <IconArrowNarrowRight
+                  strokeWidth={2.5}
                   size={18}
                   color={inputText.trim() || imageUri ? "#FFFFFF" : "#9CA3AF"}
                 />

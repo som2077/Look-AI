@@ -12,15 +12,7 @@
     "primaryColor": "#6366f1",
     "newArchEnabled": true,
     "jsEngine": "hermes",
-    "ios": {
-      "bundleIdentifier": "com.lookai.ios",
-      "buildNumber": "1",
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Allow Look AI to access your photos to upload clothing items to your wardrobe.",
-        "NSPhotoLibraryAddUsageDescription": "Allow Look AI to save outfit images to your photo library."
-      }
-    },
+
     "android": {
       "package": "com.lookai.android",
       "versionCode": 1,
@@ -53,7 +45,8 @@
       "predictiveBackGestureEnabled": false,
       "enableProguardInReleaseBuilds": true,
       "enableShrinkResourcesInReleaseBuilds": true,
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "output": "static",

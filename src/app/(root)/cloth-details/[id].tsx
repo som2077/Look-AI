@@ -1097,7 +1097,7 @@ export default function ItemDetailsScreen() {
           statusBarTranslucent
         >
           <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            behavior={"height"}
             style={{ flex: 1 }}
           >
             <Pressable

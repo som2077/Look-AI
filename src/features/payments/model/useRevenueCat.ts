@@ -26,25 +26,16 @@ export function useRevenueCat() {
       try {
         Purchases.setLogLevel(LOG_LEVEL.DEBUG);
 
-        const isAndroid = Platform.OS === "android";
-        const isIOS = Platform.OS === "ios";
-        const key = isAndroid ? API_KEYS.google : API_KEYS.apple;
+        const key = API_KEYS.google;
         
         // Skip configure if it's the dummy key to prevent annoying crash logs
-        const isDummyKey = key.includes("goog_KJiQaos") || key.includes("appl_YOUR_APPLE");
+        const isDummyKey = key.includes("goog_KJiQaos");
 
         if (!isDummyKey) {
-          if (isAndroid) {
-            Purchases.configure({
-              apiKey: API_KEYS.google,
-              appUserID: userId || undefined,
-            });
-          } else if (isIOS) {
-            Purchases.configure({
-              apiKey: API_KEYS.apple,
-              appUserID: userId || undefined,
-            });
-          }
+          Purchases.configure({
+            apiKey: API_KEYS.google,
+            appUserID: userId || undefined,
+          });
 
           // Fetch offerings (Monthly/Yearly)
           try {
