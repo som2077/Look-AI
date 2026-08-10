@@ -1,6 +1,7 @@
 // @ts-ignore: Deno import is not recognized by standard TS
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import CryptoJS from "npm:crypto-js";
+import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
 
 // @ts-ignore: Declare Deno globally to satisfy TS compiler in IDE
 declare const Deno: any;
@@ -22,6 +23,15 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Rate limit: 5 calls/min/user (multi-step: up to 4 Gemini + 1 remove.bg + 2 Cloudinary)
+  const rl = await checkRateLimit("analyze-cloth-item", getUserIdFromJwt(authHeader), 5, 60);
+  if (!rl.allowed) {
+    return new Response(rateLimitBody("analyze-cloth-item", 60), {
+      status: rl.status,
+      headers: rl.headers,
     });
   }
 

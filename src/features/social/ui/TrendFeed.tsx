@@ -1,8 +1,6 @@
 import {
-  IconFlame,
   IconLock,
   IconMapPin,
-  IconStar,
   IconTrendingUp,
 } from "@tabler/icons-react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -438,68 +436,6 @@ export const TrendCard = React.memo(function TrendCard({
   );
 });
 
-// ─── Section Header ───────────────────────────────────────────────────────────
-
-const SectionHeader = React.memo(function SectionHeader({
-  icon,
-  label,
-  subtitle,
-  iconBg,
-  iconColor,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  subtitle: string;
-  iconBg: string;
-  iconColor: string;
-}) {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        paddingHorizontal: 20,
-        marginBottom: 14,
-      }}
-    >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: iconBg,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {icon}
-      </View>
-      <View>
-        <Text
-          style={{
-            fontSize: 16,
-            fontFamily: "TikTokSans16pt-Bold",
-            color: "#1D1A27",
-          }}
-        >
-          {label}
-        </Text>
-        <Text
-          style={{
-            fontSize: 11,
-            color: "#9B9BAF",
-            fontFamily: "TikTokSans16pt-Medium",
-            marginTop: 1,
-          }}
-        >
-          {subtitle}
-        </Text>
-      </View>
-    </View>
-  );
-});
-
 // ─── Trend Chart Card (Crossing Bezier Curves Comparison) ──────────────────────
 
 type CategoryType = "Near you" | "Celebrity" | "Global";
@@ -827,40 +763,6 @@ export const TrendChartCard = React.memo(function TrendChartCard({
 });
 
 // ─── Main TrendFeed Component (used on Home screen) ──────────────────────────
-
-const CATEGORY_TRENDS_MAP: Record<CategoryType, TrendItem[]> = {
-  "Near you": LOCAL_TRENDS,
-  Celebrity: CELEBRITY_TRENDS,
-  Global: GLOBAL_TRENDS,
-};
-
-const CATEGORY_LABEL_MAP: Record<CategoryType, string> = {
-  "Near you": "Near You · Indore",
-  Celebrity: "Celebrity Looks · Bollywood",
-  Global: "Global Trends · Worldwide",
-};
-
-const getCategoryIcon = (category: CategoryType) => {
-  switch (category) {
-    case "Near you":
-      return <IconMapPin size={14} color="#6366F1" />;
-    case "Celebrity":
-      return <IconStar size={14} color="#EC4899" />;
-    case "Global":
-      return <IconFlame size={14} color="#EF4444" />;
-  }
-};
-
-const getCategoryIconBg = (category: CategoryType) => {
-  switch (category) {
-    case "Near you":
-      return "#EEF2FF";
-    case "Celebrity":
-      return "#FDF2F8";
-    case "Global":
-      return "#FEF2F2";
-  }
-};
 
 export const TrendFeed = React.memo(function TrendFeed() {
   const router = useRouter();

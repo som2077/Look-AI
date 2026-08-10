@@ -1,5 +1,6 @@
 // @ts-ignore: Deno import is not recognized by standard TS
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -21,6 +22,15 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Rate limit: 30 calls/min/user (each call can fan out to 1+ Gemini requests)
+  const rl = await checkRateLimit("gemini-proxy", getUserIdFromJwt(authHeader), 30, 60);
+  if (!rl.allowed) {
+    return new Response(rateLimitBody("gemini-proxy", 60), {
+      status: rl.status,
+      headers: rl.headers,
     });
   }
 

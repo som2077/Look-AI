@@ -6,7 +6,6 @@ import {
   IconSquareCheck,
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
@@ -25,7 +24,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
-import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { useAuth } from "@clerk/clerk-expo";
@@ -53,10 +51,8 @@ export default function BatchScanScreen() {
   const [saving, setSaving] = useState(false);
   const hasStarted = useRef(false);
 
-  const { canAddWardrobe, handleLimitReached, wardrobeCount, isPro } =
-    usePremiumLimits();
+  const { handleLimitReached, wardrobeCount, isPro } = usePremiumLimits();
   const addItem = useUserWardrobeStore((s) => s.addItem);
-  const addScan = useScanHistoryStore((s) => s.addScan);
   const { syncStreak } = useStreakSync();
 
   useEffect(() => {
@@ -84,9 +80,6 @@ export default function BatchScanScreen() {
       return [...prev, ...newIds];
     });
   }, [items]);
-
-  const allInitialLoading =
-    items.every((i) => i.status === "loading") && items.length > 0;
 
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -117,23 +110,6 @@ export default function BatchScanScreen() {
     setSelectedIds([]);
     if (currentIndex >= newItemsCount) {
       setCurrentIndex(Math.max(0, newItemsCount - 1));
-    }
-  };
-
-  const handleAddMore = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      allowsMultipleSelection: true,
-      selectionLimit: 5,
-      orderedSelection: true,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      startBatch(
-        result.assets.map((a) => a.uri),
-        true,
-      );
     }
   };
 
@@ -434,7 +410,7 @@ function SimpleView({
           index: currentIndex,
           animated: true,
         });
-      } catch (e) {
+      } catch {
         // ignore scroll error
       }
     }

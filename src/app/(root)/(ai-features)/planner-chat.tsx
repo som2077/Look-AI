@@ -12,7 +12,6 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,9 +22,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const SUPABASE_URL = "https://nekfjladdbzzgwzxtscc.supabase.co";
-const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5la2ZqbGFkZGJ6emd3enh0c2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NzQzODksImV4cCI6MjA5MjA1MDM4OX0.WXdJbQqlIInHS5jPfBM6a84TzAk474G5ehDP7CfOJgs";
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL as string;
+const ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type PlannerStep =

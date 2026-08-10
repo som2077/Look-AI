@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Image as ExpoImage } from "expo-image";
-import { IconCalendarEvent, IconClock } from "@tabler/icons-react-native";
+import { IconClock } from "@tabler/icons-react-native";
 import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
 
 export function PlannedOutfitBanner({ date }: { date: Date }) {

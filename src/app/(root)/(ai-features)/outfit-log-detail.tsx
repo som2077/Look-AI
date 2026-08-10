@@ -15,7 +15,6 @@ import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Dimensions,
   Modal,
@@ -26,103 +25,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, {
-  Circle,
-  Defs,
-  Stop,
-  LinearGradient as SvgGrad,
-} from "react-native-svg";
 
-const { width: SW, height: SH } = Dimensions.get("window");
-
-// ─── Score Ring ───────────────────────────────────────────────────────────────
-
-const RING_SIZE = 100;
-const STROKE = 8;
-const R = (RING_SIZE - STROKE) / 2;
-const CIRC = 2 * Math.PI * R;
-const CENTER = RING_SIZE / 2;
-
-function ScoreRing({ score }: { score: number }) {
-  const anim = useRef(new Animated.Value(0)).current;
-  const [offset, setOffset] = React.useState(CIRC);
-
-  useEffect(() => {
-    Animated.timing(anim, {
-      toValue: score / 100,
-      duration: 1400,
-      useNativeDriver: false,
-    }).start();
-    const id = anim.addListener(({ value }) => setOffset(CIRC * (1 - value)));
-    return () => anim.removeListener(id);
-  }, [score]);
-
-  const scoreColor =
-    score >= 90 ? "#000000" : score >= 75 ? "#000000" : "#000000";
-
-  return (
-    <View style={styles.ringContainer}>
-      <Svg width={RING_SIZE} height={RING_SIZE} style={StyleSheet.absoluteFill}>
-        <Defs>
-          <SvgGrad id="sg" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0%" stopColor={scoreColor} stopOpacity={1} />
-            <Stop offset="100%" stopColor={scoreColor} stopOpacity={0.6} />
-          </SvgGrad>
-        </Defs>
-        {/* Track */}
-        <Circle
-          cx={CENTER}
-          cy={CENTER}
-          r={R}
-          stroke="#FFFFFF"
-          strokeWidth={STROKE}
-          fill="transparent"
-        />
-        {/* Progress */}
-        <Circle
-          cx={CENTER}
-          cy={CENTER}
-          r={R}
-          stroke="url(#sg)"
-          strokeWidth={STROKE}
-          fill="transparent"
-          strokeLinecap="round"
-          strokeDasharray={`${CIRC} ${CIRC}`}
-          strokeDashoffset={offset}
-          transform={`rotate(-90 ${CENTER} ${CENTER})`}
-        />
-      </Svg>
-      <View style={styles.ringCenter}>
-        <Text style={[styles.ringScore, { color: scoreColor }]}>{score}</Text>
-        <Text style={styles.ringLabel}>Score</Text>
-      </View>
-    </View>
-  );
-}
-
-// ─── Stat Chip ────────────────────────────────────────────────────────────────
-
-function StatChip({
-  icon,
-  label,
-  value,
-  bg,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  bg: string;
-}) {
-  return (
-    <View style={[styles.chip, { backgroundColor: bg }]}>
-      <View style={styles.chipIcon}>{icon}</View>
-      <View>
-        <Text style={styles.chipLabel}>{label}</Text>
-        <Text style={styles.chipValue}>{value}</Text>
-      </View>
-    </View>
-  );
-}
+const { width: SW } = Dimensions.get("window");
 
 // ─── AI Tip Card ─────────────────────────────────────────────────────────────
 
@@ -210,20 +114,6 @@ export default function OutfitLogDetailScreen() {
     removeOutfit(outfitIndex);
     router.back();
   };
-
-  const handleMoreOptions = () => {
-    Alert.alert("Outfit Options", "What would you like to do?", [
-      { text: "Share", onPress: () => {} },
-      { text: "Edit", onPress: () => {} },
-      { text: "Delete", style: "destructive", onPress: handleDelete },
-      { text: "Cancel", style: "cancel" },
-    ]);
-  };
-
-  const scoreColor =
-    outfit.score >= 90 ? "#000000" : outfit.score >= 75 ? "#000000" : "#000000";
-  const scoreLabel =
-    outfit.score >= 90 ? "Excellent" : outfit.score >= 75 ? "Good" : "Fair";
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>

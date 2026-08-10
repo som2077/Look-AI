@@ -359,7 +359,7 @@ export async function analyzeClothLabel(
   let base64Image: string;
   try {
     base64Image = await uriToBase64(imageUri);
-  } catch (error) {
+  } catch {
     return {
       care_symbols: [],
       fabric_composition: [],

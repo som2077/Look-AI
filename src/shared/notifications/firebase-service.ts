@@ -1,13 +1,12 @@
 import messaging from "@react-native-firebase/messaging";
 import * as Notifications from "expo-notifications";
-import { Alert, Platform } from "react-native";
 
 // Handle background messages
 try {
   messaging().setBackgroundMessageHandler(async (remoteMessage) => {
     console.log("Message handled in the background!", remoteMessage);
   });
-} catch (error) {
+} catch {
   console.log("Firebase not initialized yet or running in Expo Go.");
 }
 

@@ -44,9 +44,6 @@ export default function ClothScanScreen() {
     try {
       setProgressText("⬆️ Uploading & Analyzing...");
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
       // Call Edge Function
       const response = await supabase.functions.invoke("analyze-cloth-item", {
         body: { base64Image },

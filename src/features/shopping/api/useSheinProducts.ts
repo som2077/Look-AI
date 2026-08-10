@@ -12,7 +12,7 @@ export interface SheinProduct {
 export function useSheinProducts() {
   const [products, setProducts] = useState<SheinProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -69,7 +69,7 @@ export function useSheinProducts() {
         } else {
           setProducts(getDummyData());
         }
-      } catch (err: any) {
+      } catch {
         // Network error or any other failure — use fallback
         console.warn("Shein API unreachable — using fallback products.");
         setProducts(getDummyData());

@@ -1,6 +1,4 @@
 import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
-import { useLogWears } from "@/features/wardrobe/api/useLogWears";
-import analytics from "@react-native-firebase/analytics";
 import {
   IconArrowLeft,
   IconCalendarEvent,
@@ -23,7 +21,6 @@ import {
   Animated,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -136,7 +133,6 @@ export default function PlanOutfitScreen() {
       ]).start();
     }
   }, [showMonthPicker]);
-  const { logWears } = useLogWears();
 
   const addOutfit = useUserOutfitsStore((state) => state.addOutfit);
 
@@ -184,24 +180,6 @@ export default function PlanOutfitScreen() {
     }, 1500);
   };
 
-  const handleSaveToWardrobe = async () => {
-    const idsArray = itemIds ? itemIds.split(",") : [];
-    addOutfit({
-      id: Date.now().toString(),
-      imageUri,
-      name: "My Outfit",
-      items: idsArray,
-      createdAt: Date.now(),
-      notes,
-    });
-    // Log to Supabase wear_logs
-    if (idsArray.length > 0) {
-      logWears(idsArray);
-    }
-    await analytics().logEvent("outfit_created");
-    // Alert.alert("Saved", "Outfit saved to your wardrobe.");
-  };
-
   const handleShare = async () => {
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(imageUri);
@@ -231,19 +209,12 @@ export default function PlanOutfitScreen() {
             useNativeDriver: true,
           }).start(() => setToastMessage(""));
         }, 2500);
-      } catch (e) {
+      } catch {
         Alert.alert("Error", "Failed to save image.");
       }
     } else {
       Alert.alert("Permission required", "Need permission to access gallery.");
     }
-  };
-
-  const handleDelete = () => {
-    Alert.alert("Discard Outfit?", "Are you sure you want to delete this?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Discard", style: "destructive", onPress: () => router.back() },
-    ]);
   };
 
   return (

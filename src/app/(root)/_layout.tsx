@@ -1,4 +1,4 @@
-﻿import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { Stack } from "expo-router";

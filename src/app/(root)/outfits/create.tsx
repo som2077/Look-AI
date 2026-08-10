@@ -6,7 +6,6 @@ import { useLogWears } from "@/features/wardrobe/api/useLogWears";
 import {
   Image,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,

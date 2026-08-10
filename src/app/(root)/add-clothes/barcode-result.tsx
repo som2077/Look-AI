@@ -13,7 +13,7 @@ import {
 } from "@tabler/icons-react-native"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { StatusBar } from "expo-status-bar"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   ActivityIndicator,
   Image,
@@ -82,7 +82,6 @@ export default function BarcodeResultScreen() {
 
   const [saved, setSaved] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
-  const historyAdded = useRef(false)
 
   
   const [loading, setLoading] = useState(!params.resultJson)
@@ -140,7 +139,7 @@ const handleSave = () => {
     syncStreak("scan_mode")
   }
 
-  const infoRows: Array<{ label: string; value: string }> = [
+  const infoRows: { label: string; value: string }[] = [
     { label: "Brand", value: result.brand },
     { label: "Item Name", value: result.itemName },
     { label: "Size", value: result.size },

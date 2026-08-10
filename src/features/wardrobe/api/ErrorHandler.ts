@@ -27,8 +27,7 @@ export class ErrorHandler {
         const errorMessage = error?.message || String(error);
         
         const isTransient = status >= 500 || status === 429 || errorMessage.includes("timeout") || errorMessage.includes("network");
-        const isClientError = status >= 400 && status < 500 && status !== 429;
-        
+
         let maxRetries = 0;
         if (isTransient) maxRetries = 3;
         else if (status === 400 || status === 401) maxRetries = 1;

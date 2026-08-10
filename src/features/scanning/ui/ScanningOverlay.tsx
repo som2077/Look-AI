@@ -1,4 +1,4 @@
-﻿import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
+import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
 import React, { useEffect, useRef } from "react";
 import { Modal, Text, View } from "react-native";
 import Animated, {

@@ -1,6 +1,10 @@
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { uploadToCloudinary } from "@/shared/cloudinary/client";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import {
+  fetchSupabaseRows,
+  invalidateSupabaseCache,
+} from "@/shared/supabase/use-supabase-query";
 import { useAuth } from "@clerk/clerk-expo";
 import { useCallback, useEffect, useState } from "react";
 import { create } from "zustand";
@@ -48,13 +52,14 @@ export function useCommunityPosts() {
   const { userId } = useAuth(); // Assuming the Supabase user_id matches Clerk
   const { supabase, isInitializing } = useSupabase();
 
-  const fetchPosts = useCallback(async () => {
-    if (isInitializing || !supabase) return;
-    try {
-      const { data, error } = await supabase
-        .from("community_posts")
-        .select(
-          `
+  const fetchPosts = useCallback(
+    async (force = false) => {
+      if (isInitializing || !supabase) return;
+      try {
+        const backendPosts = await fetchSupabaseRows<any>({
+          supabase,
+          table: "community_posts",
+          select: `
           *,
           user_profiles (
             nickname,
@@ -62,73 +67,54 @@ export function useCommunityPosts() {
             user_id,
             avatar_url
           ),
-          post_reactions(user_id, reaction_type),
-          post_comments(
-            id,
-            content,
-            created_at,
-            user_profiles(avatar_url, username, nickname)
-          )
-        `
-        )
-        .order("created_at", { ascending: true })
-        .limit(50);
+          post_reactions(user_id, reaction_type)
+        `,
+          userId,
+          force,
+          // Short TTL: feed changes often — the cache mainly coalesces the 3
+          // screens that mount this hook (explore / post / user) into one call.
+          ttlMs: 15_000,
+          apply: (q) =>
+            q.order("created_at", { ascending: false }).range(0, 49),
+        });
 
-      if (error) throw error;
+        const localMockPosts = usePostsStore
+          .getState()
+          .posts.filter((p) => p.id.includes("0."));
 
-      const backendPosts = (data ?? []) as any[];
-      const localMockPosts = usePostsStore
-        .getState()
-        .posts.filter((p) => p.id.includes("0."));
-
-      if (localMockPosts.length > 0 && backendPosts.length > 0) {
-        removeOptimisticPosts();
-      }
-
-      setPosts(backendPosts.length > 0 ? backendPosts : DUMMY_POSTS);
-
-      if (userId) {
-        const { data: likes } = await supabase
-          .from("post_likes")
-          .select("post_id")
-          .eq("user_id", userId);
-
-        if (likes) {
-          setLikedPostIds(new Set(likes.map((l: any) => l.post_id)));
+        if (localMockPosts.length > 0 && backendPosts.length > 0) {
+          removeOptimisticPosts();
         }
+
+        setPosts(backendPosts.length > 0 ? backendPosts : DUMMY_POSTS);
+
+        if (userId) {
+          const likes = await fetchSupabaseRows<{ post_id: string }>({
+            supabase,
+            table: "post_likes",
+            select: "post_id",
+            cacheKeySuffix: "own",
+            userId,
+            apply: (q) => q.eq("user_id", userId as string),
+          });
+          setLikedPostIds(new Set(likes.map((l) => l.post_id)));
+        }
+      } catch (err) {
+        console.error("Error fetching community posts:", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Error fetching community posts:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [supabase, isInitializing, userId, setPosts]);
+    },
+    [supabase, isInitializing, userId, setPosts],
+  );
 
   useEffect(() => {
     if (isInitializing || !supabase) return;
 
-    fetchPosts();
-
-    let timeoutId: any;
-
-    const subscription = supabase
-      .channel("public:community_posts")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "community_posts" },
-        () => {
-          if (timeoutId) clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            fetchPosts(); // Refresh posts safely after bursts
-          }, 2000);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      supabase.removeChannel(subscription);
-    };
+    // Realtime intentionally NOT used for the public feed: a single post event
+    // would fan out to every subscribed client (10k-way amplification). Feed
+    // freshness comes from pull-to-refresh + post-create refresh instead.
+    void fetchPosts();
   }, [supabase, isInitializing, fetchPosts]);
 
   const toggleLike = async (postId: string) => {
@@ -161,6 +147,9 @@ export function useCommunityPosts() {
           .insert({ post_id: postId, user_id: userId });
         if (error) throw error;
       }
+
+      // Cached "my likes" set is now stale — bust it so the next feed fetch is correct.
+      invalidateSupabaseCache("post_likes", userId);
     } catch (err) {
       console.error("Error toggling like:", err);
       setLikedPostIds((prev) => {
@@ -317,7 +306,7 @@ export function useCommunityPosts() {
       if (error) throw error;
 
       removeOptimisticPosts();
-      await fetchPosts(); // Explicitly fetch posts so we don't rely solely on Realtime being enabled
+      await fetchPosts(true); // Force-refresh: don't rely on Realtime (feed is pull-to-refresh now)
       return true;
     } catch (err) {
       console.error("Error creating post:", err);
@@ -364,6 +353,6 @@ export function useCommunityPosts() {
     toggleLike,
     toggleReaction,
     addComment,
-    refetch: fetchPosts,
+    refetch: () => fetchPosts(true),
   };
 }

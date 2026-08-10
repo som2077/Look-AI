@@ -454,7 +454,6 @@ export default function CreateOutfitScreen() {
     }
   }, [initialItem]);
 
-  const [isVisible, setIsVisible] = useState(true);
   const [isFocused, setIsFocused] = useState(true);
   const [isPreview, setIsPreview] = useState(false);
   const [ratio, setRatio] = useState<"3:4" | "1:1">("3:4");
@@ -484,7 +483,7 @@ export default function CreateOutfitScreen() {
   // Text Canvas Interactions (Removed single text state)
 
   // Bottom Sheet Interactions
-  const { width: screenW, height: screenH } = Dimensions.get("window");
+  const { width: screenW } = Dimensions.get("window");
 
   // Calculate dynamic down position based on ratio
   const canvasW = screenW - 40; // canvasContainer has paddingHorizontal: 20
@@ -591,7 +590,6 @@ export default function CreateOutfitScreen() {
   };
 
   const activeItem = canvasItems.find((i) => i.id === activeItemId);
-  const isTextActive = activeItem?.type === "text";
 
   const displayItems = useMemo(
     () =>

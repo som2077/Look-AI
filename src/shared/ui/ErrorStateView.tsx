@@ -8,7 +8,6 @@ import { StatusBar } from "expo-status-bar";
 import React, { Component, ReactNode, useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   Pressable,
   ScrollView,
   Text,
@@ -49,12 +48,9 @@ export const useErrorStore = create<ErrorState>((set) => ({
 
 // ─── ErrorStateView Overlays ───────────────────────────────────────────────────
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 export function ErrorStateView({ onRetry }: { onRetry: () => Promise<void> }) {
   const isOffline = useErrorStore((state) => state.isOffline);
   const isServerError = useErrorStore((state) => state.isServerError);
-  const resetAll = useErrorStore((state) => state.resetAll);
   const [retrying, setRetrying] = useState(false);
 
   const handleRetry = useCallback(async () => {

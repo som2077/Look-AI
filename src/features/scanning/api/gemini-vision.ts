@@ -20,7 +20,7 @@ export interface ClothingAnalysis {
   colorHex: string;
   occasion: "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym";
   season: "All" | "Summer" | "Winter" | "Monsoon" | "Spring";
-  matchingColors: Array<{ name: string; hex: string }>;
+  matchingColors: { name: string; hex: string }[];
   brand: string;
   careInstructions: string;
   notes: string;

@@ -6,8 +6,13 @@ import {
   registerStoreReset,
 } from "@/shared/storage/namespacedStorage";
 import { supabase, getSupabaseGlobalUserId, setSupabaseGlobalUserId } from "@/shared/supabase/client";
+import { subscribeToTable } from "@/shared/realtime/manager";
 
 let globalUserId: string | null = null;
+
+// Session flag: user_profiles row only needs to be ensured ONCE per user.
+// Previously every wardrobe write (addItem/updateItem) did a redundant upsert.
+let profileEnsuredFor: string | null = null;
 
 export const setWardrobeStoreUserId = (uid: string | null) => {
   globalUserId = uid;
@@ -173,59 +178,35 @@ type UserWardrobeState = {
   syncWithDatabase: (userId?: string) => Promise<void>;
 };
 
-let realtimeChannel: any = null;
-
 export const subscribeToWardrobeRealtime = (userId: string) => {
   if (!userId) return () => {};
 
-  if (realtimeChannel) {
-    try {
-      supabase.removeChannel(realtimeChannel);
-    } catch (_) {}
-    realtimeChannel = null;
-  }
-
-  realtimeChannel = supabase
-    .channel(`public:wardrobe_items:${userId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "wardrobe_items",
-        filter: `user_id=eq.${userId}`,
-      },
-      (payload) => {
-        const store = useUserWardrobeStore.getState();
-        if (payload.eventType === "INSERT") {
-          const newItem = mapDbRowToUserItem(payload.new);
-          store.setItems([
-            newItem,
-            ...store.items.filter((i) => i.id !== newItem.id),
-          ]);
-        } else if (payload.eventType === "UPDATE") {
-          const updated = mapDbRowToUserItem(payload.new);
-          store.setItems(
-            store.items.map((i) => (i.id === updated.id ? updated : i)),
-          );
-        } else if (payload.eventType === "DELETE") {
-          const oldId = (payload.old as any)?.id;
-          if (oldId) {
-            store.setItems(store.items.filter((i) => i.id !== oldId));
-          }
+  // Singleton: one wardrobe channel per user app-wide (see realtime/manager.ts)
+  return subscribeToTable(supabase, {
+    table: "wardrobe_items",
+    userId,
+    filter: `user_id=eq.${userId}`,
+    handler: (payload) => {
+      const store = useUserWardrobeStore.getState();
+      if (payload.eventType === "INSERT") {
+        const newItem = mapDbRowToUserItem(payload.new);
+        store.setItems([
+          newItem,
+          ...store.items.filter((i) => i.id !== newItem.id),
+        ]);
+      } else if (payload.eventType === "UPDATE") {
+        const updated = mapDbRowToUserItem(payload.new);
+        store.setItems(
+          store.items.map((i) => (i.id === updated.id ? updated : i)),
+        );
+      } else if (payload.eventType === "DELETE") {
+        const oldId = (payload.old as any)?.id;
+        if (oldId) {
+          store.setItems(store.items.filter((i) => i.id !== oldId));
         }
-      },
-    )
-    .subscribe();
-
-  return () => {
-    if (realtimeChannel) {
-      try {
-        supabase.removeChannel(realtimeChannel);
-      } catch (_) {}
-      realtimeChannel = null;
-    }
-  };
+      }
+    },
+  });
 };
 
 export const useUserWardrobeStore = create<UserWardrobeState>()(
@@ -257,10 +238,13 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
           try {
             const uid = item.userId || globalUserId || getSupabaseGlobalUserId();
             if (uid) {
-              // Ensure user_profiles has a row to satisfy fk_wardrobe_items_user
-              await supabase
-                .from("user_profiles")
-                .upsert({ user_id: uid }, { onConflict: "user_id" });
+              // Ensure user_profiles has a row ONCE per session to satisfy the FK
+              if (profileEnsuredFor !== uid) {
+                await supabase
+                  .from("user_profiles")
+                  .upsert({ user_id: uid }, { onConflict: "user_id" });
+                profileEnsuredFor = uid;
+              }
 
               const row = mapUserItemToDbRow(newItem, uid);
               const { error } = await supabase
@@ -325,9 +309,13 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
 
           const uid = updatedItem.userId || globalUserId || getSupabaseGlobalUserId();
           if (uid) {
-            await supabase
-              .from("user_profiles")
-              .upsert({ user_id: uid }, { onConflict: "user_id" });
+            // Ensure user_profiles has a row ONCE per session to satisfy the FK
+            if (profileEnsuredFor !== uid) {
+              await supabase
+                .from("user_profiles")
+                .upsert({ user_id: uid }, { onConflict: "user_id" });
+              profileEnsuredFor = uid;
+            }
 
             const finalId = isValidUUID(id) ? id : generateUUID();
             if (finalId !== id) {
@@ -365,7 +353,8 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
             .from("wardrobe_items")
             .select("*")
             .eq("user_id", uid)
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: false })
+            .range(0, 499); // bound the read — a 10k-user wardrobe should paginate
 
           if (error) {
             console.warn("[WardrobeStore] Error fetching from Supabase:", error);

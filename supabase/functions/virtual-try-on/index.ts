@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,15 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Rate limit: 5 calls/min/user (each call = one paid fal.ai generation)
+  const rl = await checkRateLimit("virtual-try-on", getUserIdFromJwt(authHeader), 5, 60);
+  if (!rl.allowed) {
+    return new Response(rateLimitBody("virtual-try-on", 60), {
+      status: rl.status,
+      headers: rl.headers,
     });
   }
 

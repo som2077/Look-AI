@@ -253,13 +253,6 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
   );
 });
 
-const MODE_LABELS: Record<string, string> = {
-  "scan-cloth": "Scan Cloths",
-  barcode: "Barcode",
-  label: "Cloth Label",
-  "fit-check": "Fit Check",
-};
-
 const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
   mode,
   slides,

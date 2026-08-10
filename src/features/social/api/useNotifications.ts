@@ -1,6 +1,11 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
 import { create } from "zustand";
+import { subscribeToTable } from "@/shared/realtime/manager";
+import {
+  fetchSupabaseRows,
+  invalidateSupabaseCache,
+} from "@/shared/supabase/use-supabase-query";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 
 export interface NotificationItem {
@@ -47,9 +52,10 @@ export function useNotifications() {
     if (isInitializing || !supabase || !userId) return;
 
     try {
-      const { data, error } = await supabase
-        .from("notifications")
-        .select(`
+      const items = await fetchSupabaseRows<any>({
+        supabase,
+        table: "notifications",
+        select: `
           *,
           actor_profile:user_profiles!actor_id (
             nickname,
@@ -60,14 +66,16 @@ export function useNotifications() {
             image_url,
             caption
           )
-        `)
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(50);
+        `,
+        cacheKeySuffix: "own",
+        userId,
+        apply: (q) =>
+          q
+            .eq("user_id", userId as string)
+            .order("created_at", { ascending: false })
+            .limit(50),
+      });
 
-      if (error) throw error;
-
-      const items = (data ?? []) as any[];
       setNotifications(items);
       setUnreadCount(items.filter((item) => !item.is_read).length);
     } catch (err) {
@@ -80,27 +88,27 @@ export function useNotifications() {
   useEffect(() => {
     if (isInitializing || !supabase || !userId) return;
 
-    fetchNotifications();
+    void fetchNotifications();
 
+    // Singleton channel: explore + notifications screens share ONE subscription
     let timeoutId: any;
-    const subscription = supabase
-      .channel("public:notifications")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
-        () => {
-          if (timeoutId) clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            fetchNotifications();
-          }, 1000);
-        },
-      )
-      .subscribe();
+    const unsubscribe = subscribeToTable(supabase, {
+      table: "notifications",
+      userId,
+      filter: `user_id=eq.${userId}`,
+      handler: () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          void fetchNotifications();
+        }, 1000);
+      },
+    });
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
-      supabase.removeChannel(subscription);
+      unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, isInitializing, userId]);
 
   const markAllAsRead = async () => {
@@ -118,8 +126,11 @@ export function useNotifications() {
         .update({ is_read: true })
         .eq("user_id", userId)
         .eq("is_read", false);
-        
+
       if (error) throw error;
+
+      // Cached list has stale is_read flags — bust it.
+      invalidateSupabaseCache("notifications", userId);
     } catch (err) {
       console.error("Error marking notifications as read:", err);
       // rollback could be added here

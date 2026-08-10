@@ -1,7 +1,6 @@
 import { uploadToCloudinaryWithBgRemoval } from "@/features/scanning/api/cloudinary-upload";
 import { analyzeClothingFull } from "@/features/scanning/api/gemini-scan";
 import { useWeatherStore } from "@/features/weather/model/weather-store";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {

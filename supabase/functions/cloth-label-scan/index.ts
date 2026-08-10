@@ -1,6 +1,7 @@
 // @ts-ignore: Deno import is not recognized by standard TS
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { serializeCareSymbolsForPrompt } from "../_shared/careSymbols.ts";
+import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -63,6 +64,15 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Rate limit: 10 scans/min/user
+  const rl = await checkRateLimit("cloth-label-scan", getUserIdFromJwt(authHeader), 10, 60);
+  if (!rl.allowed) {
+    return new Response(rateLimitBody("cloth-label-scan", 60), {
+      status: rl.status,
+      headers: rl.headers,
     });
   }
 

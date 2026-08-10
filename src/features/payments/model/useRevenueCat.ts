@@ -1,6 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
-import { Platform } from "react-native";
 import Purchases, {
   CustomerInfo,
   LOG_LEVEL,
@@ -46,7 +45,7 @@ export function useRevenueCat() {
             ) {
               setPackages(offerings.current.availablePackages);
             }
-          } catch (offeringsError) {
+          } catch {
             console.warn("RevenueCat: No offerings configured yet in the dashboard. Skipping offerings fetch.");
           }
         } else {
@@ -58,7 +57,7 @@ export function useRevenueCat() {
           try {
             const customerInfo = await Purchases.getCustomerInfo();
             checkProStatus(customerInfo);
-          } catch (e) {
+          } catch {
             console.warn("RevenueCat: Could not fetch customer info.");
           }
         }

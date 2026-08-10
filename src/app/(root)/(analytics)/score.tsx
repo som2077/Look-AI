@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
 import {
-  Dimensions,
   Pressable,
   ScrollView,
   Text,
@@ -25,8 +24,6 @@ import {
 
 
 // ─── Constants & Types ────────────────────────────────────────────────────────
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type Period = "daily" | "weekly" | "monthly";
 

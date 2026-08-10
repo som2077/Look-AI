@@ -11,7 +11,7 @@ import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -106,8 +106,7 @@ export default function ScanResultScreen() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadingText, setLoadingText] = useState("Initializing...");
-  const [error, setError] = useState<string | null>(null);
-  
+
   const [loading, setLoading] = useState(!params.resultJson);
   const [photoUri, setPhotoUri] = useState(params.photoUri);
   const [remainingUris, setRemainingUris] = useState<string[]>(() => {

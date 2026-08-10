@@ -1,4 +1,4 @@
-﻿import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
+import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
 import {
   IconCheck,
   IconLoader2,

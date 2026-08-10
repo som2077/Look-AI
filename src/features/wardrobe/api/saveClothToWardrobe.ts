@@ -1,5 +1,9 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 
+// Session flag: user_profiles row only needs to be ensured ONCE per user.
+// Previously every scan-save did a redundant upsert (write amplification).
+let profileEnsuredFor: string | null = null;
+
 export interface ClothAnalysisResult {
   success: boolean;
   original_url?: string;
@@ -65,9 +69,13 @@ export async function saveClothToWardrobe(
     "";
 
   // Ensure user profile exists to satisfy foreign key constraint fk_wardrobe_items_user
-  await supabase
-    .from("user_profiles")
-    .upsert({ user_id: currentUserId }, { onConflict: "user_id" });
+  // (once per session — see profileEnsuredFor flag at top of file)
+  if (profileEnsuredFor !== currentUserId) {
+    await supabase
+      .from("user_profiles")
+      .upsert({ user_id: currentUserId }, { onConflict: "user_id" });
+    profileEnsuredFor = currentUserId;
+  }
 
   const { data, error } = await supabase
     .from("wardrobe_items")

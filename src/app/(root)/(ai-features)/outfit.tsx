@@ -135,10 +135,10 @@ export default function OutfitScreen() {
   const pagerRef = useRef<PagerView>(null);
 
   // Toggles (assume user will wire UI later as they mentioned)
-  const [garmentPhotoType, setGarmentPhotoType] = useState<
+  const [garmentPhotoType] = useState<
     "model" | "flat-lay"
   >("model");
-  const [garmentCategory, setGarmentCategory] = useState<
+  const [garmentCategory] = useState<
     "tops" | "bottoms" | "footwear"
   >("tops");
 

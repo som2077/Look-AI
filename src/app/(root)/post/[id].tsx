@@ -18,7 +18,6 @@ import {
   MessageCircle,
   Share2,
   MoreHorizontal,
-  X,
   Pin,
   Download,
   Grid,

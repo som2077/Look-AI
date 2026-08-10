@@ -245,9 +245,8 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   deletePost: (postId: string) => void;
   addComment: (postId: string, content: string) => Promise<boolean>;
 }) {
-  const router = useRouter();
   const { user } = useUser();
-  const { nickname, username } = useOnboardingState();
+  const { username } = useOnboardingState();
   const [showReactions, setShowReactions] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
@@ -674,7 +673,6 @@ function FeedTab() {
   const [inputText, setInputText] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const scrollViewRef = useRef<any>(null);
   const [isComposing, setIsComposing] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);

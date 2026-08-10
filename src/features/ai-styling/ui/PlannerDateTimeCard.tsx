@@ -31,7 +31,7 @@ function buildCalendarDays(year: number, month: number) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
 
-  const cells: Array<{ day: number; month: "prev" | "cur" | "next" }> = [];
+  const cells: { day: number; month: "prev" | "cur" | "next" }[] = [];
 
   for (let i = startOffset - 1; i >= 0; i--) {
     cells.push({ day: daysInPrevMonth - i, month: "prev" });

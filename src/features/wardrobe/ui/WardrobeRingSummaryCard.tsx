@@ -99,8 +99,6 @@ const AnimatedRingSegment = ({
     outputRange: [circumference, 0],
   });
 
-  const dotRadius = segment.strokeWidth / 2 - 2.5;
-
   return (
     <React.Fragment>
       {/* Track circle outer border */}

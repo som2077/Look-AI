@@ -20,7 +20,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MIN_EVENT_DURATION = 0.5; // 30 minutes
 
 interface CalendarEvent {
   id: string;
@@ -35,7 +34,6 @@ export default function CalendarPrototypeScreen() {
   // We'll just manage one draft event for this prototype
   const [draftEvent, setDraftEvent] = useState<CalendarEvent | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [eventTitle, setEventTitle] = useState("");
   const [scrollEnabled, setScrollEnabled] = useState(true);
 
   // Reanimated shared values for the draft event position and size

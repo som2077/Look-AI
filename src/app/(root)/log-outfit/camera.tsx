@@ -73,7 +73,7 @@ export default function CameraScreen() {
   const router = useRouter();
   const cameraRef = useRef<CameraView | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
-  const [facing, setFacing] = useState<"back" | "front">("back");
+  const [facing] = useState<"back" | "front">("back");
   const [capturing, setCapturing] = useState(false);
   const [flashOn, setFlashOn] = useState(false);
   const [activeMode, setActiveMode] = useState("scan-cloth");

@@ -26,7 +26,6 @@ import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
-import { useUser } from "@clerk/clerk-expo";
 import { IconAlertTriangle } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
@@ -149,9 +148,7 @@ const HomeCard = React.memo(function HomeCard({
 });
 
 export default function HomeScreen() {
-  const { user } = useUser();
   const { canAddWardrobe, wardrobeCount, wardrobeLimit } = usePremiumLimits();
-  const router = useRouter();
   const [timeframe, setTimeframe] = useState<FilterTab>("Daily");
   const period =
     timeframe === "Daily"
@@ -163,11 +160,11 @@ export default function HomeScreen() {
           : "90_days";
   const weatherData = useWeatherStore((state) => state.data);
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [, setSelectedDate] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
   const { currentStreak, hasIncrementedToday, dismissIncrement } =
     useStreakStore();
-  const { stats, isLoading } = useRingStats(period, wardrobeCount, currentStreak, wardrobeLimit);
+  const { stats } = useRingStats(period, wardrobeCount, currentStreak, wardrobeLimit);
   const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
 
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)

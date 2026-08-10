@@ -21,6 +21,7 @@ import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import analytics from "@react-native-firebase/analytics";
 import { memo, useCallback, useEffect, useState } from "react";
+import { AppState } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
@@ -35,6 +36,10 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 if (!publishableKey) {
   throw new Error("Add your Clerk Publishable Key to the .env file");
 }
+
+// Guard avatar + FCM bootstrap sync so the client-identity swap in useSupabase()
+// (which recreates the client after init) can't double-fire them per session.
+const bootstrapSyncDone = new Map<string, boolean>();
 
 const RootNavigator = memo(function RootNavigator() {
   const { isSignedIn, isLoaded, userId } = useAuth();
@@ -165,20 +170,26 @@ const RootNavigator = memo(function RootNavigator() {
   ]);
 
   useEffect(() => {
-    if (user?.imageUrl && supabase && userId) {
-      supabase
-        .from("user_profiles")
-        .update({ avatar_url: user.imageUrl })
-        .eq("user_id", userId)
-        .is("avatar_url", null)
-        .then(() => {}); // Silent sync
-    }
-  }, [user?.imageUrl, supabase, userId]);
+    if (!user?.imageUrl || !supabase || !userId) return;
+    if (isSupabaseInitializing) return;
+    if (bootstrapSyncDone.get(`avatar:${userId}`)) return;
+    bootstrapSyncDone.set(`avatar:${userId}`, true);
+
+    supabase
+      .from("user_profiles")
+      .update({ avatar_url: user.imageUrl })
+      .eq("user_id", userId)
+      .is("avatar_url", null)
+      .then(() => {}); // Silent sync — one-time per session
+  }, [user?.imageUrl, supabase, userId, isSupabaseInitializing]);
 
   // Sync FCM Token on app start if enabled
   useEffect(() => {
     if (!isSignedIn || !userId || !supabase) return;
-    
+    if (isSupabaseInitializing) return;
+    if (bootstrapSyncDone.get(`fcm:${userId}`)) return;
+    bootstrapSyncDone.set(`fcm:${userId}`, true);
+
     async function syncFCM() {
       try {
         const { data } = await supabase
@@ -204,7 +215,7 @@ const RootNavigator = memo(function RootNavigator() {
       }
     }
     syncFCM();
-  }, [isSignedIn, userId, supabase]);
+  }, [isSignedIn, userId, supabase, isSupabaseInitializing]);
 
 
   useEffect(() => {
@@ -312,11 +323,19 @@ export default function RootLayout() {
     // Initial check on mount
     checkConnectivity();
 
-    // Periodic check every 60 seconds (was 15s — too aggressive)
-    const interval = setInterval(checkConnectivity, 60000);
+    // Check on foreground return only, with a 60s minimum interval (replaces the
+    // old 60s setInterval, which produced ~167 req/s to Supabase at 10k users).
+    let lastCheckAt = Date.now();
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState !== "active") return;
+      const now = Date.now();
+      if (now - lastCheckAt < 60_000) return;
+      lastCheckAt = now;
+      checkConnectivity();
+    });
 
     return () => {
-      clearInterval(interval);
+      subscription.remove();
     };
   }, [checkConnectivity]);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 
@@ -25,53 +25,6 @@ const getDaysInPeriod = (period: "daily" | "weekly" | "monthly" | "90_days"): nu
   return 90; // for '90_days'
 };
 
-// Helper to check streak in Supabase logs
-const getCurrentStreak = async (supabase: any, userId: string): Promise<number> => {
-  const { data: logs } = await supabase
-    .from("wear_logs")
-    .select("worn_at")
-    .eq("user_id", userId)
-    .order("worn_at", { ascending: false });
-
-  if (!logs || logs.length === 0) return 0;
-
-  // Extract unique dates (YYYY-MM-DD)
-  const uniqueDates = Array.from(
-    new Set(logs.map((log: any) => new Date(log.worn_at).toISOString().split("T")[0]))
-  );
-
-  let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  let checkDate = new Date(today);
-
-  for (let i = 0; i < uniqueDates.length; i++) {
-    const logDateStr = uniqueDates[i];
-    const checkDateStr = checkDate.toISOString().split("T")[0];
-
-    if (logDateStr === checkDateStr) {
-      streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else if (i === 0) {
-      // If the first log isn't today, check if it was yesterday
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      if (logDateStr === yesterday.toISOString().split("T")[0]) {
-        streak++;
-        checkDate = yesterday;
-        checkDate.setDate(checkDate.getDate() - 1);
-      } else {
-        break; // Streak broken
-      }
-    } else {
-      break; // Streak broken
-    }
-  }
-
-  return streak;
-};
-
 export function useRingStats(
   period: "daily" | "weekly" | "monthly" | "90_days" = "weekly",
   totalItems: number = 0,
@@ -94,6 +47,13 @@ export function useRingStats(
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Keep store-derived props (which change on wardrobe/streak churn) out of the
+  // effect deps so syncing the wardrobe doesn't re-fire this query every time.
+  const totalItemsRef = useRef(totalItems);
+  totalItemsRef.current = totalItems;
+  const currentStreakRef = useRef(currentStreak);
+  currentStreakRef.current = currentStreak;
+
   useEffect(() => {
     let isMounted = true;
 
@@ -103,7 +63,7 @@ export function useRingStats(
 
       try {
         // 1. Total items are now passed as a prop, no need to query
-        const total = totalItems || 0;
+        const total = totalItemsRef.current || 0;
 
         // 2. Set time filter based on period
         const now = new Date();
@@ -125,7 +85,8 @@ export function useRingStats(
           .select("item_id")
           .eq("user_id", user.id)
           .gte("worn_at", startTime.toISOString())
-          .lte("worn_at", now.toISOString());
+          .lte("worn_at", now.toISOString())
+          .limit(500); // bound the read — enough for usage/avg stats at scale
 
         const logs = periodLogs || [];
 
@@ -137,7 +98,7 @@ export function useRingStats(
         const avgWears = uniqueItemsWorn > 0 ? +(logs.length / uniqueItemsWorn).toFixed(1) : 0;
 
         // 6. Calculate Streak based on passed currentStreak
-        const streakCount = currentStreak;
+        const streakCount = currentStreakRef.current;
         const daysInPeriod = getDaysInPeriod(period);
         // If daily and streak > 0, 100%. Otherwise normalize by period days.
         let streakPercent = 0;
@@ -173,7 +134,9 @@ export function useRingStats(
     return () => {
       isMounted = false;
     };
-  }, [supabase, user, period, totalItems, currentStreak, wardrobeLimit]);
+    // totalItems/currentStreak intentionally excluded — read via refs above.
+     
+  }, [supabase, user, period, wardrobeLimit]);
 
   return { stats, isLoading };
 }

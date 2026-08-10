@@ -119,22 +119,6 @@ interface ClothingItem {
   createdAt: string;
 }
 
-// Category tabs (plain text strip below toolbar)
-const CATEGORY_TABS: { label: string; value: CategoryId | "all" }[] = [
-  { label: "Tops", value: "top" },
-  { label: "Dresses", value: "dress" },
-  { label: "Pants", value: "trousers" },
-  { label: "Outerwear", value: "outerwear" },
-  { label: "Shoes", value: "footwear" },
-  { label: "Bags", value: "bags" },
-  { label: "Ethnic", value: "ethnic" },
-  { label: "Accessories", value: "accessory" },
-  { label: "Activewear", value: "activewear" },
-  { label: "Hoodies", value: "hoodies" },
-  { label: "Jackets", value: "jackets" },
-  { label: "Formal", value: "formal" },
-];
-
 // Filter chips for bottom sheet
 const FILTER_CHIPS: { label: string; value: CategoryId | "all" }[] = [
   { label: "All clothes", value: "all" },
@@ -598,17 +582,6 @@ export default function WardrobeScreen() {
     null,
   );
 
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, HEADER_HEIGHT],
-    extrapolate: "clamp",
-  });
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT * 0.6, HEADER_HEIGHT],
-    outputRange: [1, 0.6, 0],
-    extrapolate: "clamp",
-  });
-
   const displayItems = useMemo(
     () =>
       userItems.map(
@@ -741,10 +714,6 @@ export default function WardrobeScreen() {
     SORT_OPTIONS.find((s) => s.value === activeSort)?.label ?? "Recently added";
   const hasActiveFilter = activeFiltersCount > 0;
 
-  const handleSaved = useCallback(
-    () => router.push("/(root)/saved" as never),
-    [router],
-  );
   const openCategory = () => {
     setTempFilters(activeFilters);
     setIsCategoryOpen(true);

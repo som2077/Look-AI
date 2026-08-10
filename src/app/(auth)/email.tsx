@@ -1,7 +1,6 @@
 import { useSignIn, useSignUp } from "@clerk/clerk-expo";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -185,7 +184,6 @@ const isUnknownEmailError = (error: unknown) => {
 export default function EmailAuthScreen() {
   const { isLoaded: isSignInLoaded, signIn, setActive } = useSignIn();
   const { isLoaded: isSignUpLoaded, signUp } = useSignUp();
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [flow, setFlow] = useState<EmailFlow | null>(null);
@@ -355,12 +353,12 @@ export default function EmailAuthScreen() {
         const result =
           flow === "sign-in"
             ? await signIn.attemptFirstFactor({
-                strategy: "email_code",
-                code: trimmedCode,
-              })
+              strategy: "email_code",
+              code: trimmedCode,
+            })
             : await signUp.attemptEmailAddressVerification({
-                code: trimmedCode,
-              });
+              code: trimmedCode,
+            });
 
         const sessionId =
           result.createdSessionId ||
@@ -425,7 +423,7 @@ export default function EmailAuthScreen() {
       contentContainerStyle={{ flexGrow: 1 }}
       keyboardShouldPersistTaps="handled"
     >
-      <View className="flex-1 px-6 mt-12">
+      <View className="flex-1 px-6 mt-20">
         {/* Logo */}
         <View className="items-center mt-12">
           <Image
@@ -437,7 +435,7 @@ export default function EmailAuthScreen() {
 
         {/* Heading */}
         <MaskedView
-          className="mt-16 mb-16"
+          className="mt-10 mb-14"
           style={{ minHeight: 90 }}
           maskElement={
             <View
@@ -455,7 +453,7 @@ export default function EmailAuthScreen() {
           }
         >
           <LinearGradient
-            colors={["#F35E44", "#D84F75", "#B8589B", "#6B79B5"]}
+            colors={["#000000ff", "#864646ff", "#B8589B", "#161618ff"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{ flex: 1 }}
@@ -463,13 +461,14 @@ export default function EmailAuthScreen() {
         </MaskedView>
 
         {/* Subtext */}
-        <Text className="text-center text-xl font-medium text-[#000000] mb-2">
+        <Text className="text-center text-xl font-medium text-[#000000] mb-4 mt-3">
           Enter your email address to get started
         </Text>
 
         {/* Email Input */}
         <TextInput
-          className="w-full rounded-2xl bg-[#F2F4F7] text-center border border-[#D1D5DB] px-5 py-5 text-base text-[#000000]"
+          className="w-full rounded-2xl bg-[#F2F4F7] border border-[#D1D5DB] px-5 py-5 text-base text-[#000000]"
+          style={{ textAlign: "center" }}
           placeholder="name@youremailaddress.com"
           placeholderTextColor="#9CA3AF"
           value={email}
@@ -528,7 +527,7 @@ export default function EmailAuthScreen() {
         ) : null}
 
         {/* Terms Text */}
-        <Text className="mt-5 px-4 text-center text-sm leading-5 text-[#000000]">
+        <Text className="mt-2 px-5 text-center text-[11px] leading-5 font-medium text-[#1b1b1b]">
           By continuing, you accept our{" "}
           <Text className="font-semibold text-[#000000] underline">
             Terms of Service

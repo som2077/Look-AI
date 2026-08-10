@@ -218,7 +218,7 @@ export default function StreakScreen() {
       await Share.share({
         message: `I'm on a ${currentStreak}-day streak styling my outfits on Look AI! 🔥`,
       });
-    } catch (_) {}
+    } catch {}
   };
 
   return (

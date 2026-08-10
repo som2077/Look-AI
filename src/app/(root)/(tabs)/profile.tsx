@@ -365,7 +365,7 @@ const ProfileScreenUI = ({
   isDeletingAccount,
   onLogoutPress,
 }: any) => {
-  const { data: userProfile, isLoading } = useUserProfile();
+  const { data: userProfile } = useUserProfile();
 
   const displayName = userProfile?.nickname || user?.fullName || "Your Name";
   const displayUsername = userProfile?.username || user?.username || "";
@@ -623,7 +623,7 @@ export default function ProfileScreen() {
     if (!user) return;
     async function loadSettings() {
       if (!user) return;
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("user_profiles")
         .select("notifications_enabled")
         .eq("user_id", user.id)

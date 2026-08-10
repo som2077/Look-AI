@@ -27,7 +27,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -93,11 +92,6 @@ type Occasion =
   | "All Occasion";
 type Season =
   "Spring" | "Summer" | "Autumn" | "Winter" | "Monsoon" | "All Season";
-
-interface MatchingColor {
-  name: string;
-  hex: string;
-}
 
 const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "T-Shirt", label: "T-Shirt" },
@@ -217,62 +211,6 @@ type FormParams = {
   careInstructions?: string;
 };
 
-// ─── Small helper: Section label ─────────────────────────────────────────────
-const SectionLabel = ({ text }: { text: string }) => (
-  <Text
-    style={{
-      fontSize: 12,
-      fontWeight: "700",
-      color: "#9CA3AF",
-      letterSpacing: 1,
-      marginBottom: 10,
-      textTransform: "uppercase",
-    }}
-  >
-    {text}
-  </Text>
-);
-
-// ─── Chip selector ───────────────────────────────────────────────────────────
-function ChipSelector<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: T[];
-  value: T;
-  onChange: (v: T) => void;
-}) {
-  return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-      {options.map((opt) => (
-        <Pressable
-          key={opt}
-          onPress={() => onChange(opt)}
-          style={{
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            borderRadius: 999,
-            backgroundColor: value === opt ? "#1D1A27" : "#F3F4F6",
-            borderWidth: 1,
-            borderColor: value === opt ? "#1D1A27" : "#E5E7EB",
-          }}
-        >
-          <Text
-            style={{
-              color: value === opt ? "#FFFFFF" : "#374151",
-              fontSize: 13,
-              fontWeight: "600",
-            }}
-          >
-            {opt}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function AddClothesFormScreen() {
   const router = useRouter();
@@ -281,19 +219,9 @@ export default function AddClothesFormScreen() {
   const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
 
   const isScanned = params.mode === "scanned";
-  const isManual = params.mode === "manual";
-
-  // Parse matching colors from JSON string
-  const initialMatchingColors: MatchingColor[] = (() => {
-    try {
-      return params.matchingColors ? JSON.parse(params.matchingColors) : [];
-    } catch {
-      return [];
-    }
-  })();
 
   // Form state — pre-filled by AI when scanned
-  const [name, setName] = useState(params.name ?? "");
+  const [name] = useState(params.name ?? "");
   const [category, setCategory] = useState<string>(params.category ?? "top");
   const [color, setColor] = useState(params.color ?? "");
   // Auto-resolve colorHex from COLOR_OPTIONS if not explicitly set
@@ -310,7 +238,6 @@ export default function AddClothesFormScreen() {
   const [seasons, setSeasons] = useState<Season[]>(
     params.season ? [params.season as Season] : ["All Season"],
   );
-  const [matchingColors] = useState<MatchingColor[]>(initialMatchingColors);
   const [localPhotoUri, setLocalPhotoUri] = useState(params.photoUri ?? "");
   const [notes, setNotes] = useState(params.notes ?? "");
   const [brand, setBrand] = useState(params.brand ?? "");
@@ -432,10 +359,6 @@ export default function AddClothesFormScreen() {
     removeOutfit,
     syncStreak,
   ]);
-
-  const handleRetake = useCallback(() => {
-    router.replace("/(root)/log-outfit/camera" as never);
-  }, [router]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (

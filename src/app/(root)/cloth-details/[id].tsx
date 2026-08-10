@@ -10,7 +10,6 @@ import {
 } from "@/shared/constants/occasions";
 import { getMockWardrobeItemById } from "@/shared/testing/mock-wardrobe-items";
 import {
-  IconArrowLeft,
   IconBeach,
   IconBriefcase,
   IconBuilding,
@@ -38,11 +37,9 @@ import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -92,11 +89,6 @@ type Season =
   | "Winter"
   | "Monsoon"
   | "All Season";
-
-interface MatchingColor {
-  name: string;
-  hex: string;
-}
 
 const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "T-Shirt", label: "T-Shirt" },
@@ -177,77 +169,7 @@ const COLOR_OPTIONS = [
   { name: "Colorful", hex: "colorful" },
 ];
 
-type FormParams = {
-  mode?: string;
-  photoUri?: string;
-  name?: string;
-  category?: string;
-  color?: string;
-  colorHex?: string;
-  occasion?: string;
-  season?: string;
-  matchingColors?: string;
-  isScanning?: string;
-};
-
-// ─── Small helper: Section label ─────────────────────────────────────────────
-const SectionLabel = ({ text }: { text: string }) => (
-  <Text
-    style={{
-      fontSize: 12,
-      fontWeight: "700",
-      color: "#9CA3AF",
-      letterSpacing: 1,
-      marginBottom: 10,
-      textTransform: "uppercase",
-    }}
-  >
-    {text}
-  </Text>
-);
-
-// ─── Chip selector ───────────────────────────────────────────────────────────
-function ChipSelector<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: T[];
-  value: T;
-  onChange: (v: T) => void;
-}) {
-  return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-      {options.map((opt) => (
-        <Pressable
-          key={opt}
-          onPress={() => onChange(opt)}
-          style={{
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            borderRadius: 999,
-            backgroundColor: value === opt ? "#1D1A27" : "#F3F4F6",
-            borderWidth: 1,
-            borderColor: value === opt ? "#1D1A27" : "#E5E7EB",
-          }}
-        >
-          <Text
-            style={{
-              color: value === opt ? "#FFFFFF" : "#374151",
-              fontSize: 13,
-              fontWeight: "600",
-            }}
-          >
-            {opt}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 // ─── Main Screen ─────────────────────────────────────────────────────────────
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const getCategoryIcon = (label: string, color: string) => {
   const size = 16;
@@ -337,7 +259,6 @@ export default function ItemDetailsScreen() {
 
   const updateItem = useUserWardrobeStore((state) => state.updateItem);
   const addItem = useUserWardrobeStore((state) => state.addItem);
-  const items = useUserWardrobeStore((state) => state.items);
   const removeItem = useUserWardrobeStore((state) => state.removeItem);
   const userItem = useUserWardrobeStore((state) =>
     state.items.find((item) => item.id === id),
@@ -358,7 +279,7 @@ export default function ItemDetailsScreen() {
   const initialImageUrl = userItem?.imageUrl ?? "";
 
   // Form state — pre-filled by AI when scanned
-  const [name, setName] = useState(initialName);
+  const [name] = useState(initialName);
   const [category, setCategory] = useState<string>(initialCategory);
   const [color, setColor] = useState(initialColor);
   // Auto-resolve colorHex from COLOR_OPTIONS if not explicitly set
@@ -382,11 +303,9 @@ export default function ItemDetailsScreen() {
       ? (userItem.season as Season[])
       : [(userItem?.season?.[0] as Season) ?? "All Season"],
   );
-  const [matchingColors] = useState<MatchingColor[]>([]);
-  const [localPhotoUri, setLocalPhotoUri] = useState(initialImageUrl);
+  const [localPhotoUri] = useState(initialImageUrl);
   const [notes, setNotes] = useState(userItem?.notes ?? "");
   const [brand, setBrand] = useState(userItem?.brand ?? "");
-  const [styleTag, setStyleTag] = useState(userItem?.style?.join(", ") ?? "");
   const [careInstructions, setCareInstructions] = useState(
     userItem?.careInstructions ?? "",
   );

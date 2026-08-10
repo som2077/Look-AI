@@ -101,7 +101,7 @@ export const WardrobeActivityTracker = ({
 }: {
   data: WardrobeActivityData;
 }) => {
-  const { weekly, today } = data;
+  const { today } = data;
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("Past 7 Days");
 

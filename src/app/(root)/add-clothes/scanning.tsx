@@ -36,7 +36,7 @@ export default function AddClothesScanningScreen() {
   notifyRef.current = notifyComplete;
 
   const [stepIndex, setStepIndex] = useState(0);
-  const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [, setIsAnalyzing] = useState(true);
 
   // Spinner animation
   const spin = useSharedValue(0);

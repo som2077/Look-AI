@@ -1,4 +1,5 @@
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { useAuth } from "@clerk/clerk-expo";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
 import {
@@ -9,7 +10,6 @@ import {
 import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
 import { useFocusEffect } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
-import * as Calendar from "expo-calendar";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -28,7 +28,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -38,12 +37,6 @@ import {
 } from "react-native";
 import { Calendar as RNCalendar } from "react-native-calendars";
 import DatePicker from "react-native-date-picker";
-import { Gesture } from "react-native-gesture-handler";
-import {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
@@ -94,10 +87,7 @@ const isSameDay = (d1: Date, d2: Date) =>
   d1.getMonth() === d2.getMonth() &&
   d1.getDate() === d2.getDate();
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const CELL_GAP = 7;
-const PADDING = 20;
-const CELL_WIDTH = (SCREEN_WIDTH - PADDING * 2 - CELL_GAP * 6) / 7;
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // Reusable Bottom Sheet
 function BottomSheet({
@@ -232,108 +222,8 @@ export default function CalendarScreen() {
     }, []),
   );
 
-  // Drag and drop logic
-  const HOUR_HEIGHT = 72;
-  const [draftEvent, setDraftEvent] = useState<{
-    id: string;
-    start: number;
-    end: number;
-    title: string;
-  } | null>(null);
-  const [scrollEnabled, setScrollEnabled] = useState(true);
-  const startY = useSharedValue(0);
-  const eventHeight = useSharedValue(0);
-
-  const createEventAtY = (y: number) => {
-    const snapY = Math.floor(y / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2);
-    const startHour = snapY / HOUR_HEIGHT;
-    startY.value = snapY;
-    eventHeight.value = Math.max(HOUR_HEIGHT, HOUR_HEIGHT);
-    setDraftEvent({
-      id: "draft",
-      start: startHour,
-      end: startHour + 1,
-      title: "(No title)",
-    });
-  };
-
-  const handleTap = Gesture.Tap().onEnd((e) => {
-    runOnJS(createEventAtY)(e.y);
-  });
-
-  const updateDraftFromShared = () => {
-    if (draftEvent) {
-      setDraftEvent({
-        ...draftEvent,
-        start: startY.value / HOUR_HEIGHT,
-        end: (startY.value + eventHeight.value) / HOUR_HEIGHT,
-      });
-    }
-  };
-
-  const panBody = Gesture.Pan()
-    .onBegin(() => {
-      runOnJS(setScrollEnabled)(false);
-    })
-    .onUpdate((e) => {
-      const snapY =
-        Math.round((startY.value + e.translationY) / (HOUR_HEIGHT / 2)) *
-        (HOUR_HEIGHT / 2);
-      if (snapY >= 0 && snapY + eventHeight.value <= 24 * HOUR_HEIGHT)
-        startY.value = snapY;
-    })
-    .onFinalize(() => {
-      runOnJS(updateDraftFromShared)();
-      runOnJS(setScrollEnabled)(true);
-    });
-
-  const panBottomHandle = Gesture.Pan()
-    .onBegin(() => {
-      runOnJS(setScrollEnabled)(false);
-    })
-    .onUpdate((e) => {
-      const newHeight = eventHeight.value + e.translationY;
-      const snapHeight = Math.max(
-        HOUR_HEIGHT / 2,
-        Math.round(newHeight / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2),
-      );
-      if (startY.value + snapHeight <= 24 * HOUR_HEIGHT)
-        eventHeight.value = snapHeight;
-    })
-    .onFinalize(() => {
-      runOnJS(updateDraftFromShared)();
-      runOnJS(setScrollEnabled)(true);
-    });
-
-  const panTopHandle = Gesture.Pan()
-    .onBegin(() => {
-      runOnJS(setScrollEnabled)(false);
-    })
-    .onUpdate((e) => {
-      const newY = startY.value + e.translationY;
-      const snapY = Math.max(
-        0,
-        Math.round(newY / (HOUR_HEIGHT / 2)) * (HOUR_HEIGHT / 2),
-      );
-      const endY = startY.value + eventHeight.value;
-      if (snapY < endY - HOUR_HEIGHT / 2 + 1) {
-        startY.value = snapY;
-        eventHeight.value = endY - snapY;
-      }
-    })
-    .onFinalize(() => {
-      runOnJS(updateDraftFromShared)();
-      runOnJS(setScrollEnabled)(true);
-    });
-
-  const animatedEventStyle = useAnimatedStyle(() => ({
-    top: startY.value,
-    height: eventHeight.value,
-  }));
-
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
-  const [isOutfitModalClosing, setIsOutfitModalClosing] = useState(false);
-  const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
+  const { setPlannedOutfit } = useCalendarPlanStore();
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isAddOutfitModalVisible, setIsAddOutfitModalVisible] = useState(false);
   const [isTimePickerModalVisible, setIsTimePickerModalVisible] =
@@ -390,29 +280,15 @@ export default function CalendarScreen() {
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
   const [caption, setCaption] = useState("");
-  const [deviceEvents, setDeviceEvents] = useState<Calendar.Event[]>([]);
   const dateStripRef = useRef<any>(null); // Type as any or ScrollView to fix TS error
   const dateStripScrollX = useRef(new Animated.Value(0)).current;
 
-  const lastHapticIndex = useRef(-1);
-  // ponytail: Removed heavy scrollX listener that tracked 30 elements on every frame.
-  // Ceiling: Haptics on scroll snap might be missing. Upgrade path: use onViewableItemsChanged in FlatList to trigger haptics when center item changes.
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const clampedScrollY = useMemo(
-    () =>
-      scrollY.interpolate({
-        inputRange: [0, 10000],
-        outputRange: [0, 10000],
-        extrapolateLeft: "clamp",
-      }),
-    [scrollY],
-  );
-
   const { supabase } = useSupabase();
+  const { userId } = useAuth();
   const [loggedOutfitsData, setLoggedOutfitsData] = useState<
     Record<string, LoggedOutfit[]>
   >({});
-  const [isLoadingOutfits, setIsLoadingOutfits] = useState(false);
+  const [, setIsLoadingOutfits] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -425,8 +301,10 @@ export default function CalendarScreen() {
         const { data, error } = await supabase
           .from("logged_outfits")
           .select("*")
+          .eq("user_id", userId)
           .gte("date", startDate)
-          .lte("date", endDate);
+          .lte("date", endDate)
+          .limit(500); // bound the read — a heavy year can exceed one page
 
         if (error) throw error;
 
