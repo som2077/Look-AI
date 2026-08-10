@@ -3,10 +3,12 @@ import { useNotifications } from "@/features/social/api/useNotifications";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import {
   IconBell,
+  IconDots,
   IconMoodPlus,
   IconPhoto,
   IconPlus,
   IconSend,
+  IconTrash,
   IconX,
 } from "@tabler/icons-react-native";
 import { ResizeMode, Video } from "expo-av";
@@ -17,8 +19,12 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Dimensions,
   Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  PanResponder,
   Platform,
   RefreshControl,
   Image as RNImage,
@@ -26,7 +32,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,126 +42,219 @@ import { useUser } from "@clerk/clerk-expo";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getOrdinalSuffix(day: number): string {
-  if (day > 3 && day < 21) return "th";
-  switch (day % 10) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
-  }
-}
-
-function formatDateSectionHeader(dateString: string): string {
-  if (!dateString) return "Recent";
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return "Recent";
-
-  const now = new Date();
-
-  // Check if today
-  const isToday =
-    date.getDate() === now.getDate() &&
-    date.getMonth() === now.getMonth() &&
-    date.getFullYear() === now.getFullYear();
-
-  // Check if yesterday
-  const yesterday = new Date();
-  yesterday.setDate(now.getDate() - 1);
-  const isYesterday =
-    date.getDate() === yesterday.getDate() &&
-    date.getMonth() === yesterday.getMonth() &&
-    date.getFullYear() === yesterday.getFullYear();
-
-  if (isToday) return "Today";
-  if (isYesterday) return "Yesterday";
-
-  const monthNames = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-  const month = monthNames[date.getMonth()];
-  const day = date.getDate();
-  const suffix = getOrdinalSuffix(day);
-
-  if (date.getFullYear() !== now.getFullYear()) {
-    return `${month} ${day}${suffix}, ${date.getFullYear()}`;
-  }
-
-  return `${month} ${day}${suffix}`;
-}
-
-function formatPostTime(dateString: string): string {
+function formatPostDateTime(dateString: string): string {
   if (!dateString) return "Just now";
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return "Just now";
-
-  let hours = date.getHours();
-  const minutes = date.getMinutes();
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  const strMinutes = minutes < 10 ? "0" + minutes : minutes;
-
-  return `${hours}:${strMinutes} ${ampm}`;
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return "Just now";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " at " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
-interface DateGroup {
-  dateKey: string;
-  displayHeader: string;
-  posts: any[];
+const POPULAR_REACTIONS = ["🔥", "👍", "😂", "❤️"];
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+
+// ─── Replies Bottom Sheet ─────────────────────────────────────────────────────
+
+function RepliesBottomSheet({
+  visible,
+  onClose,
+  comments,
+  post,
+  isMyPost,
+  addComment,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  comments: any[];
+  post: any;
+  isMyPost: boolean;
+  addComment: (postId: string, content: string) => Promise<boolean>;
+}) {
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const [replyText, setReplyText] = useState("");
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+
+  React.useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: visible ? 0 : SCREEN_HEIGHT,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  }, [visible, slideAnim]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return (
+          gestureState.dy > 0 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          Animated.timing(slideAnim, {
+            toValue: SCREEN_HEIGHT,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            onClose();
+          });
+        } else {
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={{ flex: 1 }}
+      >
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+          {/* Overlay Background */}
+          <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, backgroundColor: "rgba(0,0,0,0.35)" }}>
+            <TouchableOpacity style={{ flex: 1 }} onPress={onClose} activeOpacity={1} />
+          </View>
+
+          <Animated.View
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              paddingBottom: Platform.OS === "ios" ? 40 : 20,
+              maxHeight: SCREEN_HEIGHT * 0.8,
+              transform: [{ translateY: slideAnim }],
+            }}
+          >
+            <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
+              <View style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: "#E2E2EA",
+                  }}
+                />
+              </View>
+              <Text style={{ textAlign: "center", fontSize: 18, fontWeight: "600", marginBottom: 4 }}>
+                Replies
+              </Text>
+            </View>
+
+            <ScrollView
+              style={{ paddingHorizontal: 20 }}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {comments.length === 0 ? (
+                <Text style={{ textAlign: "center", color: "#9CA3AF", marginTop: 20, marginBottom: 20 }}>
+                  No replies yet. Be the first!
+                </Text>
+              ) : (
+                comments.map((comment: any) => (
+                  <View key={comment.id} style={{ flexDirection: "row", marginBottom: 12, gap: 8 }}>
+                    <Image
+                      source={{ uri: comment.user_profiles?.avatar_url || "https://i.pravatar.cc/80?img=1" }}
+                      style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#E5E7EB" }}
+                      contentFit="cover"
+                    />
+                    <View style={{ flex: 1, backgroundColor: "#F3F4F6", padding: 10, borderRadius: 12 }}>
+                      <Text style={{ fontWeight: "600", fontSize: 13, color: "#1D1A27", marginBottom: 2 }}>
+                        {comment.user_profiles?.nickname || comment.user_profiles?.username || "Style Explorer"}
+                      </Text>
+                      <Text style={{ fontSize: 14, color: "#4B5563" }}>
+                        {comment.content}
+                      </Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            {!isMyPost && (
+              <View style={{ paddingHorizontal: 20, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F3F4F6", flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <TextInput
+                  placeholder="Type your reply..."
+                  placeholderTextColor="#9CA3AF"
+                  value={replyText}
+                  onChangeText={setReplyText}
+                  style={{
+                    flex: 1,
+                    height: 40,
+                    backgroundColor: "#F3F4F6",
+                    borderRadius: 20,
+                    paddingHorizontal: 16,
+                    fontSize: 14,
+                    color: "#1D1A27",
+                    borderWidth: 1,
+                    borderColor: "#E5E7EB",
+                  }}
+                />
+                <TouchableOpacity
+                  disabled={isSubmittingReply || !replyText.trim()}
+                  onPress={async () => {
+                    setIsSubmittingReply(true);
+                    const success = await addComment(post.id, replyText.trim());
+                    setIsSubmittingReply(false);
+                    if (success) {
+                      setReplyText("");
+                    }
+                  }}
+                  style={{
+                    backgroundColor: replyText.trim() ? "#3B82F6" : "#D1D5DB",
+                    paddingHorizontal: 16,
+                    height: 40,
+                    borderRadius: 20,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 14 }}>Send</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
-
-function groupPostsByDate(posts: any[]): DateGroup[] {
-  const groupsMap = new Map<string, { displayHeader: string; posts: any[] }>();
-
-  // Ensure sorted oldest first so newest posts always appear at the bottom
-  const sorted = [...posts].sort((a, b) => {
-    const timeA = new Date(a.created_at || 0).getTime();
-    const timeB = new Date(b.created_at || 0).getTime();
-    return timeA - timeB;
-  });
-
-  for (const post of sorted) {
-    const postDate = new Date(post.created_at || Date.now());
-    const dateKey = `${postDate.getFullYear()}-${postDate.getMonth() + 1}-${postDate.getDate()}`;
-
-    if (!groupsMap.has(dateKey)) {
-      groupsMap.set(dateKey, {
-        displayHeader: formatDateSectionHeader(post.created_at || new Date().toISOString()),
-        posts: [],
-      });
-    }
-    groupsMap.get(dateKey)!.posts.push(post);
-  }
-
-  return Array.from(groupsMap.entries()).map(([dateKey, val]) => ({
-    dateKey,
-    displayHeader: val.displayHeader,
-    posts: val.posts,
-  }));
-}
-
-const POPULAR_REACTIONS = ["😽", "💭", "🥳", "❤️", "🔥", "✨", "😍", "👍", "😂"];
 
 // ─── Timeline Post Card ───────────────────────────────────────────────────────
 
 const TimelinePostCard = React.memo(function TimelinePostCard({
   post,
   toggleReaction,
+  deletePost,
+  addComment,
 }: {
   post: any;
-  toggleReaction: (postId: string, reactionType: string | null) => void;
+  toggleReaction: (postId: string, reactionType: string) => void;
+  deletePost: (postId: string) => void;
+  addComment: (postId: string, content: string) => Promise<boolean>;
 }) {
+  const router = useRouter();
   const { user } = useUser();
   const { nickname, username } = useOnboardingState();
   const [showReactions, setShowReactions] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number>(4 / 3);
+  const [showRepliesBottomSheet, setShowRepliesBottomSheet] = useState(false);
+
+  const isMyPost = post.user_id === user?.id;
 
   useEffect(() => {
     if (typeof post.image_url === "string" && post.image_url) {
@@ -172,8 +271,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   }, [post.image_url]);
 
   const reactions = post.post_reactions || [];
-  const myReactionObj = reactions.find((r: any) => r.user_id === user?.id);
-  const myReaction = myReactionObj?.reaction_type || null;
+  const myReactions = reactions.filter((r: any) => r.user_id === user?.id).map((r: any) => r.reaction_type);
 
   const reactionCounts: Record<string, number> = {};
   reactions.forEach((r: any) => {
@@ -183,16 +281,23 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   });
   const uniqueReactions = Object.keys(reactionCounts);
 
+  const comments = post.post_comments || [];
+  const replyCount = comments.length;
+  // Get one avatar per comment (up to 4), keeping duplicates so count matches.
+  const replierAvatars = comments
+    .map((c: any) => c.user_profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.user_profiles?.username || "U")}&background=random`)
+    .slice(0, 4) as string[];
+
   const formattedTime = post.created_at
-    ? formatPostTime(post.created_at)
-    : "Just now";
+    ? formatPostDateTime(post.created_at)
+    : `Just now`;
 
   const isCurrentUser =
     post.user_id === user?.id || post.user_profiles?.user_id === user?.id;
 
-  const displayNickname = isCurrentUser
-    ? nickname || user?.fullName || "User"
-    : post.user_profiles?.nickname || "User";
+  const displayUsername = isCurrentUser
+    ? (username ? `@${username}` : (user?.username ? `@${user.username}` : "User"))
+    : (post.user_profiles?.username ? `@${post.user_profiles.username}` : "User");
 
   const avatarUrl =
     isCurrentUser && user?.imageUrl
@@ -226,30 +331,86 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
         <View
           style={{
             flexDirection: "row",
-            alignItems: "baseline",
-            flexWrap: "wrap",
-            gap: 8,
+            alignItems: "center",
+            justifyContent: "space-between",
             marginBottom: 4,
           }}
         >
-          <Text
+          <View
             style={{
-              fontSize: 15,
-              fontWeight: "700",
-              color: "#111827",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
             }}
           >
-            {displayNickname}
-          </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              color: "#9CA3AF",
-              fontWeight: "400",
-            }}
-          >
-            {formattedTime}
-          </Text>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "700",
+                color: "#111827",
+              }}
+            >
+              {displayUsername}
+            </Text>
+            <Text
+              style={{
+                fontSize: 13,
+                color: "#9CA3AF",
+                fontWeight: "400",
+              }}
+            >
+              {formattedTime}
+            </Text>
+          </View>
+          {isCurrentUser && (
+            <View style={{ position: "relative", zIndex: 10 }}>
+              <TouchableOpacity
+                onPress={() => setShowOptions((prev) => !prev)}
+                style={{ padding: 4 }}
+              >
+                <IconDots size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+
+              {showOptions && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 32,
+                    right: 0,
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 12,
+                    padding: 4,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 12,
+                    elevation: 5,
+                    width: 140,
+                    zIndex: 100,
+                    borderWidth: 1,
+                    borderColor: "#F3F4F6",
+                  }}
+                >
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: 10,
+                      borderRadius: 8,
+                    }}
+                    onPress={() => {
+                      setShowOptions(false);
+                      deletePost(post.id);
+                    }}
+                  >
+                    <IconTrash size={18} color="#EF4444" />
+                    <Text style={{ fontSize: 15, fontWeight: "500", color: "#EF4444" }}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Caption */}
@@ -333,12 +494,12 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
           }}
         >
           {uniqueReactions.map((emoji) => {
-            const isMine = myReaction === emoji;
+            const isMine = myReactions.includes(emoji);
             return (
               <TouchableOpacity
                 key={emoji}
                 activeOpacity={0.7}
-                onPress={() => toggleReaction(post.id, isMine ? null : emoji)}
+                onPress={() => toggleReaction(post.id, emoji)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -409,14 +570,14 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                 key={emoji}
                 activeOpacity={0.7}
                 onPress={() => {
-                  toggleReaction(post.id, myReaction === emoji ? null : emoji);
+                  toggleReaction(post.id, emoji);
                   setShowReactions(false);
                 }}
                 style={{
                   padding: 6,
                   borderRadius: 8,
                   backgroundColor:
-                    myReaction === emoji ? "#EFF6FF" : "transparent",
+                    myReactions.includes(emoji) ? "#EFF6FF" : "transparent",
                 }}
               >
                 <Text style={{ fontSize: 20 }}>{emoji}</Text>
@@ -424,6 +585,70 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
             ))}
           </View>
         )}
+
+        {/* Replies Section */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setShowRepliesBottomSheet(true)}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginTop: 16,
+          }}
+        >
+          {/* Overlapping Avatars */}
+          {replierAvatars.length > 0 && (
+            <View style={{ flexDirection: "row", marginRight: 10 }}>
+              {replierAvatars.map((url, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: url }}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    borderWidth: 2,
+                    borderColor: "#FFFFFF",
+                    marginLeft: index > 0 ? -12 : 0,
+                    backgroundColor: "#F3F4F6",
+                  }}
+                  contentFit="cover"
+                />
+              ))}
+            </View>
+          )}
+
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "500",
+              color: "#3B82F6",
+            }}
+          >
+            {replyCount} {replyCount === 1 ? "reply" : "replies"}
+          </Text>
+
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: "500",
+              color: "#6B7280",
+              marginLeft: "auto",
+            }}
+          >
+            {formattedTime}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Expanded Replies Section */}
+        <RepliesBottomSheet
+          visible={showRepliesBottomSheet}
+          onClose={() => setShowRepliesBottomSheet(false)}
+          comments={comments}
+          post={post}
+          isMyPost={isMyPost}
+          addComment={addComment}
+        />
       </View>
     </View>
   );
@@ -433,7 +658,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
 
 function FeedTab() {
   const router = useRouter();
-  const { posts, loading, uploading, createPost, toggleReaction, refetch } =
+  const { posts, loading, uploading, createPost, toggleReaction, addComment, refetch, deletePost } =
     useCommunityPosts();
   const { unreadCount } = useNotifications();
   const [refreshing, setRefreshing] = useState(false);
@@ -521,7 +746,13 @@ function FeedTab() {
     }
   };
 
-  const dateGroups = React.useMemo(() => groupPostsByDate(posts), [posts]);
+  const sortedPosts = React.useMemo(() => {
+    return [...posts].sort((a, b) => {
+      const timeA = new Date(a.created_at || 0).getTime();
+      const timeB = new Date(b.created_at || 0).getTime();
+      return timeA - timeB;
+    });
+  }, [posts]);
 
   return (
     <View
@@ -662,44 +893,14 @@ function FeedTab() {
             }
             contentContainerStyle={{ paddingBottom: 40 }}
           >
-            {dateGroups.map((group, groupIndex) => (
-              <View key={group.dateKey}>
-                {/* Date Section Header with subtle divider */}
-                <View
-                  style={{
-                    marginTop: groupIndex === 0 ? 8 : 20,
-                    marginBottom: 16,
-                  }}
-                >
-                  {groupIndex > 0 && (
-                    <View
-                      style={{
-                        height: 1,
-                        backgroundColor: "#F1F5F9",
-                        marginBottom: 18,
-                      }}
-                    />
-                  )}
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: "700",
-                      color: "#1F2937",
-                    }}
-                  >
-                    {group.displayHeader}
-                  </Text>
-                </View>
-
-                {/* Posts in this date group */}
-                {group.posts.map((post) => (
-                  <TimelinePostCard
-                    key={post.id}
-                    post={post}
-                    toggleReaction={toggleReaction}
-                  />
-                ))}
-              </View>
+            {sortedPosts.map((post) => (
+              <TimelinePostCard
+                key={post.id}
+                post={post}
+                toggleReaction={toggleReaction}
+                deletePost={deletePost}
+                addComment={addComment}
+              />
             ))}
           </ScrollView>
         )}

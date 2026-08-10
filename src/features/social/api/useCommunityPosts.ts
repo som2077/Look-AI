@@ -48,7 +48,7 @@ export function useCommunityPosts() {
   const { userId } = useAuth(); // Assuming the Supabase user_id matches Clerk
   const { supabase, isInitializing } = useSupabase();
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     if (isInitializing || !supabase) return;
     try {
       const { data, error } = await supabase
@@ -62,7 +62,13 @@ export function useCommunityPosts() {
             user_id,
             avatar_url
           ),
-          post_reactions(user_id, reaction_type)
+          post_reactions(user_id, reaction_type),
+          post_comments(
+            id,
+            content,
+            created_at,
+            user_profiles(avatar_url, username, nickname)
+          )
         `
         )
         .order("created_at", { ascending: true })
@@ -82,21 +88,13 @@ export function useCommunityPosts() {
       setPosts(backendPosts.length > 0 ? backendPosts : DUMMY_POSTS);
 
       if (userId) {
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("id")
-          .eq("user_id", userId)
-          .single();
+        const { data: likes } = await supabase
+          .from("post_likes")
+          .select("post_id")
+          .eq("user_id", userId);
 
-        if (profile) {
-          const { data: likes } = await supabase
-            .from("post_likes")
-            .select("post_id")
-            .eq("user_id", profile.id);
-
-          if (likes) {
-            setLikedPostIds(new Set(likes.map((l: any) => l.post_id)));
-          }
+        if (likes) {
+          setLikedPostIds(new Set(likes.map((l: any) => l.post_id)));
         }
       }
     } catch (err) {
@@ -104,7 +102,7 @@ export function useCommunityPosts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase, isInitializing, userId, setPosts]);
 
   useEffect(() => {
     if (isInitializing || !supabase) return;
@@ -131,23 +129,15 @@ export function useCommunityPosts() {
       if (timeoutId) clearTimeout(timeoutId);
       supabase.removeChannel(subscription);
     };
-  }, [supabase, isInitializing, userId]);
+  }, [supabase, isInitializing, fetchPosts]);
 
   const toggleLike = async (postId: string) => {
     if (!userId) throw new Error("You must be logged in to like.");
     if (!supabase) throw new Error("Supabase client not initialized.");
 
+    const isLiked = likedPostIds.has(postId);
+
     try {
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("id")
-        .eq("user_id", userId)
-        .single();
-
-      if (!profile) return;
-
-      const isLiked = likedPostIds.has(postId);
-
       // Optimistic UI Update
       setLikedPostIds((prev) => {
         const next = new Set(prev);
@@ -163,19 +153,19 @@ export function useCommunityPosts() {
         const { error } = await supabase
           .from("post_likes")
           .delete()
-          .match({ post_id: postId, user_id: profile.id });
+          .match({ post_id: postId, user_id: userId });
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("post_likes")
-          .insert({ post_id: postId, user_id: profile.id });
+          .insert({ post_id: postId, user_id: userId });
         if (error) throw error;
       }
     } catch (err) {
       console.error("Error toggling like:", err);
       setLikedPostIds((prev) => {
         const next = new Set(prev);
-        if (likedPostIds.has(postId)) {
+        if (isLiked) {
           next.add(postId);
         } else {
           next.delete(postId);
@@ -185,20 +175,30 @@ export function useCommunityPosts() {
     }
   };
 
-  const toggleReaction = useCallback(async (postId: string, reactionType: string | null) => {
+  const toggleReaction = useCallback(async (postId: string, reactionType: string) => {
     if (!userId || !supabase) return;
 
     const previousPosts = usePostsStore.getState().posts;
+    let isAdding = true;
 
     // Optimistic UI Update
     usePostsStore.setState((state) => ({
       posts: state.posts.map((post) => {
         if (post.id === postId) {
-          const newReactions = (post as any).post_reactions?.filter(
-            (r: any) => r.user_id !== userId
-          ) || [];
-          if (reactionType !== null) {
-            newReactions.push({ user_id: userId, reaction_type: reactionType });
+          const currentReactions = (post as any).post_reactions || [];
+          const hasReaction = currentReactions.some(
+            (r: any) => r.user_id === userId && r.reaction_type === reactionType
+          );
+
+          isAdding = !hasReaction;
+
+          let newReactions;
+          if (isAdding) {
+            newReactions = [...currentReactions, { user_id: userId, reaction_type: reactionType }];
+          } else {
+            newReactions = currentReactions.filter(
+              (r: any) => !(r.user_id === userId && r.reaction_type === reactionType)
+            );
           }
           return { ...post, post_reactions: newReactions };
         }
@@ -207,16 +207,20 @@ export function useCommunityPosts() {
     }));
 
     try {
-      if (reactionType === null) {
+      if (isAdding) {
         const { error } = await supabase
           .from("post_reactions")
-          .delete()
-          .match({ post_id: postId, user_id: userId });
+          .insert({
+            post_id: postId,
+            user_id: userId,
+            reaction_type: reactionType,
+          });
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("post_reactions")
-          .upsert({ post_id: postId, user_id: userId, reaction_type: reactionType }, { onConflict: 'post_id,user_id' });
+          .delete()
+          .match({ post_id: postId, user_id: userId, reaction_type: reactionType });
         if (error) throw error;
       }
     } catch (err) {
@@ -224,7 +228,52 @@ export function useCommunityPosts() {
       // Rollback on error
       usePostsStore.setState({ posts: previousPosts });
     }
-  }, [userId, supabase]);
+  }, [supabase, userId]);
+
+  const addComment = useCallback(async (postId: string, content: string) => {
+    if (!userId || !supabase) return false;
+
+    const previousPosts = usePostsStore.getState().posts;
+    const { nickname, username } = useOnboardingState.getState();
+
+    // Optimistic UI Update
+    const newComment = {
+      id: Math.random().toString(),
+      content: content,
+      created_at: new Date().toISOString(),
+      user_profiles: {
+        nickname: nickname || "You",
+        username: username || "you",
+      },
+    };
+
+    usePostsStore.setState((state) => ({
+      posts: state.posts.map((post) => {
+        if (post.id === postId) {
+          const currentComments = (post as any).post_comments || [];
+          return { ...post, post_comments: [...currentComments, newComment] };
+        }
+        return post;
+      }),
+    }));
+
+    try {
+      const { error } = await supabase
+        .from("post_comments")
+        .insert({
+          post_id: postId,
+          user_id: userId,
+          content: content,
+        });
+      if (error) throw error;
+      return true;
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      // Rollback on error
+      usePostsStore.setState({ posts: previousPosts });
+      return false;
+    }
+  }, [supabase, userId]);
 
   const createPost = async (imageUri: string, caption: string) => {
     setUploading(true);
@@ -251,17 +300,6 @@ export function useCommunityPosts() {
         return true;
       }
 
-      const { data: profile, error: profileError } = await supabase
-        .from("user_profiles")
-        .select("id")
-        .eq("user_id", userId)
-        .single();
-
-      if (profileError || !profile) {
-        console.warn("Profile not found, keeping local only");
-        return true;
-      }
-
       let cloudinaryUrl = null;
       if (imageUri) {
         cloudinaryUrl = await uploadToCloudinary(imageUri);
@@ -271,7 +309,7 @@ export function useCommunityPosts() {
       }
 
       const { error } = await supabase.from("community_posts").insert({
-        user_id: profile.id,
+        user_id: userId,
         image_url: cloudinaryUrl,
         caption: caption,
       });
@@ -292,14 +330,40 @@ export function useCommunityPosts() {
     }
   };
 
+  const deletePost = useCallback(async (postId: string) => {
+    if (!userId || !supabase) return false;
+
+    // Optimistically update the UI
+    const previousPosts = usePostsStore.getState().posts;
+    usePostsStore.setState((state) => ({
+      posts: state.posts.filter((post) => post.id !== postId),
+    }));
+
+    try {
+      const { error } = await supabase
+        .from("community_posts")
+        .delete()
+        .match({ id: postId, user_id: userId });
+
+      if (error) throw error;
+      return true;
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      usePostsStore.setState({ posts: previousPosts });
+      return false;
+    }
+  }, [userId, supabase]);
+
   return {
     posts,
     likedPostIds,
     loading,
     uploading,
     createPost,
+    deletePost,
     toggleLike,
     toggleReaction,
+    addComment,
     refetch: fetchPosts,
   };
 }

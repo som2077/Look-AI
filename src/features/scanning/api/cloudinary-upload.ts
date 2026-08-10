@@ -1,6 +1,6 @@
 import { supabase } from "@/shared/supabase/client";
-import * as FileSystem from "expo-file-system";
 import CryptoJS from "crypto-js";
+import { File, Paths } from "expo-file-system";
 
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
 const API_KEY = process.env.EXPO_PUBLIC_CLOUDINARY_API_KEY?.trim();
@@ -31,9 +31,8 @@ async function uriToBase64(uri: string): Promise<string> {
     uri.startsWith("ph://")
   ) {
     try {
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: "base64",
-      });
+      const file = new File(uri);
+      const base64 = await file.base64();
       if (base64 && base64.length > 0) {
         return base64;
       }
@@ -79,7 +78,9 @@ async function removeBackgroundLocal(fileUri: string): Promise<string> {
 
     if (!error && data?.result_b64) {
       console.log("[BG-Removal] Successfully removed background via Edge Function");
-      return `data:image/png;base64,${data.result_b64}`;
+      const file = new File(Paths.cache, `bg_removed_${Date.now()}.png`);
+      file.write(data.result_b64, { encoding: "base64" });
+      return file.uri;
     }
     console.warn(
       "[BG-Removal] Edge Function returned error/no-result, attempting direct API fallback:",
@@ -122,7 +123,9 @@ async function removeBackgroundLocal(fileUri: string): Promise<string> {
         const b64 = data.data?.result_b64;
         if (b64) {
           console.log(`[BG-Removal] Successfully removed background via direct remove.bg key #${i + 1}`);
-          return `data:image/png;base64,${b64}`;
+          const file = new File(Paths.cache, `bg_removed_${Date.now()}.png`);
+          file.write(b64, { encoding: "base64" });
+          return file.uri;
         }
       } else {
         const errText = await response.text();
@@ -197,7 +200,14 @@ export async function uploadToCloudinaryWithBgRemoval(
     }
 
     const formData = new FormData();
-    formData.append("file", uploadUri as any);
+    let fileToUpload: any;
+    if (uploadUri.startsWith("data:")) {
+      fileToUpload = await (await fetch(uploadUri)).blob();
+    } else {
+      const fileName = uploadUri.split("/").pop() || "image.jpg";
+      fileToUpload = { uri: uploadUri, name: fileName, type: "image/jpeg" };
+    }
+    formData.append("file", fileToUpload);
     formData.append("api_key", API_KEY);
     formData.append("timestamp", timestamp);
     formData.append("signature", signature);
@@ -240,10 +250,19 @@ export async function uploadToCloudinaryWithBgRemoval(
 export function extractPublicIdFromUrl(url: string): string | null {
   try {
     if (!url || !url.includes("cloudinary.com")) return null;
-    const parts = url.split("/");
-    const filename = parts.pop();
-    if (!filename) return null;
-    return filename.split(".")[0];
+    const uploadIndex = url.indexOf("/upload/");
+    if (uploadIndex === -1) return null;
+
+    let pathAfterUpload = url.substring(uploadIndex + 8);
+    if (pathAfterUpload.match(/^v\d+\//)) {
+      pathAfterUpload = pathAfterUpload.replace(/^v\d+\//, "");
+    }
+
+    const lastDotIndex = pathAfterUpload.lastIndexOf(".");
+    if (lastDotIndex !== -1) {
+      pathAfterUpload = pathAfterUpload.substring(0, lastDotIndex);
+    }
+    return pathAfterUpload;
   } catch {
     return null;
   }

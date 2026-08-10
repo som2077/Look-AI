@@ -55,7 +55,6 @@ export const uploadToCloudinary = async (
         body: data,
         headers: {
           Accept: "application/json",
-          "Content-Type": "multipart/form-data",
         },
       },
     );
