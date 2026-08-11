@@ -67,7 +67,8 @@ export function useCommunityPosts() {
             user_id,
             avatar_url
           ),
-          post_reactions(user_id, reaction_type)
+          post_reactions(user_id, reaction_type),
+          post_comments(count)
         `,
           userId,
           force,
@@ -164,105 +165,111 @@ export function useCommunityPosts() {
     }
   };
 
-  const toggleReaction = useCallback(async (postId: string, reactionType: string) => {
-    if (!userId || !supabase) return;
+  const toggleReaction = useCallback(
+    async (postId: string, reactionType: string) => {
+      if (!userId || !supabase) return;
 
-    const previousPosts = usePostsStore.getState().posts;
-    let isAdding = true;
+      const previousPosts = usePostsStore.getState().posts;
+      let isAdding = true;
 
-    // Optimistic UI Update
-    usePostsStore.setState((state) => ({
-      posts: state.posts.map((post) => {
-        if (post.id === postId) {
-          const currentReactions = (post as any).post_reactions || [];
-          const hasReaction = currentReactions.some(
-            (r: any) => r.user_id === userId && r.reaction_type === reactionType
-          );
-
-          isAdding = !hasReaction;
-
-          let newReactions;
-          if (isAdding) {
-            newReactions = [...currentReactions, { user_id: userId, reaction_type: reactionType }];
-          } else {
-            newReactions = currentReactions.filter(
-              (r: any) => !(r.user_id === userId && r.reaction_type === reactionType)
+      // Optimistic UI Update
+      usePostsStore.setState((state) => ({
+        posts: state.posts.map((post) => {
+          if (post.id === postId) {
+            const currentReactions = (post as any).post_reactions || [];
+            const hasReaction = currentReactions.some(
+              (r: any) =>
+                r.user_id === userId && r.reaction_type === reactionType,
             );
-          }
-          return { ...post, post_reactions: newReactions };
-        }
-        return post;
-      }),
-    }));
 
-    try {
-      if (isAdding) {
-        const { error } = await supabase
-          .from("post_reactions")
-          .insert({
+            isAdding = !hasReaction;
+
+            let newReactions;
+            if (isAdding) {
+              newReactions = [
+                ...currentReactions,
+                { user_id: userId, reaction_type: reactionType },
+              ];
+            } else {
+              newReactions = currentReactions.filter(
+                (r: any) =>
+                  !(r.user_id === userId && r.reaction_type === reactionType),
+              );
+            }
+            return { ...post, post_reactions: newReactions };
+          }
+          return post;
+        }),
+      }));
+
+      try {
+        if (isAdding) {
+          const { error } = await supabase.from("post_reactions").insert({
             post_id: postId,
             user_id: userId,
             reaction_type: reactionType,
           });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("post_reactions")
-          .delete()
-          .match({ post_id: postId, user_id: userId, reaction_type: reactionType });
-        if (error) throw error;
-      }
-    } catch (err) {
-      console.error("Error toggling reaction:", err);
-      // Rollback on error
-      usePostsStore.setState({ posts: previousPosts });
-    }
-  }, [supabase, userId]);
-
-  const addComment = useCallback(async (postId: string, content: string) => {
-    if (!userId || !supabase) return false;
-
-    const previousPosts = usePostsStore.getState().posts;
-    const { nickname, username } = useOnboardingState.getState();
-
-    // Optimistic UI Update
-    const newComment = {
-      id: Math.random().toString(),
-      content: content,
-      created_at: new Date().toISOString(),
-      user_profiles: {
-        nickname: nickname || "You",
-        username: username || "you",
-      },
-    };
-
-    usePostsStore.setState((state) => ({
-      posts: state.posts.map((post) => {
-        if (post.id === postId) {
-          const currentComments = (post as any).post_comments || [];
-          return { ...post, post_comments: [...currentComments, newComment] };
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("post_reactions")
+            .delete()
+            .match({
+              post_id: postId,
+              user_id: userId,
+              reaction_type: reactionType,
+            });
+          if (error) throw error;
         }
-        return post;
-      }),
-    }));
+      } catch (err) {
+        console.error("Error toggling reaction:", err);
+        // Rollback on error
+        usePostsStore.setState({ posts: previousPosts });
+      }
+    },
+    [supabase, userId],
+  );
 
-    try {
-      const { error } = await supabase
-        .from("post_comments")
-        .insert({
+  const addComment = useCallback(
+    async (postId: string, content: string) => {
+      if (!userId || !supabase) return false;
+
+      try {
+        const { error } = await supabase.from("post_comments").insert({
           post_id: postId,
           user_id: userId,
           content: content,
         });
-      if (error) throw error;
-      return true;
-    } catch (err) {
-      console.error("Error adding comment:", err);
-      // Rollback on error
-      usePostsStore.setState({ posts: previousPosts });
-      return false;
-    }
-  }, [supabase, userId]);
+        if (error) throw error;
+        return true;
+      } catch (err) {
+        console.error("Error adding comment:", err);
+        return false;
+      }
+    },
+    [supabase, userId],
+  );
+
+  // Comments are intentionally NOT in the feed select (keeps the feed slim).
+  // Fetch them per-post on demand when the replies sheet opens.
+  const fetchComments = useCallback(
+    async (postId: string): Promise<any[]> => {
+      if (!supabase) return [];
+      try {
+        const { data, error } = await supabase
+          .from("post_comments")
+          .select("*, user_profiles(nickname, username, avatar_url)")
+          .eq("post_id", postId)
+          .order("created_at", { ascending: true });
+        if (error) throw error;
+        return data || [];
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+        return [];
+      }
+    },
+    [supabase],
+  );
 
   const createPost = async (imageUri: string, caption: string) => {
     setUploading(true);
@@ -319,29 +326,32 @@ export function useCommunityPosts() {
     }
   };
 
-  const deletePost = useCallback(async (postId: string) => {
-    if (!userId || !supabase) return false;
+  const deletePost = useCallback(
+    async (postId: string) => {
+      if (!userId || !supabase) return false;
 
-    // Optimistically update the UI
-    const previousPosts = usePostsStore.getState().posts;
-    usePostsStore.setState((state) => ({
-      posts: state.posts.filter((post) => post.id !== postId),
-    }));
+      // Optimistically update the UI
+      const previousPosts = usePostsStore.getState().posts;
+      usePostsStore.setState((state) => ({
+        posts: state.posts.filter((post) => post.id !== postId),
+      }));
 
-    try {
-      const { error } = await supabase
-        .from("community_posts")
-        .delete()
-        .match({ id: postId, user_id: userId });
+      try {
+        const { error } = await supabase
+          .from("community_posts")
+          .delete()
+          .match({ id: postId, user_id: userId });
 
-      if (error) throw error;
-      return true;
-    } catch (err) {
-      console.error("Error deleting post:", err);
-      usePostsStore.setState({ posts: previousPosts });
-      return false;
-    }
-  }, [userId, supabase]);
+        if (error) throw error;
+        return true;
+      } catch (err) {
+        console.error("Error deleting post:", err);
+        usePostsStore.setState({ posts: previousPosts });
+        return false;
+      }
+    },
+    [userId, supabase],
+  );
 
   return {
     posts,
@@ -353,6 +363,7 @@ export function useCommunityPosts() {
     toggleLike,
     toggleReaction,
     addComment,
+    fetchComments,
     refetch: () => fetchPosts(true),
   };
 }

@@ -59,14 +59,18 @@ function RepliesBottomSheet({
   comments,
   post,
   isMyPost,
+  isLoading,
   addComment,
+  onAddReply,
 }: {
   visible: boolean;
   onClose: () => void;
   comments: any[];
   post: any;
   isMyPost: boolean;
+  isLoading?: boolean;
   addComment: (postId: string, content: string) => Promise<boolean>;
+  onAddReply?: (content: string) => void;
 }) {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -158,7 +162,11 @@ function RepliesBottomSheet({
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
-              {comments.length === 0 ? (
+              {isLoading ? (
+                <Text style={{ textAlign: "center", color: "#9CA3AF", marginTop: 20, marginBottom: 20 }}>
+                  Loading replies...
+                </Text>
+              ) : comments.length === 0 ? (
                 <Text style={{ textAlign: "center", color: "#9CA3AF", marginTop: 20, marginBottom: 20 }}>
                   No replies yet. Be the first!
                 </Text>
@@ -209,6 +217,7 @@ function RepliesBottomSheet({
                     const success = await addComment(post.id, replyText.trim());
                     setIsSubmittingReply(false);
                     if (success) {
+                      onAddReply?.(replyText.trim());
                       setReplyText("");
                     }
                   }}
@@ -239,19 +248,25 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   toggleReaction,
   deletePost,
   addComment,
+  fetchComments,
 }: {
   post: any;
   toggleReaction: (postId: string, reactionType: string) => void;
   deletePost: (postId: string) => void;
   addComment: (postId: string, content: string) => Promise<boolean>;
+  fetchComments: (postId: string) => Promise<any[]>;
 }) {
   const { user } = useUser();
-  const { username } = useOnboardingState();
+  const { nickname, username } = useOnboardingState();
   const [showReactions, setShowReactions] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number>(4 / 3);
   const [showRepliesBottomSheet, setShowRepliesBottomSheet] = useState(false);
+  // Replies are fetched per-post on demand (not part of the feed select).
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
 
   const isMyPost = post.user_id === user?.id;
 
@@ -280,12 +295,40 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   });
   const uniqueReactions = Object.keys(reactionCounts);
 
-  const comments = post.post_comments || [];
-  const replyCount = comments.length;
+  // Feed only carries a cheap count aggregate — actual comments load on demand.
+  const countAggregate = (post as any).post_comments?.[0]?.count;
+  const replyCount = commentsLoaded ? comments.length : (countAggregate ?? 0);
   // Get one avatar per comment (up to 4), keeping duplicates so count matches.
   const replierAvatars = comments
     .map((c: any) => c.user_profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.user_profiles?.username || "U")}&background=random`)
     .slice(0, 4) as string[];
+
+  const openReplies = React.useCallback(async () => {
+    setShowRepliesBottomSheet(true);
+    if (commentsLoaded) return;
+    setIsLoadingComments(true);
+    const rows = await fetchComments(post.id);
+    setComments(rows);
+    setCommentsLoaded(true);
+    setIsLoadingComments(false);
+  }, [post.id, fetchComments, commentsLoaded]);
+
+  const handleReplySent = React.useCallback(
+    (content: string) => {
+      const newComment = {
+        id: "opt_" + Date.now().toString() + Math.random().toString(36).slice(2, 7),
+        content,
+        created_at: new Date().toISOString(),
+        user_profiles: {
+          nickname: nickname || user?.firstName || "You",
+          username: username || "you",
+          avatar_url: user?.imageUrl,
+        },
+      };
+      setComments((prev) => [...prev, newComment]);
+    },
+    [nickname, username, user],
+  );
 
   const formattedTime = post.created_at
     ? formatPostDateTime(post.created_at)
@@ -590,7 +633,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
         {/* Replies Section */}
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => setShowRepliesBottomSheet(true)}
+          onPress={openReplies}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -648,7 +691,9 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
           comments={comments}
           post={post}
           isMyPost={isMyPost}
+          isLoading={isLoadingComments}
           addComment={addComment}
+          onAddReply={handleReplySent}
         />
       </View>
     </View>
@@ -659,7 +704,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
 
 function FeedTab() {
   const router = useRouter();
-  const { posts, loading, uploading, createPost, toggleReaction, addComment, refetch, deletePost } =
+  const { posts, loading, uploading, createPost, toggleReaction, addComment, fetchComments, refetch, deletePost } =
     useCommunityPosts();
   const { unreadCount } = useNotifications();
   const [refreshing, setRefreshing] = useState(false);
@@ -902,6 +947,7 @@ function FeedTab() {
                 toggleReaction={toggleReaction}
                 deletePost={deletePost}
                 addComment={addComment}
+                fetchComments={fetchComments}
               />
             )}
           />
