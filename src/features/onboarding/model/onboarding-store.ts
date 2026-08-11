@@ -34,6 +34,15 @@ type OnboardingState = OnboardingFormData & {
   setUsername: (value: string) => void;
   toggleStyle: (value: string) => void;
   setWhereDidYouHear: (value: string[]) => void;
+  hydrateFromProfile: (profile: {
+    age?: number;
+    height?: number;
+    gender?: string;
+    body_type?: string;
+    nickname?: string;
+    username?: string;
+    style_preferences?: string[];
+  }) => void;
   ensureUserSession: (userId: string) => void;
   resetState: () => void;
   completeOnboarding: (
@@ -83,6 +92,17 @@ export const useOnboardingState = create<OnboardingState>()(
           return { stylePreferences: [...state.stylePreferences, style] };
         }),
       setWhereDidYouHear: (whereDidYouHear) => set({ whereDidYouHear }),
+      hydrateFromProfile: (profile) =>
+        set({
+          age: profile.age ?? get().age,
+          height: profile.height ?? get().height,
+          gender: (profile.gender as Gender) || get().gender,
+          bodyType: profile.body_type ?? get().bodyType,
+          nickname: profile.nickname ?? get().nickname,
+          username: profile.username ?? get().username,
+          stylePreferences:
+            profile.style_preferences ?? get().stylePreferences,
+        }),
       ensureUserSession: (userId: string) =>
         set((state) => {
           if (state.activeUserId === userId) return {};

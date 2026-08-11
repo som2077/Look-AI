@@ -129,8 +129,16 @@ const RootNavigator = memo(function RootNavigator() {
       return;
     }
 
-    syncStoresWithUser(userId);
-    ensureOnboardingSession(userId);
+    let cancelled = false;
+    (async () => {
+      // Rehydrate persisted stores FIRST so ensureUserSession never clobbers
+      // previously-saved onboarding data with the empty initial form.
+      await syncStoresWithUser(userId);
+      if (!cancelled) ensureOnboardingSession(userId);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [
     ensureOnboardingSession,
     resetOnboardingState,
@@ -138,6 +146,42 @@ const RootNavigator = memo(function RootNavigator() {
     isSignedIn,
     userId,
   ]);
+
+  // Self-heal: if the local onboarding store is empty (e.g. fresh install,
+  // SecureStore cleared, or a rehydration race), pull the profile from
+  // user_profiles (source of truth) so profile, personal-details, and
+  // community posts still show real onboarding data.
+  useEffect(() => {
+    if (!isSignedIn || !userId || isSupabaseInitializing) return;
+    if (onboardingComplete !== true) return;
+
+    const s = useOnboardingState.getState();
+    const hasLocalData = Boolean(
+      s.nickname || s.username || s.bodyType || s.stylePreferences.length,
+    );
+    if (hasLocalData) return; // store already has data — don't clobber
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("user_profiles")
+          .select(
+            "age,height,gender,body_type,nickname,username,style_preferences",
+          )
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (!cancelled && !error && data) {
+          useOnboardingState.getState().hydrateFromProfile(data);
+        }
+      } catch (err) {
+        console.warn("Failed to hydrate onboarding store from profile", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn, userId, isSupabaseInitializing, onboardingComplete, supabase]);
 
   useEffect(() => {
     if (!isSignedIn) {

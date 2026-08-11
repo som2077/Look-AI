@@ -1,4 +1,5 @@
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
+import { useUserProfile } from "@/features/profile/api/useProfile";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import {
   IconArrowLeft,
@@ -87,12 +88,25 @@ export default function PersonalDetailsScreen() {
   const router = useRouter();
 
   const onboardingState = useOnboardingState();
+  const { data: profile } = useUserProfile();
+
+  // Source of truth is user_profiles in Supabase; the local store is a
+  // fallback (and the live draft during onboarding edits).
+  const nickname = profile?.nickname || onboardingState.nickname || "";
+  const age = profile?.age ?? onboardingState.age;
+  const height = profile?.height ?? onboardingState.height;
+  const gender = profile?.gender || onboardingState.gender || "";
+  const bodyType = profile?.body_type || onboardingState.bodyType || "";
+  const stylePreferences =
+    profile?.style_preferences?.length
+      ? profile.style_preferences
+      : onboardingState.stylePreferences;
 
   const fields: Field[] = [
     {
       key: "name",
       label: "Nickname",
-      value: onboardingState.nickname || "",
+      value: nickname,
       icon: <IconUserCheck size={24} color="#00000090" strokeWidth={1.5} />,
       editable: true,
       type: "text",
@@ -100,7 +114,7 @@ export default function PersonalDetailsScreen() {
     {
       key: "dob",
       label: "Age",
-      value: onboardingState.age ? onboardingState.age.toString() : "",
+      value: age ? age.toString() : "",
       icon: <IconCalendarMonth size={24} color="#00000090" strokeWidth={1.5} />,
       editable: true,
       type: "text",
@@ -108,7 +122,7 @@ export default function PersonalDetailsScreen() {
     {
       key: "height",
       label: "Height",
-      value: onboardingState.height ? `${onboardingState.height} cm` : "",
+      value: height ? `${height} cm` : "",
       icon: <IconRulerMeasure2 size={24} color="#00000090" strokeWidth={1.5} />,
       editable: true,
       type: "select",
@@ -116,7 +130,7 @@ export default function PersonalDetailsScreen() {
     {
       key: "gender",
       label: "Gender",
-      value: onboardingState.gender || "",
+      value: gender,
       icon: (
         <IconGenderBigender size={24} color="#00000080" strokeWidth={1.5} />
       ),
@@ -126,9 +140,8 @@ export default function PersonalDetailsScreen() {
     {
       key: "bodyType",
       label: "Body Type",
-      value: onboardingState.bodyType
-        ? onboardingState.bodyType.charAt(0).toUpperCase() +
-          onboardingState.bodyType.slice(1)
+      value: bodyType
+        ? bodyType.charAt(0).toUpperCase() + bodyType.slice(1)
         : "Tap to add...",
       icon: <IconBodyScan size={24} color="#00000080" strokeWidth={1.5} />,
       editable: true,
@@ -137,8 +150,8 @@ export default function PersonalDetailsScreen() {
     {
       key: "style",
       label: "Choose your style",
-      value: onboardingState.stylePreferences?.length
-        ? onboardingState.stylePreferences.join(", ")
+      value: stylePreferences?.length
+        ? stylePreferences.join(", ")
         : "Tap to choose...",
       icon: <IconBleach size={24} color="#00000080" strokeWidth={1.5} />,
       editable: true,
