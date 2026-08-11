@@ -123,6 +123,10 @@ export default function RootLayout() {
         options={{ animation: "slide_from_right" }}
       />
       <Stack.Screen
+        name="(ai-features)/outfit-suggestion"
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
         name="(wardrobe)/wardrobe-highlights"
         options={{ animation: "slide_from_right" }}
       />

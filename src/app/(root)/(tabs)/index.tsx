@@ -138,9 +138,17 @@ const HomeCard = React.memo(function HomeCard({
       ) : (
         <>
           <WeatherOutfitCard />
-          <LookAIBanner
-            score={weatherData ? Math.round(weatherData.comfortScore / 10) : 8}
-          />
+          <Pressable
+            onPress={() =>
+              router.push("/(root)/(ai-features)/outfit-suggestion" as never)
+            }
+          >
+            <LookAIBanner
+              score={
+                weatherData ? Math.round(weatherData.comfortScore / 10) : 8
+              }
+            />
+          </Pressable>
         </>
       )}
     </View>
