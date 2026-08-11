@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import Navbar from './components/Navbar'
 
@@ -133,9 +133,9 @@ function Hero() {
             </svg>
             AI-Powered Fashion
           </div>
-          <h1>Your Personal<br /><span className="text-primary">AI Stylist</span></h1>
+          <h1>Your personal<br /><em className="serif-accent">AI stylist</em></h1>
           <p className="hero-subtitle">
-            Digitize your wardrobe, analyze your body type, and get hyper-personalized daily outfit recommendations — all powered by AI and synced with real-time weather.
+            Digitize your wardrobe, analyze your body type, and get a complete daily look — recommended by AI, matched to your style, and synced to the weather outside.
           </p>
           <div className="hero-badges">
             <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" className="store-badge google">
@@ -171,14 +171,44 @@ function Hero() {
           </div>
         </div>
         <div className="hero-visual">
+          <div className="hero-mock-glow" />
           <div className="hero-phone">
-            <div className="placeholder hero-phone-placeholder">
-              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3 }}>
-                <rect x="5" y="2" width="14" height="20" rx="2" />
-                <path d="M12 18h.01" />
-              </svg>
-              <span>App Screenshot</span>
+            <div className="phone-screen">
+              <div className="phone-status">
+                <span>TUE · 21°C</span>
+                <span className="phone-notch" />
+              </div>
+              <div className="phone-look-label">
+                <span>Today's Look</span>
+                <span className="tag-chip">SCORE 88</span>
+              </div>
+              <div className="phone-outfit">
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 6.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
+                  <path d="M12 6.5 3 13h3l6-4.5L18 13h3L12 6.5Z" />
+                  <path d="M5 13v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
+                </svg>
+                <span>Outfit preview</span>
+                <div className="phone-score">
+                  <div className="score-ring" />
+                  <span className="score-ring-num">88</span>
+                  <span className="score-ring-label">Score</span>
+                </div>
+              </div>
+              <div className="phone-tags">
+                <span className="tag-chip">Casual</span>
+                <span className="tag-chip">Linen</span>
+                <span className="tag-chip">21°C</span>
+              </div>
             </div>
+          </div>
+          <div className="hero-widget wa">
+            <span className="dot" />
+            COMFORT 87
+          </div>
+          <div className="hero-widget wb">
+            <span className="dot warm" />
+            STYLE +2 · STREAK 12
           </div>
         </div>
       </div>
@@ -190,17 +220,36 @@ function Features() {
   return (
     <section id="features" className="section">
       <div className="container">
-        <div className="text-center">
+        <div className="text-center reveal">
           <div className="section-label">Features</div>
-          <h2 className="section-title">Everything You Need to<br /><span className="text-primary">Dress Smarter</span></h2>
-          <p className="section-subtitle mx-auto">From AI-powered recommendations to weather-synced outfits, Look AI handles every aspect of your daily style.</p>
+          <h2 className="section-title">Everything you need to<br /><em className="serif-accent">dress smarter</em></h2>
+          <p className="section-subtitle mx-auto">From AI-powered recommendations to weather-synced outfits — every part of your daily style, handled.</p>
         </div>
-        <div className="features-grid">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="feature-card">
-              <div className="feature-icon">{f.icon}</div>
-              <h3>{f.title}</h3>
-              <p>{f.desc}</p>
+        <div className="features-grid reveal">
+          {FEATURES.map((f, i) => (
+            <div key={f.title} className={`feature-card ${i === 3 ? 'feature-card-wide' : ''}`}>
+              {i === 3 ? (
+                <>
+                  <div>
+                    <div className="feature-icon">{f.icon}</div>
+                    <h3>{f.title}</h3>
+                    <p>{f.desc}</p>
+                  </div>
+                  <div className="feature-score-visual">
+                    <div className="feature-score-ring" />
+                    <div className="feature-score-center">
+                      <strong>87</strong>
+                      <span>Style Score</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="feature-icon">{f.icon}</div>
+                  <h3>{f.title}</h3>
+                  <p>{f.desc}</p>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -213,12 +262,12 @@ function HowItWorks() {
   return (
     <section id="how-it-works" className="section section-bg">
       <div className="container">
-        <div className="text-center">
+        <div className="text-center reveal">
           <div className="section-label">How It Works</div>
-          <h2 className="section-title">Three Steps to Your<br /><span className="text-primary">Perfect Outfit</span></h2>
+          <h2 className="section-title">Three steps to your<br /><em className="serif-accent">perfect outfit</em></h2>
           <p className="section-subtitle mx-auto">No complicated setup. Just snap, let AI do the work, and step out looking great.</p>
         </div>
-        <div className="steps-grid">
+        <div className="steps-grid reveal">
           {STEPS.map((s) => (
             <div key={s.num} className="step-card">
               <div className="step-num">{s.num}</div>
@@ -245,10 +294,10 @@ function AIDeepDive() {
     <section id="ai-deep-dive" className="section">
       <div className="container">
         {/* Block 1 */}
-        <div className="ai-split">
+        <div className="ai-split reveal">
           <div className="ai-split-text">
             <div className="section-label">The AI Behind Your Style</div>
-            <h2 className="section-title">Intelligent Fashion<br /><span className="text-primary">Analysis</span></h2>
+            <h2 className="section-title">Intelligent fashion<br /><em className="serif-accent">analysis</em></h2>
             <p className="section-subtitle">Look AI doesn't just pick random clothes — it understands your body, your lifestyle, and the science of color and fabric.</p>
             <ul className="ai-points">
               {AI_POINTS.map((p) => (
@@ -278,10 +327,10 @@ function AIDeepDive() {
         </div>
 
         {/* Block 2 */}
-        <div className="ai-split reverse">
+        <div className="ai-split reverse reveal">
           <div className="ai-split-text">
             <div className="section-label">Weather Intelligence</div>
-            <h2 className="section-title">Weather-Synced<br /><span className="text-primary">Comfort</span></h2>
+            <h2 className="section-title">Weather-synced<br /><em className="serif-accent">comfort</em></h2>
             <p className="section-subtitle">Every recommendation is optimized for real-time weather conditions at your exact location.</p>
             <ul className="ai-points">
               {WEATHER_POINTS.map((p) => (
@@ -317,11 +366,11 @@ function Testimonials() {
   return (
     <section className="section section-bg">
       <div className="container">
-        <div className="text-center">
+        <div className="text-center reveal">
           <div className="section-label">Testimonials</div>
-          <h2 className="section-title">What Our Users<br /><span className="text-primary">Are Saying</span></h2>
+          <h2 className="section-title">Loved by people who<br /><em className="serif-accent">dress better</em></h2>
         </div>
-        <div className="testimonials-grid">
+        <div className="testimonials-grid reveal">
           {TESTIMONIALS.map((t) => (
             <div key={t.name} className="testimonial-card">
               <div className="testimonial-stars">
@@ -351,11 +400,11 @@ function FAQ() {
   return (
     <section id="faq" className="section">
       <div className="container">
-        <div className="text-center">
+        <div className="text-center reveal">
           <div className="section-label">FAQ</div>
-          <h2 className="section-title">Frequently Asked<br /><span className="text-primary">Questions</span></h2>
+          <h2 className="section-title">Frequently asked<br /><em className="serif-accent">questions</em></h2>
         </div>
-        <div className="faq-list">
+        <div className="faq-list reveal">
           {FAQ_ITEMS.map((item, i) => (
             <div key={i} className={`faq-item ${openIdx === i ? 'open' : ''}`}>
               <button className="faq-question" onClick={() => setOpenIdx(openIdx === i ? null : i)}>
@@ -378,11 +427,11 @@ function FAQ() {
 function CTABanner() {
   return (
     <section className="cta-section">
-      <div className="cta-glow" />
-      <div className="container text-center">
-        <h2>Start Dressing<br /><span className="text-primary">Smarter Today</span></h2>
-        <p className="cta-subtitle">Join thousands of users who let AI handle their daily outfit decisions.</p>
-        <div className="cta-badges">
+      <div className="container">
+        <div className="cta-panel reveal">
+          <h2>Start dressing <em className="serif-accent">smarter</em> today</h2>
+          <p className="cta-subtitle">Join thousands of users who let AI handle their daily outfit decisions.</p>
+          <div className="cta-badges">
           <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" className="store-badge google large">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
               <path d="M3.18 23.76c.37.2.8.2 1.2-.02l11.4-6.58-2.5-2.5-10.1 9.1z" fill="#EA4335"/>
@@ -403,6 +452,7 @@ function CTABanner() {
               <span className="store-badge-sub">Coming Soon</span>
               <span className="store-badge-main">App Store</span>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -474,6 +524,27 @@ function Footer() {
 /* ─── App ───────────────────────────────────────────────── */
 
 function App() {
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal')
+    if (!('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('visible'))
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible')
+            io.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    )
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+
   return (
     <>
       <Navbar />
