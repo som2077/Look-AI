@@ -2,7 +2,9 @@ import {
   CalendarPlan,
   useCalendarPlanStore,
 } from "@/features/calendar/model/calendar-plan-store";
+import { LOTTIE_CALENDAR_URL } from "@/shared/constants/assets";
 import { getOccasionIcon } from "@/shared/constants/occasions";
+import { formatTimeShort } from "@/shared/utils/date";
 import {
   IconClock,
   IconDots,
@@ -27,8 +29,6 @@ export function CalendarPlanBanner({
 }) {
   const [isPlanDropdownVisible, setIsPlanDropdownVisible] = useState(false);
   const setPlannedOutfit = useCalendarPlanStore((s) => s.setPlannedOutfit);
-
-  if (!plan) return null;
 
   return (
     <View
@@ -127,11 +127,7 @@ export function CalendarPlanBanner({
                     }}
                   >
                     {plan.createdAt
-                      ? new Date(plan.createdAt).toLocaleTimeString("en-US", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
+                      ? formatTimeShort(new Date(plan.createdAt))
                       : "12:42 PM"}
                   </Text>
                 </View>
@@ -262,7 +258,7 @@ export function CalendarPlanBanner({
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <ExpoImage
                   source={{
-                    uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
+                    uri: LOTTIE_CALENDAR_URL,
                   }}
                   style={{ width: 15, height: 15 }}
                   contentFit="contain"
@@ -288,13 +284,7 @@ export function CalendarPlanBanner({
                     marginLeft: 4,
                   }}
                 >
-                  {plan.time
-                    ? new Date(plan.time).toLocaleTimeString("en-US", {
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    })
-                    : "3:00 AM"}
+                  {plan.time ? formatTimeShort(new Date(plan.time)) : "3:00 AM"}
                 </Text>
               </View>
 

@@ -5,18 +5,24 @@ import {
   usePremiumLimits,
 } from "@/features/payments/model/usePremiumLimits";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
-import { useRingStats } from "@/features/wardrobe/api/useRingStats";
+import { useRingStats, type RingStats } from "@/features/wardrobe/api/useRingStats";
 import { PendingBatchBanner } from "@/features/wardrobe/ui/PendingBatchBanner";
 import {
   EmptyStyleBanner,
   NotifyBanner,
   RecentlyUploadedHeading
 } from "@/features/wardrobe/ui/RecentlyUploadedCard";
-import { WardrobeFilterTabs } from "@/features/wardrobe/ui/WardrobeFilterTabs";
+import {
+  WardrobeFilterTabs,
+  type FilterTab,
+} from "@/features/wardrobe/ui/WardrobeFilterTabs";
 import { WardrobeMessageBar } from "@/features/wardrobe/ui/WardrobeMessageBar";
 import type { RingProgressSegment } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
 import { WardrobeRingSummaryCard } from "@/features/wardrobe/ui/WardrobeRingSummaryCard";
-import { useWeatherStore } from "@/features/weather/model/weather-store";
+import {
+  useWeatherStore,
+  type WeatherData,
+} from "@/features/weather/model/weather-store";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
@@ -52,30 +58,43 @@ const RING_SEGMENT_BASE: readonly Omit<RingProgressSegment, "progress">[] = [
   { id: "innermost", color: "#000000", radius: 39, strokeWidth: 15 },
 ] as const;
 
-const clampRatio = (value: number): number => {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  if (value >= 1) return 1;
-  return value;
-};
-
 type CardKey = "wardrobe" | "blank1";
 // Only 2 cards needed — was wastefully creating 100 items
 const CARDS: CardKey[] = ["wardrobe", "blank1"];
 
-type FilterTab = "Daily" | "Weekly" | "Monthly" | "90 Days";
+const TAB_TO_PERIOD: Record<
+  FilterTab,
+  "daily" | "weekly" | "monthly" | "90_days"
+> = {
+  Daily: "daily",
+  Weekly: "weekly",
+  Monthly: "monthly",
+  "90 Days": "90_days",
+};
+
+interface HomeCardProps {
+  item: CardKey;
+  canAddWardrobe: boolean;
+  wardrobeCount: number;
+  wardrobeLimit: number;
+  stats: RingStats;
+  ringSegments: readonly RingProgressSegment[];
+  timeframe: FilterTab;
+  setTimeframe: (tab: FilterTab) => void;
+  weatherData: WeatherData | null;
+}
 
 const HomeCard = React.memo(function HomeCard({
   item,
   canAddWardrobe,
   wardrobeCount,
+  wardrobeLimit,
   stats,
   ringSegments,
-  currentStreak,
   timeframe,
   setTimeframe,
   weatherData,
-  wardrobeLimit,
-}: any) {
+}: HomeCardProps) {
   const router = useRouter();
   return (
     <View style={{ width: SCREEN_WIDTH, paddingHorizontal: H_PADDING }}>
@@ -104,7 +123,6 @@ const HomeCard = React.memo(function HomeCard({
             wearCount={stats.raw.avgWears}
             neverCount={wardrobeCount}
             ringSegments={ringSegments}
-            streak={stats.raw.streakCount}
             labels={{
               topLeft: "Usage",
               bottomLeft: "Streak",
@@ -158,36 +176,32 @@ const HomeCard = React.memo(function HomeCard({
 export default function HomeScreen() {
   const { canAddWardrobe, wardrobeCount, wardrobeLimit } = usePremiumLimits();
   const [timeframe, setTimeframe] = useState<FilterTab>("Daily");
-  const period =
-    timeframe === "Daily"
-      ? "daily"
-      : timeframe === "Weekly"
-        ? "weekly"
-        : timeframe === "Monthly"
-          ? "monthly"
-          : "90_days";
+  const period = TAB_TO_PERIOD[timeframe];
   const weatherData = useWeatherStore((state) => state.data);
   const [activeIndex, setActiveIndex] = useState(0); // Start at index 0 directly
-  const [, setSelectedDate] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
-  const { currentStreak, hasIncrementedToday, dismissIncrement } =
-    useStreakStore();
+  const currentStreak = useStreakStore((state) => state.currentStreak);
+  const hasIncrementedToday = useStreakStore(
+    (state) => state.hasIncrementedToday,
+  );
+  const dismissIncrement = useStreakStore((state) => state.dismissIncrement);
   const { stats } = useRingStats(period, wardrobeCount, currentStreak, wardrobeLimit);
   const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
 
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)
 
+  // WardrobeRingSummaryCard sanitizes progress itself, so pass raw ratios.
   const ringSegments = useMemo<readonly RingProgressSegment[]>(() => {
     return [
-      { ...RING_SEGMENT_BASE[0], progress: clampRatio(wardrobeCount / wardrobeLimit) },
-      { ...RING_SEGMENT_BASE[1], progress: clampRatio(stats.avgWearsPercent) },
-      { ...RING_SEGMENT_BASE[2], progress: clampRatio(stats.streakPercent) },
+      { ...RING_SEGMENT_BASE[0], progress: wardrobeCount / wardrobeLimit },
+      { ...RING_SEGMENT_BASE[1], progress: stats.avgWearsPercent },
+      { ...RING_SEGMENT_BASE[2], progress: stats.streakPercent },
       {
         ...RING_SEGMENT_BASE[3],
-        progress: clampRatio(stats.usagePercent), // Move wardrobe utilization to innermost ring
+        progress: stats.usagePercent, // Move wardrobe utilization to innermost ring
       },
     ];
-  }, [stats, wardrobeCount, wardrobeLimit, currentStreak, timeframe]);
+  }, [stats, wardrobeCount, wardrobeLimit]);
 
   const handleMomentumScrollEnd = useCallback((event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -210,9 +224,9 @@ export default function HomeScreen() {
         item={item}
         canAddWardrobe={canAddWardrobe}
         wardrobeCount={wardrobeCount}
+        wardrobeLimit={wardrobeLimit}
         stats={stats}
         ringSegments={ringSegments}
-        currentStreak={currentStreak}
         timeframe={timeframe}
         setTimeframe={setTimeframe}
         weatherData={weatherData}
@@ -221,7 +235,6 @@ export default function HomeScreen() {
     [
       stats,
       ringSegments,
-      currentStreak,
       timeframe,
       canAddWardrobe,
       wardrobeCount,
@@ -270,7 +283,7 @@ export default function HomeScreen() {
               }}
             >
               <HomeHeader />
-              <WeeklyCalendarStrip onDateChange={setSelectedDate} />
+              <WeeklyCalendarStrip />
             </Animated.View>
 
             {/* Scrollable content — scrolls over the header */}
@@ -291,7 +304,6 @@ export default function HomeScreen() {
                 maxToRenderPerBatch={1}
                 windowSize={2}
                 removeClippedSubviews={true}
-                extraData={{ stats, timeframe, currentStreak, canAddWardrobe, wardrobeCount, wardrobeLimit, weatherData }}
               />
 
               {/* Pagination dots */}
@@ -321,7 +333,6 @@ export default function HomeScreen() {
 
               <RecentlyUploadedHeading />
               <PendingBatchBanner />
-              {/* <ErrorBanner /> */}
               <NotifyBanner />
               <EmptyStyleBanner />
               <OutfitAnalyzingCard />

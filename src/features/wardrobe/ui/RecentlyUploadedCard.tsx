@@ -1,10 +1,42 @@
-import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
-import { usePendingBatchStore } from "@/features/wardrobe/model/usePendingBatchStore";
+import { useHasOutfitActivity } from "@/features/ai-styling/model/useHasOutfitActivity";
 import { IconBell, IconX } from "@tabler/icons-react-native";
-import { Image as ExpoImage } from "expo-image";
+import { Image as ExpoImage, type ImageSource } from "expo-image";
 import React from "react";
 import { Animated, Pressable, Text, View } from "react-native";
-// import Svg, { Polygon, Defs, LinearGradient, Stop } from "react-native-svg";
+
+const AVATAR_SOURCES: ImageSource[] = [
+  require("@/assets/images/mirror_selfie_guy.jpg"),
+  require("@/assets/images/mirror_selfie_girl.jpg"),
+  require("@/assets/images/selfi3rd.jpg"),
+];
+
+const AvatarCircle = ({
+  source,
+  marginLeft = 0,
+}: {
+  source: ImageSource;
+  marginLeft?: number;
+}) => (
+  <View
+    style={{
+      width: 60,
+      height: 60,
+      borderRadius: 60,
+      borderWidth: 5,
+      borderColor: "#FFFFFF",
+      overflow: "hidden",
+      backgroundColor: "#F8F7FC80",
+      marginLeft,
+    }}
+  >
+    <ExpoImage
+      source={source}
+      style={{ width: "100%", height: "100%" }}
+      contentFit="cover"
+      cachePolicy="memory-disk"
+    />
+  </View>
+);
 
 export const RecentlyUploadedHeading = React.memo(
   function RecentlyUploadedHeading() {
@@ -22,21 +54,12 @@ export const RecentlyUploadedHeading = React.memo(
 );
 
 export const NotifyBanner = React.memo(function NotifyBanner() {
-  const isAnalyzing = useOutfitAnalysisStore((s) => s.isAnalyzing);
-  const lastOutfits = useOutfitAnalysisStore((s) => s.lastOutfits);
+  const hasActivity = useHasOutfitActivity();
   const [isDismissed, setIsDismissed] = React.useState(false);
   const opacity = React.useRef(new Animated.Value(1)).current;
 
-  const pendingBatchItems = usePendingBatchStore((s) => s.items);
-
   // Show banner only when no analysis, no completed outfits, and no pending batch items
-  if (
-    isAnalyzing ||
-    lastOutfits.length > 0 ||
-    isDismissed ||
-    pendingBatchItems.length > 0
-  )
-    return null;
+  if (isDismissed || hasActivity) return null;
 
   return (
     <Animated.View
@@ -70,22 +93,11 @@ export const NotifyBanner = React.memo(function NotifyBanner() {
   );
 });
 
-export const ErrorBanner = React.memo(function ErrorBanner() {
-  return null;
-});
-
 export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
-  const isAnalyzing = useOutfitAnalysisStore((s) => s.isAnalyzing);
-  const lastOutfits = useOutfitAnalysisStore((s) => s.lastOutfits);
-  const pendingBatchItems = usePendingBatchStore((s) => s.items);
+  const hasActivity = useHasOutfitActivity();
 
   // Show banner when no analysis and no completed outfits (stays visible even if upcoming event plan exists)
-  if (
-    isAnalyzing ||
-    lastOutfits.length > 0 ||
-    pendingBatchItems.length > 0
-  )
-    return null;
+  if (hasActivity) return null;
 
   return (
     <View className="mx-6 mt-3  items-center justify-center bg-[#F8F7FC80] border-[0.5px] border-[#E9EBF8] rounded-[24px] px-4 py-6">
@@ -99,66 +111,13 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
           marginTop: -10,
         }}
       >
-        {/* Left Circle: Guy Selfie */}
-        <View
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 60,
-            borderWidth: 5,
-            borderColor: "#FFFFFF",
-            overflow: "hidden",
-            backgroundColor: "#F8F7FC80",
-          }}
-        >
-          <ExpoImage
-            source={require("@/assets/images/mirror_selfie_guy.jpg")}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            cachePolicy="memory-disk"
+        {AVATAR_SOURCES.map((source, index) => (
+          <AvatarCircle
+            key={index}
+            source={source}
+            marginLeft={index === 0 ? 0 : -30}
           />
-        </View>
-
-        {/* mid Circle: Girl Selfie (overlapping) */}
-        <View
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 60,
-            borderWidth: 5,
-            borderColor: "#FFFFFF",
-            overflow: "hidden",
-            backgroundColor: "#F8F7FC80",
-            marginLeft: -30,
-          }}
-        >
-          <ExpoImage
-            source={require("@/assets/images/mirror_selfie_girl.jpg")}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-          />
-        </View>
-        {/* Right Circle: Girl Selfie (overlapping) */}
-        <View
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 60,
-            borderWidth: 5,
-            borderColor: "#FFFFFF",
-            overflow: "hidden",
-            backgroundColor: "#F8F7FC80",
-            marginLeft: -30,
-          }}
-        >
-          <ExpoImage
-            source={require("@/assets/images/selfi3rd.jpg")}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-          />
-        </View>
+        ))}
       </View>
       <Text
         className="text-[#00000090] mt-1 text-center font-TikTokSans16pt-Medium"

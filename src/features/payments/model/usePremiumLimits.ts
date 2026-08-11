@@ -2,6 +2,7 @@ import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { useRouter } from "expo-router";
+import { useMemo } from "react";
 import { Alert } from "react-native";
 
 export const FREE_WARDROBE_LIMIT = 50;
@@ -17,10 +18,17 @@ export function usePremiumLimits() {
   const scans = useScanHistoryStore((state) => state.scans);
 
   const wardrobeCount = wardrobeItems.length;
-  
-  const clothLabelCount = scans.filter((scan) => scan.type === "label").length;
-  
-  const fitCheckCount = scans.filter((scan) => scan.type === "fit-check").length;
+
+  // Single pass over scans, memoized so limit checks don't rescan on every render.
+  const { clothLabelCount, fitCheckCount } = useMemo(() => {
+    let clothLabelCount = 0;
+    let fitCheckCount = 0;
+    for (const scan of scans) {
+      if (scan.type === "label") clothLabelCount += 1;
+      else if (scan.type === "fit-check") fitCheckCount += 1;
+    }
+    return { clothLabelCount, fitCheckCount };
+  }, [scans]);
 
   const wardrobeLimit = isPro ? PRO_WARDROBE_LIMIT : FREE_WARDROBE_LIMIT;
   const canAddWardrobe = wardrobeCount < wardrobeLimit;

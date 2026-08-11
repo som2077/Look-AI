@@ -1,38 +1,34 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-type FilterTab = "Daily" | "Weekly" | "Monthly" | "90 Days";
+export type FilterTab = "Daily" | "Weekly" | "Monthly" | "90 Days";
 
-const TABS: FilterTab[] = ["Daily", "Weekly", "Monthly", "90 Days"];
+export const TABS: readonly FilterTab[] = [
+  "Daily",
+  "Weekly",
+  "Monthly",
+  "90 Days",
+];
 
 interface WardrobeFilterTabsProps {
-  value?: FilterTab;
-  onChange?: (tab: FilterTab) => void;
+  value: FilterTab;
+  onChange: (tab: FilterTab) => void;
 }
 
 export function WardrobeFilterTabs({ value, onChange }: WardrobeFilterTabsProps) {
-  // Use controlled value if provided, fallback to local state
-  const [localActive, setLocalActive] = useState<FilterTab>("Daily");
-  const active = value !== undefined ? value : localActive;
-
-  const handlePress = (tab: FilterTab) => {
-    setLocalActive(tab);
-    onChange?.(tab);
-  };
-
   return (
     <View style={styles.container}>
       {TABS.map((tab) => (
         <Pressable
           key={tab}
-          onPress={() => handlePress(tab)}
+          onPress={() => onChange(tab)}
           style={[
             styles.tab,
-            active === tab && styles.tabActive,
-            { zIndex: active === tab ? 10 : 0 },
+            value === tab && styles.tabActive,
+            { zIndex: value === tab ? 10 : 0 },
           ]}
         >
-          <Text style={[styles.label, active === tab && styles.labelActive]}>
+          <Text style={[styles.label, value === tab && styles.labelActive]}>
             {tab}
           </Text>
         </Pressable>

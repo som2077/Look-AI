@@ -1,9 +1,13 @@
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { LOTTIE_FLAME_URL } from "@/shared/constants/assets";
+import { daysBetween, startOfDay } from "@/shared/utils/date";
 import { IconFlameFilled, IconFlameOff } from "@tabler/icons-react-native";
 import LottieView from "lottie-react-native";
 import React from "react";
 import { Animated, Modal, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fr", "Sat"];
 
 interface StreakPopupProps {
   visible: boolean;
@@ -33,11 +37,10 @@ export function StreakPopup({
     }
   }, [visible, fadeAnim]);
 
+  if (!visible) return null;
+
   // Determine current day of week (0 = Sunday)
   const currentDay = new Date().getDay();
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fr", "Sat"];
-
-  if (!visible) return null;
 
   return (
     <Modal
@@ -66,7 +69,7 @@ export function StreakPopup({
               >
                 <LottieView
                   source={{
-                    uri: "https://lottie.host/90aa36ae-cfef-49e5-bd8e-8c4c54fc2004/df47Z2J4nI.json",
+                    uri: LOTTIE_FLAME_URL,
                   }}
                   autoPlay
                   loop
@@ -101,7 +104,7 @@ export function StreakPopup({
               {/* Weekly Calendar */}
               <View className="w-full mb-6">
                 <View className="flex-row justify-between w-full px-2 mb-3">
-                  {weekDays.map((day, i) => (
+                  {WEEK_DAYS.map((day, i) => (
                     <Text
                       key={i}
                       className={`text-center font-bold text-sm w-8 ${i === currentDay ? "text-[#E2833F]" : "text-gray-500"}`}
@@ -111,28 +114,18 @@ export function StreakPopup({
                   ))}
                 </View>
                 <View className="flex-row justify-between w-full px-2">
-                  {weekDays.map((_, i) => {
+                  {WEEK_DAYS.map((_, i) => {
                     const isFuture = i > currentDay;
 
                     let isStreak = false;
                     if (!isFuture && lastActiveDate) {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
+                      const today = startOfDay(new Date());
+                      const lastActive = startOfDay(new Date(lastActiveDate));
 
-                      const lastActive = new Date(lastActiveDate);
-                      lastActive.setHours(0, 0, 0, 0);
-
-                      // i is the day index (0 = Mon, 1 = Tue... wait weekDays might be different)
-                      // wait, `currentDay` is the index of today.
-                      // `currentDay - i` is how many days ago it was from today.
+                      // `currentDay - i` is how many days ago that weekday was.
                       const daysAgoFromToday = currentDay - i;
-
-                      const diffFromLastActiveToToday = Math.round(
-                        (today.getTime() - lastActive.getTime()) /
-                          (1000 * 60 * 60 * 24),
-                      );
                       const daysAgoFromLastActive =
-                        daysAgoFromToday - diffFromLastActiveToToday;
+                        daysAgoFromToday - daysBetween(today, lastActive);
 
                       if (
                         daysAgoFromLastActive >= 0 &&

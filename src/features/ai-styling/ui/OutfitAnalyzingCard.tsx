@@ -26,6 +26,11 @@ const CENTER = SVG_SIZE / 2;
 const CARD_H_MARGIN = 20;
 const CARD_WIDTH = Dimensions.get("window").width - CARD_H_MARGIN * 2;
 
+const SCAN_MODE_ROUTES: Record<"label" | "fit-check", { pathname: string }> = {
+  label: { pathname: "/(root)/add-clothes/label-result" },
+  "fit-check": { pathname: "/(root)/add-clothes/fitcheck-result" },
+};
+
 // ─── Slide type: either a completed outfit or the in-progress analysis ───────
 
 interface AnalyzingSlide {
@@ -138,7 +143,7 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
             </View>
           </View>
 
-          {/* View Details button */}
+          {/* View Details hint — the outer card handles the tap */}
           <View
             style={{
               flexDirection: "row",
@@ -148,8 +153,7 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
               marginTop: -4,
             }}
           >
-            <Pressable
-              onPress={() => onViewDetails(outfitIndex)}
+            <View
               style={{
                 flex: 1,
                 paddingVertical: 10,
@@ -165,7 +169,7 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
               >
                 Analysis complete and ready to view.
               </Text>
-            </Pressable>
+            </View>
           </View>
         </View>
       </View>
@@ -178,12 +182,12 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
 const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
   imageUri,
   progress,
-  strokeDashoffset,
 }: {
   imageUri: string;
   progress: number;
-  strokeDashoffset: number;
 }) {
+  const strokeDashoffset = CIRCUMFERENCE * (1 - Math.min(progress, 100) / 100);
+
   return (
     <View style={{ width: CARD_WIDTH }}>
       <View className="flex-row rounded-[24px] border-[0.8px] border-[#E9EBF8] bg-[#F3F2F770] overflow-hidden h-40">
@@ -254,28 +258,27 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
 });
 
 const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
-  mode,
   slides,
-  strokeDashoffset,
   handleViewDetails,
 }: {
-  mode: string;
   slides: CardSlide[];
-  strokeDashoffset: number;
   handleViewDetails: (index: number) => void;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList<CardSlide>>(null);
 
-  // Auto-scroll to analyzing slide (index 0) if one is active
+  // The analyzing slide (if present) is always first in its group.
+  const hasAnalyzing = slides[0]?.type === "analyzing";
+
+  // Auto-scroll to the analyzing slide once it appears.
   useEffect(() => {
-    const hasAnalyzing = slides.some((s) => s.type === "analyzing");
     if (hasAnalyzing && slides.length > 1) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         flatListRef.current?.scrollToIndex({ index: 0, animated: true });
       }, 200);
+      return () => clearTimeout(timer);
     }
-  }, [slides.length, slides]);
+  }, [hasAnalyzing, slides.length]);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: { index: number | null }[] }) => {
@@ -301,7 +304,6 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
           <AnalyzingCardSlide
             imageUri={item.imageUri}
             progress={item.progress}
-            strokeDashoffset={strokeDashoffset}
           />
         );
       }
@@ -313,7 +315,7 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
         />
       );
     },
-    [strokeDashoffset, handleViewDetails],
+    [handleViewDetails],
   );
 
   const safeIndex = Math.min(activeIndex, slides.length - 1);
@@ -381,11 +383,6 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
     prevIsDoneRef.current = isDone;
   }, [isDone, notifyComplete]);
 
-  const strokeDashoffset = useMemo(
-    () => CIRCUMFERENCE * (1 - Math.min(progress, 100) / 100),
-    [progress],
-  );
-
   const handleViewDetails = useCallback(
     (index: number) => {
       const outfit = lastOutfits[index];
@@ -407,28 +404,20 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
             outfitIndex: index.toString(),
           },
         } as never);
-      } else if (outfit && outfit.mode === "label") {
+      } else if (
+        outfit &&
+        (outfit.mode === "label" || outfit.mode === "fit-check")
+      ) {
+        const route = SCAN_MODE_ROUTES[outfit.mode];
         const scanId = useScanHistoryStore.getState().addScan({
-          type: "label",
+          type: outfit.mode,
           thumbnail: outfit.imageUri,
           date: new Date().toISOString(),
           result: outfit.clothingData as Record<string, unknown>,
           isFavorite: false,
         });
         router.push({
-          pathname: "/(root)/add-clothes/label-result",
-          params: { scanId, outfitIndex: index.toString() },
-        } as never);
-      } else if (outfit && outfit.mode === "fit-check") {
-        const scanId = useScanHistoryStore.getState().addScan({
-          type: "fit-check",
-          thumbnail: outfit.imageUri,
-          date: new Date().toISOString(),
-          result: outfit.clothingData as Record<string, unknown>,
-          isFavorite: false,
-        });
-        router.push({
-          pathname: "/(root)/add-clothes/fitcheck-result",
+          pathname: route.pathname,
           params: { scanId, outfitIndex: index.toString() },
         } as never);
       } else {
@@ -438,7 +427,9 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
     [router, lastOutfits],
   );
 
-  const groupedSlides = useMemo(() => {
+  // Completed outfits grouped by mode — stable unless the list changes, so the
+  // memoized carousels are not rebuilt on every progress tick.
+  const completedGroups = useMemo(() => {
     const groups: Record<string, CardSlide[]> = {};
 
     // Add completed outfits to their respective mode groups
@@ -452,29 +443,41 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
       });
     });
 
-    // Add analyzing outfit to its mode group at the TOP
-    if (isAnalyzing && imageUri) {
-      const mode = currentMode || "scan-cloth";
-      if (!groups[mode]) groups[mode] = [];
-      groups[mode].unshift({ type: "analyzing" as const, imageUri, progress });
-    }
-
     return groups;
-  }, [lastOutfits, isAnalyzing, imageUri, progress, currentMode]);
+  }, [lastOutfits]);
 
-  if (Object.keys(groupedSlides).length === 0) return null;
+  const analyzingSlide: AnalyzingSlide | null =
+    isAnalyzing && imageUri
+      ? { type: "analyzing", imageUri, progress }
+      : null;
+  const analyzingMode = analyzingSlide ? currentMode || "scan-cloth" : null;
+
+  const groupModes = useMemo(() => {
+    const modes = Object.keys(completedGroups);
+    if (analyzingMode && !modes.includes(analyzingMode)) {
+      modes.push(analyzingMode);
+    }
+    return modes;
+  }, [completedGroups, analyzingMode]);
+
+  if (groupModes.length === 0) return null;
 
   return (
     <View className="mt-3 mb-1">
-      {Object.entries(groupedSlides).map(([mode, slides]) => (
-        <ModeGroupCarousel
-          key={mode}
-          mode={mode}
-          slides={slides}
-          strokeDashoffset={strokeDashoffset}
-          handleViewDetails={handleViewDetails}
-        />
-      ))}
+      {groupModes.map((mode) => {
+        const completed = completedGroups[mode] ?? [];
+        const slides =
+          analyzingSlide && analyzingMode === mode
+            ? [analyzingSlide, ...completed]
+            : completed;
+        return (
+          <ModeGroupCarousel
+            key={mode}
+            slides={slides}
+            handleViewDetails={handleViewDetails}
+          />
+        );
+      })}
     </View>
   );
 });

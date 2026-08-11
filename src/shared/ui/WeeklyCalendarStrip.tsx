@@ -1,13 +1,12 @@
 import { useWeeklyActivity } from "@/features/streaks/api/useWeeklyActivity";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
-import { toLocalDateString } from "@/shared/utils/date";
+import {
+  getStartOfWeek,
+  startOfDay,
+  toLocalDateString,
+} from "@/shared/utils/date";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-
-interface WeeklyCalendarStripProps {
-  initialDate?: Date;
-  onDateChange?: (date: Date) => void;
-}
 
 const DAY_LABELS: readonly string[] = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -15,18 +14,6 @@ const isSameDay = (first: Date, second: Date) =>
   first.getFullYear() === second.getFullYear() &&
   first.getMonth() === second.getMonth() &&
   first.getDate() === second.getDate();
-
-const getStartOfWeek = (date: Date) => {
-  const reference = new Date(date);
-  reference.setHours(0, 0, 0, 0);
-
-  const dayOfWeek = reference.getDay();
-  const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-  reference.setDate(reference.getDate() + offset);
-
-  return reference;
-};
 
 interface DayCellProps {
   date: Date;
@@ -100,13 +87,8 @@ const DayCell = React.memo(function DayCell({
   );
 });
 
-export function WeeklyCalendarStrip({
-  initialDate,
-  onDateChange,
-}: WeeklyCalendarStripProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(
-    initialDate ?? new Date(),
-  );
+export function WeeklyCalendarStrip() {
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
 
   // Real DB data: Set of "YYYY-MM-DD" strings for days app was opened
   const { activeDates } = useWeeklyActivity();
@@ -122,26 +104,17 @@ export function WeeklyCalendarStrip({
     });
   }, [selectedDate]);
 
-  const handleSelectDate = useCallback(
-    (date: Date) => {
-      setSelectedDate(date);
-      onDateChange?.(date);
-    },
-    [onDateChange],
-  );
-
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
+  const handleSelectDate = useCallback((date: Date) => {
+    setSelectedDate(date);
   }, []);
+
+  const today = useMemo(() => startOfDay(new Date()), []);
 
   return (
     <View className="px-[5px] py-1 mt-3">
       <View className="flex-row items-center justify-between">
         {weekDates.map((date, index) => {
-          const dateAtMidnight = new Date(date);
-          dateAtMidnight.setHours(0, 0, 0, 0);
+          const dateAtMidnight = startOfDay(date);
 
           const diffTime = dateAtMidnight.getTime() - today.getTime();
           const diffDaysFromToday = Math.round(

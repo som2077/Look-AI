@@ -11,14 +11,24 @@ import { usePendingBatchStore } from "../model/usePendingBatchStore";
 
 import { useRouter } from "expo-router";
 
+import { formatTimeShort } from "@/shared/utils/date";
+
 export function PendingBatchBanner() {
   const items = usePendingBatchStore((s) => s.items);
   const router = useRouter();
 
   const opacity = useRef(new Animated.Value(0.3)).current;
 
+  const firstSuccess = items.find((i) => i.status === "success");
+  const allDone = items.every(
+    (i) => i.status === "success" || i.status === "error",
+  );
+
+  // Pulse only while the skeleton (loading) branch is actually rendered.
   useEffect(() => {
-    Animated.loop(
+    if (items.length === 0 || firstSuccess) return;
+
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
           toValue: 0.7,
@@ -31,15 +41,13 @@ export function PendingBatchBanner() {
           useNativeDriver: true,
         }),
       ]),
-    ).start();
-  }, [opacity]);
+    );
+    loop.start();
+
+    return () => loop.stop();
+  }, [items.length, firstSuccess, opacity]);
 
   if (items.length === 0) return null;
-
-  const firstSuccess = items.find((i) => i.status === "success");
-  const allDone = items.every(
-    (i) => i.status === "success" || i.status === "error",
-  );
 
   const avatars = items.slice(0, 4);
   const totalAvatars = avatars.length;
@@ -47,6 +55,7 @@ export function PendingBatchBanner() {
   // each avatar overlaps the previous one by a certain amount (e.g. left: index * 24)
   // let's use 24 as the offset. Width = (totalAvatars - 1) * 24 + 64 (width of avatar)
   const avatarsWidth = totalAvatars > 0 ? (totalAvatars - 1) * 17 + 64 : 64;
+  const timeStr = formatTimeShort();
 
   return (
     <Pressable
@@ -74,11 +83,7 @@ export function PendingBatchBanner() {
             >
               <Text style={styles.title}>Batch Scan</Text>
               <Text style={styles.timeText}>
-                {new Date().toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                })}
+                {timeStr}
               </Text>
             </View>
             <Text style={styles.subtitle}>
@@ -97,11 +102,7 @@ export function PendingBatchBanner() {
             >
               <View style={styles.skeletonLine1} />
               <Text style={styles.timeText}>
-                {new Date().toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                })}
+                {timeStr}
               </Text>
             </View>
             <View style={styles.skeletonLine2} />
@@ -126,7 +127,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 20,
     marginTop: 12,
-    // marginBottom: 16,
     borderWidth: 0.8,
     borderColor: "#E9EBF8",
   },

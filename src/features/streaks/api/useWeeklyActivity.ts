@@ -1,7 +1,7 @@
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { getStartOfWeek, toLocalDateString } from "@/shared/utils/date";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
-import { toLocalDateString } from "@/shared/utils/date";
 /**
  * Fetches the current week (Mon-Sun) active days from Supabase streak_logs.
  *
@@ -13,18 +13,6 @@ import { toLocalDateString } from "@/shared/utils/date";
  *   activeDates - Set of "YYYY-MM-DD" strings for days app was opened
  *   isLoading   - true while fetching
  */
-
-const toDateString = (d: Date): string => toLocalDateString(d);
-
-/** Returns Monday of the week containing `date` */
-const getMonday = (date: Date): Date => {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay(); // 0=Sun, 1=Mon ... 6=Sat
-  const offset = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + offset);
-  return d;
-};
 
 export function useWeeklyActivity() {
   const { supabase } = useSupabase();
@@ -42,12 +30,12 @@ export function useWeeklyActivity() {
       setIsLoading(true);
       try {
         const today = new Date();
-        const monday = getMonday(today);
+        const monday = getStartOfWeek(today);
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
 
-        const mondayStr = toDateString(monday);
-        const sundayStr = toDateString(sunday);
+        const mondayStr = toLocalDateString(monday);
+        const sundayStr = toLocalDateString(sunday);
 
         const { data, error } = await supabase
           .from("streak_logs")

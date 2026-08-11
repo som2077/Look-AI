@@ -1,4 +1,5 @@
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { LOTTIE_CALENDAR_URL, LOTTIE_FLAME_URL } from "@/shared/constants/assets";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
@@ -43,7 +44,7 @@ export const HomeHeader = React.memo(function HomeHeader() {
         >
           <LottieView
             source={{
-              uri: "https://lottie.host/90aa36ae-cfef-49e5-bd8e-8c4c54fc2004/df47Z2J4nI.json",
+              uri: LOTTIE_FLAME_URL,
             }}
             autoPlay
             loop
@@ -78,7 +79,7 @@ export const HomeHeader = React.memo(function HomeHeader() {
         >
           <ExpoImage
             source={{
-              uri: "https://lottie.host/d792b296-3b91-4233-bdd3-5c0cdd8fd7d6/bN9RwNrbUY.svg",
+              uri: LOTTIE_CALENDAR_URL,
             }}
             style={{ width: 19, height: 19 }}
             contentFit="contain"

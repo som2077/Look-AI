@@ -52,7 +52,6 @@ export interface WardrobeRingSummaryCardProps {
   readonly wearCount: number;
   readonly neverCount: number;
   readonly ringSegments: readonly RingProgressSegment[];
-  readonly streak?: number;
   readonly labels?: Partial<RingStatLabels>;
   readonly statColors?: Partial<RingStatColors>;
   readonly showStreakIcon?: boolean;
@@ -66,13 +65,8 @@ const clampProgress = (value: number) => {
   return value;
 };
 
-const AnimatedRingSegment = ({
-  segment,
-  center,
-}: {
-  segment: RingProgressSegment & { progress: number };
-  center: number;
-}) => {
+/** Animates a value to `progress` on focus; shared by the ring arc and dot. */
+const useAnimatedProgress = (progress: number, duration = 1000) => {
   const animatedProgress = useRef(new Animated.Value(0)).current;
 
   useFocusEffect(
@@ -80,16 +74,64 @@ const AnimatedRingSegment = ({
       // Reset to 0 when focused to replay the animation
       animatedProgress.setValue(0);
       Animated.timing(animatedProgress, {
-        toValue: segment.progress,
-        duration: 1000,
+        toValue: progress,
+        duration,
         useNativeDriver: true,
       }).start();
 
       return () => {
         animatedProgress.stopAnimation();
       };
-    }, [segment.progress, animatedProgress]),
+    }, [progress, duration, animatedProgress]),
   );
+
+  return animatedProgress;
+};
+
+const StatCell = ({
+  value,
+  label,
+  color,
+  alignEnd = false,
+}: {
+  value: ReactNode;
+  label: string;
+  color: string;
+  alignEnd?: boolean;
+}) => (
+  <View
+    style={alignEnd ? { alignItems: "flex-end" } : { alignItems: "flex-start" }}
+  >
+    <Text
+      style={{
+        fontSize: 22,
+        fontFamily: "TikTokSans16pt-Bold",
+        color,
+      }}
+    >
+      {value}
+    </Text>
+    <Text
+      style={{
+        fontSize: 13,
+        fontFamily: "TikTokSans16pt-Bold",
+        color: "#1D1A27",
+        marginTop: 2,
+      }}
+    >
+      {label}
+    </Text>
+  </View>
+);
+
+const AnimatedRingSegment = ({
+  segment,
+  center,
+}: {
+  segment: RingProgressSegment & { progress: number };
+  center: number;
+}) => {
+  const animatedProgress = useAnimatedProgress(segment.progress);
 
   const circumference = 2 * Math.PI * segment.radius;
   const dashArray = `${circumference} ${circumference}`;
@@ -153,22 +195,7 @@ const AnimatedDot = ({
   segment: RingProgressSegment & { progress: number };
   center: number;
 }) => {
-  const animatedProgress = useRef(new Animated.Value(0)).current;
-
-  useFocusEffect(
-    React.useCallback(() => {
-      animatedProgress.setValue(0);
-      Animated.timing(animatedProgress, {
-        toValue: segment.progress,
-        duration: 1000,
-        useNativeDriver: true,
-      }).start();
-
-      return () => {
-        animatedProgress.stopAnimation();
-      };
-    }, [segment.progress, animatedProgress]),
-  );
+  const animatedProgress = useAnimatedProgress(segment.progress);
 
   const capRadius = segment.strokeWidth / 2;
   const innerDotRadius = capRadius - 2.5;
@@ -226,7 +253,6 @@ export function WardrobeRingSummaryCard({
   wearCount,
   neverCount,
   ringSegments,
-  streak = 0,
   labels,
   statColors,
   showStreakIcon = true,
@@ -286,48 +312,18 @@ export function WardrobeRingSummaryCard({
       <View className="flex-row items-center justify-between gap-3">
         {/* Left Stats */}
         <View className="flex-1 items-end gap-10 py-1">
-          <View className="items-end">
-            <Text
-              style={{
-                fontSize: 22,
-                fontFamily: "TikTokSans16pt-Bold",
-                color: resolvedColors.topLeft,
-              }}
-            >
-              {formattedPercentage}%
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                fontFamily: "TikTokSans16pt-Bold",
-                color: "#1D1A27",
-                marginTop: 2,
-              }}
-            >
-              {resolvedLabels.topLeft}
-            </Text>
-          </View>
-          <View className="items-end">
-            <Text
-              style={{
-                fontSize: 22,
-                fontFamily: "TikTokSans16pt-Bold",
-                color: resolvedColors.bottomLeft,
-              }}
-            >
-              {totalWorn}
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                fontFamily: "TikTokSans16pt-Bold",
-                color: "#1D1A27",
-                marginTop: 2,
-              }}
-            >
-              {resolvedLabels.bottomLeft}
-            </Text>
-          </View>
+          <StatCell
+            alignEnd
+            value={`${formattedPercentage}%`}
+            label={resolvedLabels.topLeft}
+            color={resolvedColors.topLeft}
+          />
+          <StatCell
+            alignEnd
+            value={totalWorn}
+            label={resolvedLabels.bottomLeft}
+            color={resolvedColors.bottomLeft}
+          />
         </View>
 
         {/* Center Ring */}
@@ -378,48 +374,16 @@ export function WardrobeRingSummaryCard({
 
         {/* Right Stats */}
         <View className="flex-1 items-start gap-10 py-2 ml-1">
-          <View>
-            <Text
-              style={{
-                fontSize: 22,
-                fontFamily: "TikTokSans16pt-Bold",
-                color: resolvedColors.topRight,
-              }}
-            >
-              {wearCount}
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                fontFamily: "TikTokSans16pt-Bold",
-                color: "#1D1A27",
-                marginTop: 2,
-              }}
-            >
-              {resolvedLabels.topRight}
-            </Text>
-          </View>
-          <View>
-            <Text
-              style={{
-                fontSize: 22,
-                fontFamily: "TikTokSans16pt-Bold",
-                color: resolvedColors.bottomRight,
-              }}
-            >
-              {neverCount}
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                fontFamily: "TikTokSans16pt-Bold",
-                color: "#1D1A27",
-                marginTop: 2,
-              }}
-            >
-              {resolvedLabels.bottomRight}
-            </Text>
-          </View>
+          <StatCell
+            value={wearCount}
+            label={resolvedLabels.topRight}
+            color={resolvedColors.topRight}
+          />
+          <StatCell
+            value={neverCount}
+            label={resolvedLabels.bottomRight}
+            color={resolvedColors.bottomRight}
+          />
         </View>
       </View>
       {bottomContent && <View style={{ marginTop: 12 }}>{bottomContent}</View>}

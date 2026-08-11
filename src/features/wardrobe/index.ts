@@ -10,7 +10,7 @@ export * from "./model/user-wardrobe-store";
 export * from "./api/useWardrobeSummary";
 
 // UI
-export { RecentlyUploadedHeading, NotifyBanner, ErrorBanner, EmptyStyleBanner } from "./ui/RecentlyUploadedCard";
+export { RecentlyUploadedHeading, NotifyBanner, EmptyStyleBanner } from "./ui/RecentlyUploadedCard";
 export { WardrobeActivityTracker } from "./ui/WardrobeActivityTracker";
 export { WardrobeFilterTabs } from "./ui/WardrobeFilterTabs";
 export { WardrobeMessageBar } from "./ui/WardrobeMessageBar";
