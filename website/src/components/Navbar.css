@@ -15,13 +15,13 @@
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: background var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
 }
 
 .navbar.scrolled {
   background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ─── Logo ───────────────────────────────────────────────── */
@@ -35,7 +35,6 @@
 .navbar-logo img {
   height: 36px;
   width: auto;
-  filter: none;
   transition: opacity 0.2s ease;
 }
 
@@ -54,7 +53,7 @@
 
 .navbar-links a {
   text-decoration: none;
-  color: rgba(30, 30, 40, 0.7);
+  color: var(--text-secondary);
   font-size: 0.92rem;
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -69,116 +68,125 @@
   left: 0;
   right: 0;
   height: 1.5px;
-  background: #1a1a2e;
+  background: var(--primary);
   transform: scaleX(0);
   transition: transform 0.25s ease;
   border-radius: 2px;
 }
 
 .navbar-links a:hover {
-  color: #1a1a2e;
+  color: var(--primary);
 }
 
 .navbar-links a:hover::after {
   transform: scaleX(1);
 }
 
-/* ─── App Buttons ────────────────────────────────────────── */
-.navbar-apps {
+/* ─── Right Section ──────────────────────────────────────── */
+.navbar-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   flex-shrink: 0;
 }
 
-.app-btn {
+/* ─── Download Button ────────────────────────────────────── */
+.nav-download-btn {
   display: inline-flex;
   align-items: center;
-  text-decoration: none;
-  border-radius: 10px;
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
-}
-
-.app-btn-inner {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.45rem 1rem;
-  background: #1a1a2e;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 10px;
-  min-width: 140px;
-}
-
-.app-btn.google .app-btn-inner {
-  background: #1a1a2e;
-}
-
-.app-btn.google:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-}
-
-.store-icon {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  color: #ffffff;
-}
-
-.google-play-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.app-btn-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-
-.app-btn-sub {
-  font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.55);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 500;
-}
-
-.app-btn-main {
-  font-size: 0.82rem;
-  color: #ffffff;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-/* ─── Coming Soon (Apple) ────────────────────────────────── */
-.app-btn.coming-soon {
-  position: relative;
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.app-btn.coming-soon .app-btn-inner {
-  border-color: rgba(255, 255, 255, 0.07);
-}
-
-.coming-soon-badge {
-  position: absolute;
-  top: -9px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #6c63ff, #a855f7);
+  gap: 0.5rem;
+  padding: 0.5rem 1.1rem;
+  background: var(--primary);
   color: #fff;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.25s var(--ease);
   white-space: nowrap;
-  z-index: 1;
-  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.5);
+}
+
+.nav-download-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-primary);
+}
+
+/* ─── Hamburger ──────────────────────────────────────────── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: all 0.3s var(--ease);
+  transform-origin: center;
+}
+
+.hamburger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ─── Mobile ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 1.25rem;
+  }
+
+  .navbar-links {
+    position: fixed;
+    top: 68px;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s var(--ease);
+  }
+
+  .navbar-links.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .navbar-links a {
+    font-size: 1.05rem;
+  }
+
+  .nav-download-btn {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+  }
+
+  .hamburger {
+    display: flex;
+  }
 }
