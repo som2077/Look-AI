@@ -214,7 +214,7 @@ export default function CalendarScreen() {
         const index = t.getDate() - 1 + 5; // +5 for buffer days
         if (dateStripRef.current) {
           dateStripRef.current.scrollToOffset({
-            offset: index * 100,
+            offset: index * 90,
             animated: false,
           });
         }
@@ -448,7 +448,7 @@ export default function CalendarScreen() {
                   const index = t.getDate() - 1 + 5; // +5 for buffer days
                   if (dateStripRef.current) {
                     dateStripRef.current.scrollToOffset({
-                      offset: index * 100,
+                      offset: index * 90,
                       animated: true,
                     });
                   }
@@ -489,10 +489,10 @@ export default function CalendarScreen() {
             keyExtractor={(d) => d.toISOString()}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
-              paddingHorizontal: Dimensions.get("window").width / 2 - 50,
+              paddingHorizontal: Dimensions.get("window").width / 2 - 45,
               alignItems: "flex-end",
             }}
-            snapToInterval={100}
+            snapToInterval={90}
             decelerationRate="fast"
             initialNumToRender={15}
             windowSize={5}
@@ -501,7 +501,7 @@ export default function CalendarScreen() {
               const index = t.getDate() - 1 + 5;
               if (dateStripRef.current) {
                 dateStripRef.current.scrollToOffset({
-                  offset: index * 100,
+                  offset: index * 90,
                   animated: false,
                 });
               }
@@ -512,14 +512,14 @@ export default function CalendarScreen() {
             )}
             onMomentumScrollEnd={(e) => {
               const offsetX = e.nativeEvent.contentOffset.x;
-              const index = Math.round(offsetX / 100);
+              const index = Math.round(offsetX / 90);
               if (days[index]) {
                 handleDaySelect(days[index]);
               }
             }}
             getItemLayout={(data, index) => ({
-              length: 100,
-              offset: 100 * index,
+              length: 90,
+              offset: 90 * index,
               index,
             })}
             renderItem={({ item: d, index }) => {
@@ -531,7 +531,7 @@ export default function CalendarScreen() {
               const hasOutfit = !!combinedOutfitsData[d.toDateString()]?.length;
               const log = combinedOutfitsData[d.toDateString()]?.[0];
 
-              const ITEM_PITCH = 100;
+              const ITEM_PITCH = 90;
               const scale = dateStripScrollX.interpolate({
                 inputRange: [
                   (index - 1) * ITEM_PITCH,
@@ -545,14 +545,25 @@ export default function CalendarScreen() {
                 (log) => log.isPlanned,
               );
 
+              const translateX = dateStripScrollX.interpolate({
+                inputRange: [
+                  (index - 1) * ITEM_PITCH,
+                  index * ITEM_PITCH,
+                  (index + 1) * ITEM_PITCH,
+                ],
+                outputRange: [6, 0, -6],
+                extrapolate: "clamp",
+              });
+
               return (
-                <View
+                <Animated.View
                   style={{
                     alignItems: "center",
                     width: 80,
-                    marginHorizontal: 10,
+                    marginHorizontal: 5,
                     marginTop: 20,
                     justifyContent: "center",
+                    transform: [{ translateX }],
                   }}
                 >
                   <TouchableOpacity
@@ -637,11 +648,11 @@ export default function CalendarScreen() {
                         width: 80,
                         height: 120,
                         marginTop: 4,
-                        borderRadius: 13,
-                        backgroundColor: isSelected ? "#F8F8FA" : "#F8F8FA",
-                        borderWidth: isSelected ? 0.5 : 0.5,
-                        borderColor: isSelected ? "#E5E7EB" : "#E5E7EB",
-                        shadowColor: isSelected ? "#00000090" : "transparent",
+                        borderRadius: 16,
+                        backgroundColor: isSelected ? "#1D1A27" : "#F8F8FA",
+                        borderWidth: isSelected ? 0 : 1,
+                        borderColor: isSelected ? "transparent" : "#E9EBF8",
+                        shadowColor: isSelected ? "#1D1A27" : "transparent",
                         shadowOpacity: isSelected ? 0.08 : 0,
                         shadowRadius: 12,
                         shadowOffset: { width: 0, height: 1 },
@@ -662,13 +673,13 @@ export default function CalendarScreen() {
                       ) : (
                         <IconCalendarPlus
                           size={26}
-                          color="#00000080"
+                          color={isSelected ? "#FFFFFF" : "#00000060"}
                           strokeWidth={1.5}
                         />
                       )}
                     </Animated.View>
                   </TouchableOpacity>
-                </View>
+                </Animated.View>
               );
             }}
           />
@@ -732,11 +743,11 @@ export default function CalendarScreen() {
             />
             <Text
               style={{
-                fontSize: 14,
-                lineHeight: 20,
-                color: "#666666",
-                fontWeight: "400",
-                marginTop: -45,
+                fontSize: 15,
+                lineHeight: 22,
+                color: "#4B5563",
+                fontWeight: "500",
+                marginTop: -40,
                 textAlign: "center",
                 paddingHorizontal: 20,
               }}

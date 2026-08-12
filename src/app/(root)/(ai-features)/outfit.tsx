@@ -2,6 +2,7 @@ import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
+import { showToast } from "@/shared/ui/toast-store";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
   IconArrowLeft,
@@ -116,13 +117,9 @@ export default function OutfitScreen() {
   const [loading, setLoading] = useState(false);
   const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [customError, setCustomError] = useState<string | null>(null);
 
   const showError = (msg: string) => {
-    setCustomError(msg);
-    setTimeout(() => {
-      setCustomError(null);
-    }, 3000);
+    showToast("error", msg);
   };
 
   // Outfit States
@@ -806,33 +803,6 @@ export default function OutfitScreen() {
           </View>
         </Modal>
 
-        {/* Custom Error Toast */}
-        {customError && (
-          <View
-            style={{
-              position: "absolute",
-              top: 60,
-              left: 20,
-              right: 20,
-              backgroundColor: "#FF3B30",
-              padding: 16,
-              borderRadius: 12,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-              elevation: 5,
-              zIndex: 9999,
-            }}
-          >
-            <Text style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 16 }}>
-              {customError}
-            </Text>
-          </View>
-        )}
       </SafeAreaView>
       <StreakPopup
         visible={hasIncrementedToday}

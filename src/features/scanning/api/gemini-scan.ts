@@ -3,6 +3,7 @@
  * Handles: Full Cloth Scan, Barcode Image, Care Label OCR, Fit Check
  */
 
+import { request } from "@/shared/api/http";
 import { supabase } from "@/shared/supabase/client";
 import * as FileSystem from "expo-file-system";
 
@@ -12,6 +13,13 @@ const MODELS = [
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface GeminiVisionResponse {
+  candidates?: Array<{
+    finishReason?: string;
+    content?: { parts?: Array<{ text?: string }> };
+  }>;
+}
 
 export interface BarcodeAnalysis {
   brand: string;
@@ -196,22 +204,20 @@ async function callGeminiVision(
       }
 
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error(`[Gemini-Scan] Direct fetch failed for ${model}:`, res.status, errText);
+      let data: GeminiVisionResponse | null = null;
+      try {
+        data = await request<GeminiVisionResponse>({
+          url,
+          method: "POST",
+          headers: { "x-goog-api-key": apiKey },
+          body,
+          retries: 0, // the model fallback loop below is the retry strategy
+        });
+      } catch (err) {
+        console.error(`[Gemini-Scan] Direct fetch failed for ${model}:`, err);
         continue;
       }
 
-      const data = await res.json();
       const candidate = data?.candidates?.[0];
       if (candidate?.finishReason === "SAFETY") {
         return JSON.stringify({ error: "SAFETY_VIOLATION" });

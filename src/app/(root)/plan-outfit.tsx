@@ -1,8 +1,8 @@
 import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
+import { showToast } from "@/shared/ui/toast-store";
 import {
   IconArrowLeft,
   IconCalendarEvent,
-  IconCheck,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
@@ -48,13 +48,11 @@ export default function PlanOutfitScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [notes, setNotes] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [calendarKey, setCalendarKey] = useState(0);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth()); // 0-indexed
   const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const bottomSheetSlideAnim = React.useRef(new Animated.Value(400)).current;
   const bottomSheetFadeAnim = React.useRef(new Animated.Value(0)).current;
   const monthPickerSlideAnim = React.useRef(new Animated.Value(400)).current;
@@ -160,23 +158,10 @@ export default function PlanOutfitScreen() {
 
     setIsModalVisible(false);
 
-    // Show custom toast before navigating
-    setToastMessage("Outfit added to calendar!");
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-
+    // Confirmation toast, then navigate back to the calendar.
+    showToast("success", "Outfit added to calendar!");
     setTimeout(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
-        setToastMessage("");
-        router.replace("/");
-      });
+      router.replace("/");
     }, 1500);
   };
 
@@ -193,22 +178,7 @@ export default function PlanOutfitScreen() {
     if (status === "granted") {
       try {
         await MediaLibrary.saveToLibraryAsync(imageUri);
-
-        // Show Custom Toast
-        setToastMessage("Saved to gallery");
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }).start();
-
-        setTimeout(() => {
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }).start(() => setToastMessage(""));
-        }, 2500);
+        showToast("success", "Saved to gallery");
       } catch {
         Alert.alert("Error", "Failed to save image.");
       }
@@ -219,18 +189,6 @@ export default function PlanOutfitScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      {/* Toast Notification */}
-      {!!toastMessage && (
-        <Animated.View style={[styles.toastContainer, { opacity: fadeAnim }]}>
-          <View style={styles.toastContent}>
-            <View style={styles.toastIconContainer}>
-              <IconCheck size={16} color="#FFFFFF" />
-            </View>
-            <Text style={styles.toastText}>{toastMessage}</Text>
-          </View>
-        </Animated.View>
-      )}
-
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.replace("/(root)/(tabs)")} style={{ padding: 4 }}>
@@ -749,41 +707,6 @@ const styles = StyleSheet.create({
   planButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
-  },
-  toastContainer: {
-    position: "absolute",
-    top: 60,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 999,
-  },
-  toastContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1D1A27",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 100,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 6,
-    gap: 12,
-  },
-  toastIconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#22C55E",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  toastText: {
-    color: "#FFFFFF",
-    fontSize: 15,
     fontWeight: "600",
   },
   bottomSheetOverlay: {

@@ -2,6 +2,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import CryptoJS from "npm:crypto-js";
 import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
+import {
+  isRequiredString,
+  readJsonBody,
+} from "../_shared/validate.ts";
 
 // @ts-ignore: Declare Deno globally to satisfy TS compiler in IDE
 declare const Deno: any;
@@ -17,9 +21,12 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Auth check
+  // Auth: require a real user JWT (Clerk "supabase" template, carries `sub`).
+  // Supabase's verify_jwt accepts anon keys (they're project-signed JWTs), so
+  // gate on the presence of a user id to block anon-key / service-role abuse.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromJwt(authHeader);
+  if (!userId) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -27,7 +34,7 @@ serve(async (req) => {
   }
 
   // Rate limit: 5 calls/min/user (multi-step: up to 4 Gemini + 1 remove.bg + 2 Cloudinary)
-  const rl = await checkRateLimit("analyze-cloth-item", getUserIdFromJwt(authHeader), 5, 60);
+  const rl = await checkRateLimit("analyze-cloth-item", userId, 5, 60);
   if (!rl.allowed) {
     return new Response(rateLimitBody("analyze-cloth-item", 60), {
       status: rl.status,
@@ -36,11 +43,11 @@ serve(async (req) => {
   }
 
   try {
-    const { base64Image } = await req.json();
-
-    if (!base64Image) {
-      throw new Error("Missing base64Image parameter");
-    }
+    const body = await readJsonBody(req);
+    const base64Image = isRequiredString(
+      (body as Record<string, unknown>)?.base64Image,
+      "base64Image",
+    );
 
     // Clean base64 string
     const cleanBase64 = base64Image.includes(",")
@@ -324,7 +331,7 @@ Do not use markdown blocks.`;
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       {
-        status: 400,
+        status: error?.status ?? 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );

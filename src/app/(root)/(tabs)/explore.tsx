@@ -10,7 +10,7 @@ import {
   IconPhoto,
   IconPlus,
   IconTrash,
-  IconX
+  IconX,
 } from "@tabler/icons-react-native";
 import { ResizeMode, Video } from "expo-av";
 import { Image } from "expo-image";
@@ -32,7 +32,7 @@ import {
   TextInput,
   TouchableOpacity,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -46,7 +46,11 @@ function formatPostDateTime(dateString: string): string {
   if (!dateString) return "Just now";
   const d = new Date(dateString);
   if (isNaN(d.getTime())) return "Just now";
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " at " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return (
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
+    " at " +
+    d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+  );
 }
 
 const POPULAR_REACTIONS = ["🔥", "👍", "😂", "❤️"];
@@ -116,19 +120,34 @@ function RepliesBottomSheet({
           }).start();
         }
       },
-    })
+    }),
   ).current;
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior="padding"
-        style={{ flex: 1 }}
-      >
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ flex: 1, justifyContent: "flex-end" }}>
           {/* Overlay Background */}
-          <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, backgroundColor: "rgba(0,0,0,0.35)" }}>
-            <TouchableOpacity style={{ flex: 1 }} onPress={onClose} activeOpacity={1} />
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: "rgba(0,0,0,0.35)",
+            }}
+          >
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={onClose}
+              activeOpacity={1}
+            />
           </View>
 
           <Animated.View
@@ -142,7 +161,13 @@ function RepliesBottomSheet({
             }}
           >
             <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
-              <View style={{ alignItems: "center", paddingTop: 14, paddingBottom: 6 }}>
+              <View
+                style={{
+                  alignItems: "center",
+                  paddingTop: 14,
+                  paddingBottom: 6,
+                }}
+              >
                 <View
                   style={{
                     width: 40,
@@ -152,7 +177,14 @@ function RepliesBottomSheet({
                   }}
                 />
               </View>
-              <Text style={{ textAlign: "center", fontSize: 18, fontWeight: "600", marginBottom: 4 }}>
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 18,
+                  fontWeight: "600",
+                  marginBottom: 4,
+                }}
+              >
                 Replies
               </Text>
             </View>
@@ -163,24 +195,75 @@ function RepliesBottomSheet({
               showsVerticalScrollIndicator={false}
             >
               {isLoading ? (
-                <Text style={{ textAlign: "center", color: "#9CA3AF", marginTop: 20, marginBottom: 20 }}>
-                  Loading replies...
-                </Text>
+                <View
+                  style={{
+                    alignItems: "center",
+                    marginTop: 24,
+                    marginBottom: 24,
+                    gap: 8,
+                  }}
+                >
+                  <ActivityIndicator color="#4C36F5" size="small" />
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      color: "#9CA3AF",
+                      fontSize: 13,
+                    }}
+                  >
+                    Loading replies...
+                  </Text>
+                </View>
               ) : comments.length === 0 ? (
-                <Text style={{ textAlign: "center", color: "#9CA3AF", marginTop: 20, marginBottom: 20 }}>
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: "#9CA3AF",
+                    marginTop: 20,
+                    marginBottom: 20,
+                  }}
+                >
                   No replies yet. Be the first!
                 </Text>
               ) : (
                 comments.map((comment: any) => (
-                  <View key={comment.id} style={{ flexDirection: "row", marginBottom: 12, gap: 8 }}>
+                  <View
+                    key={comment.id}
+                    style={{ flexDirection: "row", marginBottom: 12, gap: 8 }}
+                  >
                     <Image
-                      source={{ uri: comment.user_profiles?.avatar_url || "https://i.pravatar.cc/80?img=1" }}
-                      style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#E5E7EB" }}
+                      source={{
+                        uri:
+                          comment.user_profiles?.avatar_url ||
+                          "https://i.pravatar.cc/80?img=1",
+                      }}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
+                        backgroundColor: "#E5E7EB",
+                      }}
                       contentFit="cover"
                     />
-                    <View style={{ flex: 1, backgroundColor: "#F3F4F6", padding: 10, borderRadius: 12 }}>
-                      <Text style={{ fontWeight: "600", fontSize: 13, color: "#1D1A27", marginBottom: 2 }}>
-                        {comment.user_profiles?.nickname || comment.user_profiles?.username || "Style Explorer"}
+                    <View
+                      style={{
+                        flex: 1,
+                        backgroundColor: "#F3F4F6",
+                        padding: 10,
+                        borderRadius: 12,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontWeight: "600",
+                          fontSize: 13,
+                          color: "#1D1A27",
+                          marginBottom: 2,
+                        }}
+                      >
+                        {comment.user_profiles?.nickname ||
+                          comment.user_profiles?.username ||
+                          "Style Explorer"}
                       </Text>
                       <Text style={{ fontSize: 14, color: "#4B5563" }}>
                         {comment.content}
@@ -192,7 +275,17 @@ function RepliesBottomSheet({
             </ScrollView>
 
             {!isMyPost && (
-              <View style={{ paddingHorizontal: 20, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F3F4F6", flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <View
+                style={{
+                  paddingHorizontal: 20,
+                  paddingTop: 12,
+                  borderTopWidth: 1,
+                  borderTopColor: "#F3F4F6",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
                 <TextInput
                   placeholder="Type your reply..."
                   placeholderTextColor="#9CA3AF"
@@ -230,7 +323,15 @@ function RepliesBottomSheet({
                     alignItems: "center",
                   }}
                 >
-                  <Text style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 14 }}>Send</Text>
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontWeight: "600",
+                      fontSize: 14,
+                    }}
+                  >
+                    Send
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -279,18 +380,21 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
         },
         () => {
           setAspectRatio(4 / 3);
-        }
+        },
       );
     }
   }, [post.image_url]);
 
   const reactions = post.post_reactions || [];
-  const myReactions = reactions.filter((r: any) => r.user_id === user?.id).map((r: any) => r.reaction_type);
+  const myReactions = reactions
+    .filter((r: any) => r.user_id === user?.id)
+    .map((r: any) => r.reaction_type);
 
   const reactionCounts: Record<string, number> = {};
   reactions.forEach((r: any) => {
     if (r.reaction_type) {
-      reactionCounts[r.reaction_type] = (reactionCounts[r.reaction_type] || 0) + 1;
+      reactionCounts[r.reaction_type] =
+        (reactionCounts[r.reaction_type] || 0) + 1;
     }
   });
   const uniqueReactions = Object.keys(reactionCounts);
@@ -300,7 +404,11 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   const replyCount = commentsLoaded ? comments.length : (countAggregate ?? 0);
   // Get one avatar per comment (up to 4), keeping duplicates so count matches.
   const replierAvatars = comments
-    .map((c: any) => c.user_profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.user_profiles?.username || "U")}&background=random`)
+    .map(
+      (c: any) =>
+        c.user_profiles?.avatar_url ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(c.user_profiles?.username || "U")}&background=random`,
+    )
     .slice(0, 4) as string[];
 
   const openReplies = React.useCallback(async () => {
@@ -316,7 +424,10 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   const handleReplySent = React.useCallback(
     (content: string) => {
       const newComment = {
-        id: "opt_" + Date.now().toString() + Math.random().toString(36).slice(2, 7),
+        id:
+          "opt_" +
+          Date.now().toString() +
+          Math.random().toString(36).slice(2, 7),
         content,
         created_at: new Date().toISOString(),
         user_profiles: {
@@ -338,14 +449,20 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
     post.user_id === user?.id || post.user_profiles?.user_id === user?.id;
 
   const displayUsername = isCurrentUser
-    ? (username ? `@${username}` : (user?.username ? `@${user.username}` : "User"))
-    : (post.user_profiles?.username ? `@${post.user_profiles.username}` : "User");
+    ? username
+      ? `@${username}`
+      : user?.username
+        ? `@${user.username}`
+        : "User"
+    : post.user_profiles?.username
+      ? `@${post.user_profiles.username}`
+      : "User";
 
   const avatarUrl =
     isCurrentUser && user?.imageUrl
       ? user.imageUrl
       : post.user_profiles?.avatar_url ||
-      "https://api.dicebear.com/7.x/avataaars/png?seed=" + post.user_id;
+        "https://api.dicebear.com/7.x/avataaars/png?seed=" + post.user_id;
 
   return (
     <View
@@ -376,7 +493,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
             alignItems: "center",
             justifyContent: "space-between",
             marginBottom: 1,
-            marginTop: -4
+            marginTop: -4,
           }}
         >
           <View
@@ -448,7 +565,15 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                     }}
                   >
                     <IconTrash size={18} color="#EF4444" />
-                    <Text style={{ fontSize: 15, fontWeight: "500", color: "#EF4444" }}>Delete</Text>
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: "500",
+                        color: "#EF4444",
+                      }}
+                    >
+                      Delete
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -620,8 +745,9 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                 style={{
                   padding: 7,
                   borderRadius: 8,
-                  backgroundColor:
-                    myReactions.includes(emoji) ? "#EFF6FF" : "transparent",
+                  backgroundColor: myReactions.includes(emoji)
+                    ? "#EFF6FF"
+                    : "transparent",
                 }}
               >
                 <Text style={{ fontSize: 20 }}>{emoji}</Text>
@@ -704,8 +830,20 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
 
 function FeedTab() {
   const router = useRouter();
-  const { posts, loading, uploading, createPost, toggleReaction, addComment, fetchComments, refetch, deletePost } =
-    useCommunityPosts();
+  const {
+    posts,
+    loading,
+    uploading,
+    createPost,
+    toggleReaction,
+    addComment,
+    fetchComments,
+    refetch,
+    deletePost,
+    loadMore,
+    loadingMore,
+    hasMore,
+  } = useCommunityPosts();
   const { unreadCount } = useNotifications();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -735,13 +873,11 @@ function FeedTab() {
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   useEffect(() => {
-    const showSub = Keyboard.addListener(
-      "keyboardDidShow",
-      (e) => setKeyboardHeight(e.endCoordinates.height)
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) =>
+      setKeyboardHeight(e.endCoordinates.height),
     );
-    const hideSub = Keyboard.addListener(
-      "keyboardDidHide",
-      () => setKeyboardHeight(0)
+    const hideSub = Keyboard.addListener("keyboardDidHide", () =>
+      setKeyboardHeight(0),
     );
     return () => {
       showSub.remove();
@@ -817,6 +953,7 @@ function FeedTab() {
           marginBottom: 12,
           paddingHorizontal: 20,
           paddingTop: 4,
+          marginTop: 7,
         }}
       >
         <Text
@@ -950,6 +1087,26 @@ function FeedTab() {
                 fetchComments={fetchComments}
               />
             )}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.4}
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={{ paddingVertical: 24, alignItems: "center" }}>
+                  <ActivityIndicator color="#4C36F5" />
+                </View>
+              ) : hasMore ? null : (
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: "#9CA3AF",
+                    fontSize: 12,
+                    paddingVertical: 16,
+                  }}
+                >
+                  You&apos;re all caught up
+                </Text>
+              )
+            }
           />
         )}
       </View>

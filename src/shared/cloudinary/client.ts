@@ -48,24 +48,34 @@ export const uploadToCloudinary = async (
       data.append("folder", folder);
     }
 
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      {
-        method: "POST",
-        body: data,
-        headers: {
-          Accept: "application/json",
+    // FormData multipart upload — not JSON, so keep the raw fetch but bound the
+    // request so a hung upload can't spin the scanner forever.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: data,
+          headers: {
+            Accept: "application/json",
+          },
+          signal: controller.signal,
         },
-      },
-    );
+      );
 
-    const json = await response.json();
+      const json = await response.json();
 
-    if (json.secure_url) {
-      return json.secure_url;
-    } else {
-      console.error("Cloudinary upload failed:", json);
-      return null;
+      if (json.secure_url) {
+        return json.secure_url;
+      } else {
+        console.error("Cloudinary upload failed:", json);
+        return null;
+      }
+    } finally {
+      clearTimeout(timeout);
     }
   } catch (error) {
     console.error("Error uploading to Cloudinary:", error);

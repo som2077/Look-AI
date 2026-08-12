@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
+import {
+  asEnum,
+  isObject,
+  isRequiredString,
+  readJsonBody,
+} from "../_shared/validate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,15 +13,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const photoTypeEnum = asEnum(["model", "flat-lay"] as const);
+const categoryEnum = asEnum(["tops", "bottoms", "footwear"] as const);
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Auth check
+  // Auth: require a real user JWT (Clerk "supabase" template, carries `sub`).
+  // Supabase's verify_jwt accepts anon keys (they're project-signed JWTs), so
+  // gate on the presence of a user id to block anon-key / service-role abuse.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromJwt(authHeader);
+  if (!userId) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -23,7 +35,7 @@ serve(async (req) => {
   }
 
   // Rate limit: 5 calls/min/user (each call = one paid fal.ai generation)
-  const rl = await checkRateLimit("virtual-try-on", getUserIdFromJwt(authHeader), 5, 60);
+  const rl = await checkRateLimit("virtual-try-on", userId, 5, 60);
   if (!rl.allowed) {
     return new Response(rateLimitBody("virtual-try-on", 60), {
       status: rl.status,
@@ -32,24 +44,24 @@ serve(async (req) => {
   }
 
   try {
-    const {
-      person_image_url,
-      garment_image_url,
-      garment_photo_type,
-      garment_category,
-    } = await req.json();
-
-    if (!person_image_url || !garment_image_url) {
-      return new Response(
-        JSON.stringify({
-          error: "person_image_url and garment_image_url are required",
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    }
+    const body = await readJsonBody(req);
+    const obj = isObject(body) ? body : {};
+    const person_image_url = isRequiredString(
+      obj.person_image_url,
+      "person_image_url",
+    );
+    const garment_image_url = isRequiredString(
+      obj.garment_image_url,
+      "garment_image_url",
+    );
+    const garment_photo_type = photoTypeEnum(
+      obj.garment_photo_type ?? "model",
+      "garment_photo_type",
+    );
+    const garment_category = categoryEnum(
+      obj.garment_category ?? "tops",
+      "garment_category",
+    );
 
     // Map footwear to auto for fal.ai compatibility
     const mappedCategory =
@@ -119,15 +131,15 @@ serve(async (req) => {
     return new Response(JSON.stringify({ resultUrl }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error processing request:", error);
     return new Response(
       JSON.stringify({
-        error: "Internal Server Error",
+        error: error?.status ? error.message : "Internal Server Error",
         details: error.message,
       }),
       {
-        status: 500,
+        status: error?.status ?? 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );

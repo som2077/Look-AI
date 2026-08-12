@@ -1,7 +1,27 @@
 // @ts-ignore
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
+import {
+  ValidationError,
+  asEnum,
+  isObject,
+  isString,
+  readJsonBody,
+  validationErrorResponse,
+} from "../_shared/validate.ts";
 declare const Deno: any;
+
+// Whitelist the only planner steps the client is allowed to request. An
+// unknown step previously fell through to a 200 `{success:false}`.
+const STEPS = [
+  "weather_text",
+  "ask_occasion",
+  "parse_occasion",
+  "suggest_outfit",
+  "no_wardrobe",
+  "plan_saved",
+] as const;
+const stepEnum = asEnum(STEPS);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,9 +82,12 @@ serve(async (req: Request) => {
   if (req.method === "OPTIONS")
     return new Response("ok", { headers: corsHeaders });
 
-  // Auth check
+  // Auth: require a real user JWT (Clerk "supabase" template, carries `sub`).
+  // Supabase's verify_jwt accepts anon keys (they're project-signed JWTs), so
+  // gate on the presence of a user id to block anon-key / service-role abuse.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromJwt(authHeader);
+  if (!userId) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -72,7 +95,7 @@ serve(async (req: Request) => {
   }
 
   // Rate limit: 30 calls/min/user (planner chat can fire several steps in a row)
-  const rl = await checkRateLimit("planner-agent", getUserIdFromJwt(authHeader), 30, 60);
+  const rl = await checkRateLimit("planner-agent", userId, 30, 60);
   if (!rl.allowed) {
     return new Response(rateLimitBody("planner-agent", 60), {
       status: rl.status,
@@ -81,7 +104,11 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { step, context = {}, user_message = "" } = await req.json();
+    const body = await readJsonBody(req);
+    const obj = isObject(body) ? body : {};
+    const step = stepEnum(obj.step, "step");
+    const context = isObject(obj.context) ? obj.context : {};
+    const user_message = isString(obj.user_message) ? obj.user_message : "";
     const geminiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY");
     if (!geminiKey) throw new Error("Missing GOOGLE_GEMINI_API_KEY");
 
@@ -145,12 +172,20 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ success: true, ...result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[planner-agent]", error);
+    // Client-caused failures (bad JSON, unknown step, bad field) → 400.
+    if (error instanceof ValidationError) {
+      return validationErrorResponse(error, corsHeaders);
+    }
+    // Gemini / env failures are server-side → 500, no longer a fake 200.
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "Internal Server Error",
+      }),
       {
-        status: 200,
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );

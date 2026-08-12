@@ -1,3 +1,5 @@
+import { request } from "@/shared/api/http";
+import { showToast } from "@/shared/ui/toast-store";
 import { useEffect, useState } from "react";
 
 export interface SheinProduct {
@@ -27,25 +29,17 @@ export function useSheinProducts() {
         const url =
           "https://shein-data-api.p.rapidapi.com/product/recommended?goodsId=10559554&limit=10&countryCode=US";
 
-        const response = await fetch(url, {
+        // Fail fast (no retries): the dummy fallback is the product here, and a
+        // 403/429 shouldn't stall the shopping tab while we back off.
+        const data = await request<{ data?: Array<Record<string, unknown>> }>({
+          url,
           method: "GET",
           headers: {
-            "Content-Type": "application/json",
             "x-rapidapi-host": apiHost,
             "x-rapidapi-key": apiKey,
           },
+          retries: 0,
         });
-
-        // 403 = not subscribed, 429 = rate limit — use fallback silently
-        if (!response.ok) {
-          console.warn(
-            `Shein API unavailable (${response.status}) — using fallback products.`
-          );
-          setProducts(getDummyData());
-          return;
-        }
-
-        const data = await response.json();
 
         if (data && data.data && Array.isArray(data.data)) {
           const formatted: SheinProduct[] = data.data
@@ -70,9 +64,12 @@ export function useSheinProducts() {
           setProducts(getDummyData());
         }
       } catch {
-        // Network error or any other failure — use fallback
+        // Network error, 403 (not subscribed) or 429 (rate limited) — fall back
+        // to sample products, but surface a non-blocking toast so the failure
+        // isn't completely silent.
         console.warn("Shein API unreachable — using fallback products.");
         setProducts(getDummyData());
+        showToast("info", "Showing sample products — live feed is unavailable");
       } finally {
         setLoading(false);
       }

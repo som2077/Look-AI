@@ -1,5 +1,8 @@
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
-import { LOTTIE_CALENDAR_URL, LOTTIE_FLAME_URL } from "@/shared/constants/assets";
+import {
+  LOTTIE_CALENDAR_URL,
+  LOTTIE_FLAME_URL,
+} from "@/shared/constants/assets";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
@@ -16,6 +19,7 @@ export const HomeHeader = React.memo(function HomeHeader() {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        marginTop: 7,
       }}
     >
       <ExpoImage

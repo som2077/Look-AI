@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { fetchSupabaseRows } from "@/shared/supabase/use-supabase-query";
 import { useUser } from "@clerk/clerk-expo";
 
 export interface RingStats {
@@ -79,16 +80,22 @@ export function useRingStats(
           startTime.setDate(now.getDate() - 90);
         }
 
-        // 3. Get wear logs for the period
-        const { data: periodLogs } = await supabase
-          .from("wear_logs")
-          .select("item_id")
-          .eq("user_id", user.id)
-          .gte("worn_at", startTime.toISOString())
-          .lte("worn_at", now.toISOString())
-          .limit(500); // bound the read — enough for usage/avg stats at scale
+        // 3. Get wear logs for the period (shared 30s cache, keyed by period).
+        const periodLogs = await fetchSupabaseRows<{ item_id: string }>({
+          supabase,
+          table: "wear_logs",
+          select: "item_id",
+          userId: user.id,
+          cacheKeySuffix: period,
+          apply: (q) =>
+            q
+              .eq("user_id", user.id)
+              .gte("worn_at", startTime.toISOString())
+              .lte("worn_at", now.toISOString())
+              .limit(500), // bound the read — enough for usage/avg stats at scale
+        });
 
-        const logs = periodLogs || [];
+        const logs = periodLogs;
 
         // 4. Calculate Usage %
         const uniqueItemsWorn = new Set(logs.map((log) => log.item_id)).size;

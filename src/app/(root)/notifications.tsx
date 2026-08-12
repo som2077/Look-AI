@@ -2,10 +2,11 @@ import { IconArrowLeft } from "@tabler/icons-react-native";
 import { ResizeMode, Video } from "expo-av";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
-import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { useNotifications, NotificationItem } from "@/features/social/api/useNotifications";
+import { LoadingScreen } from "@/shared/ui/LoadingScreen";
 import { useIsFocused } from "@react-navigation/native";
 
 function timeAgoHelper(dateString: string) {
@@ -115,9 +116,7 @@ export default function NotificationsScreen() {
 
       {/* Content */}
       {loading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#1D1A27" />
-        </View>
+        <LoadingScreen label="Loading notifications..." />
       ) : notifications.length === 0 ? (
         <View
           style={{

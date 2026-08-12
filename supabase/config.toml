@@ -1,11 +1,41 @@
 
+# ── Edge Functions ─────────────────────────────────────────────────────────────
+# All functions require a valid Supabase JWT (Clerk "supabase" template token).
+# verify_jwt = true means a raw ANON-key call is rejected with 401 — the client
+# must go through supabase.functions.invoke() so the Clerk token is sent.
+
+[functions.analyze-cloth-item]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/analyze-cloth-item/index.ts"
+
+[functions.cloth-label-scan]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/cloth-label-scan/index.ts"
+
+[functions.cloudinary-signature]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/cloudinary-signature/index.ts"
+
+[functions.gemini-proxy]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/gemini-proxy/index.ts"
+
+[functions.planner-agent]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/planner-agent/index.ts"
+
+[functions.remove-bg]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/remove-bg/index.ts"
+
 [functions.virtual-try-on]
 enabled = true
 verify_jwt = true
 import_map = "./functions/virtual-try-on/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/virtual-try-on/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/virtual-try-on/*.html" ]

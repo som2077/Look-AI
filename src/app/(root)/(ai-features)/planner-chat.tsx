@@ -5,6 +5,7 @@ import WeatherCard, { WeatherData } from "@/features/ai-styling/ui/WeatherCard";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -20,10 +21,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL as string;
-const ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type PlannerStep =
@@ -83,18 +80,27 @@ function getMockWeather(date: Date): WeatherData {
 }
 
 // ─── API call to edge function ────────────────────────────────────────────────
-async function callPlanner(step: string, context: any, user_message = "") {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/planner-agent`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${ANON_KEY}`,
-      apikey: ANON_KEY,
-    },
-    body: JSON.stringify({ step, context, user_message }),
+// Goes through supabase.functions.invoke() so the Clerk "supabase" JWT is sent.
+// planner-agent has verify_jwt = true — a raw ANON-key fetch would now 401.
+async function callPlanner(
+  supabase: SupabaseClient,
+  step: string,
+  context: any,
+  user_message = "",
+) {
+  const { data, error } = await supabase.functions.invoke("planner-agent", {
+    body: { step, context, user_message },
   });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error ?? "Unknown error");
+  if (error) {
+    const body = (error as any)?.context;
+    const msg =
+      body?.error ??
+      (typeof body === "string" ? body : null) ??
+      error.message ??
+      "Failed to reach the styling assistant";
+    throw new Error(msg);
+  }
+  if (!data?.success) throw new Error((data as any)?.error ?? "Unknown error");
   return data;
 }
 
@@ -161,7 +167,7 @@ export default function PlannerChatScreen() {
     addMsg({ role: "model", card: "weather", weather });
 
     try {
-      const { text } = await callPlanner("weather_text", {
+      const { text } = await callPlanner(supabase, "weather_text", {
         date: date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }),
         time,
         weather,
@@ -182,7 +188,7 @@ export default function PlannerChatScreen() {
     setIsLoading(true);
     try {
       const ctx = contextRef.current;
-      const { text } = await callPlanner("ask_occasion", {
+      const { text } = await callPlanner(supabase, "ask_occasion", {
         date: ctx.date?.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
         time: ctx.time,
         weather: ctx.weather,
@@ -223,7 +229,7 @@ export default function PlannerChatScreen() {
       pushCtx({ suggestedItems: suggested, occasion });
 
       const ctx = contextRef.current;
-      const { text } = await callPlanner("suggest_outfit", {
+      const { text } = await callPlanner(supabase, "suggest_outfit", {
         date: ctx.date?.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }),
         time: ctx.time,
         occasion,
@@ -250,7 +256,7 @@ export default function PlannerChatScreen() {
   const runNoMatchStep = async (occasion: string, _clothes: any[]) => {
     const ctx = contextRef.current;
     try {
-      const { text } = await callPlanner("no_wardrobe", { occasion, weather: ctx.weather });
+      const { text } = await callPlanner(supabase, "no_wardrobe", { occasion, weather: ctx.weather });
       addMsg({ role: "model", text, card: "no_match" });
     } catch {
       addMsg({
@@ -283,7 +289,7 @@ export default function PlannerChatScreen() {
       setStep("saved");
       const dateLabel = ctx.date?.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
       try {
-        const { text } = await callPlanner("plan_saved", {
+        const { text } = await callPlanner(supabase, "plan_saved", {
           date: dateLabel,
           time: ctx.time,
           occasion: ctx.occasion,
@@ -313,7 +319,7 @@ export default function PlannerChatScreen() {
       // Parse occasion from free text
       setIsLoading(true);
       try {
-        const { occasion } = await callPlanner("parse_occasion", {}, txt);
+        const { occasion } = await callPlanner(supabase, "parse_occasion", {}, txt);
         const resolved = occasion ?? "Casual";
         pushCtx({ occasion: resolved });
         await runWardrobeStep(resolved);

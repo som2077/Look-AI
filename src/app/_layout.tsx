@@ -11,6 +11,7 @@ import {
   ErrorStateView,
   useErrorStore,
 } from "@/shared/ui/ErrorStateView";
+import { ToastProvider } from "@/shared/ui/Toast";
 import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -397,6 +398,7 @@ export default function RootLayout() {
             <AppErrorBoundary>
               <RootNavigator />
               <ErrorStateView onRetry={checkConnectivity} />
+              <ToastProvider />
             </AppErrorBoundary>
           </OnboardingProvider>
         </SafeAreaProvider>

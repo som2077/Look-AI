@@ -1,6 +1,16 @@
 // @ts-ignore: Deno import is not recognized by standard TS
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import CryptoJS from "npm:crypto-js";
+import {
+  checkRateLimit,
+  getUserIdFromJwt,
+  rateLimitBody,
+} from "../_shared/rate-limit.ts";
+import {
+  isRequiredString,
+  readJsonBody,
+  validationErrorResponse,
+} from "../_shared/validate.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -16,21 +26,34 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Auth check
+  // Auth: require a real user JWT (Clerk "supabase" template, carries `sub`).
+  // Supabase's verify_jwt accepts anon keys (they're project-signed JWTs), so
+  // gate on the presence of a user id to block anon-key / service-role abuse.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromJwt(authHeader);
+  if (!userId) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  try {
-    const { paramsToSign } = await req.json();
+  // Rate limit: signing oracle — cap at 20/min/user so an abused anon key
+  // can't burn unbounded Cloudinary API secret churn.
+  const rl = await checkRateLimit("cloudinary-signature", userId, 20, 60);
+  if (!rl.allowed) {
+    return new Response(rateLimitBody("cloudinary-signature", 60), {
+      status: rl.status,
+      headers: rl.headers,
+    });
+  }
 
-    if (!paramsToSign) {
-      throw new Error("Missing paramsToSign parameter");
-    }
+  try {
+    const body = await readJsonBody(req);
+    const paramsToSign = isRequiredString(
+      (body as Record<string, unknown>)?.paramsToSign,
+      "paramsToSign",
+    );
 
     const apiSecret = Deno.env.get("CLOUDINARY_API_SECRET");
     if (!apiSecret) {
@@ -43,10 +66,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+  } catch (error) {
+    return validationErrorResponse(error, corsHeaders);
   }
 });

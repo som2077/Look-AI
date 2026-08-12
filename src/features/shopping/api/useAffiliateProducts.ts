@@ -1,3 +1,5 @@
+import { request } from "@/shared/api/http";
+import { showToast } from "@/shared/ui/toast-store";
 import { useEffect, useState } from "react";
 
 export interface AffiliateProduct {
@@ -25,18 +27,15 @@ export function useAffiliateProducts() {
 
         if (!apiKey) throw new Error("Missing API Key");
 
-        const response = await fetch(url, {
+        const data = await request<{ products?: Array<Record<string, unknown>> }>({
+          url,
           method: "GET",
           headers: {
             "X-RapidAPI-Key": apiKey,
             "X-RapidAPI-Host": apiHost,
           },
+          retries: 0, // fail fast — the dummy fallback below is the product here
         });
-
-        if (!response.ok) {
-          throw new Error("Failed to load affiliate products");
-        }
-        const data = await response.json();
 
         if (data && data.products) {
           const formatted = data.products.map((p: any) => {
@@ -61,11 +60,13 @@ export function useAffiliateProducts() {
             "Invalid ASOS API response or Rate Limit exceeded. Using fallback.",
           );
           setProducts(getDummyData());
+          showToast("info", "Showing sample products — live feed is unavailable");
         }
       } catch (err: any) {
         console.error("API fetch error:", err);
         setError(err.message);
         setProducts(getDummyData());
+        showToast("info", "Showing sample products — live feed is unavailable");
       } finally {
         setLoading(false);
       }

@@ -6,6 +6,10 @@ import {
   registerStoreReset,
 } from "@/shared/storage/namespacedStorage";
 import { supabase, getSupabaseGlobalUserId, setSupabaseGlobalUserId } from "@/shared/supabase/client";
+import {
+  fetchSupabaseRows,
+  invalidateSupabaseCache,
+} from "@/shared/supabase/use-supabase-query";
 import { subscribeToTable } from "@/shared/realtime/manager";
 
 let globalUserId: string | null = null;
@@ -168,7 +172,10 @@ type UserWardrobeState = {
   items: UserClothingItem[];
   outfitLogs: UserOutfitLog[];
   outfits: UserOutfit[];
+  /** True while an initial DB sync is in flight — screens show a skeleton. */
+  isSyncing: boolean;
   setItems: (items: UserClothingItem[]) => void;
+  setIsSyncing: (syncing: boolean) => void;
   addItem: (item: Omit<UserClothingItem, "id" | "createdAt"> & { id?: string }) => string;
   removeItem: (id: string) => Promise<void>;
   updateItem: (id: string, updates: Partial<UserClothingItem>) => Promise<void>;
@@ -215,8 +222,10 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
       items: [],
       outfitLogs: [],
       outfits: [],
+      isSyncing: false,
 
       setItems: (items) => set({ items }),
+      setIsSyncing: (syncing) => set({ isSyncing: syncing }),
 
       addItem: (item) => {
         const id = item.id && isValidUUID(item.id) ? item.id : generateUUID();
@@ -254,6 +263,7 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
                 console.error("[WardrobeStore] Supabase insert error:", error);
               } else {
                 console.log("[WardrobeStore] Successfully saved wardrobe item to Supabase:", id);
+                invalidateSupabaseCache("wardrobe_items", uid);
               }
             } else {
               console.warn("[WardrobeStore] No authenticated user ID available to persist wardrobe item.");
@@ -278,6 +288,7 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
               console.error("[WardrobeStore] Supabase delete error:", error);
             } else {
               console.log("[WardrobeStore] Successfully deleted item from Supabase:", id);
+              invalidateSupabaseCache("wardrobe_items", getSupabaseGlobalUserId() ?? undefined);
             }
           } else {
             const uid = itemToDelete?.userId || globalUserId || getSupabaseGlobalUserId();
@@ -287,6 +298,7 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
                 .delete()
                 .eq("user_id", uid)
                 .eq("name", itemToDelete.customName);
+              invalidateSupabaseCache("wardrobe_items", uid);
             }
           }
         } catch (err) {
@@ -335,6 +347,7 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
               console.error("[WardrobeStore] Supabase update item error:", error);
             } else {
               console.log("[WardrobeStore] Real-time Supabase update successful for item:", finalId);
+              invalidateSupabaseCache("wardrobe_items", uid);
             }
           } else {
             console.warn("[WardrobeStore] No user ID available for real-time Supabase update.");
@@ -349,19 +362,23 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
           const uid = explicitUserId || globalUserId || getSupabaseGlobalUserId();
           if (!uid) return;
 
-          const { data, error } = await supabase
-            .from("wardrobe_items")
-            .select("*")
-            .eq("user_id", uid)
-            .order("created_at", { ascending: false })
-            .range(0, 499); // bound the read — a 10k-user wardrobe should paginate
+          set({ isSyncing: true });
 
-          if (error) {
-            console.warn("[WardrobeStore] Error fetching from Supabase:", error);
-            return;
-          }
+          // Routes the bounded read through the shared 30s cache + in-flight
+          // dedup so re-syncs (tab focus, app return) don't re-hit the network.
+          const data = await fetchSupabaseRows<Record<string, unknown>>({
+            supabase,
+            table: "wardrobe_items",
+            select: "*",
+            userId: uid,
+            apply: (q) =>
+              q
+                .eq("user_id", uid)
+                .order("created_at", { ascending: false })
+                .range(0, 499), // bound the read — a 10k-user wardrobe should paginate
+          });
 
-          if (data && data.length > 0) {
+          if (data.length > 0) {
             const dbItems = data.map(mapDbRowToUserItem);
             const localItems = get().items;
             const dbIds = new Set(dbItems.map((i) => i.id));
@@ -370,6 +387,8 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
           }
         } catch (err) {
           console.warn("[WardrobeStore] Error in syncWithDatabase:", err);
+        } finally {
+          set({ isSyncing: false });
         }
       },
 
@@ -400,6 +419,12 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
     {
       name: "user-wardrobe-v2",
       storage: createJSONStorage(() => namespacedAsyncStorage),
+      // Only persist data — never transient flags like isSyncing.
+      partialize: (state) => ({
+        items: state.items,
+        outfitLogs: state.outfitLogs,
+        outfits: state.outfits,
+      }),
     },
   ),
 );

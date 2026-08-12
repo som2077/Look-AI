@@ -1,4 +1,8 @@
 import { supabase } from "@/shared/supabase/client";
+import {
+  fetchSupabaseRows,
+  invalidateSupabaseCache,
+} from "@/shared/supabase/use-supabase-query";
 import { useAuth } from "@clerk/clerk-expo";
 import { useCallback, useEffect, useState } from "react";
 
@@ -28,17 +32,17 @@ export function useUserProfile() {
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        throw error;
-      }
-
-      setData(data as UserProfile | null);
+      // Explicit columns (no select("*")) + shared 30s cache. A missing row is
+      // an empty list here, which avoids the PGRST116 special-case entirely.
+      const rows = await fetchSupabaseRows<UserProfile>({
+        supabase,
+        table: "user_profiles",
+        select:
+          "user_id, nickname, username, age, height, gender, body_type, style_preferences, avatar_url",
+        userId,
+        apply: (q) => q.eq("user_id", userId).limit(1),
+      });
+      setData(rows[0] ?? null);
     } catch (err: any) {
       setError(err);
     } finally {
@@ -72,6 +76,7 @@ export function useUpdateProfile() {
         .single();
 
       if (error) throw error;
+      invalidateSupabaseCache("user_profiles", userId);
       return data;
     } catch (err: any) {
       setError(err);

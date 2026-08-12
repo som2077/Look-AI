@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { create } from "zustand";
+import { debounce } from "@/shared/utils/timing";
 import { subscribeToTable } from "@/shared/realtime/manager";
 import {
   fetchSupabaseRows,
@@ -85,27 +86,33 @@ export function useNotifications() {
     }
   };
 
+  // Keep the debounced refetch reading the latest fetchNotifications without
+  // rebinding the timer on every render.
+  const fetchRef = useRef(fetchNotifications);
+  fetchRef.current = fetchNotifications;
+  const debouncedRefetch = useRef(debounce(() => void fetchRef.current(), 1000));
+
   useEffect(() => {
     if (isInitializing || !supabase || !userId) return;
 
     void fetchNotifications();
 
-    // Singleton channel: explore + notifications screens share ONE subscription
-    let timeoutId: any;
+    // Singleton channel: explore + notifications screens share ONE subscription.
+    // Realtime bursts are coalesced with the shared 1s debounce (the old inline
+    // setTimeout did the same job; this uses the common utility + cancel).
+    // Capture the ref value so handler + cleanup share the same debounced fn.
+    const debouncedFetch = debouncedRefetch.current;
     const unsubscribe = subscribeToTable(supabase, {
       table: "notifications",
       userId,
       filter: `user_id=eq.${userId}`,
       handler: () => {
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          void fetchNotifications();
-        }, 1000);
+        debouncedFetch();
       },
     });
 
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      debouncedFetch.cancel();
       unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

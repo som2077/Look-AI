@@ -1,4 +1,6 @@
+import { getErrorMessage } from "@/shared/api/errors";
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
+import { showToast } from "@/shared/ui/toast-store";
 import { uploadToCloudinary } from "@/shared/cloudinary/client";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import {
@@ -6,7 +8,7 @@ import {
   invalidateSupabaseCache,
 } from "@/shared/supabase/use-supabase-query";
 import { useAuth } from "@clerk/clerk-expo";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 
 export interface CommunityPost {
@@ -28,14 +30,26 @@ interface CommunityPostsStore {
   posts: CommunityPost[];
   setPosts: (posts: CommunityPost[]) => void;
   addPost: (post: CommunityPost) => void;
+  appendPosts: (posts: CommunityPost[]) => void;
 }
 
 const DUMMY_POSTS: CommunityPost[] = [];
+
+// Fixed page size for feed pagination. The range offset is NOT part of the
+// query cache key, so each page must carry its own cacheKeySuffix to avoid
+// pages overwriting each other in the module cache.
+const PAGE_SIZE = 50;
 
 const usePostsStore = create<CommunityPostsStore>((set) => ({
   posts: DUMMY_POSTS,
   setPosts: (posts) => set({ posts }),
   addPost: (post) => set((state) => ({ posts: [...state.posts, post] })),
+  appendPosts: (posts) =>
+    set((state) => {
+      const existingIds = new Set(state.posts.map((p) => p.id));
+      const fresh = posts.filter((p) => !existingIds.has(p.id));
+      return { posts: [...state.posts, ...fresh] };
+    }),
 }));
 
 const removeOptimisticPosts = () => {
@@ -45,15 +59,18 @@ const removeOptimisticPosts = () => {
 };
 
 export function useCommunityPosts() {
-  const { posts, setPosts, addPost } = usePostsStore();
+  const { posts, setPosts, addPost, appendPosts } = usePostsStore();
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageRef = useRef(0);
   const [uploading, setUploading] = useState(false);
   const { userId } = useAuth(); // Assuming the Supabase user_id matches Clerk
   const { supabase, isInitializing } = useSupabase();
 
   const fetchPosts = useCallback(
-    async (force = false) => {
+    async (force = false, nextPage = 0) => {
       if (isInitializing || !supabase) return;
       try {
         const backendPosts = await fetchSupabaseRows<any>({
@@ -74,20 +91,30 @@ export function useCommunityPosts() {
           force,
           // Short TTL: feed changes often — the cache mainly coalesces the 3
           // screens that mount this hook (explore / post / user) into one call.
+          // Page-scoped suffix so page N doesn't clobber page 0 in the cache.
           ttlMs: 15_000,
+          cacheKeySuffix: `feed:page:${nextPage}`,
           apply: (q) =>
-            q.order("created_at", { ascending: false }).range(0, 49),
+            q
+              .order("created_at", { ascending: false })
+              .range(nextPage * PAGE_SIZE, nextPage * PAGE_SIZE + PAGE_SIZE - 1),
         });
 
         const localMockPosts = usePostsStore
           .getState()
           .posts.filter((p) => p.id.includes("0."));
 
-        if (localMockPosts.length > 0 && backendPosts.length > 0) {
-          removeOptimisticPosts();
+        if (nextPage === 0) {
+          if (localMockPosts.length > 0 && backendPosts.length > 0) {
+            removeOptimisticPosts();
+          }
+          setPosts(backendPosts.length > 0 ? backendPosts : DUMMY_POSTS);
+        } else {
+          appendPosts(backendPosts);
         }
 
-        setPosts(backendPosts.length > 0 ? backendPosts : DUMMY_POSTS);
+        // A short page (< PAGE_SIZE) means we've hit the end of the feed.
+        setHasMore(backendPosts.length === PAGE_SIZE);
 
         if (userId) {
           const likes = await fetchSupabaseRows<{ post_id: string }>({
@@ -104,10 +131,24 @@ export function useCommunityPosts() {
         console.error("Error fetching community posts:", err);
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
     },
-    [supabase, isInitializing, userId, setPosts],
+    [supabase, isInitializing, userId, setPosts, appendPosts],
   );
+
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore || isInitializing || !supabase) return;
+    const nextPage = pageRef.current + 1;
+    pageRef.current = nextPage;
+    setLoadingMore(true);
+    return fetchPosts(false, nextPage);
+  }, [loadingMore, hasMore, isInitializing, supabase, fetchPosts]);
+
+  const refetch = useCallback(() => {
+    pageRef.current = 0;
+    return fetchPosts(true, 0);
+  }, [fetchPosts]);
 
   useEffect(() => {
     if (isInitializing || !supabase) return;
@@ -162,6 +203,7 @@ export function useCommunityPosts() {
         }
         return next;
       });
+      showToast("error", getErrorMessage(err));
     }
   };
 
@@ -225,6 +267,7 @@ export function useCommunityPosts() {
         console.error("Error toggling reaction:", err);
         // Rollback on error
         usePostsStore.setState({ posts: previousPosts });
+        showToast("error", getErrorMessage(err));
       }
     },
     [supabase, userId],
@@ -244,6 +287,7 @@ export function useCommunityPosts() {
         return true;
       } catch (err) {
         console.error("Error adding comment:", err);
+        showToast("error", getErrorMessage(err));
         return false;
       }
     },
@@ -313,13 +357,15 @@ export function useCommunityPosts() {
       if (error) throw error;
 
       removeOptimisticPosts();
-      await fetchPosts(true); // Force-refresh: don't rely on Realtime (feed is pull-to-refresh now)
+      pageRef.current = 0;
+      await fetchPosts(true, 0); // Force-refresh page 0: don't rely on Realtime (feed is pull-to-refresh now)
       return true;
     } catch (err) {
       console.error("Error creating post:", err);
       usePostsStore.setState((state) => ({
         posts: state.posts.filter((post) => post.id !== newPost.id),
       }));
+      showToast("error", getErrorMessage(err));
       return false;
     } finally {
       setUploading(false);
@@ -347,6 +393,7 @@ export function useCommunityPosts() {
       } catch (err) {
         console.error("Error deleting post:", err);
         usePostsStore.setState({ posts: previousPosts });
+        showToast("error", getErrorMessage(err));
         return false;
       }
     },
@@ -357,6 +404,8 @@ export function useCommunityPosts() {
     posts,
     likedPostIds,
     loading,
+    loadingMore,
+    hasMore,
     uploading,
     createPost,
     deletePost,
@@ -364,6 +413,7 @@ export function useCommunityPosts() {
     toggleReaction,
     addComment,
     fetchComments,
-    refetch: () => fetchPosts(true),
+    refetch,
+    loadMore,
   };
 }

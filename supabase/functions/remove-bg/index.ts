@@ -1,6 +1,10 @@
 // @ts-ignore: Deno import is not recognized by standard TS
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
+import {
+  isRequiredString,
+  readJsonBody,
+} from "../_shared/validate.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -16,9 +20,12 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Auth check
+  // Auth: require a real user JWT (Clerk "supabase" template, carries `sub`).
+  // Supabase's verify_jwt accepts anon keys (they're project-signed JWTs), so
+  // gate on the presence of a user id to block anon-key / service-role abuse.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromJwt(authHeader);
+  if (!userId) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -26,7 +33,7 @@ serve(async (req) => {
   }
 
   // Rate limit: 10 calls/min/user (each call = one remove.bg credit)
-  const rl = await checkRateLimit("remove-bg", getUserIdFromJwt(authHeader), 10, 60);
+  const rl = await checkRateLimit("remove-bg", userId, 10, 60);
   if (!rl.allowed) {
     return new Response(rateLimitBody("remove-bg", 60), {
       status: rl.status,
@@ -35,11 +42,11 @@ serve(async (req) => {
   }
 
   try {
-    const { base64Image } = await req.json();
-
-    if (!base64Image) {
-      throw new Error("Missing base64Image parameter");
-    }
+    const body = await readJsonBody(req);
+    const base64Image = isRequiredString(
+      (body as Record<string, unknown>)?.base64Image,
+      "base64Image",
+    );
 
     const cleanBase64 = base64Image.includes(",")
       ? base64Image.split(",")[1].trim()
@@ -109,7 +116,7 @@ serve(async (req) => {
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
+      status: error?.status ?? 400,
     });
   }
 });

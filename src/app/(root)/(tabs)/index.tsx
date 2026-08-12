@@ -28,6 +28,7 @@ import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
 import { HomeHeader } from "@/shared/ui/HomeHeader";
 import { LookAIBanner } from "@/shared/ui/LookAIBanner";
+import { SkeletonCard } from "@/shared/ui/Skeleton";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
@@ -78,6 +79,7 @@ interface HomeCardProps {
   wardrobeCount: number;
   wardrobeLimit: number;
   stats: RingStats;
+  isLoading: boolean;
   ringSegments: readonly RingProgressSegment[];
   timeframe: FilterTab;
   setTimeframe: (tab: FilterTab) => void;
@@ -90,6 +92,7 @@ const HomeCard = React.memo(function HomeCard({
   wardrobeCount,
   wardrobeLimit,
   stats,
+  isLoading,
   ringSegments,
   timeframe,
   setTimeframe,
@@ -112,28 +115,32 @@ const HomeCard = React.memo(function HomeCard({
                 className="ml-3 text-[#991B1B] font-sans"
                 style={{ fontSize: 13, flex: 1, fontWeight: "600" }}
               >
-                  Wardrobe limit reached ({wardrobeCount}/{wardrobeLimit}).
+                Wardrobe limit reached ({wardrobeCount}/{wardrobeLimit}).
                 Upgrade to Pro to add more items.
               </Text>
             </Pressable>
           )}
-          <WardrobeRingSummaryCard
-            wornPercentage={wardrobeCount / wardrobeLimit}
-            totalWorn={stats.raw.streakCount}
-            wearCount={stats.raw.avgWears}
-            neverCount={wardrobeCount}
-            ringSegments={ringSegments}
-            labels={{
-              topLeft: "Usage",
-              bottomLeft: "Streak",
-              topRight: "Avg Wears",
-              bottomRight: "Total Items",
-            }}
-            statColors={{
-              bottomLeft: "#FEC466",
-              bottomRight: "#1D1A27",
-            }}
-          />
+          {isLoading ? (
+            <SkeletonCard style={{ height: 190 }} />
+          ) : (
+            <WardrobeRingSummaryCard
+              wornPercentage={wardrobeCount / wardrobeLimit}
+              totalWorn={stats.raw.streakCount}
+              wearCount={stats.raw.avgWears}
+              neverCount={wardrobeCount}
+              ringSegments={ringSegments}
+              labels={{
+                topLeft: "Usage",
+                bottomLeft: "Streak",
+                topRight: "Avg Wears",
+                bottomRight: "Total Items",
+              }}
+              statColors={{
+                bottomLeft: "#FEC466",
+                bottomRight: "#1D1A27",
+              }}
+            />
+          )}
           <View
             style={{
               borderWidth: 0.7,
@@ -185,7 +192,7 @@ export default function HomeScreen() {
     (state) => state.hasIncrementedToday,
   );
   const dismissIncrement = useStreakStore((state) => state.dismissIncrement);
-  const { stats } = useRingStats(period, wardrobeCount, currentStreak, wardrobeLimit);
+  const { stats, isLoading } = useRingStats(period, wardrobeCount, currentStreak, wardrobeLimit);
   const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
 
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)
@@ -226,6 +233,7 @@ export default function HomeScreen() {
         wardrobeCount={wardrobeCount}
         wardrobeLimit={wardrobeLimit}
         stats={stats}
+        isLoading={isLoading}
         ringSegments={ringSegments}
         timeframe={timeframe}
         setTimeframe={setTimeframe}
@@ -234,6 +242,7 @@ export default function HomeScreen() {
     ),
     [
       stats,
+      isLoading,
       ringSegments,
       timeframe,
       canAddWardrobe,

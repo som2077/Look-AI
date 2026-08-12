@@ -23,7 +23,14 @@ describe('saveClothToWardrobe', () => {
     const mockSingle = jest.fn().mockResolvedValue({ data: { id: 'item-123' }, error: null });
     const mockSelect = jest.fn(() => ({ single: mockSingle }));
     const mockInsert = jest.fn(() => ({ select: mockSelect }));
-    mockSupabase.from.mockReturnValue({ insert: mockInsert });
+    // saveClothToWardrobe first ensures the user_profiles row via upsert(), then
+    // inserts the wardrobe_item via insert().select().single().
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'user_profiles') {
+        return { upsert: jest.fn().mockResolvedValue({ data: null, error: null }) };
+      }
+      return { insert: mockInsert };
+    });
 
     const analysisResult = {
       success: true,

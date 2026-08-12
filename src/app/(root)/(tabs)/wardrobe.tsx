@@ -1,14 +1,16 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { useSavedStore } from "@/features/wardrobe/model/saved-store";
 import {
-  useUserWardrobeStore,
   subscribeToWardrobeRealtime,
+  useUserWardrobeStore,
 } from "@/features/wardrobe/model/user-wardrobe-store";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
+import { SkeletonList } from "@/shared/ui/Skeleton";
 import { useAuth } from "@clerk/clerk-expo";
 // import { PremiumGradientBackground } from "@/shared/ui/PremiumGradientBackground";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+import { FlashList } from "@shopify/flash-list";
 import {
   IconAdjustmentsHorizontal,
   IconBeach,
@@ -36,7 +38,13 @@ import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Animated,
   Dimensions,
@@ -48,7 +56,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FlashList } from "@shopify/flash-list";
 
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 
@@ -547,7 +554,10 @@ export default function WardrobeScreen() {
   const router = useRouter();
   const { userId } = useAuth();
   const userItems = useUserWardrobeStore((state) => state.items);
-  const syncWithDatabase = useUserWardrobeStore((state) => state.syncWithDatabase);
+  const syncWithDatabase = useUserWardrobeStore(
+    (state) => state.syncWithDatabase,
+  );
+  const isSyncing = useUserWardrobeStore((state) => state.isSyncing);
   const scrollY = useRef(new Animated.Value(0)).current;
   const HEADER_HEIGHT = 50;
 
@@ -605,20 +615,23 @@ export default function WardrobeScreen() {
     [userItems],
   );
 
-  const renderGridItem = useCallback(({ item }: { item: any }) => (
-    <View style={{ padding: GRID_GAP / 2 }}>
-      <BentoCard
-        item={item}
-        width={ITEM_WIDTH}
-        height={ITEM_HEIGHT}
-        onPress={
-          item.category.startsWith("saved_")
-            ? () => setSelectedSavedImage(item.image ?? null)
-            : undefined
-        }
-      />
-    </View>
-  ), [setSelectedSavedImage]);
+  const renderGridItem = useCallback(
+    ({ item }: { item: any }) => (
+      <View style={{ padding: GRID_GAP / 2 }}>
+        <BentoCard
+          item={item}
+          width={ITEM_WIDTH}
+          height={ITEM_HEIGHT}
+          onPress={
+            item.category.startsWith("saved_")
+              ? () => setSelectedSavedImage(item.image ?? null)
+              : undefined
+          }
+        />
+      </View>
+    ),
+    [setSelectedSavedImage],
+  );
 
   // Combine and sort
   const combinedData = useMemo(() => {
@@ -770,6 +783,7 @@ export default function WardrobeScreen() {
             zIndex: 10,
             backgroundColor: "transparent",
             marginBottom: 7,
+            marginTop: 7,
           }}
         >
           <View>
@@ -980,16 +994,22 @@ export default function WardrobeScreen() {
         {/* Grid */}
         <View style={{ flex: 1, zIndex: 1 }}>
           {combinedData.length === 0 ? (
-            <Animated.ScrollView
-              showsVerticalScrollIndicator={false}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                { useNativeDriver: true, listener: hideTabBarOnScroll },
-              )}
-              scrollEventThrottle={16}
-            >
-              <EmptyState onAdd={handleAddClothesGallery} />
-            </Animated.ScrollView>
+            isSyncing ? (
+              // First DB sync in flight — show placeholders instead of the
+              // empty state, which would flash before the rows arrive.
+              <SkeletonList count={6} cardHeight={140} />
+            ) : (
+              <Animated.ScrollView
+                showsVerticalScrollIndicator={false}
+                onScroll={Animated.event(
+                  [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                  { useNativeDriver: true, listener: hideTabBarOnScroll },
+                )}
+                scrollEventThrottle={16}
+              >
+                <EmptyState onAdd={handleAddClothesGallery} />
+              </Animated.ScrollView>
+            )
           ) : (
             <AnimatedFlashList
               data={combinedData}
@@ -1000,7 +1020,11 @@ export default function WardrobeScreen() {
                 { useNativeDriver: true, listener: hideTabBarOnScroll },
               )}
               scrollEventThrottle={16}
-              contentContainerStyle={{ paddingBottom: 140, paddingTop: 10, paddingHorizontal: GRID_PADDING }}
+              contentContainerStyle={{
+                paddingBottom: 140,
+                paddingTop: 10,
+                paddingHorizontal: GRID_PADDING,
+              }}
               numColumns={NUM_COLUMNS}
               renderItem={renderGridItem}
             />

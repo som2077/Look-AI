@@ -1,3 +1,4 @@
+import { request } from "@/shared/api/http";
 import * as Location from "expo-location";
 import { create } from "zustand";
 
@@ -219,52 +220,58 @@ export const useWeatherStore = create<WeatherStore>((set, get) => ({
         `&wind_speed_unit=kmh` +
         `&timezone=auto`;
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      // request() applies the 8s timeout + error normalization for us.
+      const json = await request<{
+        current: {
+          temperature_2m: number;
+          apparent_temperature: number;
+          relative_humidity_2m: number;
+          wind_speed_10m: number;
+          uv_index?: number;
+          weather_code?: number;
+          is_day?: number;
+        };
+      }>({
+        url,
+        method: "GET",
+        timeoutMs: 8000,
+        retries: 0,
+      });
 
-      try {
-        const res = await fetch(url, { signal: controller.signal });
-        const json = await res.json();
+      const current = json.current;
+      const temp = Math.round(current.temperature_2m);
+      const feelsLike = Math.round(current.apparent_temperature);
+      const humidity = Math.round(current.relative_humidity_2m);
+      const windKmh = Math.round(current.wind_speed_10m);
+      const uvIndex = Math.round(current.uv_index ?? 0);
+      const wmoCode = current.weather_code ?? 0;
+      const isDay = current.is_day === 1;
 
-        if (!res.ok) throw new Error("Weather fetch failed");
+      const { condition, icon } = wmoToCondition(wmoCode, isDay);
+      const uvLevel = uvIndexToLevel(uvIndex);
+      const comfortScore = calcComfortScore(temp, humidity, windKmh);
 
-        const current = json.current;
-        const temp = Math.round(current.temperature_2m);
-        const feelsLike = Math.round(current.apparent_temperature);
-        const humidity = Math.round(current.relative_humidity_2m);
-        const windKmh = Math.round(current.wind_speed_10m);
-        const uvIndex = Math.round(current.uv_index ?? 0);
-        const wmoCode = current.weather_code ?? 0;
-        const isDay = current.is_day === 1;
-
-        const { condition, icon } = wmoToCondition(wmoCode, isDay);
-        const uvLevel = uvIndexToLevel(uvIndex);
-        const comfortScore = calcComfortScore(temp, humidity, windKmh);
-
-        set({
-          data: {
-            city,
-            state: abbreviateState(state),
-            isLive: true,
-            temperatureCelsius: temp,
-            feelsLike,
-            condition,
-            humidityPercent: humidity,
-            windKmh,
-            uvIndex,
-            uvLevel,
-            comfortScore,
-            bestFabric: bestFabricForTemp(temp),
-            bestColors: bestColorsForTemp(temp),
-            weatherIcon: icon,
-            isDay,
-          },
-          loading: false,
-          lastFetchedAt: Date.now(),
-        });
-      } finally {
-        clearTimeout(timeout);
-      }
+      set({
+        data: {
+          city,
+          state: abbreviateState(state),
+          isLive: true,
+          temperatureCelsius: temp,
+          feelsLike,
+          condition,
+          humidityPercent: humidity,
+          windKmh,
+          uvIndex,
+          uvLevel,
+          comfortScore,
+          bestFabric: bestFabricForTemp(temp),
+          bestColors: bestColorsForTemp(temp),
+          weatherIcon: icon,
+          isDay,
+        },
+        loading: false,
+        lastFetchedAt: Date.now(),
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       set({ loading: false, error: msg });

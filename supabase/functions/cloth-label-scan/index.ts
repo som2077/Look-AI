@@ -2,6 +2,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { serializeCareSymbolsForPrompt } from "../_shared/careSymbols.ts";
 import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
+import {
+  isRequiredString,
+  readJsonBody,
+} from "../_shared/validate.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -58,9 +62,12 @@ serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Auth check
+  // Auth: require a real user JWT (Clerk "supabase" template, carries `sub`).
+  // Supabase's verify_jwt accepts anon keys (they're project-signed JWTs), so
+  // gate on the presence of a user id to block anon-key / service-role abuse.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const userId = getUserIdFromJwt(authHeader);
+  if (!userId) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -68,7 +75,7 @@ serve(async (req: Request) => {
   }
 
   // Rate limit: 10 scans/min/user
-  const rl = await checkRateLimit("cloth-label-scan", getUserIdFromJwt(authHeader), 10, 60);
+  const rl = await checkRateLimit("cloth-label-scan", userId, 10, 60);
   if (!rl.allowed) {
     return new Response(rateLimitBody("cloth-label-scan", 60), {
       status: rl.status,
@@ -77,10 +84,11 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { base64Image } = await req.json();
-    if (!base64Image) {
-      throw new Error("Missing base64Image parameter");
-    }
+    const body = await readJsonBody(req);
+    const base64Image = isRequiredString(
+      (body as Record<string, unknown>)?.base64Image,
+      "base64Image",
+    );
 
     const geminiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY");
     if (!geminiKey) {
@@ -155,7 +163,7 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       {
-        status: 400,
+        status: error?.status ?? 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );

@@ -1,4 +1,5 @@
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { fetchSupabaseRows } from "@/shared/supabase/use-supabase-query";
 import { getStartOfWeek, toLocalDateString } from "@/shared/utils/date";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
@@ -37,18 +38,20 @@ export function useWeeklyActivity() {
         const mondayStr = toLocalDateString(monday);
         const sundayStr = toLocalDateString(sunday);
 
-        const { data, error } = await supabase
-          .from("streak_logs")
-          .select("activity_date")
-          .eq("user_id", user.id)
-          .gte("activity_date", mondayStr)
-          .lte("activity_date", sundayStr);
+        const data = await fetchSupabaseRows<{ activity_date: string }>({
+          supabase,
+          table: "streak_logs",
+          select: "activity_date",
+          userId: user.id,
+          cacheKeySuffix: mondayStr, // one cache entry per week
+          apply: (q) =>
+            q
+              .eq("user_id", user.id)
+              .gte("activity_date", mondayStr)
+              .lte("activity_date", sundayStr),
+        });
 
-        if (error) throw error;
-
-        const dateSet = new Set<string>(
-          (data ?? []).map((row: { activity_date: string }) => row.activity_date)
-        );
+        const dateSet = new Set<string>(data.map((row) => row.activity_date));
         setActiveDates(dateSet);
       } catch (err) {
         console.warn("[useWeeklyActivity] fetch failed:", err);
