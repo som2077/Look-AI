@@ -44,6 +44,11 @@ export const HomeHeader = React.memo(function HomeHeader() {
             backgroundColor: "#F8F7FC",
             paddingHorizontal: 12,
             gap: 5,
+            shadowColor: "#00000040",
+            shadowOpacity: 0.04,
+            shadowRadius: 24,
+            shadowOffset: { width: 0, height: 12 },
+            elevation: 10,
           }}
         >
           <LottieView
@@ -79,6 +84,11 @@ export const HomeHeader = React.memo(function HomeHeader() {
             backgroundColor: "#F8F7FC",
             alignItems: "center",
             justifyContent: "center",
+            shadowColor: "#00000040",
+            shadowOpacity: 0.04,
+            shadowRadius: 24,
+            shadowOffset: { width: 0, height: 12 },
+            elevation: 10,
           }}
         >
           <ExpoImage

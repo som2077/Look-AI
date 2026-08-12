@@ -17,7 +17,14 @@ import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useFonts } from "expo-font";
 import * as NavigationBar from "expo-navigation-bar";
-import { Stack, useRouter, useSegments, usePathname } from "expo-router";
+import {
+  Stack,
+  useRouter,
+  useSegments,
+  usePathname,
+  useRootNavigationState,
+  useNavigationContainerRef,
+} from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
 import analytics from "@react-native-firebase/analytics";
@@ -48,6 +55,15 @@ const RootNavigator = memo(function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
   const pathname = usePathname();
+  // undefined until the root layout's navigator has mounted — prevents the
+  // redirect effect below from navigating before the router is ready (which
+  // throws "Couldn't find a navigation context" / "navigate before mounting").
+  const rootNavigationState = useRootNavigationState();
+  // Same ref expo-router uses internally — `current` flips from null to the
+  // container when the root navigator mounts, and `isReady()` is only true
+  // after React Navigation finishes its initial mount. Both must hold before
+  // we're allowed to call router.replace().
+  const navigationRef = useNavigationContainerRef();
 
   const segmentKey = segments.join("/");
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(
@@ -265,6 +281,14 @@ const RootNavigator = memo(function RootNavigator() {
 
   useEffect(() => {
     if (!isLoaded) return;
+    // Wait for the root navigator to mount AND be ready before redirecting.
+    // Navigating before the container is ready throws "Couldn't find a
+    // navigation context" / "navigate before mounting the Root Layout".
+    // Note: `navigationRef.current` becoming non-null (container mounted) is
+    // not enough — `isReady()` flips true only after React Navigation commits
+    // the initial state. Both `navigationRef?.current` and `rootNavigationState`
+    // are deps so this effect re-runs at each stage of container readiness.
+    if (!navigationRef.current?.isReady()) return;
 
     const inAuth = segments[0] === "(auth)";
     const inRoot = segments[0] === "(root)";
@@ -292,7 +316,14 @@ const RootNavigator = memo(function RootNavigator() {
       router.replace("/(root)/(tabs)");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn, isLoaded, onboardingComplete, segmentKey]);
+  }, [
+    isSignedIn,
+    isLoaded,
+    onboardingComplete,
+    segmentKey,
+    rootNavigationState,
+    navigationRef?.current,
+  ]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
 });

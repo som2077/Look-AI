@@ -14,9 +14,14 @@ export function WardrobeMessageBar() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 5,
+    paddingVertical: 1.5,
     paddingHorizontal: 12,
     marginTop: 2,
+    shadowColor: "#00000040",
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
   },
   text: {
     fontSize: 13,

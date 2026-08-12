@@ -10,16 +10,11 @@ import {
 import { Image as ExpoImage } from "expo-image";
 import { useRouter, type Href } from "expo-router";
 import LottieView from "lottie-react-native";
-import React, {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import React, { ReactNode, useCallback, useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
@@ -134,7 +129,7 @@ export function CustomTabBar({
       right: 0,
       bottom: -50,
       backgroundColor: "#2C2C2E",
-      paddingBottom: 50,
+      paddingBottom: 40,
       transform: [{ translateY: translateY.value }],
     };
   });
@@ -157,7 +152,7 @@ export function CustomTabBar({
           backgroundColor: "#FFFFFF",
           // borderColor:
           // borderWidth: 1,
-          paddingHorizontal: 16,
+          paddingHorizontal: 20,
           paddingTop: 12,
           paddingBottom: insets.bottom + 12,
         }}
@@ -174,14 +169,11 @@ export function CustomTabBar({
               backgroundColor: "#FFFFFF",
               borderWidth: 1,
               borderColor: "#E5E5EA",
-              shadowColor: "#00000080",
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
+              shadowColor: "#00000090",
               shadowOpacity: 0.04,
-              shadowRadius: 3.84,
-              elevation: 2,
+              shadowRadius: 24,
+              shadowOffset: { width: 0, height: 12 },
+              elevation: 5,
               paddingHorizontal: 8,
               paddingVertical: 7,
               height: 65,
@@ -363,14 +355,11 @@ export function CustomTabBar({
               alignItems: "center",
               justifyContent: "center",
               borderColor: "#E5E5EA",
-              shadowColor: "#00000080",
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
+              shadowColor: "#000000",
               shadowOpacity: 0.04,
-              shadowRadius: 3.84,
-              elevation: 3,
+              shadowRadius: 24,
+              shadowOffset: { width: 0, height: 12 },
+              elevation: 5,
               paddingHorizontal: 8,
               paddingVertical: 7,
               // height: 65,

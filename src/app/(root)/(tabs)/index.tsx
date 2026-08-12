@@ -1,16 +1,17 @@
 import { OutfitAnalyzingCard } from "@/features/ai-styling/ui/OutfitAnalyzingCard";
 import { WeatherOutfitCard } from "@/features/ai-styling/ui/WeatherOutfitCard";
 import { useCalendarPlanStore } from "@/features/calendar/model/calendar-plan-store";
-import {
-  usePremiumLimits,
-} from "@/features/payments/model/usePremiumLimits";
+import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
-import { useRingStats, type RingStats } from "@/features/wardrobe/api/useRingStats";
+import {
+  useRingStats,
+  type RingStats,
+} from "@/features/wardrobe/api/useRingStats";
 import { PendingBatchBanner } from "@/features/wardrobe/ui/PendingBatchBanner";
 import {
   EmptyStyleBanner,
   NotifyBanner,
-  RecentlyUploadedHeading
+  RecentlyUploadedHeading,
 } from "@/features/wardrobe/ui/RecentlyUploadedCard";
 import {
   WardrobeFilterTabs,
@@ -149,11 +150,12 @@ const HomeCard = React.memo(function HomeCard({
               borderRadius: 24,
               padding: 8,
               marginTop: 5,
-              shadowColor: "#FFFFFF",
+              shadowColor: "#00000040",
               shadowOpacity: 0.02,
               shadowRadius: 10,
               shadowOffset: { width: 0, height: 4 },
-              elevation: 10,
+              elevation: 5,
+              marginBottom: 10,
             }}
           >
             <WardrobeFilterTabs value={timeframe} onChange={setTimeframe} />
@@ -192,7 +194,12 @@ export default function HomeScreen() {
     (state) => state.hasIncrementedToday,
   );
   const dismissIncrement = useStreakStore((state) => state.dismissIncrement);
-  const { stats, isLoading } = useRingStats(period, wardrobeCount, currentStreak, wardrobeLimit);
+  const { stats, isLoading } = useRingStats(
+    period,
+    wardrobeCount,
+    currentStreak,
+    wardrobeLimit,
+  );
   const { plannedOutfit, setPlannedOutfit } = useCalendarPlanStore();
 
   // Streak popup driven by useStreakStore.hasIncrementedToday (set in layout)

@@ -295,18 +295,18 @@ export function WardrobeRingSummaryCard({
   return (
     <View
       style={{
-        marginTop: 16,
+        marginTop: 10,
         backgroundColor: "#ffffff",
         borderWidth: 0.9,
         borderColor: "#E9EBF8",
         borderRadius: 40,
         paddingVertical: 16,
         paddingHorizontal: 12,
-        shadowColor: "#FFFFFF",
+        shadowColor: "#00000040",
         shadowOpacity: 0.02,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
-        elevation: 3,
+        elevation: 10,
       }}
     >
       <View className="flex-row items-center justify-between gap-3">

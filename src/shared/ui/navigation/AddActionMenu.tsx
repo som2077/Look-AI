@@ -1,3 +1,4 @@
+import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import {
   IconCamera,
   IconSparkles,
@@ -5,7 +6,6 @@ import {
   type IconProps,
 } from "@tabler/icons-react-native";
 import { BlurView } from "expo-blur";
-import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import React, { useCallback, useEffect, useState } from "react";
 import { Image, Modal, Pressable, Text, View } from "react-native";
 import Animated, {
@@ -122,7 +122,7 @@ export function AddActionMenu({
           <View className="flex-row flex-wrap justify-between mb-4">
             {ACTION_CARDS.map((card) => {
               const IconComponent = card.icon;
-              
+
               let chipText = card.chipText;
               let chipBgColor = "#F1EFFF";
               let chipTextColor = "#594EE6";
@@ -141,15 +141,15 @@ export function AddActionMenu({
                 <Pressable
                   key={card.id}
                   onPress={() => handleCardPress(card.route)}
-                  className="w-[48%] h-[240px] rounded-[35px] bg-[#ffffff] mb-4 overflow-hidden"
+                  className="w-[48%] h-[240px] rounded-[40px] bg-[#ffffff] mb-4 overflow-hidden"
                 >
                   <View className="flex-1 pt-3 pb-6 px-3 items-center">
                     {!!chipText && (
-                      <View 
+                      <View
                         className="px-3 py-[6px] rounded-full mb-3"
                         style={{ backgroundColor: chipBgColor }}
                       >
-                        <Text 
+                        <Text
                           className="text-[11px] font-bold tracking-wide"
                           style={{ color: chipTextColor }}
                         >

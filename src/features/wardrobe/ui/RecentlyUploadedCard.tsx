@@ -63,7 +63,14 @@ export const NotifyBanner = React.memo(function NotifyBanner() {
 
   return (
     <Animated.View
-      style={{ opacity }}
+      style={{
+        opacity,
+        shadowColor: "#00000040",
+        shadowOpacity: 0.02,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 10,
+      }}
       className="mx-6 mt-2 flex-row border-[0.4px] border-[#E9EBF8] items-center justify-between bg-[#FFFFFF] rounded-[16px] px-4 py-4"
     >
       <View className="flex-row items-center flex-1 pr-3">
@@ -100,7 +107,16 @@ export const EmptyStyleBanner = React.memo(function EmptyStyleBanner() {
   if (hasActivity) return null;
 
   return (
-    <View className="mx-6 mt-3  items-center justify-center bg-[#F8F7FC80] border-[0.5px] border-[#E9EBF8] rounded-[24px] px-4 py-6">
+    <View
+      style={{
+        shadowColor: "#00000040",
+        shadowOpacity: 0.04,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 12 },
+        elevation: 5,
+      }}
+      className="mx-6 mt-3  items-center justify-center bg-[#F8F7FC] border-[0.5px] border-[#E9EBF8] rounded-[24px] px-4 py-6"
+    >
       <View
         style={{
           flexDirection: "row",

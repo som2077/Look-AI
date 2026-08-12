@@ -1,6 +1,9 @@
-import { useUserProfile } from "@/features/profile/api/useProfile";
 import { useDeleteAccount } from "@/features/profile/api/useDeleteAccount";
-import { getFCMToken, requestUserPermission } from "@/shared/notifications/firebase-service";
+import { useUserProfile } from "@/features/profile/api/useProfile";
+import {
+  getFCMToken,
+  requestUserPermission,
+} from "@/shared/notifications/firebase-service";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
@@ -68,11 +71,11 @@ const CardContainer = ({
         overflow: "hidden",
         borderColor: "#E5E7EB",
         borderWidth: 0.4,
-        shadowColor: "#000",
-        shadowOpacity: 0.06,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 2 },
-        // elevation: 2,
+        shadowColor: "#00000040",
+        shadowOpacity: 0.04,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 12 },
+        elevation: 10,
       },
       style,
     ]}
@@ -373,7 +376,7 @@ const ProfileScreenUI = ({
   const displayInitial = displayName.charAt(0).toUpperCase();
 
   return (
-    <View style={{ paddingHorizontal: 20, paddingBottom: 116 }}>
+    <View style={{ paddingHorizontal: 20, paddingBottom: 90, marginTop: 7 }}>
       <Text
         style={{
           fontSize: 24,
@@ -394,6 +397,11 @@ const ProfileScreenUI = ({
           flexDirection: "row",
           alignItems: "center",
           borderRadius: 24,
+          shadowColor: "#00000040",
+          shadowOpacity: 0.04,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 12 },
+          elevation: 10,
         }}
       >
         <View
@@ -591,13 +599,16 @@ const ProfileScreenUI = ({
         <View style={{ alignItems: "center", marginTop: 12 }}>
           <Text
             style={{
-              fontSize: 13,
+              fontSize: 10,
               fontWeight: "400",
               color: "#00000080",
               letterSpacing: 0.2,
             }}
           >
-            Version {Constants.expoConfig?.version ?? Application.nativeApplicationVersion ?? "4.2.9"}
+            VERSION{" "}
+            {Constants.expoConfig?.version ??
+              Application.nativeApplicationVersion ??
+              "4.2.9"}
           </Text>
         </View>
       </View>
@@ -630,7 +641,11 @@ export default function ProfileScreen() {
         .single();
 
       // We check undefined because the column might not exist yet
-      if (data && data.notifications_enabled !== undefined && data.notifications_enabled !== null) {
+      if (
+        data &&
+        data.notifications_enabled !== undefined &&
+        data.notifications_enabled !== null
+      ) {
         setNotificationsEnabled(data.notifications_enabled);
       }
     }
@@ -648,7 +663,10 @@ export default function ProfileScreen() {
         if (hasPermission) {
           fcm_token = await getFCMToken();
         } else {
-          Alert.alert("Permission Required", "Please enable notifications in your phone settings.");
+          Alert.alert(
+            "Permission Required",
+            "Please enable notifications in your phone settings.",
+          );
           setNotificationsEnabled(false); // revert
           return;
         }

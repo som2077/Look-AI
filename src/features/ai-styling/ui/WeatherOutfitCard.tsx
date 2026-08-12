@@ -17,18 +17,18 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import {
   Pressable,
+  Animated as RNAnimated,
   StyleSheet,
   Text,
   View,
-  Animated as RNAnimated,
 } from "react-native";
 import Animated, {
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  withSequence,
   Easing,
   useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
 
@@ -127,7 +127,6 @@ function WeatherIcon({
   iconCode: string;
   spinStyle: any;
 }) {
-
   const isNight = iconCode.endsWith("n");
   const code = iconCode.slice(0, 2);
 
@@ -193,15 +192,15 @@ export const WeatherOutfitCard = React.memo(function WeatherOutfitCard() {
     spin.value = withRepeat(
       withTiming(360, { duration: 12000, easing: Easing.linear }),
       -1,
-      false
+      false,
     );
     blink.value = withRepeat(
       withSequence(
         withTiming(0.2, { duration: 800 }),
-        withTiming(1, { duration: 800 })
+        withTiming(1, { duration: 800 }),
       ),
       -1,
-      true
+      true,
     );
   }, []);
 
@@ -276,9 +275,7 @@ export const WeatherOutfitCard = React.memo(function WeatherOutfitCard() {
               </Text>
               {data.isLive && (
                 <>
-                  <Animated.View
-                    style={[styles.liveDot, blinkStyle]}
-                  />
+                  <Animated.View style={[styles.liveDot, blinkStyle]} />
                   <Text style={styles.liveText}>Live</Text>
                 </>
               )}
@@ -326,7 +323,7 @@ export const WeatherOutfitCard = React.memo(function WeatherOutfitCard() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  outerWrapper: { marginTop: 13 },
+  outerWrapper: { marginTop: 10 },
 
   card: {
     backgroundColor: "#FFFFFF",
@@ -334,11 +331,11 @@ const styles = StyleSheet.create({
     borderWidth: 0.7,
     borderRadius: 40,
     padding: 25,
-    shadowColor: "#FFFFFF",
+    shadowColor: "#00000040",
     shadowOpacity: 0.04,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },
-    elevation: 1,
+    elevation: 10,
   },
 
   skeleton: {

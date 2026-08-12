@@ -1020,7 +1020,7 @@ function FeedTab() {
       </View>
 
       {/* Main Content Area */}
-      <View style={{ flex: 1, paddingHorizontal: 20 }}>
+      <View style={{ flex: 1, paddingHorizontal: 20, marginTop: 10 }}>
         {loading ? (
           <View
             style={{

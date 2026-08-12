@@ -129,7 +129,10 @@ export function WeeklyCalendarStrip() {
           } else {
             // Past or today: check if user actually opened the app that day
             const dateStr = toLocalDateString(dateAtMidnight);
-            streakStatus = (activeDates.has(dateStr) || lastActiveDate === dateStr) ? "streak" : "missed";
+            streakStatus =
+              activeDates.has(dateStr) || lastActiveDate === dateStr
+                ? "streak"
+                : "missed";
           }
 
           return (

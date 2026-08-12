@@ -15,7 +15,10 @@ interface WardrobeFilterTabsProps {
   onChange: (tab: FilterTab) => void;
 }
 
-export function WardrobeFilterTabs({ value, onChange }: WardrobeFilterTabsProps) {
+export function WardrobeFilterTabs({
+  value,
+  onChange,
+}: WardrobeFilterTabsProps) {
   return (
     <View style={styles.container}>
       {TABS.map((tab) => (
@@ -40,7 +43,7 @@ export function WardrobeFilterTabs({ value, onChange }: WardrobeFilterTabsProps)
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#F8F7FC70",
+    backgroundColor: "#F8F7FC",
     padding: 2,
     borderRadius: 18,
     shadowColor: "#FFFFFF10",
@@ -76,4 +79,3 @@ const styles = StyleSheet.create({
     color: "#1C1C1E",
   },
 });
-

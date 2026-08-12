@@ -838,9 +838,9 @@ export default function WardrobeScreen() {
                 width: 44,
                 height: 44,
                 borderRadius: 14,
-                borderWidth: 1.5,
+                borderWidth: 0.7,
                 borderColor: "#E2E2EA",
-                backgroundColor: "#FFFFFF",
+                backgroundColor: "#F8F7FC",
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -877,9 +877,9 @@ export default function WardrobeScreen() {
                 paddingHorizontal: 14,
                 paddingVertical: 10,
                 borderRadius: 50,
-                borderWidth: 1.5,
+                borderWidth: 0.7,
                 borderColor: "#E2E2EA",
-                backgroundColor: "#FFFFFF",
+                backgroundColor: "#F8F7FC",
                 height: 44,
               }}
             >

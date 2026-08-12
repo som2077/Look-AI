@@ -2,12 +2,12 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 export type WeatherData = {
-  date: string;         // e.g. "Wed Jul 22"
-  tempC: number;        // temperature in Celsius
-  condition: string;    // e.g. "Sunny", "Rainy", "Cloudy"
-  rainPct: number;      // e.g. 65
-  windKmh: number;      // e.g. 8
-  stormPct: number;     // e.g. 25
+  date: string; // e.g. "Wed Jul 22"
+  tempC: number; // temperature in Celsius
+  condition: string; // e.g. "Sunny", "Rainy", "Cloudy"
+  rainPct: number; // e.g. 65
+  windKmh: number; // e.g. 8
+  stormPct: number; // e.g. 25
 };
 
 const CONDITION_EMOJI: Record<string, string> = {

@@ -97,10 +97,9 @@ export default function PersonalDetailsScreen() {
   const height = profile?.height ?? onboardingState.height;
   const gender = profile?.gender || onboardingState.gender || "";
   const bodyType = profile?.body_type || onboardingState.bodyType || "";
-  const stylePreferences =
-    profile?.style_preferences?.length
-      ? profile.style_preferences
-      : onboardingState.stylePreferences;
+  const stylePreferences = profile?.style_preferences?.length
+    ? profile.style_preferences
+    : onboardingState.stylePreferences;
 
   const fields: Field[] = [
     {
@@ -241,16 +240,15 @@ export default function PersonalDetailsScreen() {
               style={{
                 marginHorizontal: 16,
                 backgroundColor: "#FFFFFF",
-                borderRadius: 20,
+                borderRadius: 25,
                 overflow: "hidden",
                 borderWidth: 1,
                 borderColor: "#F3F4F6",
-                shadowColor: "#000",
+                shadowColor: "#00000040",
                 shadowOpacity: 0.04,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 2 },
-                // elevation: 1,
-                // marginTop:-20
+                shadowRadius: 24,
+                shadowOffset: { width: 0, height: 12 },
+                elevation: 5,
               }}
             >
               {fields.map((field) => (
@@ -260,8 +258,8 @@ export default function PersonalDetailsScreen() {
 
             <Text
               style={{
-                fontSize: 12,
-                color: "#000000",
+                fontSize: 13,
+                color: "#00000070",
                 textAlign: "center",
                 marginTop: 20,
                 paddingHorizontal: 32,
