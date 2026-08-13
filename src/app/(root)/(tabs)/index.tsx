@@ -29,7 +29,6 @@ import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
 import { HomeHeader } from "@/shared/ui/HomeHeader";
 import { LookAIBanner } from "@/shared/ui/LookAIBanner";
-import { SkeletonCard } from "@/shared/ui/Skeleton";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
@@ -121,27 +120,23 @@ const HomeCard = React.memo(function HomeCard({
               </Text>
             </Pressable>
           )}
-          {isLoading ? (
-            <SkeletonCard style={{ height: 190 }} />
-          ) : (
-            <WardrobeRingSummaryCard
-              wornPercentage={wardrobeCount / wardrobeLimit}
-              totalWorn={stats.raw.streakCount}
-              wearCount={stats.raw.avgWears}
-              neverCount={wardrobeCount}
-              ringSegments={ringSegments}
-              labels={{
-                topLeft: "Usage",
-                bottomLeft: "Streak",
-                topRight: "Avg Wears",
-                bottomRight: "Total Items",
-              }}
-              statColors={{
-                bottomLeft: "#FEC466",
-                bottomRight: "#1D1A27",
-              }}
-            />
-          )}
+          <WardrobeRingSummaryCard
+            wornPercentage={wardrobeCount / wardrobeLimit}
+            totalWorn={stats.raw.streakCount}
+            wearCount={stats.raw.avgWears}
+            neverCount={wardrobeCount}
+            ringSegments={ringSegments}
+            labels={{
+              topLeft: "Usage",
+              bottomLeft: "Streak",
+              topRight: "Avg Wears",
+              bottomRight: "Total Items",
+            }}
+            statColors={{
+              bottomLeft: "#FEC466",
+              bottomRight: "#1D1A27",
+            }}
+          />
           <View
             style={{
               borderWidth: 0.7,
