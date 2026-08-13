@@ -4,7 +4,8 @@ import { daysBetween, startOfDay } from "@/shared/utils/date";
 import { IconFlameFilled, IconFlameOff } from "@tabler/icons-react-native";
 import LottieView from "lottie-react-native";
 import React from "react";
-import { Animated, Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fr", "Sat"];
@@ -22,20 +23,26 @@ export function StreakPopup({
 }: StreakPopupProps) {
   const lastActiveDate = useStreakStore((state) => state.lastActiveDate);
 
-  // Simple fade in animation
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  // Spring scale and fade animation
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.8);
 
   React.useEffect(() => {
     if (visible) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      opacity.value = withTiming(1, { duration: 200 });
+      scale.value = withSpring(1, { damping: 14, stiffness: 300 });
     } else {
-      fadeAnim.setValue(0);
+      opacity.value = 0;
+      scale.value = 0.8;
     }
-  }, [visible, fadeAnim]);
+  }, [visible, opacity, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+      transform: [{ scale: scale.value }],
+    };
+  });
 
   if (!visible) return null;
 
@@ -52,7 +59,7 @@ export function StreakPopup({
       <View className="flex-1 bg-black/60 justify-center p-4">
         <Animated.View
           className="bg-white rounded-[42px] flex-1 max-h-[500px] overflow-hidden shadow-xl"
-          style={{ opacity: fadeAnim }}
+          style={animatedStyle}
         >
           <SafeAreaView className="flex-1 px-6 py-4 justify-between">
             {/* Main Content */}

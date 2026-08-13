@@ -12,6 +12,8 @@ import { useRouter, type Href } from "expo-router";
 import LottieView from "lottie-react-native";
 import React, { ReactNode, useCallback, useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -47,11 +49,12 @@ const AnimatedTabButton = React.memo(function AnimatedTabButton({
   const scale = useSharedValue(1);
 
   const animateIn = useCallback(() => {
-    scale.value = withSpring(0.93, { damping: 10, stiffness: 400 });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    scale.value = withSpring(0.93, { damping: 15, stiffness: 300 });
   }, []);
 
   const animateOut = useCallback(() => {
-    scale.value = withSpring(1, { damping: 12, stiffness: 400 });
+    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -146,12 +149,13 @@ export function CustomTabBar({
       pointerEvents={isTabBarVisible ? "box-none" : "none"}
       style={animatedContainerStyle}
     >
-      {/* Dark background strip */}
-      <View
+      {/* Translucent background strip */}
+      <BlurView
+        intensity={10}
+        tint="light"
+        experimentalBlurMethod="dimezisBlurView"
         style={{
-          backgroundColor: "#FFFFFF",
-          // borderColor:
-          // borderWidth: 1,
+          backgroundColor: "rgba(255, 255, 255)",
           paddingHorizontal: 20,
           paddingTop: 12,
           paddingBottom: insets.bottom + 12,
@@ -368,7 +372,7 @@ export function CustomTabBar({
             <IconPlus size={30} color="#FFFFFF" strokeWidth={2.5} />
           </Pressable>
         </View>
-      </View>
+      </BlurView>
 
       <AddActionMenu
         visible={menuVisible}

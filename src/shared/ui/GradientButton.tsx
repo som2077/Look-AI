@@ -7,6 +7,7 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withTiming,
+  withSpring,
 } from "react-native-reanimated";
 
 interface GradientButtonProps {
@@ -21,6 +22,7 @@ export const GradientButton = ({
   style,
 }: GradientButtonProps) => {
   const rotation = useSharedValue(0);
+  const scale = useSharedValue(1);
 
   useEffect(() => {
     rotation.value = withRepeat(
@@ -36,8 +38,29 @@ export const GradientButton = ({
     };
   });
 
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+    };
+  });
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95, { damping: 12, stiffness: 400 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 12, stiffness: 400 });
+  };
+
+  const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
   return (
-    <Pressable onPress={onPress} style={[styles.container, style]}>
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={[styles.container, style, animatedContainerStyle]}
+    >
       {/* Outer wrapper to clip the rotating square */}
       <View style={StyleSheet.absoluteFillObject}>
         {/* Rotating Background */}
@@ -55,7 +78,7 @@ export const GradientButton = ({
       <View style={styles.innerBox}>
         <Text style={styles.text}>{title}</Text>
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 };
 
