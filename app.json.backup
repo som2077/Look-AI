@@ -12,7 +12,6 @@
     "primaryColor": "#6366f1",
     "newArchEnabled": true,
     "jsEngine": "hermes",
-
     "android": {
       "package": "com.lookai.android",
       "versionCode": 1,
@@ -95,7 +94,8 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true,

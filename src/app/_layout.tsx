@@ -12,6 +12,7 @@ import {
   useErrorStore,
 } from "@/shared/ui/ErrorStateView";
 import { ToastProvider } from "@/shared/ui/Toast";
+import { initSentry, Sentry } from "@/shared/telemetry/sentry";
 import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -38,6 +39,9 @@ import {
   setupNotificationListeners,
 } from "@/shared/notifications/firebase-service";
 import "../../global.css";
+
+// Initialize Sentry before any component renders
+initSentry();
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -128,12 +132,14 @@ const RootNavigator = memo(function RootNavigator() {
     [],
   );
 
-  // Firebase User Identification
+  // Firebase User Identification + Sentry User Context
   useEffect(() => {
     if (userId) {
       analytics().setUserId(userId);
+      Sentry.setUser({ id: userId });
     } else {
       analytics().setUserId(null);
+      Sentry.setUser(null);
     }
   }, [userId]);
 

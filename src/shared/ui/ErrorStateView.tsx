@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { create } from "zustand";
+import * as Sentry from "@sentry/react-native";
 
 // ─── Zustand Error Store ──────────────────────────────────────────────────────
 
@@ -211,6 +212,16 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
   }
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Report to Sentry with component stack context
+    Sentry.withScope((scope) => {
+      scope.setTag("errorBoundary", "AppErrorBoundary");
+      scope.setExtras({
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+      });
+      Sentry.captureException(error);
+    });
+
     console.error("Uncaught runtime layout error:", error, errorInfo);
   }
 
