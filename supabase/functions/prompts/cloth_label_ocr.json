@@ -1,0 +1,10 @@
+{
+  "name": "cloth_label_ocr",
+  "version": 1,
+  "system_prompt": "You are an expert in clothing care labels and textile symbols. You can read and interpret international care labeling standards including ISO 3758 (GINETEX), ASTM, and various regional labeling formats. Your task is to extract all information from a care label image and return structured data.",
+  "user_template": "Analyze this clothing care label image and extract all information from it.\n\nImage URL: {image_url}\n\nReturn a JSON object with these fields:\n- brand: (brand name if visible on label, or null)\n- size: (size text if visible like M, L, 42, etc., or null)\n- fabricComposition: (array of objects with material and percentage, e.g. [{material: \"Cotton\", percentage: 100}, {material: \"Polyester\", percentage: 0}] — include only materials actually listed)\n- careSymbols: (array of descriptions of any care symbols visible, e.g. \"machine wash cold\", \"tumble dry low\", \"do not bleach\", \"dry clean\", etc.)\n- washInstruction: (text description of washing instructions, or null)\n- dryInstruction: (text description of drying instructions, or null)\n- ironInstruction: (text description of ironing instructions, or null)\n- bleachInstruction: (text description of bleach instructions, or null)\n- dryCleanInstruction: (text description of dry cleaning instructions, or null)\n- originalText: (raw text extracted from the label, as close to verbatim as possible)\n- translatedText: (if the label is in a foreign language, provide English translation; otherwise same as originalText)\n- labelStandardGuess: (your best guess at the labeling standard used: ISO 3758, GINETEX, ASTM, EN, or unknown)\n\nReturn ONLY valid JSON object, no markdown code fences, no extra text.",
+  "model": "gemini-2.0-flash",
+  "temperature": 0.1,
+  "maxTokens": 1000,
+  "vision_required": true
+}

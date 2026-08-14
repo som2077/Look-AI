@@ -6,6 +6,7 @@ import {
   isRequiredString,
   readJsonBody,
 } from "../_shared/validate.ts";
+import { loadPrompt, renderPrompt } from "../_shared/prompt-loader.ts";
 
 // @ts-ignore: Declare Deno globally to satisfy TS compiler in IDE
 declare const Deno: any;
@@ -197,19 +198,28 @@ serve(async (req) => {
     }
 
     // 4. Analyze with Gemini Vision (Multi-model fallbacks)
-    const visionPrompt = `Analyze this clothing item image. Extract the following details: clothType, color, material, pattern, style, fit, condition, sleeve_type, neckline, notable_features, seasonality, care_hints. Respond ONLY with valid JSON. No markdown.`;
+    const promptConfig = loadPrompt("analyze_cloth_item");
+    const systemPrompt = promptConfig.system_prompt as string;
+    const userPrompt = renderPrompt(promptConfig.user_template as string, {
+      image_url: bgRemovedUrl || originalUrl || "inline_base64_image",
+    });
+    const visionPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
+    const configuredModel = promptConfig.model as string;
     const MODELS = [
+      configuredModel,
       "gemini-2.5-flash-lite",
       "gemini-2.5-flash",
       "gemini-2.0-flash",
       "gemini-2.0-flash-lite",
-    ];
+    ].filter((model, index, models) => model && models.indexOf(model) === index);
 
     let parsedVision: any = null;
 
     for (const model of MODELS) {
       try {
+        const configuredTemp = (promptConfig.temperature as number) ?? 0.2;
+        const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 1000;
         const geminiVisionRes = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
           {
@@ -224,7 +234,7 @@ serve(async (req) => {
                   ],
                 },
               ],
-              generationConfig: { temperature: 0.2 },
+              generationConfig: { temperature: configuredTemp, maxOutputTokens: configuredMaxTokens },
             }),
           },
         );

@@ -24,6 +24,7 @@
 - [🛠 Deep Dive: Key Modules & Workflows](#-deep-dive-key-modules--workflows)
 - [🗂️ Category System](#️-category-system)
 - [⚡ Scalability & Hardening (10k Concurrent Users)](#️-scalability--hardening-10k-concurrent-users)
+- [📚 Documentation](#-documentation)
 - [⚙️ Getting Started (Local Development)](#️-getting-started-local-development)
 
 ---
@@ -171,6 +172,25 @@ A k6 script ([`scripts/loadtest/`](scripts/loadtest/README.md)) simulates the ap
 
 ---
 
+## 📚 Documentation
+
+Detailed documentation is available in the [`docs/`](docs/) directory:
+
+| Document | Description |
+|----------|-------------|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Deep dive into the system architecture, client/server design, auth flow, image pipeline, realtime architecture, and security model |
+| [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Complete contributing guide — dev setup, coding standards, PR process, testing guidelines, and review process |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Production deployment guide — EAS build, App Store submission, Supabase backend setup, edge function deployment, rollback plan |
+| [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Troubleshooting guide for common issues — auth, Supabase, edge functions, images, streaks, builds, crashes, performance |
+| [`docs/API_EDGE_FUNCTIONS.md`](docs/API_EDGE_FUNCTIONS.md) | Complete reference for all Supabase Edge Functions — inputs, outputs, rate limits, and calling patterns |
+
+Additional references:
+
+- [`DATABASE.md`](DATABASE.md) — Full database schema design document (678 lines) with ER diagram, RLS policy matrix, indexes, triggers, and migration history
+- [`scripts/loadtest/README.md`](scripts/loadtest/README.md) — k6 load testing guide for performance benchmarking
+
+---
+
 ## ⚙️ Getting Started (Local Development)
 
 ### Prerequisites
@@ -264,8 +284,14 @@ k6 run -e SUPABASE_URL=https://<branch>.supabase.co -e SUPABASE_JWT_SECRET=<jwt-
 
 ---
 
+## 🔧 Troubleshooting
+
+Having issues? Check out our [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for help with common problems, or open an issue on GitHub.
+
+---
+
 <div align="center">
   <p>Built with ❤️ for modern fashion.</p>
 </div>
 
-<!-- sdk.dir=C\:\\Users\\skynet\\AppData\\Local\\Android\\Sdk  -->
+<!-- sdk.dir=C:\Users\skynet\AppData\Local\Android\Sdk  -->

@@ -8,11 +8,13 @@
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/analyze-cloth-item/index.ts"
+static_files = ["./functions/prompts/analyze_cloth_item.json"]
 
 [functions.cloth-label-scan]
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/cloth-label-scan/index.ts"
+static_files = ["./functions/prompts/cloth_label_ocr.json"]
 
 [functions.cloudinary-signature]
 enabled = true

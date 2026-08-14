@@ -6,6 +6,7 @@ import {
   isRequiredString,
   readJsonBody,
 } from "../_shared/validate.ts";
+import { loadPrompt, renderPrompt } from "../_shared/prompt-loader.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -16,45 +17,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Load the cloth label OCR prompt configuration
+const promptConfig = loadPrompt("cloth_label_ocr");
+
 function buildSystemPrompt(): string {
   const table = serializeCareSymbolsForPrompt();
-  return `You are a garment care label reader for a fashion wardrobe app.
+  const systemPrompt = promptConfig.system_prompt as string;
+  const userTemplate = promptConfig.user_template as string;
 
-You will be shown a photo of a clothing care label. Identify every care symbol visible using ONLY the reference table below — do not rely on general knowledge of care symbols, since regional variants (e.g. US ASTM D5489) look similar but differ in meaning. If a symbol in the image combines multiple features from the table (e.g. a washing tub with '40' AND a single bar underneath, or a tumble dry square with 1 dot AND a single bar), you MUST output ALL the individual matching symbol IDs (e.g. output both 'wash_warm_40' AND 'wash_permanent_press') rather than failing to match. If a symbol truly does not match any entry or combination in this table, do not guess an id; instead set "needs_user_review": true and describe it in "review_notes".
-
-REFERENCE TABLE (ISO 3758 / GINETEX):
-${table}
-## general_rules
-- Washing temperatures are shown as a numeral written inside the tub symbol (e.g. "40" for 40°C), not as dots.
-- Drying and ironing heat levels are shown as dots inside the symbol — more dots means a higher setting, within that category only.
-- If no bleaching symbol is present on a label, any type of bleach is permitted.
-- Milder forms of treatment and lower temperatures than those indicated on the label are always permitted, even if not explicitly shown.
-- A cross (X) through any symbol means that treatment must not be used.
-- One bar underneath a symbol means a milder/gentle version of that treatment is required; two bars mean a very mild/delicate version.
-- GINETEX specifies symbols should appear in this order on a label: Washing → Bleaching → Drying → Ironing → Professional Care.
-
-Also extract:
-- Fabric composition text (material + percentage), in whatever language it is printed
-- Brand name and size, if visible
-- Any "Made in ..." origin text
-- Detect the language of any printed text, and translate it to English in "translated_text" (leave "translated_text" null if the original is already English, or if there is no text to translate)
-
-If a symbol's style looks like the US ASTM standard (e.g. dot-only temperature encoding), map it to the closest equivalent ISO symbol from the table. Do not flag needs_user_review just because the label has English text or looks hybrid. Only flag needs_user_review if a symbol is completely unreadable or has no equivalent meaning in the table.
-
-Respond with ONLY valid JSON matching this exact shape, no markdown fences, no preamble:
-{
-  "care_symbols": [{ "id": "string", "category": "string", "label": "string", "confidence": "high" | "medium" | "low" }],
-  "fabric_composition": [{ "material": "string", "percentage": 100 }],
-  "brand": "string | null",
-  "size": "string | null",
-  "origin_text": "string | null",
-  "detected_language": "string | null",
-  "original_text": "string | null",
-  "translated_text": "string | null",
-  "label_standard_guess": "iso_ginetex" | "astm" | "unclear",
-  "needs_user_review": true,
-  "review_notes": "string | null"
-}`;
+  // Render the template with the reference table
+  return `${systemPrompt}\n\n${renderPrompt(userTemplate, { reference_table: table })}`;
 }
 
 serve(async (req: Request) => {
@@ -96,8 +68,17 @@ serve(async (req: Request) => {
     }
 
     const prompt = buildSystemPrompt();
+    const configuredModel = promptConfig.model as string;
+    const configuredTemp = (promptConfig.temperature as number) ?? 0.1;
+    const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 1000;
 
-    const MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    const MODELS = [
+      configuredModel,
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+    ].filter((model, index, models) => model && models.indexOf(model) === index);
+
     let data: any = null;
     let lastError = "";
 
@@ -119,7 +100,8 @@ serve(async (req: Request) => {
               },
             ],
             generationConfig: {
-              temperature: 0.1,
+              temperature: configuredTemp,
+              maxOutputTokens: configuredMaxTokens,
               responseMimeType: "application/json",
             },
           }),

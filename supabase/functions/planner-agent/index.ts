@@ -9,6 +9,7 @@ import {
   readJsonBody,
   validationErrorResponse,
 } from "../_shared/validate.ts";
+import { loadPrompt, renderPrompt } from "../_shared/prompt-loader.ts";
 declare const Deno: any;
 
 // Whitelist the only planner steps the client is allowed to request. An
