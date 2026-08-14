@@ -91,7 +91,7 @@ function FeaturesPage() {
       <section className="section">
         <div className="container">
           <div className="features-grid">
-            {FEATURES.map((f, i) => (
+            {FEATURES.map((f) => (
               <div key={f.title} className="feature-detail-card">
                 <div className="feature-detail-icon">{f.icon}</div>
                 <h2 className="feature-detail-title">{f.title}</h2>
