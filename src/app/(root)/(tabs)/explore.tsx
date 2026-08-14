@@ -400,10 +400,14 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   const uniqueReactions = Object.keys(reactionCounts);
 
   // Feed only carries a cheap count aggregate — actual comments load on demand.
-  const countAggregate = (post as any).post_comments?.[0]?.count;
+  const countAggregate = (post as any).comments_count?.[0]?.count ?? (post as any).post_comments?.[0]?.count;
   const replyCount = commentsLoaded ? comments.length : (countAggregate ?? 0);
+  
+  // Use loaded comments if available, otherwise use recent_comments from feed
+  const sourceComments = commentsLoaded ? comments : ((post as any).recent_comments || []);
+
   // Get one avatar per comment (up to 4), keeping duplicates so count matches.
-  const replierAvatars = comments
+  const replierAvatars = sourceComments
     .map(
       (c: any) =>
         c.user_profiles?.avatar_url ||

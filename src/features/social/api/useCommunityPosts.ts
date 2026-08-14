@@ -85,7 +85,8 @@ export function useCommunityPosts() {
             avatar_url
           ),
           post_reactions(user_id, reaction_type),
-          post_comments(count)
+          comments_count:post_comments(count),
+          recent_comments:post_comments(id, user_profiles(avatar_url, username))
         `,
           userId,
           force,
@@ -97,7 +98,8 @@ export function useCommunityPosts() {
           apply: (q) =>
             q
               .order("created_at", { ascending: false })
-              .range(nextPage * PAGE_SIZE, nextPage * PAGE_SIZE + PAGE_SIZE - 1),
+              .range(nextPage * PAGE_SIZE, nextPage * PAGE_SIZE + PAGE_SIZE - 1)
+              .limit(4, { foreignTable: 'recent_comments' }),
         });
 
         const localMockPosts = usePostsStore
