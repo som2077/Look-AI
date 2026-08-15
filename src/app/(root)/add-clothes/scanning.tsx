@@ -1,4 +1,4 @@
-import { analyzeClothingImage } from "@/features/scanning/api/gemini-vision";
+import { analyzeClothingImage } from "@/features/scanning/api/ai-vision";
 import { useAnalysisCompleteNotification } from "@/shared/notifications/notification-service";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -93,7 +93,7 @@ export default function AddClothesScanningScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // Run Gemini analysis
+  // Run AI Analysis
   useEffect(() => {
     if (!photoUri) return;
 
@@ -154,7 +154,7 @@ export default function AddClothesScanningScreen() {
             AI is analyzing{"\n"}your item ✨
           </Text>
           <Text style={{ color: "#6B7280", fontSize: 14, marginTop: 6 }}>
-            Powered by Gemini Vision
+            Powered by AI Vision
           </Text>
         </Animated.View>
 

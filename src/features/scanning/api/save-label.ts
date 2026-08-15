@@ -1,6 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { uploadToCloudinary } from "@/shared/cloudinary/client";
-import { LabelAnalysis } from "./gemini-scan";
+import { LabelAnalysis } from "./ai-scan";
 
 export interface SaveLabelParams {
   supabase: SupabaseClient;

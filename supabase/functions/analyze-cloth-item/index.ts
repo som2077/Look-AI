@@ -81,12 +81,12 @@ serve(async (req) => {
       .map((k: string) => k.trim())
       .filter((k: string) => k.length > 0);
 
-    const geminiKey =
-      Deno.env.get("GOOGLE_GEMINI_API_KEY") ||
-      Deno.env.get("EXPO_PUBLIC_GEMINI_API_KEY");
+    const openaiKey =
+      Deno.env.get("OPENAI_API_KEY") ||
+      Deno.env.get("EXPO_PUBLIC_OPENAI_API_KEY");
 
-    if (!geminiKey) {
-      throw new Error("Missing GOOGLE_GEMINI_API_KEY environment variable");
+    if (!openaiKey) {
+      throw new Error("Missing OPENAI_API_KEY environment variable");
     }
 
     // 1. Upload original image to Cloudinary
@@ -197,7 +197,7 @@ serve(async (req) => {
       }
     }
 
-    // 4. Analyze with Gemini Vision (Multi-model fallbacks)
+    // 4. Analyze with OpenAI Vision
     const promptConfig = loadPrompt("analyze_cloth_item");
     const systemPrompt = promptConfig.system_prompt as string;
     const userPrompt = renderPrompt(promptConfig.user_template as string, {
@@ -205,55 +205,52 @@ serve(async (req) => {
     });
     const visionPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
-    const configuredModel = promptConfig.model as string;
-    const MODELS = [
-      configuredModel,
-      "gemini-2.5-flash-lite",
-      "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-2.0-flash-lite",
-    ].filter((model, index, models) => model && models.indexOf(model) === index);
-
     let parsedVision: any = null;
 
-    for (const model of MODELS) {
-      try {
-        const configuredTemp = (promptConfig.temperature as number) ?? 0.2;
-        const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 1000;
-        const geminiVisionRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [
+    try {
+      const configuredTemp = (promptConfig.temperature as number) ?? 0.2;
+      const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 1000;
+      const aiImageMimeType = removedBgB64 ? "image/png" : mimeType;
+      
+      const openaiVisionRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openaiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          temperature: configuredTemp,
+          max_tokens: configuredMaxTokens,
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: visionPrompt },
                 {
-                  parts: [
-                    { text: visionPrompt },
-                    { inline_data: { mime_type: removedBgB64 ? "image/png" : mimeType, data: bgBase64 } },
-                  ],
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${aiImageMimeType};base64,${bgBase64}`,
+                  },
                 },
               ],
-              generationConfig: { temperature: configuredTemp, maxOutputTokens: configuredMaxTokens },
-            }),
-          },
-        );
+            },
+          ],
+        }),
+      });
 
-        const visionJson = (await geminiVisionRes.json()) as any;
-        const rawVisionText =
-          visionJson?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const visionJson = (await openaiVisionRes.json()) as any;
+      const rawVisionText = visionJson?.choices?.[0]?.message?.content || "";
 
-        if (rawVisionText) {
-          const cleanVisionText = rawVisionText
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
-            .trim();
-          parsedVision = JSON.parse(cleanVisionText);
-          break;
-        }
-      } catch (mErr) {
-        console.warn(`Vision model ${model} failed:`, mErr);
+      if (rawVisionText) {
+        const cleanVisionText = rawVisionText
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+        parsedVision = JSON.parse(cleanVisionText);
       }
+    } catch (mErr) {
+      console.warn(`Vision model failed:`, mErr);
     }
 
     if (!parsedVision) {
@@ -282,35 +279,37 @@ Do not use markdown blocks.`;
 
     let parsedFormFields: any = null;
 
-    for (const model of MODELS) {
-      try {
-        const geminiTextRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: textPrompt }] }],
-              generationConfig: { temperature: 0.1 },
-            }),
-          },
-        );
+    try {
+      const openaiTextRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openaiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          temperature: 0.1,
+          messages: [
+            {
+              role: "user",
+              content: [{ type: "text", text: textPrompt }],
+            },
+          ],
+        }),
+      });
 
-        const textJson = (await geminiTextRes.json()) as any;
-        const rawFlashText =
-          textJson?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const textJson = (await openaiTextRes.json()) as any;
+      const rawFlashText = textJson?.choices?.[0]?.message?.content || "";
 
-        if (rawFlashText) {
-          const cleanFlashText = rawFlashText
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
-            .trim();
-          parsedFormFields = JSON.parse(cleanFlashText);
-          break;
-        }
-      } catch (tErr) {
-        console.warn(`Text mapping model ${model} failed:`, tErr);
+      if (rawFlashText) {
+        const cleanFlashText = rawFlashText
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+        parsedFormFields = JSON.parse(cleanFlashText);
       }
+    } catch (tErr) {
+      console.warn(`Text mapping model failed:`, tErr);
     }
 
     if (!parsedFormFields) {
@@ -332,8 +331,8 @@ Do not use markdown blocks.`;
         original_url: originalUrl,
         bg_removed_url: bgRemovedUrl,
         form_fields: parsedFormFields,
-        raw_gemini_vision: parsedVision,
-        raw_gemini_flash: parsedFormFields,
+        raw_ai_vision: parsedVision,
+        raw_ai_flash: parsedFormFields,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

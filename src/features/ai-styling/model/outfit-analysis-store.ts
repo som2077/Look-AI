@@ -1,5 +1,5 @@
 import { uploadToCloudinaryWithBgRemoval } from "@/features/scanning/api/cloudinary-upload";
-import { analyzeClothingFull } from "@/features/scanning/api/gemini-scan";
+import { analyzeClothingFull } from "@/features/scanning/api/ai-scan";
 import { useWeatherStore } from "@/features/weather/model/weather-store";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -23,7 +23,7 @@ export interface LastOutfit {
   mode: string;
   isSaved?: boolean;
   colorPalette?: string[];
-  clothingData?: any; // Stores Gemini AI data for scan-cloth mode
+  clothingData?: any; // Stores OpenAI data for scan-cloth mode
 }
 
 interface OutfitAnalysisState {
@@ -220,9 +220,9 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>()(
               currentTargetProgress = 100; // allow finish on error
             });
         } else if (currentMode === "label") {
-          currentTargetProgress = 25; // wait for Gemini
-          // For label mode, we just run Gemini and finish. No background removal.
-          import("@/features/scanning/api/gemini-scan").then(
+          currentTargetProgress = 25; // wait for AI
+          // For label mode, we just run AI and finish. No background removal.
+          import("@/features/scanning/api/ai-scan").then(
             ({ analyzeClothLabel }) => {
               analyzeClothLabel(imageUri)
                 .then((data) => {
@@ -248,9 +248,9 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>()(
             },
           );
         } else if (currentMode === "fit-check") {
-          currentTargetProgress = 25; // wait for Gemini
+          currentTargetProgress = 25; // wait for AI
           // For fit check, we evaluate the full picture with person included. No background removal.
-          import("@/features/scanning/api/gemini-scan").then(
+          import("@/features/scanning/api/ai-scan").then(
             ({ analyzeFitCheck }) => {
               analyzeFitCheck(imageUri)
                 .then((data) => {

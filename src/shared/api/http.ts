@@ -3,7 +3,7 @@ import { ApiError, backoffDelay, isTransientError, sleep } from "./errors";
 // ─── request() — single wrapper for external HTTP calls ───────────────────────
 // Adds: AbortController timeout, exponential-backoff retry on transient
 // failures, JSON handling, and normalization of every failure into ApiError.
-// Route all external fetch() calls (Shein, ASOS, weather, Gemini fallback,
+// Route all external fetch() calls (Shein, ASOS, weather, AI fallback,
 // Cloudinary, planner edge function) through this so timeout/retry/error
 // behavior is consistent.
 

@@ -62,66 +62,57 @@ serve(async (req: Request) => {
       "base64Image",
     );
 
-    const geminiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY");
-    if (!geminiKey) {
-      throw new Error("Missing GOOGLE_GEMINI_API_KEY");
+    const openaiKey = Deno.env.get("OPENAI_API_KEY") || Deno.env.get("EXPO_PUBLIC_OPENAI_API_KEY");
+    if (!openaiKey) {
+      throw new Error("Missing OPENAI_API_KEY");
     }
 
     const prompt = buildSystemPrompt();
-    const configuredModel = promptConfig.model as string;
     const configuredTemp = (promptConfig.temperature as number) ?? 0.1;
     const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 1000;
-
-    const MODELS = [
-      configuredModel,
-      "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-    ].filter((model, index, models) => model && models.indexOf(model) === index);
 
     let data: any = null;
     let lastError = "";
 
-    for (const model of MODELS) {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${openaiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: configuredTemp,
+        max_tokens: configuredMaxTokens,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
               {
-                parts: [
-                  { text: prompt },
-                  {
-                    inline_data: { mime_type: "image/jpeg", data: base64Image },
-                  },
-                ],
+                type: "image_url",
+                image_url: {
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
               },
             ],
-            generationConfig: {
-              temperature: configuredTemp,
-              maxOutputTokens: configuredMaxTokens,
-              responseMimeType: "application/json",
-            },
-          }),
-        },
-      );
+          },
+        ],
+      }),
+    });
 
-      if (response.ok) {
-        data = await response.json();
-        break;
-      } else {
-        lastError = await response.text();
-        // If it's a 429, we continue to the next model in the list
-      }
+    if (response.ok) {
+      data = await response.json();
+    } else {
+      lastError = await response.text();
     }
 
     if (!data) {
-      throw new Error(`Gemini API Error: ${lastError}`);
+      throw new Error(`OpenAI API Error: ${lastError}`);
     }
 
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    const rawText = data?.choices?.[0]?.message?.content || "{}";
 
     // Attempt to parse JSON safely
     let parsedResult = {};
@@ -132,7 +123,7 @@ serve(async (req: Request) => {
         .trim();
       parsedResult = JSON.parse(cleanText);
     } catch (e) {
-      console.error("Failed to parse Gemini JSON output:", rawText);
+      console.error("Failed to parse AI JSON output:", rawText);
       throw new Error("Invalid JSON response from AI");
     }
 

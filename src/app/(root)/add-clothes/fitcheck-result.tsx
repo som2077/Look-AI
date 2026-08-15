@@ -1,5 +1,5 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
-import { FitCheckAnalysis } from "@/features/scanning/api/gemini-scan";
+import { FitCheckAnalysis } from "@/features/scanning/api/ai-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import {
   IconArrowLeft,

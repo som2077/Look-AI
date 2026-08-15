@@ -1,5 +1,5 @@
 /**
- * Gemini Vision API — Clothing Analyzer
+ * AI Vision API — Clothing Analyzer
  * Analyzes a clothing image and extracts structured metadata.
  */
 
@@ -69,7 +69,7 @@ async function uriToBase64(uri: string): Promise<string> {
       });
       if (base64) return base64;
     } catch (fsErr) {
-      console.warn("[Gemini-Vision] FileSystem read failed, attempting fetch fallback:", fsErr);
+      console.warn("[ai-vision] FileSystem read failed, attempting fetch fallback:", fsErr);
     }
   }
 
@@ -87,13 +87,13 @@ async function uriToBase64(uri: string): Promise<string> {
       reader.readAsDataURL(blob);
     });
   } catch (err) {
-    console.error("[Gemini-Vision] uriToBase64 failed:", err);
+    console.error("[ai-vision] uriToBase64 failed:", err);
     throw err;
   }
 }
 
 /**
- * Analyzes a clothing image using Gemini Vision API.
+ * Analyzes a clothing image using AI Vision API.
  * @param imageUri - Local file URI of the image
  * @returns Structured clothing analysis or null on error
  */
@@ -105,7 +105,7 @@ export async function analyzeClothingImage(
     try {
       base64Image = await uriToBase64(imageUri);
     } catch (err) {
-      console.error("[Gemini-Vision] Error converting image URI to base64:", err);
+      console.error("[ai-vision] Error converting image URI to base64:", err);
       return null;
     }
 
@@ -114,29 +114,27 @@ export async function analyzeClothingImage(
       : "image/jpeg";
 
     const requestBody = {
-      contents: [
+      model: "gpt-4o-mini",
+      temperature: 0.2,
+      max_tokens: 512,
+      messages: [
         {
-          parts: [
-            { text: SYSTEM_PROMPT },
+          role: "user",
+          content: [
+            { type: "text", text: SYSTEM_PROMPT },
             {
-              inline_data: {
-                mime_type: mimeType,
-                data: base64Image,
+              type: "image_url",
+              image_url: {
+                url: `data:${mimeType};base64,${base64Image}`,
               },
             },
           ],
         },
       ],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 512,
-      },
     };
 
-    // ── Try models in order, fall back on quota errors ──────────────────────
     const MODELS = [
-      "gemini-1.5-flash",
-      "gemini-1.5-pro",
+      "gpt-4o-mini"
     ];
 
     let lastError = "";
@@ -146,67 +144,67 @@ export async function analyzeClothingImage(
       let invokeFailed = false;
 
       try {
-        const { data, error: edgeError } = await supabase.functions.invoke("gemini-proxy", {
+        const { data, error: edgeError } = await supabase.functions.invoke("openai-proxy", {
           body: { model, body: requestBody },
         });
 
         if (edgeError) {
-          console.warn(`[Gemini-Vision] Edge function failed for ${model}, attempting direct fetch...`, edgeError);
+          console.warn(`[AI-Vision] Edge function failed for ${model}, attempting direct fetch...`, edgeError);
           invokeFailed = true;
         } else {
-          textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+          textResponse = data?.choices?.[0]?.message?.content ?? null;
         }
       } catch (invokeErr) {
-        console.warn(`[Gemini-Vision] Invoke exception for ${model}, attempting direct fetch...`, invokeErr);
+        console.warn(`[AI-Vision] Invoke exception for ${model}, attempting direct fetch...`, invokeErr);
         invokeFailed = true;
       }
 
       if (invokeFailed) {
         // Fallback to direct fetch
-        const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+        const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
         if (!apiKey) {
-          console.error("[Gemini-Vision] No EXPO_PUBLIC_GEMINI_API_KEY available for fallback.");
+          console.error("[AI-Vision] No EXPO_PUBLIC_OPENAI_API_KEY available for fallback.");
           continue;
         }
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+        const url = `https://api.openai.com/v1/chat/completions`;
         const res = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-goog-api-key": apiKey
+            "Authorization": `Bearer ${apiKey}`
           },
           body: JSON.stringify(requestBody),
         });
 
         if (!res.ok) {
           const errText = await res.text();
-          console.error(`[Gemini-Vision] Direct fetch failed for ${model}:`, res.status, errText);
+          console.error(`[AI-Vision] Direct fetch failed for ${model}:`, res.status, errText);
           continue;
         }
 
         const data = await res.json();
-        textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+        textResponse = data?.choices?.[0]?.message?.content ?? null;
       }
 
       if (!textResponse) {
-        console.error(`[Gemini-Vision] No text returned from ${model}`);
+        console.error(`[AI-Vision] No text returned from ${model}`);
         continue;
       }
 
       const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.error(`[Gemini-Vision] No JSON from ${model}:`, textResponse);
+        console.error(`[AI-Vision] No JSON from ${model}:`, textResponse);
         continue;
       }
 
       const parsed = JSON.parse(jsonMatch[0]) as ClothingAnalysis;
-      console.log(`[Gemini-Vision] ✅ Success with model: ${model}`);
+      console.log(`[AI-Vision] ✅ Success with model: ${model}`);
       return parsed;
     }
 
     // All models failed
-    console.warn(`[Gemini] All models failed. Last error: ${lastError}. Using fallback.`);
+    console.warn(`[AI-Vision] All models failed. Last error: ${lastError}. Using fallback.`);
     return getFallbackAnalysis();
   } catch (err) {
     console.error("analyzeClothingImage error:", err);

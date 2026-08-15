@@ -1,6 +1,6 @@
 import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
-import { LabelAnalysis } from "@/features/scanning/api/gemini-scan";
+import { LabelAnalysis } from "@/features/scanning/api/ai-scan";
 import { saveLabelToDatabase } from "@/features/scanning/api/save-label";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useSavedStore } from "@/features/wardrobe/model/saved-store";

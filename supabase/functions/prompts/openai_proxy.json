@@ -1,9 +1,9 @@
 {
-  "name": "gemini_proxy",
+  "name": "openai_proxy",
   "version": 1,
   "system_prompt": "{system_prompt}",
   "user_template": "{user_prompt}",
-  "model": "gemini-2.0-flash",
+  "model": "gpt-4o-mini",
   "temperature": 0.5,
   "maxTokens": 2000,
   "vision_required": false

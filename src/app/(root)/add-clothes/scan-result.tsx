@@ -1,5 +1,5 @@
 import { uploadToCloudinaryWithBgRemoval } from "@/features/scanning/api/cloudinary-upload";
-import { FullClothingAnalysis, analyzeClothingFull } from "@/features/scanning/api/gemini-scan";
+import { FullClothingAnalysis, analyzeClothingFull } from "@/features/scanning/api/ai-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-native";
@@ -165,7 +165,7 @@ export default function ScanResultScreen() {
           setOriginalUrl(photoUri);
         }
         setLoadingText("AI is extracting styling details...");
-        // 2. Analyze with Gemini on the background-removed image (or fallback)
+        // 2. Analyze with OpenAI on the background-removed image (or fallback)
         const aiData = await analyzeClothingFull(aiImageUri);
         
         // Handle Error Rejection

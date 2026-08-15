@@ -41,8 +41,8 @@ describe('saveClothToWardrobe', () => {
         category: 'Top',
         color: 'Red',
       },
-      raw_gemini_vision: {},
-      raw_gemini_flash: {}
+      raw_ai_vision: {},
+      raw_ai_flash: {}
     };
 
     const result = await saveClothToWardrobe(mockSupabase as SupabaseClient, analysisResult, 'camera', 'user-1');

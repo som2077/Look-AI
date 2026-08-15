@@ -2,7 +2,7 @@ import { uploadToCloudinaryWithBgRemoval } from "@/features/scanning/api/cloudin
 import {
   FullClothingAnalysis,
   analyzeClothingFull,
-} from "@/features/scanning/api/gemini-scan";
+} from "@/features/scanning/api/ai-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
@@ -85,7 +85,7 @@ export const usePendingBatchStore = create<PendingBatchState>()(
             console.warn("BG removal failed for batch item:", bgError);
           }
 
-          // 2. Gemini Analysis
+          // 2. AI Analysis
           const aiData = await analyzeClothingFull(finalUri);
           if (
             !aiData ||

@@ -24,8 +24,8 @@ export interface ClothAnalysisResult {
     neckType?: string;
     style?: string;
   };
-  raw_gemini_vision?: any;
-  raw_gemini_flash?: any;
+  raw_ai_vision?: any;
+  raw_ai_flash?: any;
   error?: string;
 }
 
@@ -59,8 +59,8 @@ export async function saveClothToWardrobe(
     ? Array.isArray(fields.style)
       ? fields.style
       : [fields.style]
-    : analysisResult.raw_gemini_vision?.style
-      ? [analysisResult.raw_gemini_vision.style]
+    : analysisResult.raw_ai_vision?.style
+      ? [analysisResult.raw_ai_vision.style]
       : [];
 
   const imageUrl =
@@ -92,29 +92,29 @@ export async function saveClothToWardrobe(
         category: fields.category || "Top",
         sub_category:
           fields.clothType ||
-          analysisResult.raw_gemini_vision?.clothType ||
+          analysisResult.raw_ai_vision?.clothType ||
           null,
         primary_color: fields.color || null,
         secondary_colors: [],
         pattern:
           fields.pattern ||
-          analysisResult.raw_gemini_vision?.pattern ||
+          analysisResult.raw_ai_vision?.pattern ||
           null,
         fabric_guess:
           fields.material ||
-          analysisResult.raw_gemini_vision?.material ||
+          analysisResult.raw_ai_vision?.material ||
           null,
         fit:
           fields.fit ||
-          analysisResult.raw_gemini_vision?.fit ||
+          analysisResult.raw_ai_vision?.fit ||
           null,
         sleeve_type:
           fields.sleeveType ||
-          analysisResult.raw_gemini_vision?.sleeve_type ||
+          analysisResult.raw_ai_vision?.sleeve_type ||
           null,
         neck_type:
           fields.neckType ||
-          analysisResult.raw_gemini_vision?.neckline ||
+          analysisResult.raw_ai_vision?.neckline ||
           null,
         style: styleArray,
         season: seasonArray,
@@ -127,8 +127,8 @@ export async function saveClothToWardrobe(
         image_url: imageUrl,
         original_image_url: analysisResult.original_url || imageUrl,
         annotations: {
-          vision: analysisResult.raw_gemini_vision || {},
-          flash: analysisResult.raw_gemini_flash || {},
+          vision: analysisResult.raw_ai_vision || {},
+          flash: analysisResult.raw_ai_flash || {},
         },
         confidence: 0.95,
         source: scanSource || "camera",

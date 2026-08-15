@@ -6,8 +6,8 @@
 export * from "./model/scan-history-store";
 
 // API
-export * from "./api/gemini-scan";
-export * from "./api/gemini-vision";
+export * from "./api/ai-scan";
+export * from "./api/ai-vision";
 export * from "./api/cloudinary-upload";
 
 // UI

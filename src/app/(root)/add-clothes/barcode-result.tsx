@@ -1,4 +1,4 @@
-import { BarcodeAnalysis, analyzeBarcodeImage } from "@/features/scanning/api/gemini-scan"
+import { BarcodeAnalysis, analyzeBarcodeImage } from "@/features/scanning/api/ai-scan"
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store"
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store"
 import { useStreakSync } from "@/features/streaks/api/useStreakSync"

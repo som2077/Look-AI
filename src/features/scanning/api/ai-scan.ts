@@ -8,16 +8,15 @@ import { supabase } from "@/shared/supabase/client";
 import * as FileSystem from "expo-file-system";
 
 const MODELS = [
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
+  "gpt-4o-mini"
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface GeminiVisionResponse {
-  candidates?: Array<{
-    finishReason?: string;
-    content?: { parts?: Array<{ text?: string }> };
+export interface OpenAIVisionResponse {
+  choices?: Array<{
+    finish_reason?: string;
+    message?: { content?: string };
   }>;
 }
 
@@ -116,7 +115,7 @@ async function uriToBase64(uri: string): Promise<string> {
       });
       if (base64) return base64;
     } catch (fsErr) {
-      console.warn("[Gemini-Scan] FileSystem read failed, attempting fetch fallback:", fsErr);
+      console.warn("[ai-scan] FileSystem read failed, attempting fetch fallback:", fsErr);
     }
   }
 
@@ -134,12 +133,12 @@ async function uriToBase64(uri: string): Promise<string> {
       reader.readAsDataURL(blob);
     });
   } catch (err) {
-    console.error("[Gemini-Scan] uriToBase64 failed:", err);
+    console.error("[ai-scan] uriToBase64 failed:", err);
     throw err;
   }
 }
 
-async function callGeminiVision(
+async function callOpenAIVision(
   imageUri: string,
   prompt: string,
 ): Promise<string | null> {
@@ -147,7 +146,7 @@ async function callGeminiVision(
   try {
     base64 = await uriToBase64(imageUri);
   } catch (err) {
-    console.error("[Gemini-Scan] Error converting image URI to base64:", err);
+    console.error("[AI-Scan] Error converting image URI to base64:", err);
     return null;
   }
 
@@ -156,19 +155,24 @@ async function callGeminiVision(
     : "image/jpeg";
 
   const body = {
-    contents: [
+    model: "gpt-4o-mini",
+    temperature: 0.2,
+    max_tokens: 1024,
+    response_format: { type: "json_object" },
+    messages: [
       {
-        parts: [
-          { text: prompt },
-          { inline_data: { mime_type: mimeType, data: base64 } },
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:${mimeType};base64,${base64}`,
+            },
+          },
         ],
       },
     ],
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 1024,
-      responseMimeType: "application/json",
-    },
   };
 
   for (const model of MODELS) {
@@ -176,57 +180,60 @@ async function callGeminiVision(
     let invokeFailed = false;
 
     try {
-      const { data, error } = await supabase.functions.invoke("gemini-proxy", {
+      const { data, error } = await supabase.functions.invoke("openai-proxy", {
         body: { model, body },
       });
 
       if (error) {
-        console.warn(`[Gemini-Scan] Edge function failed for ${model}, attempting direct fetch...`, error);
+        console.warn(`[AI-Scan] Edge function failed for ${model}, attempting direct fetch...`, error);
         invokeFailed = true;
       } else {
-        const candidate = data?.candidates?.[0];
-        if (candidate?.finishReason === "SAFETY") {
+        const choice = data?.choices?.[0];
+        if (choice?.finish_reason === "content_filter") {
           return JSON.stringify({ error: "SAFETY_VIOLATION" });
         }
-        textResponse = candidate?.content?.parts?.[0]?.text || null;
+        textResponse = choice?.message?.content || null;
       }
     } catch (err) {
-      console.warn(`[Gemini-Scan] Invoke exception for ${model}, attempting direct fetch...`, err);
+      console.warn(`[AI-Scan] Invoke exception for ${model}, attempting direct fetch...`, err);
       invokeFailed = true;
     }
 
     if (invokeFailed) {
       // Fallback to direct fetch
-      const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+      const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
       if (!apiKey) {
-        console.error("[Gemini-Scan] No EXPO_PUBLIC_GEMINI_API_KEY available for fallback.");
+        console.error("[AI-Scan] No EXPO_PUBLIC_OPENAI_API_KEY available for fallback.");
         continue;
       }
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-      let data: GeminiVisionResponse | null = null;
+      const url = `https://api.openai.com/v1/chat/completions`;
+      let data: OpenAIVisionResponse | null = null;
       try {
-        data = await request<GeminiVisionResponse>({
+        data = await request<OpenAIVisionResponse>({
           url,
           method: "POST",
-          headers: { "x-goog-api-key": apiKey },
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
           body,
-          retries: 0, // the model fallback loop below is the retry strategy
+          retries: 0,
         });
       } catch (err) {
-        console.error(`[Gemini-Scan] Direct fetch failed for ${model}:`, err);
+        console.error(`[AI-Scan] Direct fetch failed for ${model}:`, err);
         continue;
       }
 
-      const candidate = data?.candidates?.[0];
-      if (candidate?.finishReason === "SAFETY") {
+      const choice = data?.choices?.[0];
+      if (choice?.finish_reason === "content_filter") {
         return JSON.stringify({ error: "SAFETY_VIOLATION" });
       }
-      textResponse = candidate?.content?.parts?.[0]?.text || null;
+      textResponse = choice?.message?.content || null;
     }
 
     if (!textResponse) {
-      console.warn(`[Gemini-Scan] Empty response from model ${model}`);
+      console.warn(`[AI-Scan] Empty response from model ${model}`);
       continue;
     }
 
@@ -302,7 +309,7 @@ Return only valid JSON. No markdown, no explanation.`;
 export async function analyzeClothingFull(
   imageUri: string, // Can be Cloudinary URL or local URI
 ): Promise<FullClothingAnalysis> {
-  const text = await callGeminiVision(imageUri, CLOTH_PROMPT);
+  const text = await callOpenAIVision(imageUri, CLOTH_PROMPT);
   return parseJson<FullClothingAnalysis>(text, {
     category: "Top",
     subCategory: "T-shirt",
@@ -345,7 +352,7 @@ Return only valid JSON. No markdown.`;
 export async function analyzeBarcodeImage(
   imageUri: string,
 ): Promise<BarcodeAnalysis> {
-  const text = await callGeminiVision(imageUri, BARCODE_PROMPT);
+  const text = await callOpenAIVision(imageUri, BARCODE_PROMPT);
   return parseJson<BarcodeAnalysis>(text, {
     brand: "Unknown",
     itemName: "Clothing Item",
@@ -466,7 +473,7 @@ Be constructive and highly specific. Return only valid JSON. No markdown.`;
 export async function analyzeFitCheck(
   imageUri: string,
 ): Promise<FitCheckAnalysis> {
-  const text = await callGeminiVision(imageUri, FITCHECK_PROMPT);
+  const text = await callOpenAIVision(imageUri, FITCHECK_PROMPT);
   return parseJson<FitCheckAnalysis>(text, {
     fitScore: 75,
     ratingTitle: "Good Look ✨",
