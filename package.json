@@ -3,7 +3,8 @@
   "main": "expo-router/entry",
   "version": "4.2.9",
   "scripts": {
-    "start": "expo start --max-workers 4",
+    "start": "UV_THREADPOOL_SIZE=16 expo start --max-workers 4",
+    "dev": "UV_THREADPOOL_SIZE=16 expo start --max-workers 4",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android --max-workers 4",
     "ios": "expo run:ios --max-workers 4",
@@ -100,6 +101,7 @@
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.1.0",
+    "@types/react-test-renderer": "^19.1.0",
     "eslint": "^9.39.4",
     "eslint-config-expo": "~10.0.0",
     "hermes-parser": "^0.37.0",

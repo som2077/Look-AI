@@ -7,6 +7,6 @@ const Purchases = {
   logOut: jest.fn(async () => ({ customerInfo: null })),
 };
 
-Purchases.LOG_LEVEL = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
+(Purchases as any).LOG_LEVEL = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
 
 export default Purchases;
