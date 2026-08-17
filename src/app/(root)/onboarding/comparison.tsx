@@ -1,7 +1,7 @@
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
 import { useRouter } from "expo-router";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import Animated, {

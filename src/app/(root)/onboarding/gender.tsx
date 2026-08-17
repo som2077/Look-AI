@@ -7,7 +7,7 @@ import { useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { Mars, Venus } from "lucide-react-native";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 

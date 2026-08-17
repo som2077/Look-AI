@@ -1,7 +1,7 @@
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { router, useLocalSearchParams } from "expo-router";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 import { Text, View } from "react-native";
 
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";

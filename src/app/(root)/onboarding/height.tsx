@@ -5,7 +5,7 @@ import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/Onboarding
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { router, useLocalSearchParams } from "expo-router";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 import { Text, View } from "react-native";
 
 export default function HeightScreen() {

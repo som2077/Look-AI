@@ -7,7 +7,7 @@ import {
 import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 import React, { useCallback, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

@@ -2,7 +2,7 @@ import { Href, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 
 const getStartedLogo = require("@/assets/images/getStartedLogo.png");
 

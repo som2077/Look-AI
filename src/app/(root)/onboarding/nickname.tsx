@@ -4,7 +4,7 @@ import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/Onboarding
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 import { useState } from "react";
 import { Text, TextInput, View } from "react-native";
 

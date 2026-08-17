@@ -5,7 +5,7 @@ import { ResizeMode, Video } from "expo-av";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Lock } from "lucide-react-native";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 import { Text, View } from "react-native";
 
 export default function TrustScreen() {

@@ -49,10 +49,6 @@ const config: ExpoConfig = {
     softwareKeyboardLayoutMode: "resize",
   } as any,
 
-  web: {
-    output: "static",
-    favicon: "./assets/android/ic_launcher-web.png",
-  },
 
   plugins: [
     "expo-router",

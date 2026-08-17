@@ -31,7 +31,7 @@ import {
   Tent,
   Umbrella,
 } from "lucide-react-native";
-import analytics from "@react-native-firebase/analytics";
+import analytics from "@/shared/telemetry/analytics";
 import React, { useCallback } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
