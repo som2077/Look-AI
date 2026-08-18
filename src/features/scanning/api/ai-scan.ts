@@ -3,7 +3,6 @@
  * Handles: Full Cloth Scan, Barcode Image, Care Label OCR, Fit Check
  */
 
-import { request } from "@/shared/api/http";
 import { supabase } from "@/shared/supabase/client";
 import * as FileSystem from "expo-file-system";
 
@@ -200,36 +199,8 @@ async function callOpenAIVision(
     }
 
     if (invokeFailed) {
-      // Fallback to direct fetch
-      const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
-      if (!apiKey) {
-        console.error("[AI-Scan] No EXPO_PUBLIC_OPENAI_API_KEY available for fallback.");
-        continue;
-      }
-
-      const url = `https://api.openai.com/v1/chat/completions`;
-      let data: OpenAIVisionResponse | null = null;
-      try {
-        data = await request<OpenAIVisionResponse>({
-          url,
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-          },
-          body,
-          retries: 0,
-        });
-      } catch (err) {
-        console.error(`[AI-Scan] Direct fetch failed for ${model}:`, err);
-        continue;
-      }
-
-      const choice = data?.choices?.[0];
-      if (choice?.finish_reason === "content_filter") {
-        return JSON.stringify({ error: "SAFETY_VIOLATION" });
-      }
-      textResponse = choice?.message?.content || null;
+      console.warn(`[AI-Scan] Supabase Edge Function call failed for ${model}. Direct key exposure is disabled for security.`);
+      continue;
     }
 
     if (!textResponse) {

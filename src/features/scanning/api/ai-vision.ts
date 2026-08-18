@@ -160,31 +160,8 @@ export async function analyzeClothingImage(
       }
 
       if (invokeFailed) {
-        // Fallback to direct fetch
-        const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
-        if (!apiKey) {
-          console.error("[AI-Vision] No EXPO_PUBLIC_OPENAI_API_KEY available for fallback.");
-          continue;
-        }
-
-        const url = `https://api.openai.com/v1/chat/completions`;
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!res.ok) {
-          const errText = await res.text();
-          console.error(`[AI-Vision] Direct fetch failed for ${model}:`, res.status, errText);
-          continue;
-        }
-
-        const data = await res.json();
-        textResponse = data?.choices?.[0]?.message?.content ?? null;
+        console.warn(`[AI-Vision] Supabase Edge Function call failed for ${model}. Direct key exposure is disabled for security.`);
+        continue;
       }
 
       if (!textResponse) {
