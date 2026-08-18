@@ -6,14 +6,14 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["TikTokSans16pt-Regular", "sans-serif"],
-        regular: ["TikTokSans16pt-Regular", "sans-serif"],
-        medium: ["TikTokSans16pt-Medium", "sans-serif"],
-        semibold: ["TikTokSans16pt-SemiBold", "sans-serif"],
-        bold: ["TikTokSans16pt-Bold", "sans-serif"],
-        extrabold: ["TikTokSans16pt-ExtraBold", "sans-serif"],
-        black: ["TikTokSans16pt-Black", "sans-serif"],
-        light: ["TikTokSans16pt-Light", "sans-serif"],
+        sans: ["BricolageGrotesque_400Regular", "sans-serif"],
+        regular: ["BricolageGrotesque_400Regular", "sans-serif"],
+        medium: ["BricolageGrotesque_500Medium", "sans-serif"],
+        semibold: ["BricolageGrotesque_600SemiBold", "sans-serif"],
+        bold: ["BricolageGrotesque_700Bold", "sans-serif"],
+        extrabold: ["BricolageGrotesque_800ExtraBold", "sans-serif"],
+        black: ["BricolageGrotesque_800ExtraBold", "sans-serif"],
+        bricolage: ["BricolageGrotesque_700Bold", "sans-serif"],
       },
     },
   },
