@@ -95,6 +95,10 @@ export const usePendingBatchStore = create<PendingBatchState>()(
             throw new Error("Invalid clothing image");
           }
 
+          const customName =
+            aiData.name ||
+            `${aiData.color || aiData.primaryColor || ""} ${aiData.subCategory || "Item"}`.trim();
+
           set((state) => ({
             items: state.items.map((p) => {
               if (p.id === item.id) {
@@ -103,7 +107,7 @@ export const usePendingBatchStore = create<PendingBatchState>()(
                   status: "success",
                   data: aiData,
                   cloudinaryUrl: cloudUrl || p.originalUri,
-                  customName: `${aiData.primaryColor} ${aiData.subCategory}`,
+                  customName: customName || "Wardrobe Item",
                 };
               }
               return p;

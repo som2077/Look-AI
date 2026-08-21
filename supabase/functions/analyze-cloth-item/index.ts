@@ -197,7 +197,7 @@ serve(async (req) => {
       }
     }
 
-    // 4. Analyze with OpenAI Vision
+    // 4. Analyze with OpenAI Vision (Single unified call with low detail)
     const promptConfig = loadPrompt("analyze_cloth_item");
     const systemPrompt = promptConfig.system_prompt as string;
     const userPrompt = renderPrompt(promptConfig.user_template as string, {
@@ -208,8 +208,8 @@ serve(async (req) => {
     let parsedVision: any = null;
 
     try {
-      const configuredTemp = (promptConfig.temperature as number) ?? 0.2;
-      const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 1000;
+      const configuredTemp = (promptConfig.temperature as number) ?? 0.1;
+      const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 250;
       const aiImageMimeType = removedBgB64 ? "image/png" : mimeType;
       
       const openaiVisionRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -222,6 +222,7 @@ serve(async (req) => {
           model: "gpt-4o-mini",
           temperature: configuredTemp,
           max_tokens: configuredMaxTokens,
+          response_format: { type: "json_object" },
           messages: [
             {
               role: "user",
@@ -231,6 +232,7 @@ serve(async (req) => {
                   type: "image_url",
                   image_url: {
                     url: `data:${aiImageMimeType};base64,${bgBase64}`,
+                    detail: "low",
                   },
                 },
               ],
@@ -255,74 +257,33 @@ serve(async (req) => {
 
     if (!parsedVision) {
       parsedVision = {
-        clothType: "Clothing Item",
-        color: "Detected Color",
-        style: "Casual",
-      };
-    }
-
-    // 5. Map vision data to form fields
-    const textPrompt = `You are a fashion data mapper. Given this vision analysis JSON:
-${JSON.stringify(parsedVision)}
-
-Output ONLY a valid JSON object matching this schema:
-{
-  "season": "Spring / Summer / Autumn / Winter / All Season",
-  "occasion": "Casual / Formal / Party / etc",
-  "category": "Top / Bottom / Outerwear / Dress / Accessory",
-  "color": "Primary color",
-  "careInstructions": "Short string of care hints",
-  "brand": "Brand if identified, else Unknown",
-  "notes": "Short summary of style and features"
-}
-Do not use markdown blocks.`;
-
-    let parsedFormFields: any = null;
-
-    try {
-      const openaiTextRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${openaiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          temperature: 0.1,
-          messages: [
-            {
-              role: "user",
-              content: [{ type: "text", text: textPrompt }],
-            },
-          ],
-        }),
-      });
-
-      const textJson = (await openaiTextRes.json()) as any;
-      const rawFlashText = textJson?.choices?.[0]?.message?.content || "";
-
-      if (rawFlashText) {
-        const cleanFlashText = rawFlashText
-          .replace(/```json/g, "")
-          .replace(/```/g, "")
-          .trim();
-        parsedFormFields = JSON.parse(cleanFlashText);
-      }
-    } catch (tErr) {
-      console.warn(`Text mapping model failed:`, tErr);
-    }
-
-    if (!parsedFormFields) {
-      parsedFormFields = {
+        name: "Clothing Item",
         category: "Top",
-        occasion: "Casual",
-        season: "All Season",
-        color: parsedVision?.color || "Multicolor",
+        subCategory: "Item",
+        color: "Unknown",
+        primaryColor: "Unknown",
+        colorHex: "#1E1A27",
+        season: ["All Season"],
+        occasion: ["Casual"],
+        careInstructions: "Machine wash cold",
         brand: "Unknown",
-        careInstructions: "Machine wash cold, tumble dry low",
-        notes: "Stylish clothing item.",
+        notes: "Stylish wearable item.",
       };
     }
+
+    // 5. Map fields directly without second LLM roundtrip
+    const parsedFormFields = {
+      name: parsedVision.name || `${parsedVision.color || parsedVision.primaryColor || ""} ${parsedVision.subCategory || "Item"}`.trim(),
+      category: parsedVision.category || "Top",
+      subCategory: parsedVision.subCategory || "Item",
+      occasion: Array.isArray(parsedVision.occasion) ? parsedVision.occasion[0] : (parsedVision.occasion || "Casual"),
+      season: Array.isArray(parsedVision.season) ? parsedVision.season[0] : (parsedVision.season || "All Season"),
+      color: parsedVision.color || parsedVision.primaryColor || "Unknown",
+      colorHex: parsedVision.colorHex || "#000000",
+      brand: parsedVision.brand || "Unknown",
+      careInstructions: parsedVision.careInstructions || "",
+      notes: parsedVision.notes || "",
+    };
 
     // 6. Return complete response
     return new Response(

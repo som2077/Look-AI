@@ -9,9 +9,11 @@ export interface ClothAnalysisResult {
   original_url?: string;
   bg_removed_url?: string;
   form_fields?: {
+    name?: string;
     season?: string;
     occasion?: string;
     category?: string;
+    subCategory?: string;
     color?: string;
     careInstructions?: string;
     brand?: string;
@@ -83,14 +85,18 @@ export async function saveClothToWardrobe(
       {
         user_id: currentUserId,
         custom_name:
-          fields.notes
-            ? `${fields.color ? fields.color + " " : ""}${fields.category || "Item"}`
-            : fields.brand
-              ? `${fields.brand} ${fields.category || "Item"}`
-              : fields.category || "Item",
+          fields.name ||
+          (fields.color && fields.subCategory
+            ? `${fields.color} ${fields.subCategory}`
+            : fields.notes
+              ? `${fields.color ? fields.color + " " : ""}${fields.category || "Item"}`
+              : fields.brand
+                ? `${fields.brand} ${fields.category || "Item"}`
+                : fields.category || "Item"),
         brand: fields.brand || null,
         category: fields.category || "Top",
         sub_category:
+          fields.subCategory ||
           fields.clothType ||
           analysisResult.raw_ai_vision?.clothType ||
           null,

@@ -70,8 +70,48 @@ async function removeBackgroundLocal(fileUri: string): Promise<string> {
     throw new Error("Could not read image data for background removal");
   }
 
-  // 1. Try Supabase Edge Function
+  const rawEnvKeys = process.env.EXPO_PUBLIC_REMOVE_BG_API_KEYS || process.env.REMOVEBG_API_KEY || "";
+  const keys = rawEnvKeys.split(",").map((k) => k.trim()).filter((k) => k.length > 0);
+
+  // 1. FAST PATH: Direct API
+  if (keys.length > 0) {
+    for (let i = 0; i < keys.length; i++) {
+      const apiKey = keys[i];
+      try {
+        const formData = new FormData();
+        formData.append("image_file_b64", base64Image);
+        formData.append("size", "auto");
+        formData.append("format", "png");
+        formData.append("response_type", "base64");
+
+        const response = await fetch("https://api.remove.bg/v1.0/removebg", {
+          method: "POST",
+          headers: {
+            "X-Api-Key": apiKey,
+            Accept: "application/json",
+          },
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const b64 = data.data?.result_b64;
+          if (b64) {
+            console.log(`[BG-Removal] Fast-Path: Successfully removed background via direct remove.bg key #${i + 1}`);
+            const file = new File(Paths.cache, `bg_removed_${Date.now()}.png`);
+            file.write(b64, { encoding: "base64" });
+            return file.uri;
+          }
+        }
+      } catch (apiErr) {
+        console.warn(`[BG-Removal] Fast-Path: Key #${i + 1} network error:`, apiErr);
+      }
+    }
+  }
+
+  // 2. FALLBACK PATH: Supabase Edge Function
   try {
+    console.log("[BG-Removal] Attempting Edge Function fallback...");
     const { data, error } = await supabase.functions.invoke("remove-bg", {
       body: { base64Image },
     });
@@ -82,58 +122,9 @@ async function removeBackgroundLocal(fileUri: string): Promise<string> {
       file.write(data.result_b64, { encoding: "base64" });
       return file.uri;
     }
-    console.warn(
-      "[BG-Removal] Edge Function returned error/no-result, attempting direct API fallback:",
-      error || data?.error,
-    );
+    console.warn("[BG-Removal] Edge Function returned error/no-result:", error || data?.error);
   } catch (edgeErr) {
     console.warn("[BG-Removal] Edge function invocation error:", edgeErr);
-  }
-
-  // 2. Direct remove.bg API fallback
-  const rawEnvKeys =
-    process.env.EXPO_PUBLIC_REMOVE_BG_API_KEYS ||
-    process.env.REMOVEBG_API_KEY ||
-    "";
-  const keys = rawEnvKeys
-    .split(",")
-    .map((k) => k.trim())
-    .filter((k) => k.length > 0);
-
-  for (let i = 0; i < keys.length; i++) {
-    const apiKey = keys[i];
-    try {
-      const formData = new FormData();
-      formData.append("image_file_b64", base64Image);
-      formData.append("size", "auto");
-      formData.append("format", "png");
-      formData.append("response_type", "base64");
-
-      const response = await fetch("https://api.remove.bg/v1.0/removebg", {
-        method: "POST",
-        headers: {
-          "X-Api-Key": apiKey,
-          Accept: "application/json",
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const b64 = data.data?.result_b64;
-        if (b64) {
-          console.log(`[BG-Removal] Successfully removed background via direct remove.bg key #${i + 1}`);
-          const file = new File(Paths.cache, `bg_removed_${Date.now()}.png`);
-          file.write(b64, { encoding: "base64" });
-          return file.uri;
-        }
-      } else {
-        const errText = await response.text();
-        console.warn(`[BG-Removal] Key #${i + 1} failed (${response.status}):`, errText);
-      }
-    } catch (apiErr) {
-      console.warn(`[BG-Removal] Key #${i + 1} network error:`, apiErr);
-    }
   }
 
   throw new Error("Failed to remove background via all available methods");
@@ -171,23 +162,22 @@ export async function uploadToCloudinaryWithBgRemoval(
     const paramsToSign = `timestamp=${timestamp}`;
 
     let signature = "";
-
-    // 2a. Try edge function signature
-    try {
-      const { data: sigData, error: sigError } =
-        await supabase.functions.invoke("cloudinary-signature", {
+    if (API_SECRET) {
+      // 2a. Fast Path signature
+      signature = CryptoJS.SHA1(paramsToSign + API_SECRET).toString();
+      console.log("[Cloudinary] Fast-Path: Used direct local SHA1 signature");
+    } else {
+      // 2b. Fallback edge function
+      try {
+        const { data: sigData, error: sigError } = await supabase.functions.invoke("cloudinary-signature", {
           body: { paramsToSign },
         });
-      if (!sigError && sigData?.signature) {
-        signature = sigData.signature;
+        if (!sigError && sigData?.signature) {
+          signature = sigData.signature;
+        }
+      } catch (sigErr) {
+        console.warn("[Cloudinary] Edge function signature failed:", sigErr);
       }
-    } catch (sigErr) {
-      console.warn("[Cloudinary] Edge function signature failed:", sigErr);
-    }
-
-    // 2b. Fallback to client secret signature if available
-    if (!signature && API_SECRET) {
-      signature = CryptoJS.SHA1(paramsToSign + API_SECRET).toString();
     }
 
     if (!signature) {

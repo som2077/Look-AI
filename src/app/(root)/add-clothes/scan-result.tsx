@@ -2,7 +2,15 @@ import { uploadToCloudinaryWithBgRemoval } from "@/features/scanning/api/cloudin
 import { FullClothingAnalysis, analyzeClothingFull } from "@/features/scanning/api/ai-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
-import { IconArrowLeft, IconCheck, IconSparkles } from "@tabler/icons-react-native";
+import {
+  IconArrowLeft,
+  IconCheck,
+  IconSparkles,
+  IconPhoto,
+  IconCut,
+  IconPlus,
+  IconX,
+} from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 import { usePremiumLimits } from "@/features/payments/model/usePremiumLimits";
@@ -10,12 +18,14 @@ import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analy
 import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
 import { StreakPopup } from "@/shared/ui/StreakPopup";
+import * as Haptics from "expo-haptics";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -33,63 +43,49 @@ type ScanResultParams = {
 };
 
 const DEFAULT_RESULT: FullClothingAnalysis = {
+  name: "Fashion Item",
   category: "Top",
-  subCategory: "Unknown",
-  primaryColor: "Unknown",
-  secondaryColors: [],
-  pattern: "Solid",
-  fabricGuess: "Unknown",
-  fit: "Regular",
-  sleeveType: "N/A",
-  neckType: "N/A",
-  season: ["All Season"],
+  subCategory: "Clothing Item",
+  color: "Navy Blue",
+  colorHex: "#1E3A8A",
   occasion: ["Casual"],
-  formalityScore: 5,
-  versatilityTags: [],
-  colorHex: "#000000",
+  season: ["All Season"],
+  brand: "",
   careInstructions: "Machine wash cold",
-  notes: "No special notes",
-  confidence: 0.9,
+  notes: "",
 };
 
-function ConfidenceBar({ confidence }: { confidence: number }) {
-  const pct = Math.round(confidence * 100);
-  return (
-    <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 6,
-        }}
-      >
-        <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600" }}>
-          AI Confidence
-        </Text>
-        <Text style={{ color: "#7C6AFF", fontSize: 12, fontWeight: "700" }}>
-          {pct}%
-        </Text>
-      </View>
-      <View
-        style={{
-          height: 6,
-          backgroundColor: "#2A2840",
-          borderRadius: 999,
-          overflow: "hidden",
-        }}
-      >
-        <View
-          style={{
-            height: "100%",
-            width: `${pct}%`,
-            backgroundColor: "#7C6AFF",
-            borderRadius: 999,
-          }}
-        />
-      </View>
-    </View>
-  );
-}
+const MACRO_CATEGORIES = [
+  { id: "Top", label: "👕 Top" },
+  { id: "Bottoms", label: "👖 Bottoms" },
+  { id: "Footwear", label: "👟 Footwear" },
+  { id: "Accessory", label: "👜 Accessory" },
+  { id: "Headwear", label: "🧢 Headwear" },
+  { id: "Outerwear", label: "🧥 Outerwear" },
+  { id: "Dress", label: "👗 Dress" },
+  { id: "Ethnic", label: "🥻 Ethnic" },
+  { id: "Activewear", label: "🏃 Activewear" },
+];
+
+const PRESET_OCCASIONS = [
+  "Casual",
+  "Office",
+  "Party",
+  "Date",
+  "Wedding",
+  "Gym",
+  "Travel",
+  "Lounge",
+];
+
+const PRESET_SEASONS = [
+  "All Season",
+  "Summer",
+  "Winter",
+  "Monsoon",
+  "Spring",
+  "Autumn",
+];
 
 export default function ScanResultScreen() {
   const router = useRouter();
@@ -117,8 +113,39 @@ export default function ScanResultScreen() {
     }
   });
 
-  const totalItems = 1 + (params.remainingUris ? (() => { try { return JSON.parse(params.remainingUris).length; } catch { return 0; } })() : 0);
+  const totalItems =
+    1 +
+    (params.remainingUris
+      ? (() => {
+          try {
+            return JSON.parse(params.remainingUris).length;
+          } catch {
+            return 0;
+          }
+        })()
+      : 0);
   const currentIndex = totalItems - remainingUris.length;
+
+  const [cloudinaryUrl, setCloudinaryUrl] = useState<string | null>(null);
+  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+  const [showOriginal, setShowOriginal] = useState(false);
+
+  // In-Place Editable State Fields
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("Top");
+  const [subCategory, setSubCategory] = useState("");
+  const [color, setColor] = useState("");
+  const [colorHex, setColorHex] = useState("#1E3A8A");
+  const [selectedOccasions, setSelectedOccasions] = useState<string[]>(["Casual"]);
+  const [selectedSeasons, setSelectedSeasons] = useState<string[]>(["All Season"]);
+  const [brand, setBrand] = useState("");
+  const [careInstructions, setCareInstructions] = useState("");
+  const [notes, setNotes] = useState("");
+
+  // Custom Occasion Modal state
+  const [customOccasionInput, setCustomOccasionInput] = useState("");
+  const [showCustomOccasionModal, setShowCustomOccasionModal] = useState(false);
+
   const [result, setResult] = useState<FullClothingAnalysis>(() => {
     try {
       if (!params.resultJson) return DEFAULT_RESULT;
@@ -128,12 +155,32 @@ export default function ScanResultScreen() {
     }
   });
 
-  const [cloudinaryUrl, setCloudinaryUrl] = useState<string | null>(null);
-  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+  const applyAiDataToState = (data: FullClothingAnalysis) => {
+    setResult(data);
+    const resolvedName =
+      data.name ||
+      `${data.color || data.primaryColor || ""} ${data.subCategory || data.category || "Item"}`.trim();
+    setName(resolvedName || "Wardrobe Item");
+    setCategory(data.category || "Top");
+    setSubCategory(data.subCategory || "");
+    setColor(data.color || data.primaryColor || "Unknown");
+    setColorHex(data.colorHex || "#1E3A8A");
+    if (data.occasion && data.occasion.length > 0) {
+      setSelectedOccasions(data.occasion);
+    }
+    if (data.season && data.season.length > 0) {
+      setSelectedSeasons(data.season);
+    }
+    setBrand(data.brand && data.brand !== "Unknown" ? data.brand : "");
+    setCareInstructions(data.careInstructions || "");
+    setNotes(data.notes || "");
+  };
 
-  // Editable fields
-  const [customName, setCustomName] = useState("");
-  const [brand, setBrand] = useState("");
+  useEffect(() => {
+    if (params.resultJson) {
+      applyAiDataToState(result);
+    }
+  }, [params.resultJson]);
 
   useEffect(() => {
     const processImage = async () => {
@@ -144,50 +191,40 @@ export default function ScanResultScreen() {
 
       try {
         setLoading(true);
-        
+
         let aiImageUri = photoUri;
         let finalImageUri = photoUri;
 
         try {
           setLoadingText("Removing background...");
-          // 1. Remove background and upload to Cloudinary FIRST
           const uploadRes = await uploadToCloudinaryWithBgRemoval(photoUri);
-          
+
           finalImageUri = uploadRes.imageUrl;
           aiImageUri = uploadRes.imageUrl;
-          
+
           setCloudinaryUrl(uploadRes.imageUrl);
           setOriginalUrl(uploadRes.originalImageUrl);
         } catch (bgError) {
           console.warn("Background removal failed, falling back to original image:", bgError);
-          // If bg removal fails, we proceed with the original image
           aiImageUri = photoUri;
           setOriginalUrl(photoUri);
         }
+
         setLoadingText("AI is extracting styling details...");
-        // 2. Analyze with OpenAI on the background-removed image (or fallback)
         const aiData = await analyzeClothingFull(aiImageUri);
-        
-        // Handle Error Rejection
+
+        // Validation rejection check (only reject full-body photos intended for fit check)
         if (aiData?.category === "Full Body") {
           Alert.alert(
             "Invalid Image",
-            "Please upload a picture of a single clothing item. Full body pictures are meant for Fit Check mode.",
-            [{ text: "OK", onPress: () => router.back() }]
-          );
-          return;
-        } else if (aiData?.category === "Not Clothing") {
-          Alert.alert(
-            "Invalid Image",
-            "We couldn't detect any clothing in this picture. Please try another image.",
+            "Please upload a picture of a single fashion item. Full body pictures are meant for Fit Check mode.",
             [{ text: "OK", onPress: () => router.back() }]
           );
           return;
         }
 
         if (aiData) {
-          setResult(aiData);
-          setCustomName(`${aiData.primaryColor} ${aiData.subCategory}`);
+          applyAiDataToState(aiData);
         }
 
         addScan({
@@ -197,7 +234,6 @@ export default function ScanResultScreen() {
           result: (aiData || DEFAULT_RESULT) as unknown as Record<string, unknown>,
           isFavorite: false,
         });
-
       } catch (err) {
         console.error("Failed to process scan:", err);
       } finally {
@@ -218,15 +254,39 @@ export default function ScanResultScreen() {
       setResult(DEFAULT_RESULT);
       setCloudinaryUrl(null);
       setOriginalUrl(null);
-      setCustomName("");
+      setName("");
       setBrand("");
-      setPhotoUri(nextUri); // triggers useEffect
+      setPhotoUri(nextUri);
     } else {
       router.back();
     }
   };
 
-  const alreadyInWardrobe = hasItem(result.category, result.primaryColor);
+  const toggleOccasion = (occ: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedOccasions((prev) =>
+      prev.includes(occ) ? prev.filter((o) => o !== occ) : [...prev, occ]
+    );
+  };
+
+  const toggleSeason = (s: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedSeasons((prev) =>
+      prev.includes(s) ? prev.filter((item) => item !== s) : [...prev, s]
+    );
+  };
+
+  const handleAddCustomOccasion = () => {
+    const trimmed = customOccasionInput.trim();
+    if (trimmed && !selectedOccasions.includes(trimmed)) {
+      setSelectedOccasions((prev) => [...prev, trimmed]);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setCustomOccasionInput("");
+    setShowCustomOccasionModal(false);
+  };
+
+  const alreadyInWardrobe = hasItem(category, color);
 
   const handleSave = async () => {
     if (saved || alreadyInWardrobe) return;
@@ -234,39 +294,46 @@ export default function ScanResultScreen() {
       handleLimitReached("wardrobe");
       return;
     }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSaving(true);
+
+    const savedImage = showOriginal && originalUrl ? originalUrl : (cloudinaryUrl || photoUri);
+
     addItem({
       userId: userId || undefined,
-      customName,
-      brand,
-      category: result.category,
-      subCategory: result.subCategory,
-      primaryColor: result.primaryColor,
-      secondaryColors: result.secondaryColors,
-      pattern: result.pattern,
-      fabricGuess: result.fabricGuess,
-      fit: result.fit,
-      sleeveType: result.sleeveType,
-      neckType: result.neckType,
-      season: result.season,
-      occasion: result.occasion,
-      formalityScore: result.formalityScore,
-      versatilityTags: result.versatilityTags,
-      careInstructions: result.careInstructions,
-      notes: result.notes,
-      colorHex: result.colorHex,
-      imageUrl: cloudinaryUrl || photoUri,
+      customName: name.trim() || `${color} ${subCategory || category}`.trim(),
+      brand: brand.trim(),
+      category: category || "Top",
+      subCategory: subCategory.trim() || category,
+      primaryColor: color.trim() || "Unknown",
+      secondaryColors: [],
+      pattern: "Solid",
+      fabricGuess: "Standard",
+      fit: "Regular",
+      sleeveType: undefined,
+      neckType: undefined,
+      season: selectedSeasons.length > 0 ? selectedSeasons : ["All Season"],
+      occasion: selectedOccasions.length > 0 ? selectedOccasions : ["Casual"],
+      formalityScore: 5,
+      versatilityTags: [],
+      careInstructions: careInstructions.trim(),
+      notes: notes.trim(),
+      colorHex: colorHex || "#000000",
+      imageUrl: savedImage,
       originalImageUrl: originalUrl || photoUri,
-      confidence: result.confidence,
+      confidence: 0.95,
       source: "camera",
       isFavorite: false,
       wearCount: 0,
     });
+
     if (params.outfitIndex !== undefined) {
       removeOutfit(parseInt(params.outfitIndex, 10));
     }
+
     setSaving(false);
-    
+
     if (remainingUris.length > 0) {
       advanceToNext();
     } else {
@@ -274,20 +341,6 @@ export default function ScanResultScreen() {
       syncStreak("scan_mode");
     }
   };
-
-  const chips = [
-    { label: "Category", value: result.category },
-    { label: "Type", value: result.subCategory },
-    { label: "Color", value: result.primaryColor },
-    { label: "Material", value: result.fabricGuess },
-    { label: "Pattern", value: result.pattern },
-    { label: "Fit", value: result.fit },
-    { label: "Season", value: result.season?.join(", ") },
-    { label: "Occasion", value: result.occasion?.join(", ") },
-    { label: "Formality", value: `${result.formalityScore}/10` },
-    { label: "Care", value: result.careInstructions },
-    { label: "Notes", value: result.notes },
-  ];
 
   if (loading) {
     return (
@@ -298,6 +351,8 @@ export default function ScanResultScreen() {
       </View>
     );
   }
+
+  const activeDisplayImage = showOriginal && originalUrl ? originalUrl : (cloudinaryUrl || params.photoUri);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0F0E15" }}>
@@ -328,7 +383,7 @@ export default function ScanResultScreen() {
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "800" }}>
-              Wardrobe Item
+              Universal Scan
             </Text>
             {totalItems > 1 && (
               <Text style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
@@ -356,35 +411,72 @@ export default function ScanResultScreen() {
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-          {/* Photo */}
-          {(cloudinaryUrl || params.photoUri) ? (
-            <Image
-              source={{ uri: cloudinaryUrl || params.photoUri }}
-              style={{
-                height: 300,
-                marginHorizontal: 20,
-                borderRadius: 20,
-                marginBottom: 16,
-                backgroundColor: "#1A1827", 
-              }}
-              resizeMode="contain"
-            />
-          ) : (
-            <View
-              style={{
-                height: 240,
-                marginHorizontal: 20,
-                borderRadius: 20,
-                marginBottom: 16,
-                backgroundColor: "#1A1827",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ color: "#555", fontSize: 14 }}>No image</Text>
-            </View>
-          )}
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+          {/* Photo with Cutout vs Original Toggle */}
+          <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
+            {activeDisplayImage ? (
+              <View style={{ position: "relative" }}>
+                <Image
+                  source={{ uri: activeDisplayImage }}
+                  style={{
+                    height: 280,
+                    width: "100%",
+                    borderRadius: 20,
+                    backgroundColor: "#1A1827",
+                  }}
+                  resizeMode="contain"
+                />
+
+                {/* Toggle Button */}
+                {originalUrl && (
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setShowOriginal(!showOriginal);
+                    }}
+                    style={{
+                      position: "absolute",
+                      bottom: 12,
+                      right: 12,
+                      backgroundColor: "#000000B0",
+                      borderRadius: 20,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderWidth: 1,
+                      borderColor: "#FFFFFF30",
+                    }}
+                  >
+                    {showOriginal ? (
+                      <>
+                        <IconCut size={14} color="#FFFFFF" />
+                        <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "600" }}>Show Cutout</Text>
+                      </>
+                    ) : (
+                      <>
+                        <IconPhoto size={14} color="#FFFFFF" />
+                        <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "600" }}>Original</Text>
+                      </>
+                    )}
+                  </Pressable>
+                )}
+              </View>
+            ) : (
+              <View
+                style={{
+                  height: 240,
+                  borderRadius: 20,
+                  backgroundColor: "#1A1827",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: "#555", fontSize: 14 }}>No image</Text>
+              </View>
+            )}
+          </View>
 
           {/* Already in wardrobe badge */}
           {alreadyInWardrobe && (
@@ -406,44 +498,267 @@ export default function ScanResultScreen() {
             >
               <IconCheck size={14} color="#FFB300" />
               <Text style={{ color: "#FFB300", fontSize: 12, fontWeight: "700" }}>
-                Already in Wardrobe
+                Similar item already in closet ({color} {category})
               </Text>
             </View>
           )}
 
-          <ConfidenceBar confidence={result.confidence} />
-
-          {/* Editable Fields */}
+          {/* 1. Item Name Input (Prominent, Direct In-Place Edit) */}
           <View
             style={{
               marginHorizontal: 16,
-              marginBottom: 16,
+              marginBottom: 14,
               backgroundColor: "#161422",
-              borderRadius: 24,
-              padding: 20,
-              gap: 16
+              borderRadius: 20,
+              padding: 16,
             }}
           >
-            <View>
-              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
-                Item Name (Editable)
+            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+              Item Name (1-Tap Edit)
+            </Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              style={{
+                color: "#FFFFFF",
+                fontSize: 17,
+                fontWeight: "800",
+                backgroundColor: "#2A2840",
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+              }}
+              placeholder="e.g. Graphic Hoodie, Chelsea Boots"
+              placeholderTextColor="#666"
+            />
+          </View>
+
+          {/* 2. Macro Category Selector */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 14,
+              backgroundColor: "#161422",
+              borderRadius: 20,
+              padding: 16,
+            }}
+          >
+            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
+              Category
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {MACRO_CATEGORIES.map((cat) => {
+                const isSelected = category.toLowerCase() === cat.id.toLowerCase();
+                return (
+                  <Pressable
+                    key={cat.id}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setCategory(cat.id);
+                    }}
+                    style={{
+                      backgroundColor: isSelected ? "#7C6AFF" : "#2A2840",
+                      borderRadius: 12,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderWidth: 1,
+                      borderColor: isSelected ? "#9A8CFF" : "#2A2840",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isSelected ? "#FFFFFF" : "#CCC",
+                        fontSize: 13,
+                        fontWeight: isSelected ? "700" : "500",
+                      }}
+                    >
+                      {cat.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            {/* SubCategory input if user wants to specify */}
+            <View style={{ marginTop: 12 }}>
+              <Text style={{ color: "#888", fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
+                Sub-Type / Style
               </Text>
               <TextInput
-                value={customName}
-                onChangeText={setCustomName}
+                value={subCategory}
+                onChangeText={setSubCategory}
                 style={{
                   color: "#FFFFFF",
-                  fontSize: 18,
-                  fontWeight: "800",
+                  fontSize: 14,
+                  fontWeight: "600",
                   backgroundColor: "#2A2840",
-                  borderRadius: 12,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
+                  borderRadius: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
                 }}
-                placeholder="E.g. Favorite Blue Shirt"
+                placeholder="e.g. Graphic Tee, Sneakers, Loafers, Backpack"
                 placeholderTextColor="#666"
               />
             </View>
+          </View>
+
+          {/* 3. Color with Visual Color Dot + HEX preview */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 14,
+              backgroundColor: "#161422",
+              borderRadius: 20,
+              padding: 16,
+            }}
+          >
+            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 8 }}>
+              Color & Tone
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              {/* Visual Color Dot */}
+              <View
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 19,
+                  backgroundColor: colorHex || "#1E3A8A",
+                  borderWidth: 2,
+                  borderColor: "#FFFFFF40",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+              />
+              <TextInput
+                value={color}
+                onChangeText={setColor}
+                style={{
+                  flex: 1,
+                  color: "#FFFFFF",
+                  fontSize: 15,
+                  fontWeight: "700",
+                  backgroundColor: "#2A2840",
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                }}
+                placeholder="Color Name (e.g. Navy Blue)"
+                placeholderTextColor="#666"
+              />
+            </View>
+          </View>
+
+          {/* 4. Occasion Multi-Select Chips + Add Custom */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 14,
+              backgroundColor: "#161422",
+              borderRadius: 20,
+              padding: 16,
+            }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600" }}>
+                Occasion (Multi-Select)
+              </Text>
+              <Pressable
+                onPress={() => setShowCustomOccasionModal(true)}
+                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              >
+                <IconPlus size={14} color="#7C6AFF" />
+                <Text style={{ color: "#7C6AFF", fontSize: 12, fontWeight: "700" }}>Custom</Text>
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {Array.from(new Set([...PRESET_OCCASIONS, ...selectedOccasions])).map((occ) => {
+                const isSelected = selectedOccasions.includes(occ);
+                return (
+                  <Pressable
+                    key={occ}
+                    onPress={() => toggleOccasion(occ)}
+                    style={{
+                      backgroundColor: isSelected ? "#7C6AFF" : "#2A2840",
+                      borderRadius: 12,
+                      paddingHorizontal: 13,
+                      paddingVertical: 7,
+                      borderWidth: 1,
+                      borderColor: isSelected ? "#9A8CFF" : "#2A2840",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isSelected ? "#FFFFFF" : "#CCC",
+                        fontSize: 12,
+                        fontWeight: isSelected ? "700" : "500",
+                      }}
+                    >
+                      {occ}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* 5. Season Multi-Select Chips */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 14,
+              backgroundColor: "#161422",
+              borderRadius: 20,
+              padding: 16,
+            }}
+          >
+            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
+              Season (Multi-Select)
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {PRESET_SEASONS.map((s) => {
+                const isSelected = selectedSeasons.includes(s);
+                return (
+                  <Pressable
+                    key={s}
+                    onPress={() => toggleSeason(s)}
+                    style={{
+                      backgroundColor: isSelected ? "#7C6AFF" : "#2A2840",
+                      borderRadius: 12,
+                      paddingHorizontal: 13,
+                      paddingVertical: 7,
+                      borderWidth: 1,
+                      borderColor: isSelected ? "#9A8CFF" : "#2A2840",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isSelected ? "#FFFFFF" : "#CCC",
+                        fontSize: 12,
+                        fontWeight: isSelected ? "700" : "500",
+                      }}
+                    >
+                      {s}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* 6. Brand, Care & Notes (Optional In-Place Inputs) */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 20,
+              backgroundColor: "#161422",
+              borderRadius: 20,
+              padding: 16,
+              gap: 12,
+            }}
+          >
             <View>
               <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
                 Brand (Optional)
@@ -453,102 +768,66 @@ export default function ScanResultScreen() {
                 onChangeText={setBrand}
                 style={{
                   color: "#FFFFFF",
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: "500",
                   backgroundColor: "#2A2840",
-                  borderRadius: 12,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
+                  borderRadius: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
                 }}
-                placeholder="E.g. Zara, H&M"
+                placeholder="e.g. Zara, Nike, Levi's"
+                placeholderTextColor="#666"
+              />
+            </View>
+            <View>
+              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+                Care Instructions (Optional)
+              </Text>
+              <TextInput
+                value={careInstructions}
+                onChangeText={setCareInstructions}
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 14,
+                  fontWeight: "500",
+                  backgroundColor: "#2A2840",
+                  borderRadius: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                }}
+                placeholder="e.g. Machine wash cold, dry flat"
+                placeholderTextColor="#666"
+              />
+            </View>
+            <View>
+              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+                Notes (Optional)
+              </Text>
+              <TextInput
+                value={notes}
+                onChangeText={setNotes}
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 14,
+                  fontWeight: "500",
+                  backgroundColor: "#2A2840",
+                  borderRadius: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                }}
+                placeholder="e.g. Comfortable everyday staple"
                 placeholderTextColor="#666"
               />
             </View>
           </View>
 
-          {/* Core Visuals */}
-          <View
-            style={{
-              marginHorizontal: 16,
-              marginBottom: 16,
-              backgroundColor: "#161422",
-              borderRadius: 24,
-              padding: 20,
-            }}
-          >
-            <Text
-              style={{
-                color: "#FFFFFF",
-                fontSize: 15,
-                fontWeight: "700",
-                marginBottom: 14,
-              }}
-            >
-              Styling Intelligence
-            </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {chips.map((chip, i) => (
-                <View
-                  key={i}
-                  style={{
-                    backgroundColor: "#7C6AFF22",
-                    borderRadius: 12,
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    borderWidth: 1,
-                    borderColor: "#7C6AFF44",
-                  }}
-                >
-                  <Text style={{ color: "#888", fontSize: 10, fontWeight: "600" }}>
-                    {chip.label}
-                  </Text>
-                  <Text style={{ color: "#FFFFFF", fontSize: 13, fontWeight: "700" }}>
-                    {chip.value}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Versatility Tags */}
-          {result.versatilityTags && result.versatilityTags.length > 0 && (
-            <View
-              style={{
-                marginHorizontal: 16,
-                marginBottom: 16,
-                backgroundColor: "#161422",
-                borderRadius: 24,
-                padding: 20,
-              }}
-            >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 15,
-                  fontWeight: "700",
-                  marginBottom: 14,
-                }}
-              >
-                Versatility
-              </Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {result.versatilityTags.map((tag, i) => (
-                  <View key={i} style={{ backgroundColor: "#2A2840", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}>
-                    <Text style={{ color: "#DDD", fontSize: 12 }}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Actions */}
+          {/* Action Buttons */}
           <View style={{ marginHorizontal: 16, gap: 10 }}>
             <Pressable
               onPress={handleSave}
               disabled={saved || alreadyInWardrobe || saving}
               style={{
-                backgroundColor:
-                  saved || alreadyInWardrobe ? "#1A1827" : "#7C6AFF",
+                backgroundColor: saved || alreadyInWardrobe ? "#1A1827" : "#7C6AFF",
                 borderRadius: 16,
                 paddingVertical: 16,
                 alignItems: "center",
@@ -562,15 +841,13 @@ export default function ScanResultScreen() {
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <>
-                  {(saved || alreadyInWardrobe) && (
-                    <IconCheck size={16} color="#FFFFFF" />
-                  )}
+                  {(saved || alreadyInWardrobe) && <IconCheck size={16} color="#FFFFFF" />}
                   <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
                     {alreadyInWardrobe
                       ? "Already Saved"
                       : saved
-                        ? "Saved to Wardrobe!"
-                        : "Save to Wardrobe"}
+                      ? "Saved to Closet!"
+                      : "Add to Closet"}
                   </Text>
                 </>
               )}
@@ -592,6 +869,59 @@ export default function ScanResultScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* Custom Occasion Modal */}
+      <Modal
+        visible={showCustomOccasionModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCustomOccasionModal(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", padding: 20 }}
+          onPress={() => setShowCustomOccasionModal(false)}
+        >
+          <Pressable
+            style={{ width: "100%", maxWidth: 340, backgroundColor: "#1A1827", borderRadius: 20, padding: 20, borderWidth: 1, borderColor: "#2A2840" }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "700" }}>Add Custom Occasion</Text>
+              <Pressable onPress={() => setShowCustomOccasionModal(false)}>
+                <IconX size={20} color="#AAA" />
+              </Pressable>
+            </View>
+            <TextInput
+              value={customOccasionInput}
+              onChangeText={setCustomOccasionInput}
+              style={{
+                color: "#FFFFFF",
+                fontSize: 15,
+                backgroundColor: "#2A2840",
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                marginBottom: 16,
+              }}
+              placeholder="e.g. Goa Trip, College Fest, Brunch"
+              placeholderTextColor="#666"
+              autoFocus
+            />
+            <Pressable
+              onPress={handleAddCustomOccasion}
+              style={{
+                backgroundColor: "#7C6AFF",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "700" }}>Add Occasion</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <StreakPopup
         visible={hasIncrementedToday}
         onClose={dismissIncrement}

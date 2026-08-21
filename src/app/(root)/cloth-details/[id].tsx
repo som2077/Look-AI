@@ -279,7 +279,7 @@ export default function ItemDetailsScreen() {
   const initialImageUrl = userItem?.imageUrl ?? "";
 
   // Form state — pre-filled by AI when scanned
-  const [name] = useState(initialName);
+  const [name, setName] = useState(initialName);
   const [category, setCategory] = useState<string>(initialCategory);
   const [color, setColor] = useState(initialColor);
   // Auto-resolve colorHex from COLOR_OPTIONS if not explicitly set
@@ -312,6 +312,7 @@ export default function ItemDetailsScreen() {
 
   // Bottom sheet state
   const [activeSheet, setActiveSheet] = useState<
+    | "name"
     | "category"
     | "occasion"
     | "season"
@@ -571,8 +572,41 @@ export default function ItemDetailsScreen() {
               gap: 24,
             }}
           >
-            {/* Item name (invisible in target, but maybe we keep it as a row?) */}
-            {/* The target UI just shows My Rating, Season, Occasion, Category, Color */}
+            {/* Item Name */}
+            <Pressable
+              onPress={() => openSheet("name")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#000000",
+                  fontWeight: "500",
+                }}
+              >
+                Item Name
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: name ? "#374151" : "#D1D5DB",
+                    fontWeight: "500",
+                    maxWidth: 200,
+                  }}
+                  numberOfLines={1}
+                >
+                  {name || "Add item name"}
+                </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
 
             {/* My Rating */}
             <Pressable
@@ -1069,7 +1103,9 @@ export default function ItemDetailsScreen() {
                           color: "#111827",
                         }}
                       >
-                        {activeSheet === "category"
+                        {activeSheet === "name"
+                          ? "Item Name"
+                          : activeSheet === "category"
                           ? "Select Category"
                           : activeSheet === "occasion"
                             ? "Select Occasion"
@@ -1318,6 +1354,28 @@ export default function ItemDetailsScreen() {
                             </Text>
                           </Pressable>
                         ))}
+
+                      {activeSheet === "name" && (
+                        <View style={{ width: "100%", height: 100 }}>
+                          <TextInput
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="e.g. Graphic Hoodie, Chelsea Boots"
+                            placeholderTextColor="#9CA3AF"
+                            autoFocus
+                            style={{
+                              width: "100%",
+                              height: 50,
+                              borderWidth: 1,
+                              borderColor: "#E5E7EB",
+                              borderRadius: 12,
+                              paddingHorizontal: 16,
+                              fontSize: 15,
+                              color: "#1F2937",
+                            }}
+                          />
+                        </View>
+                      )}
 
                       {activeSheet === "brand" && (
                         <View style={{ width: "100%", height: 100 }}>

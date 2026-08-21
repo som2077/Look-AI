@@ -33,6 +33,7 @@ async function callOpenAI(
   openaiKey: string,
   prompt: string,
   jsonMode = false,
+  maxTokens = 120,
 ): Promise<string> {
   const model = "gpt-4o-mini";
   try {
@@ -40,7 +41,7 @@ async function callOpenAI(
       model,
       messages: [{ role: "user", content: prompt }],
       temperature: jsonMode ? 0.1 : 0.7,
-      max_tokens: jsonMode ? 60 : 200,
+      max_tokens: maxTokens,
     };
     if (jsonMode) body.response_format = { type: "json_object" };
 
@@ -109,20 +110,20 @@ serve(async (req: Request) => {
 
     switch (step) {
       case "weather_text": {
-        const prompt = `You are a friendly AI fashion stylist in the Look AI wardrobe app. Always respond in English. Warm and brief.\n\nUser is planning an outfit for: ${context.date} at ${context.time}.\nWeather: ${wx}.\n\nWrite exactly 2 short sentences:\n1. Comment warmly on the weather.\n2. Say you'll find the perfect outfit.\nNo questions. No lists.`;
-        result.text = await callOpenAI(openaiKey, prompt);
+        const prompt = `You are a friendly AI fashion stylist in Look AI. English, warm, brief.\nPlan: ${context.date} at ${context.time}. Weather: ${wx}.\nWrite 2 short sentences commenting on weather and finding outfit.`;
+        result.text = await callOpenAI(openaiKey, prompt, false, 60);
         break;
       }
 
       case "ask_occasion": {
-        const prompt = `You are a friendly AI fashion stylist in the Look AI wardrobe app. Always respond in English. Casual, warm tone.\n\nPlan: ${context.date} at ${context.time}. Weather: ${wx}.\n\nWrite ONE casual question asking what the occasion is or where they're going. Max 1-2 sentences. Don't list options.\nExample: "Where are you heading to? Let me know, so I can find the perfect outfit!"`;
-        result.text = await callOpenAI(openaiKey, prompt);
+        const prompt = `You are a friendly AI fashion stylist in Look AI. Casual, warm.\nPlan: ${context.date} at ${context.time}. Weather: ${wx}.\nWrite 1 short casual question asking about the occasion/destination.`;
+        result.text = await callOpenAI(openaiKey, prompt, false, 40);
         break;
       }
 
       case "parse_occasion": {
-        const prompt = `Extract the occasion from: "${user_message}"\n\nRespond with ONLY valid JSON:\n{"occasion": "<Casual|Work|Formal|Party|Date|Wedding|Workout|Travel|Beach>"}\n\nRules: wedding→Wedding, work→Work, party→Party, date→Date, workout→Workout, travel→Travel, beach→Beach, formal→Formal, else→Casual`;
-        const raw = await callOpenAI(openaiKey, prompt, true);
+        const prompt = `Extract occasion from: "${user_message}"\nJSON ONLY: {"occasion": "<Casual|Work|Formal|Party|Date|Wedding|Workout|Travel|Beach>"}`;
+        const raw = await callOpenAI(openaiKey, prompt, true, 25);
         try {
           result = JSON.parse(raw.trim());
         } catch {
@@ -139,20 +140,20 @@ serve(async (req: Request) => {
               `${c.category ?? "item"} (${c.primary_color ?? c.primaryColor ?? c.color ?? ""})`,
           )
           .join(", ");
-        const prompt = `You are a friendly AI fashion stylist. Always respond in English.\n\nPlan: ${context.date} at ${context.time}, Occasion: ${context.occasion}, Weather: ${wx}\nAvailable: ${clothesSummary || "general wardrobe items"}\n\nWrite 2-3 short enthusiastic sentences presenting the outfit. Be specific about why it works. End with: "Try this out — it'll look absolutely perfect! 🔥"`;
-        result.text = await callOpenAI(openaiKey, prompt);
+        const prompt = `You are a friendly AI stylist in Look AI.\nPlan: ${context.date} at ${context.time}, Occasion: ${context.occasion}, Weather: ${wx}\nAvailable: ${clothesSummary || "general items"}\nWrite 2 concise sentences presenting outfit. End: "Try this out — it'll look great! 🔥"`;
+        result.text = await callOpenAI(openaiKey, prompt, false, 120);
         break;
       }
 
       case "no_wardrobe": {
-        const prompt = `You are a friendly AI fashion stylist. Respond in English.\n\nUser has no matching clothes for: ${context.occasion}, weather: ${wx}.\n\nWrite 2 short sympathetic sentences. Say nothing matched, encourage scanning a new item. Stay positive.`;
-        result.text = await callOpenAI(openaiKey, prompt);
+        const prompt = `You are a friendly AI stylist. User has no matching clothes for: ${context.occasion}, weather: ${wx}.\nWrite 2 short positive sentences encouraging scanning a new item.`;
+        result.text = await callOpenAI(openaiKey, prompt, false, 50);
         break;
       }
 
       case "plan_saved": {
-        const prompt = `You are a friendly AI fashion stylist. Respond in English.\n\nOutfit plan saved for ${context.date} at ${context.time}, occasion: ${context.occasion}.\n\nWrite 1-2 short celebratory sentences. Confirm plan is saved, say you'll send a reminder the day before. Use one emoji.`;
-        result.text = await callOpenAI(openaiKey, prompt);
+        const prompt = `Outfit plan saved for ${context.date} at ${context.time}, occasion: ${context.occasion}.\nWrite 1 short celebratory confirmation sentence with 1 emoji.`;
+        result.text = await callOpenAI(openaiKey, prompt, false, 45);
         break;
       }
 

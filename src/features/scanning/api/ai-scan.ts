@@ -4,6 +4,8 @@
  */
 
 import { supabase } from "@/shared/supabase/client";
+import { SYSTEM_PROMPTS } from "./prompts";
+export const DISABLE_AI_SCAN = false;
 import * as FileSystem from "expo-file-system";
 
 const MODELS = [
@@ -94,25 +96,17 @@ export interface FitCheckAnalysis {
 }
 
 export interface FullClothingAnalysis {
+  name: string;
   category: string;
   subCategory: string;
-  primaryColor: string;
-  secondaryColors: string[];
-  pattern: string;
-  fabricGuess: string;
-  fit: string;
-  sleeveType: string;
-  neckType: string;
-  season: string[];
+  color: string;
+  primaryColor?: string; // For backward compatibility
+  colorHex: string;
   occasion: string[];
-  formalityScore: number;
-  versatilityTags: string[];
-  brand?: string;
-  careInstructions?: string;
-  notes?: string;
-  colorHex?: string;
-  confidence: number;
-  error?: string;
+  season: string[];
+  brand: string;
+  careInstructions: string;
+  notes: string;
 }
 
 // ─── Token & Image Optimization Helpers ────────────────────────────────────────
@@ -292,24 +286,17 @@ export async function analyzeClothingFull(
 ): Promise<FullClothingAnalysis> {
   const text = await callOpenAIVision(imageUri, CLOTH_PROMPT, "cloth", 350);
   return parseJson<FullClothingAnalysis>(text, {
+    name: "Fashion Item",
     category: "Top",
     subCategory: "T-shirt",
+    color: "White",
     primaryColor: "White",
-    secondaryColors: [],
-    pattern: "Solid",
-    fabricGuess: "Cotton",
-    fit: "Regular",
-    sleeveType: "Half",
-    neckType: "Round",
-    season: ["All Season"],
+    colorHex: "#FFFFFF",
     occasion: ["Casual"],
-    formalityScore: 3,
-    versatilityTags: ["Pairs well with jeans"],
+    season: ["All Season"],
     brand: "Unknown",
     careInstructions: "Machine wash cold",
     notes: "A casual staple item",
-    colorHex: "",
-    confidence: 0.8,
   });
 }
 

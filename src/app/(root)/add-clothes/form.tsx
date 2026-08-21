@@ -67,7 +67,32 @@ type CategoryId =
   | "Co-ord Set"
   | "Activewear"
   | "Swimwear"
-  | "Loungewear";
+  | "Loungewear"
+  | "Sneakers"
+  | "Loafers"
+  | "Formal Shoes"
+  | "Boots"
+  | "Heels"
+  | "Sandals"
+  | "Flats"
+  | "Slides"
+  | "Bags"
+  | "Backpack"
+  | "Watch"
+  | "Sunglasses"
+  | "Belt"
+  | "Jewelry"
+  | "Scarf"
+  | "Wallet"
+  | "Cap"
+  | "Hat"
+  | "Beanie"
+  | "Kurta"
+  | "Saree"
+  | "Lehenga"
+  | "Sherwani"
+  | "Nehru Jacket"
+  | string;
 
 type Occasion =
   | "Casual"
@@ -89,9 +114,10 @@ type Occasion =
   | "Lounge"
   | "Sleepwear"
   | "Interview"
-  | "All Occasion";
+  | "All Occasion"
+  | string;
 type Season =
-  "Spring" | "Summer" | "Autumn" | "Winter" | "Monsoon" | "All Season";
+  "Spring" | "Summer" | "Autumn" | "Winter" | "Monsoon" | "All Season" | string;
 
 const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "T-Shirt", label: "T-Shirt" },
@@ -124,6 +150,30 @@ const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "Activewear", label: "Activewear" },
   { id: "Swimwear", label: "Swimwear" },
   { id: "Loungewear", label: "Loungewear" },
+  { id: "Sneakers", label: "👟 Sneakers" },
+  { id: "Loafers", label: "👞 Loafers" },
+  { id: "Formal Shoes", label: "👞 Formal Shoes" },
+  { id: "Boots", label: "👢 Boots" },
+  { id: "Heels", label: "👠 Heels" },
+  { id: "Sandals", label: "👡 Sandals" },
+  { id: "Flats", label: "🥿 Flats" },
+  { id: "Slides", label: "🩴 Slides" },
+  { id: "Bags", label: "👜 Bags" },
+  { id: "Backpack", label: "🎒 Backpack" },
+  { id: "Watch", label: "⌚ Watch" },
+  { id: "Sunglasses", label: "🕶️ Sunglasses" },
+  { id: "Belt", label: "🪢 Belt" },
+  { id: "Jewelry", label: "💍 Jewelry" },
+  { id: "Scarf", label: "🧣 Scarf" },
+  { id: "Wallet", label: "👛 Wallet" },
+  { id: "Cap", label: "🧢 Cap" },
+  { id: "Hat", label: "👒 Hat" },
+  { id: "Beanie", label: "🎿 Beanie" },
+  { id: "Kurta", label: "🥻 Kurta / Kurti" },
+  { id: "Saree", label: "🥻 Saree" },
+  { id: "Lehenga", label: "🥻 Lehenga" },
+  { id: "Sherwani", label: "🥻 Sherwani" },
+  { id: "Nehru Jacket", label: "🥻 Nehru Jacket" },
 ];
 
 const OCCASIONS: Occasion[] = [
@@ -221,7 +271,7 @@ export default function AddClothesFormScreen() {
   const isScanned = params.mode === "scanned";
 
   // Form state — pre-filled by AI when scanned
-  const [name] = useState(params.name ?? "");
+  const [name, setName] = useState(params.name ?? "");
   const [category, setCategory] = useState<string>(params.category ?? "top");
   const [color, setColor] = useState(params.color ?? "");
   // Auto-resolve colorHex from COLOR_OPTIONS if not explicitly set
@@ -251,6 +301,7 @@ export default function AddClothesFormScreen() {
 
   // Bottom sheet state
   const [activeSheet, setActiveSheet] = useState<
+    | "name"
     | "category"
     | "occasion"
     | "season"
@@ -500,8 +551,37 @@ export default function AddClothesFormScreen() {
 
           {/* ── Fields ── */}
           <View style={{ paddingHorizontal: 20, paddingTop: 30, gap: 24 }}>
-            {/* Item name (invisible in target, but maybe we keep it as a row?) */}
-            {/* The target UI just shows My Rating, Season, Occasion, Category, Color */}
+            {/* Item Name */}
+            <Pressable
+              onPress={() => openSheet("name")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, color: "#9CA3AF", fontWeight: "500" }}
+              >
+                Item Name
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: name ? "#374151" : "#D1D5DB",
+                    fontWeight: "500",
+                    maxWidth: 200,
+                  }}
+                  numberOfLines={1}
+                >
+                  {name || "Add item name"}
+                </Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
 
             {/* My Rating */}
             <Pressable
@@ -951,7 +1031,9 @@ export default function AddClothesFormScreen() {
                           color: "#111827",
                         }}
                       >
-                        {activeSheet === "category"
+                        {activeSheet === "name"
+                          ? "Item Name"
+                          : activeSheet === "category"
                           ? "Select Category"
                           : activeSheet === "occasion"
                             ? "Select Occasion"
@@ -1266,6 +1348,28 @@ export default function AddClothesFormScreen() {
                             </Text>
                           </Pressable>
                         ))}
+
+                      {activeSheet === "name" && (
+                        <View style={{ width: "100%", height: 100 }}>
+                          <TextInput
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="e.g. Graphic Hoodie, Chelsea Boots"
+                            placeholderTextColor="#9CA3AF"
+                            autoFocus
+                            style={{
+                              width: "100%",
+                              height: 50,
+                              borderWidth: 1,
+                              borderColor: "#E5E7EB",
+                              borderRadius: 12,
+                              paddingHorizontal: 16,
+                              fontSize: 15,
+                              color: "#1F2937",
+                            }}
+                          />
+                        </View>
+                      )}
 
                       {activeSheet === "brand" && (
                         <View style={{ width: "100%", height: 100 }}>

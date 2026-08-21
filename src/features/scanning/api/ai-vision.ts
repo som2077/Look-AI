@@ -5,6 +5,7 @@
 
 import { supabase } from "@/shared/supabase/client";
 import * as FileSystem from "expo-file-system";
+import { DISABLE_AI_SCAN } from "./ai-scan";
 
 export interface ClothingAnalysis {
   name: string;
@@ -15,7 +16,8 @@ export interface ClothingAnalysis {
   | "outerwear"
   | "dress"
   | "ethnic"
-  | "accessory";
+  | "accessory"
+  | "headwear";
   color: string;
   colorHex: string;
   occasion: "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym";
@@ -27,18 +29,18 @@ export interface ClothingAnalysis {
   confidence: number;
 }
 
-const SYSTEM_PROMPT = `You are a fashion AI assistant. Analyze the clothing item and return ONLY valid JSON:
+const SYSTEM_PROMPT = `Analyze clothing or wearable image. Return ONLY valid JSON:
 {
-  "name": "Item name (e.g. Navy Blue Denim Jacket)",
-  "category": "top" | "bottoms" | "footwear" | "outerwear" | "dress" | "ethnic" | "accessory",
-  "color": "Color name",
+  "name": "Item name",
+  "category": "top|bottoms|footwear|outerwear|dress|ethnic|accessory|headwear",
+  "color": "Color",
   "colorHex": "#RRGGBB",
-  "occasion": "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym",
-  "season": "All" | "Summer" | "Winter" | "Monsoon" | "Spring",
+  "occasion": "Casual|Office|Party|Wedding|Date|Gym",
+  "season": "All|Summer|Winter|Monsoon|Spring",
   "matchingColors": [{"name": "White", "hex": "#ffffff"}],
   "brand": "Brand or Unknown",
-  "careInstructions": "1-2 short wash rules",
-  "notes": "1 short styling line",
+  "careInstructions": "1 wash rule",
+  "notes": "1 style line",
   "confidence": 0.9
 }`;
 
@@ -86,8 +88,8 @@ async function uriToBase64(uri: string): Promise<string> {
 
 async function prepareVisionImageUrl(imageUri: string): Promise<string> {
   if (imageUri.startsWith("http://") || imageUri.startsWith("https://")) {
-    if (imageUri.includes("cloudinary.com") && !imageUri.includes("w_768")) {
-      return imageUri.replace("/upload/", "/upload/w_768,c_limit,q_auto/");
+    if (imageUri.includes("cloudinary.com") && !imageUri.includes("w_")) {
+      return imageUri.replace("/upload/", "/upload/w_512,c_limit,q_auto/");
     }
     return imageUri;
   }
@@ -99,13 +101,18 @@ async function prepareVisionImageUrl(imageUri: string): Promise<string> {
 export async function analyzeClothingImage(
   imageUri: string,
 ): Promise<ClothingAnalysis | null> {
+  if (DISABLE_AI_SCAN) {
+    return getFallbackAnalysis();
+  }
+
   try {
     const imageUrl = await prepareVisionImageUrl(imageUri);
 
     const requestBody = {
       model: "gpt-4o-mini",
-      temperature: 0.2,
-      max_tokens: 350,
+      temperature: 0.1,
+      max_tokens: 200,
+      response_format: { type: "json_object" },
       messages: [
         {
           role: "user",

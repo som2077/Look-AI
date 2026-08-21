@@ -21,12 +21,9 @@ const corsHeaders = {
 const promptConfig = loadPrompt("cloth_label_ocr");
 
 function buildSystemPrompt(): string {
-  const table = serializeCareSymbolsForPrompt();
   const systemPrompt = promptConfig.system_prompt as string;
   const userTemplate = promptConfig.user_template as string;
-
-  // Render the template with the reference table
-  return `${systemPrompt}\n\n${renderPrompt(userTemplate, { reference_table: table })}`;
+  return `${systemPrompt}\n\n${userTemplate}`;
 }
 
 serve(async (req: Request) => {
@@ -56,11 +53,16 @@ serve(async (req: Request) => {
   }
 
   try {
-    const body = await readJsonBody(req);
-    const base64Image = isRequiredString(
-      (body as Record<string, unknown>)?.base64Image,
-      "base64Image",
-    );
+    const body = await readJsonBody(req) as Record<string, unknown>;
+    const base64Image = body?.base64Image as string | undefined;
+    const imageUrl = body?.imageUrl as string | undefined;
+
+    if (!base64Image && !imageUrl) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing base64Image or imageUrl" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY") || Deno.env.get("EXPO_PUBLIC_OPENAI_API_KEY");
     if (!openaiKey) {
@@ -69,7 +71,11 @@ serve(async (req: Request) => {
 
     const prompt = buildSystemPrompt();
     const configuredTemp = (promptConfig.temperature as number) ?? 0.1;
-    const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 1000;
+    const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 300;
+
+    const formattedImageUrl = imageUrl
+      ? imageUrl
+      : `data:image/jpeg;base64,${base64Image!.includes(",") ? base64Image!.split(",")[1].trim() : base64Image!.trim()}`;
 
     let data: any = null;
     let lastError = "";
@@ -93,7 +99,8 @@ serve(async (req: Request) => {
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`,
+                  url: formattedImageUrl,
+                  detail: "low",
                 },
               },
             ],
