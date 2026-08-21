@@ -6,12 +6,12 @@ import Purchases, {
   PurchasesPackage,
 } from "react-native-purchases";
 
+import { isWeb } from "@/shared/utils/platform";
+
 // Replace with your RevenueCat public SDK keys
 const API_KEYS = {
-  apple: "appl_YOUR_APPLE_API_KEY", // Note: Need iOS key if testing on iPhone
-  google:
-    process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY ||
-    "goog_KJiQaosYUzixpRCyrMaNVDyRsKI",
+  apple: process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY || "appl_YOUR_APPLE_API_KEY",
+  google: process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY || "",
 };
 
 export function useRevenueCat() {
@@ -21,12 +21,17 @@ export function useRevenueCat() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    if (isWeb) {
+      setIsReady(true);
+      return;
+    }
+
     const init = async () => {
       try {
         Purchases.setLogLevel(LOG_LEVEL.DEBUG);
 
         const key = API_KEYS.google;
-        
+
         // Skip configure if it's the dummy key to prevent annoying crash logs
         const isDummyKey = key.includes("goog_KJiQaos");
 
@@ -73,6 +78,8 @@ export function useRevenueCat() {
 
   // Listen for purchase updates
   useEffect(() => {
+    if (isWeb) return;
+
     const customerInfoUpdated = async (purchaserInfo: CustomerInfo) => {
       checkProStatus(purchaserInfo);
     };

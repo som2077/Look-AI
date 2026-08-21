@@ -1,6 +1,6 @@
 /**
- * AI Vision API — Clothing Analyzer
- * Analyzes a clothing image and extracts structured metadata.
+ * AI Vision API — Clothing Analyzer (Optimized)
+ * Analyzes a clothing image and extracts structured metadata using low-token vision detail.
  */
 
 import { supabase } from "@/shared/supabase/client";
@@ -13,7 +13,7 @@ export interface ClothingAnalysis {
   | "bottoms"
   | "footwear"
   | "outerwear"
-  | "dress"[]
+  | "dress"
   | "ethnic"
   | "accessory";
   color: string;
@@ -24,32 +24,24 @@ export interface ClothingAnalysis {
   brand: string;
   careInstructions: string;
   notes: string;
-  confidence: number; // 0-1
+  confidence: number;
 }
 
-const SYSTEM_PROMPT = `You are a fashion AI assistant. Analyze the clothing item in the image and return ONLY a valid JSON object (no markdown, no explanation) with exactly these fields:
+const SYSTEM_PROMPT = `You are a fashion AI assistant. Analyze the clothing item and return ONLY valid JSON:
 {
-  "name": "descriptive item name (e.g. Navy Blue Denim Jacket)",
-  "category": one of: "top" | "bottoms" | "footwear" | "outerwear" | "dress" | "ethnic" | "accessory",
-  "color": "human readable color name (e.g. Navy Blue)",
-  "colorHex": "hex color code of the dominant color (e.g. #1B3A6B)",
-  "occasion": one of: "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym",
-  "season": one of: "All" | "Summer" | "Winter" | "Monsoon" | "Spring",
-  "matchingColors": [
-    { "name": "color name", "hex": "#hexcode" },
-    { "name": "color name", "hex": "#hexcode" },
-    { "name": "color name", "hex": "#hexcode" }
-  ],
-  "brand": "Guess brand if visible or return 'Unknown'",
-  "careInstructions": "Determine standard care instructions by guessing the fabric material. Provide 2-3 short, specific washing/drying rules (e.g., 'Machine wash cold. Do not bleach. Tumble dry low.'). If unsure, provide safe defaults like 'Hand wash cold. Dry flat.'",
-  "notes": "Write a stylish, engaging 1-2 sentence fashion note describing the vibe of the item, how it feels, and a quick styling tip.",
-  "confidence": a number between 0.7 and 1.0
-}
-Be specific and accurate. Always return valid JSON only.`;
+  "name": "Item name (e.g. Navy Blue Denim Jacket)",
+  "category": "top" | "bottoms" | "footwear" | "outerwear" | "dress" | "ethnic" | "accessory",
+  "color": "Color name",
+  "colorHex": "#RRGGBB",
+  "occasion": "Casual" | "Office" | "Party" | "Wedding" | "Date" | "Gym",
+  "season": "All" | "Summer" | "Winter" | "Monsoon" | "Spring",
+  "matchingColors": [{"name": "White", "hex": "#ffffff"}],
+  "brand": "Brand or Unknown",
+  "careInstructions": "1-2 short wash rules",
+  "notes": "1 short styling line",
+  "confidence": 0.9
+}`;
 
-/**
- * Converts a local file URI to base64 encoded string.
- */
 async function uriToBase64(uri: string): Promise<string> {
   if (!uri) return "";
 
@@ -69,7 +61,7 @@ async function uriToBase64(uri: string): Promise<string> {
       });
       if (base64) return base64;
     } catch (fsErr) {
-      console.warn("[ai-vision] FileSystem read failed, attempting fetch fallback:", fsErr);
+      console.warn("[ai-vision] FileSystem read failed:", fsErr);
     }
   }
 
@@ -92,31 +84,28 @@ async function uriToBase64(uri: string): Promise<string> {
   }
 }
 
-/**
- * Analyzes a clothing image using AI Vision API.
- * @param imageUri - Local file URI of the image
- * @returns Structured clothing analysis or null on error
- */
+async function prepareVisionImageUrl(imageUri: string): Promise<string> {
+  if (imageUri.startsWith("http://") || imageUri.startsWith("https://")) {
+    if (imageUri.includes("cloudinary.com") && !imageUri.includes("w_768")) {
+      return imageUri.replace("/upload/", "/upload/w_768,c_limit,q_auto/");
+    }
+    return imageUri;
+  }
+  const base64 = await uriToBase64(imageUri);
+  const mimeType = imageUri.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+  return `data:${mimeType};base64,${base64}`;
+}
+
 export async function analyzeClothingImage(
   imageUri: string,
 ): Promise<ClothingAnalysis | null> {
   try {
-    let base64Image: string;
-    try {
-      base64Image = await uriToBase64(imageUri);
-    } catch (err) {
-      console.error("[ai-vision] Error converting image URI to base64:", err);
-      return null;
-    }
-
-    const mimeType = imageUri.toLowerCase().endsWith(".png")
-      ? "image/png"
-      : "image/jpeg";
+    const imageUrl = await prepareVisionImageUrl(imageUri);
 
     const requestBody = {
       model: "gpt-4o-mini",
       temperature: 0.2,
-      max_tokens: 512,
+      max_tokens: 350,
       messages: [
         {
           role: "user",
@@ -125,7 +114,8 @@ export async function analyzeClothingImage(
             {
               type: "image_url",
               image_url: {
-                url: `data:${mimeType};base64,${base64Image}`,
+                url: imageUrl,
+                detail: "low", // 85 input tokens instead of 765+ tokens
               },
             },
           ],
@@ -133,88 +123,28 @@ export async function analyzeClothingImage(
       ],
     };
 
-    const MODELS = [
-      "gpt-4o-mini"
-    ];
+    const { data, error: edgeError } = await supabase.functions.invoke("openai-proxy", {
+      body: { model: "gpt-4o-mini", body: requestBody },
+    });
 
-    let lastError = "";
-
-    for (const model of MODELS) {
-      let textResponse: string | null = null;
-      let invokeFailed = false;
-
-      try {
-        const { data, error: edgeError } = await supabase.functions.invoke("openai-proxy", {
-          body: { model, body: requestBody },
-        });
-
-        if (edgeError) {
-          console.warn(`[AI-Vision] Edge function failed for ${model}, attempting direct fetch...`, edgeError);
-          invokeFailed = true;
-        } else {
-          textResponse = data?.choices?.[0]?.message?.content ?? null;
-        }
-      } catch (invokeErr) {
-        console.warn(`[AI-Vision] Invoke exception for ${model}, attempting direct fetch...`, invokeErr);
-        invokeFailed = true;
-      }
-
-      if (invokeFailed) {
-        // Fallback to direct fetch
-        const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
-        if (!apiKey) {
-          console.error("[AI-Vision] No EXPO_PUBLIC_OPENAI_API_KEY available for fallback.");
-          continue;
-        }
-
-        const url = `https://api.openai.com/v1/chat/completions`;
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!res.ok) {
-          const errText = await res.text();
-          console.error(`[AI-Vision] Direct fetch failed for ${model}:`, res.status, errText);
-          continue;
-        }
-
-        const data = await res.json();
-        textResponse = data?.choices?.[0]?.message?.content ?? null;
-      }
-
-      if (!textResponse) {
-        console.error(`[AI-Vision] No text returned from ${model}`);
-        continue;
-      }
-
-      const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error(`[AI-Vision] No JSON from ${model}:`, textResponse);
-        continue;
-      }
-
-      const parsed = JSON.parse(jsonMatch[0]) as ClothingAnalysis;
-      console.log(`[AI-Vision] ✅ Success with model: ${model}`);
-      return parsed;
+    if (edgeError || !data) {
+      console.warn(`[AI-Vision] Edge function failed:`, edgeError);
+      return getFallbackAnalysis();
     }
 
-    // All models failed
-    console.warn(`[AI-Vision] All models failed. Last error: ${lastError}. Using fallback.`);
-    return getFallbackAnalysis();
+    const textResponse = data?.choices?.[0]?.message?.content ?? null;
+    if (!textResponse) return getFallbackAnalysis();
+
+    const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return getFallbackAnalysis();
+
+    return JSON.parse(jsonMatch[0]) as ClothingAnalysis;
   } catch (err) {
     console.error("analyzeClothingImage error:", err);
     return getFallbackAnalysis();
   }
 }
 
-/**
- * Fallback analysis when API is unavailable or key is missing.
- */
 const getFallbackAnalysis = (): ClothingAnalysis => {
   return {
     name: "Classic Denim Jacket",

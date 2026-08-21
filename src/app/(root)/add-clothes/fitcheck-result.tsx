@@ -3,18 +3,23 @@ import { FitCheckAnalysis } from "@/features/scanning/api/ai-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import {
   IconArrowLeft,
-  IconBolt,
-  IconBookmark,
   IconCircleX,
   IconDotsVertical,
+  IconInfoCircle,
   IconSparkles,
+  IconX,
+  IconShirt,
 } from "@tabler/icons-react-native";
+import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
+  Animated,
+  Dimensions,
   Image,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,7 +27,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle, G } from "react-native-svg";
+import Svg, { Circle, Defs, G, Line, LinearGradient, Rect, Stop } from "react-native-svg";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type FitCheckParams = {
   scanId?: string;
@@ -52,6 +59,7 @@ const ProgressRing = ({
   innerBottom,
   bottomText,
   color,
+  strokeWidthRatio = 0.1,
 }: {
   size: number;
   progress: number;
@@ -59,8 +67,9 @@ const ProgressRing = ({
   innerBottom?: string;
   bottomText?: string;
   color: string;
+  strokeWidthRatio?: number;
 }) => {
-  const strokeWidth = size * 0.1;
+  const strokeWidth = size * strokeWidthRatio;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (circumference * progress) / 100;
@@ -120,9 +129,87 @@ const ProgressRing = ({
   );
 };
 
+const GradientScoreBar = ({ score, max = 10 }: { score: number, max?: number }) => {
+  const percent = (score / max) * 100;
+  return (
+    <View className="w-full mt-6 mb-2">
+      <View className="w-full h-3">
+        <Svg width="100%" height="100%" style={{ overflow: "visible" }}>
+          <Defs>
+            <LinearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <Stop offset="0%" stopColor="#0EA5E9" />
+              <Stop offset="30%" stopColor="#10B981" />
+              <Stop offset="65%" stopColor="#F59E0B" />
+              <Stop offset="100%" stopColor="#EF4444" />
+            </LinearGradient>
+          </Defs>
+          <Rect width="100%" height="6" y="3" rx="3" fill="url(#scoreGrad)" />
+          <Line x1={`${percent}%`} y1="-4" x2={`${percent}%`} y2="16" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" />
+        </Svg>
+      </View>
+
+      <View className="flex-row justify-between items-center mt-6 px-1">
+        <View className="flex-row items-center"><View className="w-2.5 h-2.5 rounded-full bg-[#F59E0B] mr-2" /><Text className="text-[11px] text-gray-500 font-medium">Needs Work</Text></View>
+        <View className="flex-row items-center"><View className="w-2.5 h-2.5 rounded-full bg-[#0EA5E9] mr-2" /><Text className="text-[11px] text-gray-500 font-medium">Decent</Text></View>
+        <View className="flex-row items-center"><View className="w-2.5 h-2.5 rounded-full bg-[#EF4444] mr-2" /><Text className="text-[11px] text-gray-500 font-medium">Fire</Text></View>
+        <View className="flex-row items-center"><View className="w-2.5 h-2.5 rounded-full bg-[#10B981] mr-2" /><Text className="text-[11px] text-gray-500 font-medium">Perfect</Text></View>
+      </View>
+    </View>
+  );
+};
+
+const ScoreBar = ({ label, score, max, color }: { label: string; score: number; max: number; color: string }) => {
+  const percentage = (score / max) * 100;
+  return (
+    <View className="flex-row items-center justify-between">
+      <Text className="text-[11px] font-bold text-[#111827] w-[72px]">{label}</Text>
+      <View className="flex-1 h-2 bg-gray-100 rounded-full mx-2 overflow-hidden">
+        <View
+          className="h-full rounded-full"
+          style={{ width: `${percentage}%`, backgroundColor: color }}
+        />
+      </View>
+      <Text className="text-[10px] text-gray-500 font-semibold w-7 text-right">{score}/{max}</Text>
+    </View>
+  );
+};
+
+const SmallScoreCard = ({ score, label }: { score: number; label: string }) => {
+  const radius = 22;
+  const strokeWidth = 4.5;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (score / 10) * circumference;
+
+  return (
+    <View className="flex-1 bg-white rounded-[24px] p-4 border border-gray-100 shadow-sm" style={{ elevation: 2 }}>
+      <Text className="text-3xl font-extrabold tracking-tight text-[#111827]">{score.toFixed(1)}</Text>
+      <Text className="text-[12px] font-bold text-[#111827] mt-1 mb-4 h-8 leading-tight">{label}</Text>
+      <View className="items-center justify-center self-center mt-auto">
+        <Svg width={54} height={54} viewBox="0 0 54 54">
+          <Circle cx={27} cy={27} r={radius} stroke="#E5E7EB" strokeWidth={strokeWidth} fill="none" />
+          <Circle
+            cx={27} cy={27} r={radius}
+            stroke="#111827"
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            fill="none"
+            transform="rotate(-90 27 27)"
+          />
+        </Svg>
+        <View className="absolute">
+          <IconShirt size={18} color="#111827" strokeWidth={2} />
+        </View>
+      </View>
+    </View>
+  );
+};
+
 export default function FitCheckResultScreen() {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
   const params = useLocalSearchParams() as FitCheckParams;
   const scans = useScanHistoryStore((s) => s.scans);
   const removeScan = useScanHistoryStore((s) => s.removeScan);
@@ -257,122 +344,159 @@ export default function FitCheckResultScreen() {
           className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1 }}
+          overScrollMode="never"
+          bounces={false}
         >
           {/* Spacer to show the full image */}
           <View className="h-[400px]" />
 
           {/* Bottom Sheet Container */}
-          <View className="flex-1 bg-white rounded-t-[30px] px-5 pt-6 pb-32 shadow-2xl">
+          <ExpoLinearGradient
+            colors={['#FFF0F5', '#F4F0FF', '#FFFFFF', '#FFFFFF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0.4 }}
+            style={{
+              minHeight: SCREEN_HEIGHT * 0.9,
+              elevation: 15,
+              borderTopLeftRadius: 40,
+              borderTopRightRadius: 40,
+            }}
+            className="flex-1 px-5 pt-5 pb-32 mt-auto border-t border-gray-200 shadow-sm"
+          >
             {/* Grab handle indicator */}
-            <View className="w-12 h-1.5 bg-black rounded-full self-center absolute top-3" />
+            <View className="w-16 h-1.5 bg-gray-300 rounded-full self-center mb-6" />
 
-            {/* Top Row: Time & Category Pills */}
-            <View className="flex-row justify-between items-end mb-5 mt-3 px-1">
-              <View className="flex-col items-start gap-y-2.5">
-                <View className="bg-gray-100 px-3.5 py-1.5 rounded-full ml-3">
-                  <Text className="text-[11px] font-bold text-gray-700">
-                    {new Date().toLocaleTimeString([], {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                  </Text>
-                </View>
-                <View className="bg-black px-5 py-2.5 rounded-full">
-                  <Text className="text-[13px] font-bold text-white">
-                    {result.styleCategory?.archetype || "Business casual"}
-                  </Text>
-                </View>
-              </View>
-              <Pressable className="pb-2 pr-2">
-                <IconBookmark size={24} color="#111827" strokeWidth={1.5} />
-              </Pressable>
-            </View>
+            {/* Card 1: Your Style */}
+            <OutlineCard className="p-6">
+              <Text className="text-[15px] font-bold text-[#111827] mb-4">Your Style</Text>
 
-            {/* Card 2: Body Proportions */}
-            <OutlineCard className="flex-row items-center p-4">
-              <View className="w-[100px] items-center justify-center mr-2">
-                <Image
-                  // Currently defaulting to female proportions. In the future, tie this to user gender state.
-                  source={require("../../../../assets/fitImage/female-proportions-clean.jpg")}
-                  style={{ width: 90, height: 160 }}
-                  resizeMode="contain"
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="text-[11px] font-bold text-gray-500 mb-0.5">
-                  Body Proportions
-                </Text>
-                <Text className="text-lg font-extrabold text-[#111827] mb-1">
-                  {result.silhouette?.bodyShape || "Well-Balanced"}
-                </Text>
-                <Text className="text-[11px] text-gray-500 leading-tight mb-4">
-                  {result.silhouette?.explanation ||
-                    "A solid outfit with room for minor tweaks."}
+              <View className="flex-row items-end justify-between mt-1 mb-2">
+                <Text className="text-[44px] font-light tracking-tighter text-[#111827] leading-none">
+                  {((result.fitScore || 93) / 10).toFixed(2)}
                 </Text>
 
-                <View className="flex-row items-center justify-between">
-                  <ProgressRing
-                    size={64}
-                    progress={result.fitScore || 85}
-                    innerTop={`${result.fitScore || 85}/100`}
-                    innerBottom="Overall"
-                    bottomText="Sharp tier"
-                    color="#EF4444" // Red stroke as in mockup
-                  />
-                  <ProgressRing
-                    size={64}
-                    progress={result.silhouette?.topRatio || 50}
-                    innerTop={`${result.silhouette?.topRatio || 50}%`}
-                    innerBottom="Torso"
-                    bottomText="Physical fit"
-                    color="#111827"
-                  />
-                  <ProgressRing
-                    size={64}
-                    progress={result.silhouette?.bottomRatio || 50}
-                    innerTop={`${result.silhouette?.bottomRatio || 50}%`}
-                    innerBottom="Legs"
-                    bottomText="Look & Color"
-                    color="#111827"
-                  />
+                <View className="flex-row items-center pb-2">
+                  <Text className="text-[12px] text-gray-800 mr-3">Your look is</Text>
+                  <View className="bg-[#0EA5E9] px-3.5 py-1.5 rounded-full">
+                    <Text className="text-white text-[11px] font-bold">Perfect</Text>
+                  </View>
+                  <Pressable className="ml-4 p-1" onPress={() => router.push("/(root)/add-clothes/your-style-info")}>
+                    <IconInfoCircle size={18} color="#4B5563" strokeWidth={1.5} />
+                  </Pressable>
                 </View>
               </View>
+
+              <GradientScoreBar score={((result.fitScore || 93) / 10)} />
             </OutlineCard>
 
-            {/* Card 4: Analysis & Quick Fixes (Light Themed) */}
-            <OutlineCard className="p-5">
-              <View className="mb-6 gap-y-3">
-                {[
-                  result.fitPrecision?.shoulderFit?.text,
-                  result.fitPrecision?.sleeveLength?.text,
-                  result.fitPrecision?.trouserBreak?.text,
-                ]
-                  .filter(Boolean)
-                  .map((text, idx) => (
-                    <View key={idx} className="flex-row items-start">
-                      <View className="w-1.5 h-1.5 rounded-full bg-[#10B981] mt-2 mr-3" />
-                      <Text className="text-gray-700 text-[14px] leading-5 flex-1 font-medium">
-                        {text}
-                      </Text>
+            {/* Horizontal Scrollable Score Section */}
+            <View className="-mx-5 mt-4">
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={SCREEN_WIDTH}
+                decelerationRate="fast"
+                onScroll={(e) => {
+                  const slide = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                  if (activeSlide !== slide) setActiveSlide(slide);
+                }}
+                scrollEventThrottle={16}
+              >
+                {/* Page 1: Card 2 - Overall Visual Score */}
+                <View style={{ width: SCREEN_WIDTH, paddingHorizontal: 20 }}>
+                  <OutlineCard className="p-6 pt-5">
+                    <View className="flex-row justify-between items-center mb-6">
+                      <Text className="text-[13px] font-bold text-[#111827]">Overall Visual Score</Text>
+                      <Pressable className="p-1 -mr-1" onPress={() => router.push("/(root)/add-clothes/overall-score-info")}>
+                        <IconInfoCircle size={18} color="#4B5563" strokeWidth={1.5} />
+                      </Pressable>
                     </View>
-                  ))}
-              </View>
 
-              {result.actionableFixes?.[0] && (
-                <View className="bg-orange-50 border border-orange-200/60 rounded-2xl p-4">
-                  <View className="flex-row items-center mb-1">
-                    <IconBolt size={18} color="#F59E0B" className="mr-2" />
-                    <Text className="text-[#F59E0B] font-bold text-sm">
-                      Quick fix
+                    <View className="flex-row items-center">
+                      {/* Circular Score */}
+                      <View className="relative items-center justify-center mr-6">
+                        <Svg width={110} height={110} viewBox="0 0 120 120">
+                          <Defs>
+                            <LinearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+                              <Stop offset="0" stopColor="#0EA5E9" />
+                              <Stop offset="1" stopColor="#8B5CF6" />
+                            </LinearGradient>
+                          </Defs>
+                          <Circle
+                            cx="60"
+                            cy="60"
+                            r="50"
+                            stroke="#F3F4F6"
+                            strokeWidth="10"
+                            fill="none"
+                          />
+                          <Circle
+                            cx="60"
+                            cy="60"
+                            r="50"
+                            stroke="url(#scoreGrad)"
+                            strokeWidth="10"
+                            strokeLinecap="round"
+                            strokeDasharray={2 * Math.PI * 50}
+                            strokeDashoffset={2 * Math.PI * 50 * (1 - 8.5 / 10)}
+                            fill="none"
+                            transform="rotate(-90 60 60)"
+                          />
+                        </Svg>
+                        <View className="absolute items-center justify-center">
+                          <Text className="text-3xl font-black text-[#111827]">8.5</Text>
+                        </View>
+                      </View>
+
+                      {/* Score Breakdown Bars */}
+                      <View className="flex-1 gap-y-3">
+                        <ScoreBar label="Presentation" score={8.2} max={10} color="#0EA5E9" />
+                        <ScoreBar label="Proportional" score={9.0} max={10} color="#8B5CF6" />
+                        <ScoreBar label="Coordination" score={8.5} max={10} color="#10B981" />
+                        <ScoreBar label="Posture" score={7.8} max={10} color="#F59E0B" />
+                        <ScoreBar label="Outfit Fit" score={8.9} max={10} color="#EF4444" />
+                      </View>
+                    </View>
+                  </OutlineCard>
+                </View>
+
+                {/* Page 2: 3 Small Cards + Outfit Score Banner */}
+                <View style={{ width: SCREEN_WIDTH, paddingHorizontal: 20 }}>
+                  <View className="flex-row justify-between gap-x-2">
+                    <SmallScoreCard score={9.2} label="Casual Street" />
+                    <SmallScoreCard score={9.2} label="Office / Smart" />
+                    <SmallScoreCard score={9.2} label="Formal / Event" />
+                  </View>
+
+                  {/* Outfit Score Banner */}
+                  <View className="bg-white rounded-[24px] p-4 mt-4 border border-gray-100 shadow-sm" style={{ elevation: 2 }}>
+                    <View className="flex-row justify-between items-center mb-2">
+                      <Text className="font-bold text-[#111827] text-[13px]">Outfit Score</Text>
+                      <Text className="font-bold text-[#111827] text-[13px]">8/10</Text>
+                    </View>
+                    <View className="h-1.5 bg-gray-100 rounded-full mb-3 overflow-hidden">
+                      <ExpoLinearGradient
+                        colors={['#6B7280', '#111827']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{ width: '80%' }}
+                        className="h-full rounded-full"
+                      />
+                    </View>
+                    <Text className="text-[11px] text-gray-500 leading-relaxed">
+                      Weather-friendly style starts here. Find outfits curated for today's forecast. Tap to see outfit suggestions.
                     </Text>
                   </View>
-                  <Text className="text-gray-600 text-sm leading-5 pl-6">
-                    {result.actionableFixes[0].solution}
-                  </Text>
                 </View>
-              )}
-            </OutlineCard>
-          </View>
+              </ScrollView>
+            </View>
+            {/* Pagination dots */}
+            <View className="flex-row justify-center items-center mt-3 mb-4">
+              <View className={`h-1.5 rounded-full mx-1 transition-all duration-300 ${activeSlide === 0 ? 'bg-black w-4' : 'bg-gray-300 w-1.5'}`} />
+              <View className={`h-1.5 rounded-full mx-1 transition-all duration-300 ${activeSlide === 1 ? 'bg-black w-4' : 'bg-gray-300 w-1.5'}`} />
+            </View>
+          </ExpoLinearGradient>
         </ScrollView>
 
         {/* Fixed Bottom Footer */}

@@ -5,6 +5,10 @@
   "scripts": {
     "start": "cross-env UV_THREADPOOL_SIZE=16 expo start --max-workers 4",
     "dev": "cross-env UV_THREADPOOL_SIZE=16 expo start --max-workers 4",
+    "dev:android": "cross-env UV_THREADPOOL_SIZE=16 expo start --android --port 8081",
+    "dev:web": "npm --prefix website run dev -- -p 3000",
+    "build:web": "npm --prefix website run build",
+    "typecheck": "tsc --noEmit",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -14,6 +18,7 @@
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.31",
+    "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
     "@expo/vector-icons": "^15.1.1",
     "@lottiefiles/dotlottie-react": "^0.19.14",
     "@react-native-async-storage/async-storage": "2.2.0",

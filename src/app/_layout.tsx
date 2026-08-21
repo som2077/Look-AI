@@ -4,15 +4,21 @@ import {
 } from "@/features/onboarding/model/onboarding-store";
 import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { FONT_ASSETS } from "@/shared/config/constants/fonts";
+import {
+  getFCMToken,
+  requestUserPermission,
+  setupNotificationListeners,
+} from "@/shared/notifications/firebase-service";
 import { syncStoresWithUser } from "@/shared/storage/namespacedStorage";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import analytics from "@/shared/telemetry/analytics";
+import { initSentry, Sentry } from "@/shared/telemetry/sentry";
 import {
   AppErrorBoundary,
   ErrorStateView,
   useErrorStore,
 } from "@/shared/ui/ErrorStateView";
 import { ToastProvider } from "@/shared/ui/Toast";
-import { initSentry, Sentry } from "@/shared/telemetry/sentry";
 import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -20,24 +26,18 @@ import { useFonts } from "expo-font";
 import * as NavigationBar from "expo-navigation-bar";
 import {
   Stack,
-  useRouter,
-  useSegments,
+  useNavigationContainerRef,
   usePathname,
   useRootNavigationState,
-  useNavigationContainerRef,
+  useRouter,
+  useSegments,
 } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import analytics from "@react-native-firebase/analytics";
 import { memo, useCallback, useEffect, useState } from "react";
 import { AppState } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import {
-  requestUserPermission,
-  getFCMToken,
-  setupNotificationListeners,
-} from "@/shared/notifications/firebase-service";
 import "../../global.css";
 
 // Initialize Sentry before any component renders
@@ -247,7 +247,7 @@ const RootNavigator = memo(function RootNavigator() {
       .update({ avatar_url: user.imageUrl })
       .eq("user_id", userId)
       .is("avatar_url", null)
-      .then(() => {}); // Silent sync — one-time per session
+      .then(() => { }); // Silent sync — one-time per session
   }, [user?.imageUrl, supabase, userId, isSupabaseInitializing]);
 
   // Sync FCM Token on app start if enabled
@@ -264,7 +264,7 @@ const RootNavigator = memo(function RootNavigator() {
           .select("notifications_enabled")
           .eq("user_id", userId)
           .single();
-          
+
         if (data && data.notifications_enabled) {
           const hasPermission = await requestUserPermission();
           if (hasPermission) {

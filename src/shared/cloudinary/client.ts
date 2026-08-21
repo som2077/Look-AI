@@ -13,23 +13,14 @@ export const uploadToCloudinary = async (
     const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
     const apiKey = process.env.EXPO_PUBLIC_CLOUDINARY_API_KEY?.trim();
     const apiSecret = process.env.EXPO_PUBLIC_CLOUDINARY_API_SECRET?.trim();
+    const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET?.trim();
 
-    if (!cloudName || !apiKey || !apiSecret) {
-      console.warn("Cloudinary configuration missing in .env file.");
+    if (!cloudName) {
+      console.warn("Cloudinary cloud name missing in configuration.");
       return null;
     }
 
     const timestamp = Math.round(new Date().getTime() / 1000).toString();
-    
-    // Construct params to sign (must be alphabetical)
-    let paramsToSign = "";
-    if (folder) {
-      paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
-    } else {
-      paramsToSign = `timestamp=${timestamp}`;
-    }
-
-    const signature = CryptoJS.SHA1(paramsToSign + apiSecret).toString();
 
     const fileName = localUri.split("/").pop() || "image.jpg";
     const fileExt = (fileName.split(".").pop() || "jpg").toLowerCase();
@@ -41,9 +32,19 @@ export const uploadToCloudinary = async (
       name: fileName,
       type: mimeType,
     } as any);
-    data.append("api_key", apiKey);
-    data.append("timestamp", timestamp);
-    data.append("signature", signature);
+
+    if (apiSecret && apiKey) {
+      let paramsToSign = folder ? `folder=${folder}&timestamp=${timestamp}` : `timestamp=${timestamp}`;
+      const signature = CryptoJS.SHA1(paramsToSign + apiSecret).toString();
+      data.append("api_key", apiKey);
+      data.append("timestamp", timestamp);
+      data.append("signature", signature);
+    } else if (uploadPreset) {
+      data.append("upload_preset", uploadPreset);
+    } else {
+      console.warn("Cloudinary upload requires either signed keys or EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET.");
+      return null;
+    }
     if (folder) {
       data.append("folder", folder);
     }

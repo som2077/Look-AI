@@ -1,25 +1,41 @@
-import messaging from "@react-native-firebase/messaging";
 import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
+
+let messaging: any = null;
+
+if (Platform.OS !== "web") {
+  try {
+    messaging = require("@react-native-firebase/messaging").default;
+  } catch (e) {
+    if (__DEV__) console.log("Firebase messaging module missing or un-linked.");
+  }
+}
 
 // Handle background messages
-try {
-  messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-    console.log("Message handled in the background!", remoteMessage);
-  });
-} catch {
-  console.log("Firebase not initialized yet or running in Expo Go.");
+if (messaging) {
+  try {
+    messaging().setBackgroundMessageHandler(async (remoteMessage: any) => {
+      console.log("Message handled in the background!", remoteMessage);
+    });
+  } catch {
+    console.log("Firebase not initialized yet or running in Expo Go.");
+  }
 }
 
 // Configure how notifications appear when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+} catch (e) {
+  // Ignored if platform does not support Expo notifications
+}
 
 export async function requestUserPermission() {
   try {
@@ -32,10 +48,10 @@ export async function requestUserPermission() {
 }
 
 export async function getFCMToken() {
+  if (!messaging) return null;
   try {
     const token = await messaging().getToken();
     console.log("FCM Token:", token);
-    // TODO: Save this token to your backend (e.g., Supabase) for this user
     return token;
   } catch (error) {
     console.error("Failed to get FCM token", error);
@@ -44,11 +60,12 @@ export async function getFCMToken() {
 }
 
 export function setupNotificationListeners() {
+  if (!messaging) return () => { };
   try {
     // Listen to foreground messages
-    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+    const unsubscribe = messaging().onMessage(async (remoteMessage: any) => {
       console.log("A new FCM message arrived in the foreground!", remoteMessage);
-      
+
       // Show system notification instead of an in-app Alert
       if (remoteMessage.notification) {
         await Notifications.scheduleNotificationAsync({
@@ -63,7 +80,7 @@ export function setupNotificationListeners() {
     });
 
     // When user taps on notification in background state
-    messaging().onNotificationOpenedApp((remoteMessage) => {
+    messaging().onNotificationOpenedApp((remoteMessage: any) => {
       console.log(
         "Notification caused app to open from background state:",
         remoteMessage.notification,
@@ -73,19 +90,18 @@ export function setupNotificationListeners() {
     // When user taps on notification from quit state
     messaging()
       .getInitialNotification()
-      .then((remoteMessage) => {
+      .then((remoteMessage: any) => {
         if (remoteMessage) {
           console.log(
             "Notification caused app to open from quit state:",
             remoteMessage.notification,
           );
-          // Add routing logic here if needed
         }
       });
 
     return unsubscribe;
   } catch (error) {
     console.log("Firebase not initialized yet. Listeners not attached.", error);
-    return () => {};
+    return () => { };
   }
 }
