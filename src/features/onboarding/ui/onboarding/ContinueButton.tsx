@@ -1,5 +1,5 @@
-import { Pressable, Text } from "react-native";
 import * as Haptics from "expo-haptics";
+import { Pressable, Text, View } from "react-native";
 
 export function ContinueButton({
   onPress,
@@ -15,9 +15,15 @@ export function ContinueButton({
         onPress();
       }}
       disabled={disabled}
-      className={`mt-auto items-center rounded-2xl py-5 ${disabled ? "bg-gray-300" : "bg-[#000000]"}`}
+      className={`mt-auto w-full  ${disabled ? "opacity-70" : ""}`}
     >
-      <Text className="text-base font-semibold text-white">Continue</Text>
+      <View className="rounded-[32px] bg-[#000000]" style={{ paddingBottom: 4, marginBottom: -20 }}>
+        <View className="items-center justify-center rounded-[32px] bg-[#000000] py-4">
+          <Text className="text-[17px] font-sans font-bold text-white">
+            Continue
+          </Text>
+        </View>
+      </View>
     </Pressable>
   );
 }

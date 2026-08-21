@@ -3,11 +3,11 @@ import { useOnboardingState } from "@/features/onboarding/model/onboarding-store
 import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import analytics from "@/shared/telemetry/analytics";
 import { useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { Mars, Venus } from "lucide-react-native";
-import analytics from "@/shared/telemetry/analytics";
 import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 

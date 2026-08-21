@@ -1,8 +1,8 @@
+import * as Haptics from "expo-haptics";
+import { Image as ExpoImage } from "expo-image";
 import { Check } from "lucide-react-native";
 import React from "react";
-import { Image as ExpoImage } from "expo-image";
 import { Pressable, Text, View } from "react-native";
-import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 export type BodyTypeOption = {

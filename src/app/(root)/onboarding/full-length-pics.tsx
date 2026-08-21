@@ -1,12 +1,12 @@
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
 import { createSupabaseClient } from "@/shared/supabase/client";
+import analytics from "@/shared/telemetry/analytics";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Info, Upload, X } from "lucide-react-native";
-import analytics from "@/shared/telemetry/analytics";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -20,7 +20,6 @@ import {
 const BUCKET = "full-length-pics";
 
 export default function FullLengthPicsScreen() {
-
   const router = useRouter();
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const { getToken, userId } = useAuth();
@@ -154,24 +153,24 @@ export default function FullLengthPicsScreen() {
               const transformConfig =
                 idx === 0
                   ? {
-                      rotate: "0deg",
-                      translateX: 0,
-                      translateY: 10,
-                      zIndex: 10,
-                    }
+                    rotate: "0deg",
+                    translateX: 0,
+                    translateY: 10,
+                    zIndex: 10,
+                  }
                   : idx === 1
                     ? {
-                        rotate: "-12deg",
-                        translateX: -60,
-                        translateY: 20,
-                        zIndex: 5,
-                      }
+                      rotate: "-12deg",
+                      translateX: -60,
+                      translateY: 20,
+                      zIndex: 5,
+                    }
                     : {
-                        rotate: "12deg",
-                        translateX: 60,
-                        translateY: 20,
-                        zIndex: 4,
-                      };
+                      rotate: "12deg",
+                      translateX: 60,
+                      translateY: 20,
+                      zIndex: 4,
+                    };
 
               return (
                 <View
@@ -240,80 +239,11 @@ export default function FullLengthPicsScreen() {
             onPress={handlePickImages}
             className="h-[320px] w-full items-center justify-center relative"
           >
-            {/* Left Card */}
-            <View
-              style={{
-                position: "absolute",
-                transform: [
-                  { rotate: "-12deg" },
-                  { translateX: -60 },
-                  { translateY: 20 },
-                ],
-                zIndex: 5,
-                shadowColor: "#000000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 5,
-              }}
-              className="h-[280px] w-[200px] rounded-[24px] bg-white p-[6px]"
-            >
-              <Image
-                source={require("@/assets/images/mirror_selfie_girl.jpg")}
-                className="h-full w-full rounded-[18px]"
-                resizeMode="cover"
-              />
-            </View>
-
-            {/* Right Card */}
-            <View
-              style={{
-                position: "absolute",
-                transform: [
-                  { rotate: "12deg" },
-                  { translateX: 60 },
-                  { translateY: 20 },
-                ],
-                zIndex: 4,
-                shadowColor: "#000000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 5,
-              }}
-              className="h-[280px] w-[200px] rounded-[24px] bg-white p-[6px]"
-            >
-              <Image
-                source={require("@/assets/Rectangle 126.png")}
-                className="h-full w-full rounded-[18px]"
-                resizeMode="cover"
-              />
-            </View>
-
-            {/* Center Card (Top layer) */}
-            <View
-              style={{
-                position: "absolute",
-                transform: [
-                  { rotate: "0deg" },
-                  { translateX: 0 },
-                  { translateY: 10 },
-                ],
-                zIndex: 10,
-                shadowColor: "#000000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 5,
-              }}
-              className="h-[280px] w-[200px] rounded-[24px] bg-white p-[6px]"
-            >
-              <Image
-                source={require("@/assets/Rectangle 125.png")}
-                className="h-full w-full rounded-[18px]"
-                resizeMode="cover"
-              />
-            </View>
+            <Image
+              source={require("@/assets/onboarding_fullPIC.png")}
+              className="h-[250px] w-[280px]"
+              resizeMode="contain"
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -328,12 +258,12 @@ export default function FullLengthPicsScreen() {
       </View>
 
       {/* Buttons */}
-      <View className="mt-8 gap-3">
+      <View className="mt-8  -mb-4 gap-3">
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={showPreview ? uploadToSupabase : handlePickImages}
           disabled={uploading}
-          className="items-center justify-center rounded-2xl bg-[#1D1A27] py-5"
+          className="items-center justify-center rounded-[32px] bg-[#1D1A27] py-5"
         >
           {uploading ? (
             <ActivityIndicator color="#ffffff" />

@@ -3,6 +3,7 @@ import {
   BodyTypeCard,
   type BodyTypeOption,
 } from "@/features/onboarding/ui/onboarding/BodyTypeCard";
+import { ContinueButton } from "@/features/onboarding/ui/onboarding/ContinueButton";
 import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/OnboardingHeader";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
@@ -126,23 +127,10 @@ export default function BodyTypesScreen() {
       />
 
       <View className="absolute inset-x-6 bottom-8">
-        <TouchableOpacity
-          activeOpacity={0.9}
+        <ContinueButton 
           disabled={!selectedBodyType}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            handleContinue();
-          }}
-          className={`items-center rounded-2xl py-5 ${
-            selectedBodyType ? "bg-[#1D1A27]" : "bg-[#E5E7EB]"
-          }`}
-        >
-          <Text
-            className={`text-base font-sans font-semibold ${selectedBodyType ? "text-white" : "text-[#9CA3AF]"}`}
-          >
-            Continue
-          </Text>
-        </TouchableOpacity>
+          onPress={handleContinue}
+        />
       </View>
     </View>
   );

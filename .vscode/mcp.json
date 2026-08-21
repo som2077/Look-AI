@@ -3,11 +3,18 @@
     "Figma": {
       "type": "http",
       "url": "https://mcp.figma.com/mcp"
+    },
+    "sentry": {
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp"
     }
   },
   "mcpServers": {
     "Figma": {
       "url": "https://mcp.figma.com/mcp"
+    },
+    "sentry": {
+      "url": "https://mcp.sentry.dev/mcp"
     }
   }
 }
