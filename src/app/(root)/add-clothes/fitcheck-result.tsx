@@ -504,7 +504,7 @@ export default function FitCheckResultScreen() {
           <Pressable
             className="flex-1 h-14 rounded-full border border-gray-300 items-center justify-center flex-row active:bg-gray-50"
             onPress={() => {
-              // TODO: Implement fix scan logic
+              router.back();
             }}
           >
             <IconSparkles size={20} color="#111827" className="mr-2" />

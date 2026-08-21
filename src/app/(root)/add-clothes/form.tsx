@@ -545,7 +545,6 @@ export default function AddClothesFormScreen() {
                   </Text>
                 </Pressable>
               )}
-              {/* )} */}
             </View>
           </View>
 
