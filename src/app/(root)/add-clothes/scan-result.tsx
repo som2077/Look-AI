@@ -213,13 +213,42 @@ export default function ScanResultScreen() {
         setLoadingText("AI is extracting styling details...");
         const aiData = await analyzeClothingFull(aiImageUri);
 
-        // Validation rejection check (only reject full-body photos intended for fit check)
-        if (aiData?.category === "Full Body") {
+        // Validation rejection — check validationStatus and category for invalid images
+        const validationStatus = aiData?.validationStatus;
+        if (validationStatus === "full_body" || aiData?.category === "Full Body") {
           Alert.alert(
-            "Invalid Image",
-            "Please upload a picture of a single fashion item. Full body pictures are meant for Fit Check mode.",
-            [{ text: "OK", onPress: () => router.back() }]
+            "Full Body Photo Detected",
+            "Please scan a single clothing item, not a full body photo. Use Fit Check mode for full body shots.",
+            [{ text: "Got it", onPress: () => router.back() }]
           );
+          setLoading(false);
+          return;
+        }
+        if (validationStatus === "not_clothing" || aiData?.category === "Not Clothing") {
+          Alert.alert(
+            "Not a Clothing Item",
+            "This doesn't look like a clothing item, footwear, or accessory. Please try again with a clear photo of a fashion item.",
+            [{ text: "Try Again", onPress: () => router.back() }]
+          );
+          setLoading(false);
+          return;
+        }
+        if (validationStatus === "multiple_items") {
+          Alert.alert(
+            "Multiple Items Detected",
+            "Please scan one item at a time. Frame a single clothing piece, shoe, or accessory and try again.",
+            [{ text: "Got it", onPress: () => router.back() }]
+          );
+          setLoading(false);
+          return;
+        }
+        if (validationStatus === "unclear") {
+          Alert.alert(
+            "Image Unclear",
+            "The image is too blurry or dark to analyze. Please retake with better lighting.",
+            [{ text: "Retake", onPress: () => router.back() }]
+          );
+          setLoading(false);
           return;
         }
 
@@ -748,7 +777,37 @@ export default function ScanResultScreen() {
             </View>
           </View>
 
-          {/* 6. Brand, Care & Notes (Optional In-Place Inputs) */}
+          {/* 6. Care Instructions */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 14,
+              backgroundColor: "#161422",
+              borderRadius: 20,
+              padding: 16,
+            }}
+          >
+            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+              Care Instructions
+            </Text>
+            <TextInput
+              value={careInstructions}
+              onChangeText={setCareInstructions}
+              style={{
+                color: "#FFFFFF",
+                fontSize: 14,
+                fontWeight: "500",
+                backgroundColor: "#2A2840",
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+              }}
+              placeholder="e.g. Machine wash cold, dry flat"
+              placeholderTextColor="#666"
+            />
+          </View>
+
+          {/* 7. Notes */}
           <View
             style={{
               marginHorizontal: 16,
@@ -756,70 +815,28 @@ export default function ScanResultScreen() {
               backgroundColor: "#161422",
               borderRadius: 20,
               padding: 16,
-              gap: 12,
             }}
           >
-            <View>
-              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
-                Brand (Optional)
-              </Text>
-              <TextInput
-                value={brand}
-                onChangeText={setBrand}
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 14,
-                  fontWeight: "500",
-                  backgroundColor: "#2A2840",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}
-                placeholder="e.g. Zara, Nike, Levi's"
-                placeholderTextColor="#666"
-              />
-            </View>
-            <View>
-              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
-                Care Instructions (Optional)
-              </Text>
-              <TextInput
-                value={careInstructions}
-                onChangeText={setCareInstructions}
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 14,
-                  fontWeight: "500",
-                  backgroundColor: "#2A2840",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}
-                placeholder="e.g. Machine wash cold, dry flat"
-                placeholderTextColor="#666"
-              />
-            </View>
-            <View>
-              <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
-                Notes (Optional)
-              </Text>
-              <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 14,
-                  fontWeight: "500",
-                  backgroundColor: "#2A2840",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}
-                placeholder="e.g. Comfortable everyday staple"
-                placeholderTextColor="#666"
-              />
-            </View>
+            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+              Notes
+            </Text>
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              style={{
+                color: "#FFFFFF",
+                fontSize: 14,
+                fontWeight: "500",
+                backgroundColor: "#2A2840",
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+              }}
+              placeholder="e.g. Comfortable everyday staple"
+              placeholderTextColor="#666"
+            />
           </View>
+
 
           {/* Action Buttons */}
           <View style={{ marginHorizontal: 16, gap: 10 }}>

@@ -31,7 +31,7 @@ export interface ClothAnalysisResult {
   error?: string;
 }
 
-export type ScanSource = "camera" | "gallery" | "barcode" | "label_scan" | "manual";
+export type ScanSource = "camera" | "gallery" | "wardrobe" | "barcode" | "label_scan" | "manual";
 
 export async function saveClothToWardrobe(
   supabase: SupabaseClient,

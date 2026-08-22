@@ -24,6 +24,7 @@ import {
   IconArrowLeft,
   IconCamera,
   IconChevronRight,
+  IconHanger,
   IconPencil,
   IconPhoto,
   IconSparkles,
@@ -133,6 +134,13 @@ export default function AddClothesIndex() {
     closeSheet();
     setTimeout(() => {
       router.push("/(root)/add-clothes/camera" as never);
+    }, 280);
+  }, [router, closeSheet]);
+
+  const handleWardrobeScan = useCallback(() => {
+    closeSheet();
+    setTimeout(() => {
+      router.push("/(root)/add-clothes/wardrobe-select" as never);
     }, 280);
   }, [router, closeSheet]);
 
@@ -287,8 +295,26 @@ export default function AddClothesIndex() {
                 <IconPhoto size={22} color="#0F766E" strokeWidth={1.8} />
               </View>
               <View style={s.sheetRowText}>
-                <Text style={s.sheetRowTitle}>Choose from gallery</Text>
-                <Text style={s.sheetRowSub}>Pick & crop an existing photo</Text>
+                <Text style={s.sheetRowTitle}>Choose from library</Text>
+                <Text style={s.sheetRowSub}>Pick 1–5 photos from gallery</Text>
+              </View>
+              <IconChevronRight size={16} color="#D1D5DB" strokeWidth={2} />
+            </Pressable>
+
+            {/* Divider */}
+            <View style={s.divider} />
+
+            {/* Wardrobe option */}
+            <Pressable
+              onPress={handleWardrobeScan}
+              style={({ pressed }) => [s.sheetRow, pressed && s.sheetRowPressed]}
+            >
+              <View style={[s.sheetRowIcon, { backgroundColor: "#FEF3C7" }]}>
+                <IconHanger size={22} color="#D97706" strokeWidth={1.8} />
+              </View>
+              <View style={s.sheetRowText}>
+                <Text style={s.sheetRowTitle}>From my wardrobe</Text>
+                <Text style={s.sheetRowSub}>Pick from your saved items</Text>
               </View>
               <IconChevronRight size={16} color="#D1D5DB" strokeWidth={2} />
             </Pressable>

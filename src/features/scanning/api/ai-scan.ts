@@ -107,6 +107,8 @@ export interface FullClothingAnalysis {
   brand: string;
   careInstructions: string;
   notes: string;
+  // Validation flag — set to "Not Clothing" when image is rejected
+  validationStatus?: "ok" | "not_clothing" | "full_body" | "multiple_items" | "unclear";
 }
 
 // ─── Token & Image Optimization Helpers ────────────────────────────────────────
@@ -254,37 +256,43 @@ function parseJson<T>(text: string | null, fallback: T): T {
 
 // ─── Mode 1: Scan Cloth ───────────────────────────────────────────────────────
 
-const CLOTH_PROMPT = `You are a STRICT fashion AI analyzer.
-STEP 1: EVALUATE IMAGE TYPE.
-- If full body or no clothing visible, return: {"category": "Not Clothing", "confidence": 0}.
+const CLOTH_PROMPT = `You are a STRICT fashion AI clothing analyzer. Analyze images of single clothing items, footwear, or accessories.
 
-STEP 2: ANALYZE SINGLE ITEM.
-Return ONLY valid JSON with fields:
+STEP 1: VALIDATE IMAGE TYPE.
+Check what is in the image:
+- If image shows a full body person wearing clothes → return: {"validationStatus": "full_body", "category": "Full Body", "confidence": 0}
+- If image shows multiple items at once → return: {"validationStatus": "multiple_items", "category": "Not Clothing", "confidence": 0}
+- If image has no clothing/fashion item at all (food, landscape, selfie, text) → return: {"validationStatus": "not_clothing", "category": "Not Clothing", "confidence": 0}
+- If image is too blurry/dark to analyze → return: {"validationStatus": "unclear", "category": "Not Clothing", "confidence": 0}
+
+STEP 2: ANALYZE THE SINGLE FASHION ITEM.
+Valid items include: tops, bottoms, footwear, accessories, bags, ethnic wear, activewear, outerwear — for men or women.
+
+Return ONLY valid JSON:
 {
-  "category": "T-Shirt, Shirt, Hoodie, Sweatshirt, Jacket, Blazer, Jeans, Trousers, Shorts, Skirt, Dress, Activewear",
-  "subCategory": "e.g., Graphic Tee, Slim Jeans",
-  "primaryColor": "White, Black, Blue, Navy, Red, Green, Yellow, Gray, Brown, Beige, Pink, Purple",
+  "name": "e.g. Navy Blue Hoodie, White Sneakers, Leather Tote Bag",
+  "category": "Top | Bottoms | Footwear | Accessory | Outerwear | Dress | Ethnic | Activewear | Headwear",
+  "subCategory": "e.g. Graphic Tee, Slim Fit Jeans, Chelsea Boots, Crossbody Bag",
+  "primaryColor": "White, Black, Blue, Navy, Red, Green, Yellow, Gray, Brown, Beige, Pink, Purple, Orange, Khaki",
   "secondaryColors": [],
-  "pattern": "Solid, Striped, Checked, Printed",
-  "fabricGuess": "Cotton, Denim, Wool, Polyester",
-  "fit": "Slim, Regular, Loose",
-  "sleeveType": "Full, Half, Sleeveless, or null",
-  "neckType": "Round, V-neck, Collar, or null",
+  "pattern": "Solid | Striped | Checked | Printed | Floral | Camo | Geometric",
+  "fabricGuess": "Cotton | Denim | Wool | Polyester | Leather | Linen | Silk | Synthetic",
+  "fit": "Slim | Regular | Loose | Oversized | Fitted",
+  "sleeveType": "Full | Half | Sleeveless | null",
+  "neckType": "Round | V-neck | Collar | Polo | Turtleneck | null",
   "season": ["All Season"],
-  "occasion": ["Casual", "Formal", "Party"],
-  "formalityScore": 5,
-  "versatilityTags": ["versatile item"],
-  "brand": "Brand name or 'Unknown'",
-  "careInstructions": "1-2 short wash rules",
-  "notes": "1 short styling line",
+  "occasion": ["Casual"],
+  "careInstructions": "Machine wash cold, tumble dry low",
+  "notes": "1 short styling tip for this item",
   "colorHex": "#RRGGBB",
+  "validationStatus": "ok",
   "confidence": 0.9
 }`;
 
 export async function analyzeClothingFull(
   imageUri: string,
 ): Promise<FullClothingAnalysis> {
-  const text = await callOpenAIVision(imageUri, CLOTH_PROMPT, "cloth", 350);
+  const text = await callOpenAIVision(imageUri, CLOTH_PROMPT, "cloth", 400);
   return parseJson<FullClothingAnalysis>(text, {
     name: "Fashion Item",
     category: "Top",
@@ -297,6 +305,7 @@ export async function analyzeClothingFull(
     brand: "Unknown",
     careInstructions: "Machine wash cold",
     notes: "A casual staple item",
+    validationStatus: "ok",
   });
 }
 

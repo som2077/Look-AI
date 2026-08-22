@@ -451,37 +451,21 @@ function SimpleView({
             </View>
           ) : (
             <View style={styles.formContainer}>
+              {/* 1. Name */}
               <View style={styles.formRow}>
-                <Text style={styles.formLabel}>My Rating</Text>
-                <View style={styles.formValueContainer}>
-                  <Text style={[styles.formValue, { color: "#9CA3AF" }]}>
-                    Give a rating
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Season</Text>
-                <View style={styles.formValueContainer}>
-                  <Text style={styles.formValue}>
-                    {item.data?.season?.join(", ") || "All Season"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Occasion</Text>
+                <Text style={styles.formLabel}>Item Name</Text>
                 <View style={styles.formValueContainer}>
                   <Text
                     style={styles.formValue}
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
-                    {item.data?.occasion?.join(", ") || "Casual"}
+                    {item.customName || item.data?.name || "—"}
                   </Text>
                   <IconChevronDown size={16} color="#9CA3AF" />
                 </View>
               </View>
+              {/* 2. Category */}
               <View style={styles.formRow}>
                 <Text style={styles.formLabel}>Category</Text>
                 <View style={styles.formValueContainer}>
@@ -496,6 +480,7 @@ function SimpleView({
                   <IconChevronDown size={16} color="#9CA3AF" />
                 </View>
               </View>
+              {/* 3. Color */}
               <View style={styles.formRow}>
                 <Text style={styles.formLabel}>Color</Text>
                 <View style={styles.formValueContainer}>
@@ -511,22 +496,31 @@ function SimpleView({
                   <IconChevronDown size={16} color="#9CA3AF" />
                 </View>
               </View>
+              {/* 4. Season */}
               <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Brand / Designer</Text>
+                <Text style={styles.formLabel}>Season</Text>
                 <View style={styles.formValueContainer}>
-                  <Text
-                    style={[
-                      styles.formValue,
-                      !item.brand && { color: "#9CA3AF" },
-                    ]}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.brand || "Unknown"}
+                  <Text style={styles.formValue}>
+                    {item.data?.season?.join(", ") || "All Season"}
                   </Text>
                   <IconChevronDown size={16} color="#9CA3AF" />
                 </View>
               </View>
+              {/* 5. Occasion */}
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Occasion</Text>
+                <View style={styles.formValueContainer}>
+                  <Text
+                    style={styles.formValue}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.data?.occasion?.join(", ") || "Casual"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              {/* 6. Care Instructions */}
               <View style={styles.formRow}>
                 <Text style={styles.formLabel}>Care Instructions</Text>
                 <View style={styles.formValueContainer}>
@@ -535,11 +529,12 @@ function SimpleView({
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
-                    {item.data?.careInstructions || "Unknown"}
+                    {item.data?.careInstructions || "—"}
                   </Text>
                   <IconChevronDown size={16} color="#9CA3AF" />
                 </View>
               </View>
+              {/* 7. Notes */}
               <View style={styles.formRow}>
                 <Text style={styles.formLabel}>Notes</Text>
                 <View style={styles.formValueContainer}>
@@ -548,7 +543,7 @@ function SimpleView({
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
-                    {item.data?.notes || "None"}
+                    {item.data?.notes || "—"}
                   </Text>
                   <IconChevronDown size={16} color="#9CA3AF" />
                 </View>

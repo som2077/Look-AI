@@ -56,7 +56,7 @@ export type UserClothingItem = {
   imageUrl?: string;
   originalImageUrl?: string;
   confidence?: number;
-  source?: "camera" | "gallery" | "barcode" | "label_scan" | "manual";
+  source?: "camera" | "gallery" | "wardrobe" | "barcode" | "label_scan" | "manual";
   
   // Editable/Tracking
   isFavorite?: boolean;
