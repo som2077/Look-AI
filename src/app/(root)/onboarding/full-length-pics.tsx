@@ -6,7 +6,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Info, Upload, X } from "lucide-react-native";
+import { IconInfoCircle, IconUpload, IconX } from "@tabler/icons-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -201,7 +201,7 @@ export default function FullLengthPicsScreen() {
                     className="absolute -right-3 -top-3 h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-[#E5E7EB]"
                     style={{ zIndex: 20 }}
                   >
-                    <X size={16} color="#1D1A27" />
+                    <IconX size={16} color="#1D1A27" />
                   </TouchableOpacity>
                 </View>
               );
@@ -225,7 +225,7 @@ export default function FullLengthPicsScreen() {
                 className="h-[280px] w-[200px] items-center justify-center rounded-[24px] border-2 border-dashed border-[#D1D1D8] bg-[#F9F9FB]"
               >
                 <View className="h-12 w-12 items-center justify-center rounded-full bg-[#ECEDF9]">
-                  <Upload size={24} color="#1D1A27" />
+                  <IconUpload size={24} color="#1D1A27" />
                 </View>
                 <Text className="mt-3 text-sm font-sans font-medium text-[#1D1A27]">
                   {selectedImages.length === 1 ? "Add 2nd Pic" : "Add 3rd Pic"}
@@ -250,7 +250,7 @@ export default function FullLengthPicsScreen() {
 
       {/* Tips */}
       <View className="mt-6 flex-row items-start rounded-2xl bg-[#F5F4F8] p-4">
-        <Info size={20} color="#1D1A27" className="mt-0.5" />
+        <IconInfoCircle size={20} color="#1D1A27" className="mt-0.5" />
         <Text className="ml-3 flex-1 text-sm font-sans leading-relaxed text-[#000000]">
           Please upload a clear full-length photo with no close-ups, glasses,
           hats, AirPods, bags, pets, or phones.

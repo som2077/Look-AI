@@ -1,6 +1,6 @@
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
-import { Check } from "lucide-react-native";
+import { IconCheck } from "@tabler/icons-react-native";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -104,7 +104,7 @@ export const BodyTypeCard = React.memo(function BodyTypeCard({
               marginLeft: 12,
             }}
           >
-            {selected && <Check size={13} color="#FFFFFF" strokeWidth={3} />}
+            {selected && <IconCheck size={13} color="#FFFFFF" strokeWidth={3} />}
           </View>
         </View>
       </Pressable>

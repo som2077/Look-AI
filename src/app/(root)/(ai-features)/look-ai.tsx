@@ -1,16 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import {
-  ChevronLeft,
-  Droplets,
-  Footprints,
-  Shirt,
-  Sparkles,
-  Sun,
-  Watch,
-  Wind,
-} from "lucide-react-native";
+import { IconChevronLeft, IconDroplets, IconShoe, IconShirt, IconSparkles, IconSun, IconDeviceWatch, IconWind } from "@tabler/icons-react-native";
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
@@ -42,7 +33,7 @@ const OUTFIT_DATA = [
     id: "top",
     label: "Top",
     name: "White Linen Shirt",
-    icon: Shirt,
+    icon: IconShirt,
     color: "#4C4B5E",
     bgColor: "#F4F4F6",
   },
@@ -58,7 +49,7 @@ const OUTFIT_DATA = [
     id: "shoes",
     label: "Shoes",
     name: "Tan Loafers",
-    icon: Footprints,
+    icon: IconShoe,
     color: "#D97706",
     bgColor: "#FFFBEB",
   },
@@ -66,7 +57,7 @@ const OUTFIT_DATA = [
     id: "accessory",
     label: "Accessory",
     name: "Silver Watch",
-    icon: Watch,
+    icon: IconDeviceWatch,
     color: "#1D1A27",
     bgColor: "#F4F4F6",
   },
@@ -93,11 +84,11 @@ export default function LookAIScreen() {
             elevation: 1,
           }}
         >
-          <ChevronLeft size={22} color="#1D1A27" />
+          <IconChevronLeft size={22} color="#1D1A27" />
         </TouchableOpacity>
 
         <View className="flex-row items-center justify-center gap-1.5 absolute left-0 right-0 -z-10">
-          <Sparkles size={20} color="#9333EA" fill="#9333EA" />
+          <IconSparkles size={20} color="#9333EA" fill="#9333EA" />
           <Text
             style={{
               fontFamily: "TikTokSans16pt-Bold",
@@ -168,7 +159,7 @@ export default function LookAIScreen() {
                   Sunny & Clear
                 </Text>
               </View>
-              <Sun
+              <IconSun
                 size={64}
                 color="#F59E0B"
                 fill="#FDE68A"
@@ -178,7 +169,7 @@ export default function LookAIScreen() {
 
             <View className="flex-row gap-3 mt-8">
               <View className="bg-white/80 rounded-full px-4 py-2.5 flex-row items-center gap-2 border border-[#E9EBF8]">
-                <Droplets size={16} color="#3B82F6" />
+                <IconDroplets size={16} color="#3B82F6" />
                 <Text
                   style={{
                     fontFamily: "TikTokSans16pt-Bold",
@@ -191,7 +182,7 @@ export default function LookAIScreen() {
               </View>
 
               <View className="bg-white/80 rounded-full px-4 py-2.5 flex-row items-center gap-2 border border-[#E9EBF8]">
-                <Wind size={16} color="#6B7280" />
+                <IconWind size={16} color="#6B7280" />
                 <Text
                   style={{
                     fontFamily: "TikTokSans16pt-Bold",
@@ -199,7 +190,7 @@ export default function LookAIScreen() {
                     color: "#1D1A27",
                   }}
                 >
-                  Wind 12km/h
+                  IconWind 12km/h
                 </Text>
               </View>
             </View>
@@ -226,7 +217,7 @@ export default function LookAIScreen() {
           >
             <View className="flex-row items-start gap-3">
               <View className="w-8 h-8 rounded-full bg-[#9333EA] items-center justify-center mt-1">
-                <Sparkles size={14} color="#FFFFFF" fill="#FFFFFF" />
+                <IconSparkles size={14} color="#FFFFFF" fill="#FFFFFF" />
               </View>
               <Text
                 style={{

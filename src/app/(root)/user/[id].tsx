@@ -1,14 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
-import {
-  ArrowDownLeft,
-  ArrowDownRight,
-  ArrowUpLeft,
-  ArrowUpRight,
-  ChevronLeft,
-  Grid,
-  Link2,
-} from "lucide-react-native";
+import { IconArrowDownLeft, IconArrowDownRight, IconArrowUpLeft, IconArrowUpRight, IconChevronLeft, IconLayoutGrid, IconLink } from "@tabler/icons-react-native";
 import React, { useMemo } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -56,7 +48,7 @@ export default function PublicUserProfileScreen() {
             onPress={() => router.back()}
             style={{ padding: 4 }}
           >
-            <ChevronLeft size={28} color="#1D1A27" />
+            <IconChevronLeft size={28} color="#1D1A27" />
           </TouchableOpacity>
         </View>
 
@@ -64,7 +56,7 @@ export default function PublicUserProfileScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 60 }}
         >
-          {/* User Info Section */}
+          {/* User IconInfoCircle Section */}
           <View style={{ paddingHorizontal: 20, marginTop: 8 }}>
             {/* Banner */}
             <View
@@ -78,10 +70,10 @@ export default function PublicUserProfileScreen() {
                 gap: 16,
               }}
             >
-              <ArrowUpRight size={28} color="#FFFFFF" strokeWidth={3.5} />
-              <ArrowDownRight size={28} color="#FFFFFF" strokeWidth={3.5} />
-              <ArrowUpLeft size={28} color="#FFFFFF" strokeWidth={3.5} />
-              <ArrowDownLeft size={28} color="#FFFFFF" strokeWidth={3.5} />
+              <IconArrowUpRight size={28} color="#FFFFFF" strokeWidth={3.5} />
+              <IconArrowDownRight size={28} color="#FFFFFF" strokeWidth={3.5} />
+              <IconArrowUpLeft size={28} color="#FFFFFF" strokeWidth={3.5} />
+              <IconArrowDownLeft size={28} color="#FFFFFF" strokeWidth={3.5} />
             </View>
 
             {/* Profile Avatar & Link */}
@@ -113,7 +105,7 @@ export default function PublicUserProfileScreen() {
                 }}
               />
               <TouchableOpacity style={{ marginBottom: 12, marginRight: 8 }}>
-                <Link2 size={20} color="#6B7280" />
+                <IconLink size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
@@ -219,7 +211,7 @@ export default function PublicUserProfileScreen() {
             </View>
           </View>
 
-          {/* Posts Grid */}
+          {/* Posts IconLayoutGrid */}
           <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
             <View
               style={{
@@ -229,7 +221,7 @@ export default function PublicUserProfileScreen() {
                 gap: 8,
               }}
             >
-              <Grid size={20} color="#1D1A27" />
+              <IconLayoutGrid size={20} color="#1D1A27" />
               <Text
                 style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}
               >

@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { ArrowLeft } from "lucide-react-native";
+import { IconArrowLeft } from "@tabler/icons-react-native";
 import { Pressable } from "react-native";
 
 export function BackButton({ onPress }: { onPress: () => void }) {
@@ -11,7 +11,7 @@ export function BackButton({ onPress }: { onPress: () => void }) {
       }}
       className="h-11 w-11 items-center justify-center rounded-full bg-[#F8F8FA]"
     >
-      <ArrowLeft size={20} color="#1D1A27" strokeWidth={2} />
+      <IconArrowLeft size={20} color="#1D1A27" strokeWidth={2} />
     </Pressable>
   );
 }

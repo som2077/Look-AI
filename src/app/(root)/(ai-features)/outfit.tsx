@@ -15,7 +15,7 @@ import {
   IconSparklesFilled,
   IconUser,
 } from "@tabler/icons-react-native";
-import { decode } from "base64-arraybuffer";
+
 import { ResizeMode, Video } from "expo-av";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
@@ -189,7 +189,7 @@ export default function OutfitScreen() {
         const base64 = await FileSystem.readAsStringAsync(uri, {
           encoding: "base64",
         });
-        const arrayBuffer = decode(base64);
+        const arrayBuffer = Uint8Array.from(atob(base64), c => c.charCodeAt(0)).buffer;
 
         const { error } = await supabase.storage
           .from("try-on-uploads")

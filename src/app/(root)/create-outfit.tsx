@@ -31,7 +31,7 @@ import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { FlipHorizontal2, Type } from "lucide-react-native";
+import { IconFlipHorizontal, IconTypography } from "@tabler/icons-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -852,10 +852,10 @@ export default function CreateOutfitScreen() {
                     }
                   }}
                 >
-                  <Type size={22} color="#4B5563" />
+                  <IconTypography size={22} color="#4B5563" />
                 </Pressable>
                 <Pressable style={styles.toolbarIcon} onPress={handleFlip}>
-                  <FlipHorizontal2 size={22} color="#4B5563" />
+                  <IconFlipHorizontal size={22} color="#4B5563" />
                 </Pressable>
               </View>
             )}
@@ -1055,7 +1055,7 @@ export default function CreateOutfitScreen() {
                   </ScrollView>
                 </View>
 
-                {/* Clothes Grid */}
+                {/* Clothes IconLayoutGrid */}
                 <ScrollView
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={{ paddingBottom: 140 }}
@@ -1402,10 +1402,10 @@ export default function CreateOutfitScreen() {
                   }
                 }}
               >
-                <Type size={22} color="#4B5563" />
+                <IconTypography size={22} color="#4B5563" />
               </Pressable>
               <Pressable style={styles.toolbarIcon} onPress={handleFlip}>
-                <FlipHorizontal2 size={22} color="#4B5563" />
+                <IconFlipHorizontal size={22} color="#4B5563" />
               </Pressable>
             </View>
           </View>

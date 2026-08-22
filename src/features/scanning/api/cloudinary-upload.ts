@@ -1,5 +1,5 @@
 import { supabase } from "@/shared/supabase/client";
-import CryptoJS from "crypto-js";
+import * as Crypto from "expo-crypto";
 import { File, Paths } from "expo-file-system";
 
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
@@ -164,7 +164,7 @@ export async function uploadToCloudinaryWithBgRemoval(
     let signature = "";
     if (API_SECRET) {
       // 2a. Fast Path signature
-      signature = CryptoJS.SHA1(paramsToSign + API_SECRET).toString();
+      signature = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA1, paramsToSign + API_SECRET);
       console.log("[Cloudinary] Fast-Path: Used direct local SHA1 signature");
     } else {
       // 2b. Fallback edge function
@@ -283,7 +283,7 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
     }
 
     if (!signature && API_SECRET) {
-      signature = CryptoJS.SHA1(paramsToSign + API_SECRET).toString();
+      signature = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA1, paramsToSign + API_SECRET);
     }
 
     if (!signature) {

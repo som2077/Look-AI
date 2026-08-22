@@ -5,64 +5,39 @@ import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  Activity,
-  BookOpen,
-  Briefcase,
-  Camera,
-  Cloud,
-  Coffee,
-  Cpu,
-  Disc,
-  Feather,
-  Flame,
-  Gem,
-  Glasses,
-  GlassWater,
-  Maximize,
-  Minus,
-  Moon,
-  Scissors,
-  Search,
-  Shirt,
-  Snowflake,
-  Sparkles,
-  Sun,
-  Tent,
-  Umbrella,
-} from "lucide-react-native";
+import { IconActivity, IconBook, IconBriefcase, IconCamera, IconCloud, IconCoffee, IconCpu, IconDisc, IconFeather, IconFlame, IconDiamond, IconEyeglass, IconGlass, IconMaximize, IconMinus, IconMoon, IconScissors, IconSearch, IconShirt, IconSnowflake, IconSparkles, IconSun, IconTent, IconUmbrella } from "@tabler/icons-react-native";
 import analytics from "@/shared/telemetry/analytics";
 import React, { useCallback } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 const styleIcons: Record<string, any> = {
-  Casual: Coffee,
-  Streetwear: Flame,
-  Y2k: Disc,
-  Preppy: BookOpen,
-  Scandinavian: Snowflake,
-  Oversized: Maximize,
-  Glam: Sparkles,
-  Minimal: Minus,
-  "Smart casual": Glasses,
-  "Business Casual": Briefcase,
-  "Quiet Luxury": Gem,
-  "Old Money": Gem,
-  Luxury: Gem,
-  Vintage: Camera,
-  Bohemian: Feather,
-  Soft: Cloud,
-  Athleisure: Activity,
-  Formal: Shirt,
-  Edgy: Scissors,
-  Dark: Moon,
-  Party: GlassWater,
-  Light: Sun,
-  Techwear: Cpu,
-  Sporty: Activity,
-  Grunge: Tent,
-  Vacation: Umbrella,
-  "Not sure": Search,
+  Casual: IconCoffee,
+  Streetwear: IconFlame,
+  Y2k: IconDisc,
+  Preppy: IconBook,
+  Scandinavian: IconSnowflake,
+  Oversized: IconMaximize,
+  Glam: IconSparkles,
+  Minimal: IconMinus,
+  "Smart casual": IconEyeglass,
+  "Business Casual": IconBriefcase,
+  "Quiet Luxury": IconDiamond,
+  "Old Money": IconDiamond,
+  Luxury: IconDiamond,
+  Vintage: IconCamera,
+  Bohemian: IconFeather,
+  Soft: IconCloud,
+  Athleisure: IconActivity,
+  Formal: IconShirt,
+  Edgy: IconScissors,
+  Dark: IconMoon,
+  Party: IconGlass,
+  Light: IconSun,
+  Techwear: IconCpu,
+  Sporty: IconActivity,
+  Grunge: IconTent,
+  Vacation: IconUmbrella,
+  "Not sure": IconSearch,
 };
 
 interface StyleChipProps {
@@ -186,7 +161,7 @@ export default function StylePreferenceScreen() {
             <StyleChip
               key={style}
               label={style}
-              Icon={styleIcons[style] || Sparkles}
+              Icon={styleIcons[style] || IconSparkles}
               selected={stylePreferences.includes(style)}
               onToggle={toggleStyle}
             />

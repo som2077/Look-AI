@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Smile } from "lucide-react-native";
+import { IconMoodSmile } from "@tabler/icons-react-native";
 import { View } from "react-native";
 import { BackButton } from "./BackButton";
 import { ProgressIndicator } from "./ProgressIndicator";
@@ -16,7 +16,7 @@ export function OnboardingHeader({ step, showBack = true }: Props) {
     <View className="mb-4 flex-row items-center">
       {step === 1 ? (
         <View className="h-11 w-11 items-center justify-center rounded-full bg-[#F8F8FA]">
-          <Smile size={20} color="#1D1A27" strokeWidth={2} />
+          <IconMoodSmile size={20} color="#1D1A27" strokeWidth={2} />
         </View>
       ) : showBack ? (
         <BackButton onPress={() => router.back()} />

@@ -5,7 +5,7 @@ import {
 } from "@tabler/icons-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { ChevronRight } from "lucide-react-native";
+import { IconChevronRight } from "@tabler/icons-react-native";
 import React, { useCallback, useState } from "react";
 import {
   Dimensions,
@@ -309,7 +309,7 @@ export const TrendCard = React.memo(function TrendCard({
           </Text>
         </View>
 
-        {/* Premium Lock Badge */}
+        {/* Premium IconLock Badge */}
         {trend.isPremium && (
           <View
             style={{
@@ -659,7 +659,7 @@ export const TrendChartCard = React.memo(function TrendChartCard({
             strokeWidth={2}
           />
 
-          {/* X Axis labels */}
+          {/* IconX Axis labels */}
           <SvgText
             x={xStart}
             y={yBaseline + 18}
@@ -808,7 +808,7 @@ export const TrendFeed = React.memo(function TrendFeed() {
         </View>
 
         <TouchableOpacity onPress={handleSeeAll}>
-          <ChevronRight size={20} color="#000000" strokeWidth={2} />
+          <IconChevronRight size={20} color="#000000" strokeWidth={2} />
         </TouchableOpacity>
       </View>
 

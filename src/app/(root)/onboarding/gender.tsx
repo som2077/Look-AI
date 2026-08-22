@@ -7,21 +7,21 @@ import analytics from "@/shared/telemetry/analytics";
 import { useUser } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
-import { Mars, Venus } from "lucide-react-native";
+import { IconGenderMale, IconGenderFemale } from "@tabler/icons-react-native";
 import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 
 const GENDER_OPTIONS = [
   {
     label: "Male",
-    icon: Mars,
+    icon: IconGenderMale,
     bg: "#1E1A27",
     iconColor: "#FFFFFF",
     ringColor: "#1E1A27",
   },
   {
     label: "Female",
-    icon: Venus,
+    icon: IconGenderFemale,
     bg: "#DCE754",
     iconColor: "#1E1A27",
     ringColor: "#DCE754",

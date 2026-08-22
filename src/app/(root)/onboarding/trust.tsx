@@ -5,7 +5,7 @@ import analytics from "@/shared/telemetry/analytics";
 import { ResizeMode, Video } from "expo-av";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Lock } from "lucide-react-native";
+import { IconLock } from "@tabler/icons-react-native";
 import { Text, View } from "react-native";
 
 export default function TrustScreen() {
@@ -70,12 +70,12 @@ export default function TrustScreen() {
             borderColor: "#F1EEF3",
           }}
         >
-          {/* Lock Icon Badge Overlapping Top — tinted to echo the hero gradient */}
+          {/* IconLock Icon Badge Overlapping Top — tinted to echo the hero gradient */}
           <View
             className="absolute -top-6 h-12 w-12 items-center justify-center rounded-full border-4 border-white shadow-sm"
             style={{ backgroundColor: "#F6EEF2" }}
           >
-            <Lock size={16} color="#6B5A73" strokeWidth={2.2} />
+            <IconLock size={16} color="#6B5A73" strokeWidth={2.2} />
           </View>
 
           <Text className="text-center font-sans font-semibold text-[16px] text-[#1D1A27] p-1">

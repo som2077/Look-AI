@@ -1,4 +1,4 @@
-import CryptoJS from "crypto-js";
+import * as Crypto from "expo-crypto";
 
 /**
  * Uploads an image to Cloudinary using signed upload.
@@ -35,7 +35,7 @@ export const uploadToCloudinary = async (
 
     if (apiSecret && apiKey) {
       let paramsToSign = folder ? `folder=${folder}&timestamp=${timestamp}` : `timestamp=${timestamp}`;
-      const signature = CryptoJS.SHA1(paramsToSign + apiSecret).toString();
+      const signature = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA1, paramsToSign + apiSecret);
       data.append("api_key", apiKey);
       data.append("timestamp", timestamp);
       data.append("signature", signature);

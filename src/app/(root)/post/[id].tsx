@@ -12,16 +12,7 @@ import {
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ChevronLeft,
-  Heart,
-  MessageCircle,
-  Share2,
-  MoreHorizontal,
-  Pin,
-  Download,
-  Grid,
-} from "lucide-react-native";
+import { IconChevronLeft, IconHeart, IconMessageCircle, IconShare, IconDots, IconPin, IconDownload, IconLayoutGrid } from "@tabler/icons-react-native";
 import { StatusBar } from "expo-status-bar";
 import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
 
@@ -104,7 +95,7 @@ export default function PostDetailScreen() {
                 justifyContent: "center",
               }}
             >
-              <ChevronLeft color="#000000" size={28} />
+              <IconChevronLeft color="#000000" size={28} />
             </Pressable>
           </View>
         </View>
@@ -124,7 +115,7 @@ export default function PostDetailScreen() {
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
               onPress={handleLikePress}
             >
-              <Heart
+              <IconHeart
                 color={isLiked ? "#E60023" : "#1D1A27"}
                 fill={isLiked ? "#E60023" : "transparent"}
                 size={24}
@@ -139,16 +130,16 @@ export default function PostDetailScreen() {
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
               onPress={handleComment}
             >
-              <MessageCircle color="#1D1A27" size={24} strokeWidth={2.5} />
+              <IconMessageCircle color="#1D1A27" size={24} strokeWidth={2.5} />
               <Text style={{ fontWeight: "700", fontSize: 14 }}>133</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleShare}>
-              <Share2 color="#1D1A27" size={24} strokeWidth={2.5} />
+              <IconShare color="#1D1A27" size={24} strokeWidth={2.5} />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setIsOptionsVisible(true)}>
-              <MoreHorizontal color="#1D1A27" size={24} strokeWidth={2.5} />
+              <IconDots color="#1D1A27" size={24} strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
 
@@ -166,7 +157,7 @@ export default function PostDetailScreen() {
           </Pressable>
         </View>
 
-        {/* Creator Info */}
+        {/* Creator IconInfoCircle */}
         <View
           style={{
             paddingHorizontal: 16,
@@ -324,7 +315,7 @@ export default function PostDetailScreen() {
               <TouchableOpacity
                 style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
               >
-                <Pin size={24} color="#1D1A27" />
+                <IconPin size={24} color="#1D1A27" />
                 <Text
                   style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}
                 >
@@ -334,7 +325,7 @@ export default function PostDetailScreen() {
               <TouchableOpacity
                 style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
               >
-                <Share2 size={24} color="#1D1A27" />
+                <IconShare size={24} color="#1D1A27" />
                 <Text
                   style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}
                 >
@@ -344,17 +335,17 @@ export default function PostDetailScreen() {
               <TouchableOpacity
                 style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
               >
-                <Download size={24} color="#1D1A27" />
+                <IconDownload size={24} color="#1D1A27" />
                 <Text
                   style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}
                 >
-                  Download image
+                  IconDownload image
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ flexDirection: "row", alignItems: "center", gap: 16 }}
               >
-                <Grid size={24} color="#1D1A27" />
+                <IconLayoutGrid size={24} color="#1D1A27" />
                 <Text
                   style={{ fontSize: 18, fontWeight: "600", color: "#1D1A27" }}
                 >

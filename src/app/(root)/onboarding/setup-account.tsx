@@ -7,7 +7,7 @@ import { ActivityIndicator, Text, View, TouchableOpacity } from "react-native";
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { RotateCcw } from "lucide-react-native";
+import { IconRefresh } from "@tabler/icons-react-native";
 
 const LOADING_MESSAGES = [
   "Analyzing your style preferences...",
@@ -114,7 +114,7 @@ export default function SetupAccountScreen() {
                 disabled={isSaving}
                 className="flex-1 flex-row items-center justify-center rounded-2xl bg-[#1D1A27] py-4"
               >
-                <RotateCcw size={18} color="#ffffff" className="mr-2" />
+                <IconRefresh size={18} color="#ffffff" className="mr-2" />
                 <Text className="text-base font-semibold text-white">
                   Retry
                 </Text>
