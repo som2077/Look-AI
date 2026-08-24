@@ -5,7 +5,6 @@
 
 import { supabase } from "@/shared/supabase/client";
 import * as FileSystem from "expo-file-system";
-import { DISABLE_AI_SCAN } from "./ai-scan";
 
 export interface ClothingAnalysis {
   name: string;
@@ -101,9 +100,6 @@ async function prepareVisionImageUrl(imageUri: string): Promise<string> {
 export async function analyzeClothingImage(
   imageUri: string,
 ): Promise<ClothingAnalysis | null> {
-  if (DISABLE_AI_SCAN) {
-    return getFallbackAnalysis();
-  }
 
   try {
     const imageUrl = await prepareVisionImageUrl(imageUri);

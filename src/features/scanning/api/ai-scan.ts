@@ -4,13 +4,8 @@
  */
 
 import { supabase } from "@/shared/supabase/client";
-import { SYSTEM_PROMPTS } from "./prompts";
-export const DISABLE_AI_SCAN = false;
 import * as FileSystem from "expo-file-system";
 
-const MODELS = [
-  "gpt-4o-mini"
-];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -185,7 +180,6 @@ async function callOpenAIVision(
     return null;
   }
 
-  // "low" detail consumes only 85 tokens per photo vs 765+ tokens for default "high" detail!
   const detail = mode === "barcode" ? "auto" : "low";
 
   const body = {
@@ -210,37 +204,26 @@ async function callOpenAIVision(
     ],
   };
 
-  for (const model of MODELS) {
-    let textResponse: string | null = null;
-    let invokeFailed = false;
+  try {
+    const { data, error } = await supabase.functions.invoke("openai-proxy", {
+      body: { model: "gpt-4o-mini", body },
+    });
 
-    try {
-      const { data, error } = await supabase.functions.invoke("openai-proxy", {
-        body: { model, body },
-      });
+    if (error) {
+      console.warn(`[AI-Scan] Edge function failed:`, error);
+      return null;
+    } 
 
-      if (error) {
-        console.warn(`[AI-Scan] Edge function failed for ${model}:`, error);
-        invokeFailed = true;
-      } else {
-        const choice = data?.choices?.[0];
-        if (choice?.finish_reason === "content_filter") {
-          return JSON.stringify({ error: "SAFETY_VIOLATION" });
-        }
-        textResponse = choice?.message?.content || null;
-      }
-    } catch (err) {
-      console.warn(`[AI-Scan] Invoke exception for ${model}:`, err);
-      invokeFailed = true;
+    const choice = data?.choices?.[0];
+    if (choice?.finish_reason === "content_filter") {
+      return JSON.stringify({ error: "SAFETY_VIOLATION" });
     }
-
-    if (invokeFailed || !textResponse) {
-      continue;
-    }
-
-    return textResponse;
+    return choice?.message?.content || null;
+    
+  } catch (err) {
+    console.warn(`[AI-Scan] Invoke exception:`, err);
+    return null;
   }
-  return null;
 }
 
 function parseJson<T>(text: string | null, fallback: T): T {
@@ -425,55 +408,44 @@ const FITCHECK_PROMPT = `Analyze this full-body outfit photo. Return ONLY valid 
 export async function analyzeFitCheck(
   imageUri: string,
 ): Promise<FitCheckAnalysis> {
-  const MOCK_AI = true; // SET THIS TO TRUE TO BYPASS AI FOR UI TESTING
+  
 
-  const mockData: FitCheckAnalysis = {
-    fitScore: 93,
-    ratingTitle: "Good Look ✨",
-    ratingSubtitle: "A solid outfit with room for minor tweaks.",
+  const fallbackData: FitCheckAnalysis = {
+    fitScore: 85,
+    ratingTitle: "Fallback Result",
+    ratingSubtitle: "Unable to analyze completely.",
     silhouette: {
       bodyShape: "Balanced",
       waistBalance: "Standard Balance",
       topRatio: 50,
       bottomRatio: 50,
-      explanation: "Balanced proportions.",
+      explanation: "Fallback proportions.",
     },
     fitPrecision: {
-      shoulderFit: { status: "Perfect", text: "Shoulders fit well" },
-      sleeveLength: { status: "Perfect", text: "Sleeves are correct length" },
-      trouserBreak: { status: "Perfect", text: "Good break length" },
+      shoulderFit: { status: "Perfect", text: "N/A" },
+      sleeveLength: { status: "Perfect", text: "N/A" },
+      trouserBreak: { status: "Perfect", text: "N/A" },
     },
     colorTheory: {
       hexColors: ["#1D1A27", "#F9FAFB"],
       harmony: "Neutral",
-      contrastExplanation: "Medium contrast tonal look.",
+      contrastExplanation: "Fallback contrast.",
     },
     styleCategory: {
       archetype: "Casual",
-      trendScore: 70,
+      trendScore: 50,
     },
-    actionableFixes: [
-      {
-        problem: "Outfit lacks personal touch",
-        solution: "Try adding a statement accessory",
-      },
-    ],
+    actionableFixes: [],
     outfitPieces: {
-      top: "Top piece",
-      bottom: "Bottom piece",
-      footwear: "Footwear",
+      top: null,
+      bottom: null,
+      footwear: null,
       accessories: null,
     },
   };
 
-  if (MOCK_AI) {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    return mockData;
-  }
-
   const text = await callOpenAIVision(imageUri, FITCHECK_PROMPT, "fitcheck", 400);
-  return parseJson<FitCheckAnalysis>(text, mockData);
+  return parseJson<FitCheckAnalysis>(text, fallbackData);
 }
 
 // ─── Mode 4: Wardrobe Selection Scan (Up to 5 Selected Images) ────────────────

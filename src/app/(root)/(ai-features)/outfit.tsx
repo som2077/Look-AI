@@ -16,7 +16,7 @@ import {
   IconUser,
 } from "@tabler/icons-react-native";
 
-import { ResizeMode, Video } from "expo-av";
+
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
@@ -393,38 +393,11 @@ export default function OutfitScreen() {
                   justifyContent: "center",
                 }}
               >
-                {resultImageUrl === "mock_video" ? (
-                  <>
-                    <View style={{ flex: 1, width: "100%" }}>
-                      <Video
-                        source={require("../../../../assets/final.webm")}
-                        style={{ width: "100%", height: "90%" }}
-                        resizeMode={ResizeMode.COVER}
-                        shouldPlay
-                        isMuted
-                        isLooping
-                      />
-                    </View>
-                    <Text
-                      style={{
-                        padding: 16,
-                        textAlign: "center",
-                        color: "#9CA3AF",
-                        fontSize: 14,
-                        lineHeight: 20,
-                      }}
-                    >
-                      Your merged try-on image will appear here after
-                      generation.
-                    </Text>
-                  </>
-                ) : (
                   <Image
                     source={{ uri: resultImageUrl }}
                     style={{ width: "100%", height: "100%" }}
                     resizeMode="cover"
                   />
-                )}
               </View>
             </View>
 
@@ -696,21 +669,7 @@ export default function OutfitScreen() {
                 </Text>
               </Pressable>
 
-              <Pressable
-                onPress={() => {
-                  // Bypass to test the Final Result State UI with local video
-                  setResultImageUrl("mock_video");
-                }}
-                style={{
-                  width: 60,
-                  backgroundColor: "#1C1C1C",
-                  borderRadius: 30,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <IconArrowRight size={24} color="#FFFFFF" />
-              </Pressable>
+
             </View>
           </View>
         )}
