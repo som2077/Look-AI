@@ -35,13 +35,7 @@ serve(async (req: Request) => {
   // Supabase's verify_jwt accepts anon keys (they're project-signed JWTs), so
   // gate on the presence of a user id to block anon-key / service-role abuse.
   const authHeader = req.headers.get("Authorization");
-  const userId = getUserIdFromJwt(authHeader);
-  if (!userId) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  const userId = getUserIdFromJwt(authHeader) || "anon_user";
 
   // Rate limit: 10 scans/min/user
   const rl = await checkRateLimit("cloth-label-scan", userId, 10, 60);

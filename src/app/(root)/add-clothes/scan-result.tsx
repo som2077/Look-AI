@@ -10,6 +10,8 @@ import {
   IconCut,
   IconPlus,
   IconX,
+  IconStar,
+  IconStarFilled,
 } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
@@ -33,6 +35,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
 
 type ScanResultParams = {
   photoUri?: string;
@@ -57,26 +60,28 @@ const DEFAULT_RESULT: FullClothingAnalysis = {
 
 const MACRO_CATEGORIES = [
   { id: "Top", label: "👕 Top" },
-  { id: "Bottoms", label: "👖 Bottoms" },
-  { id: "Footwear", label: "👟 Footwear" },
-  { id: "Accessory", label: "👜 Accessory" },
-  { id: "Headwear", label: "🧢 Headwear" },
+  { id: "Bottom", label: "👖 Bottom" },
+  { id: "One-Piece", label: "👗 One-Piece" },
   { id: "Outerwear", label: "🧥 Outerwear" },
-  { id: "Dress", label: "👗 Dress" },
-  { id: "Ethnic", label: "🥻 Ethnic" },
-  { id: "Activewear", label: "🏃 Activewear" },
+  { id: "Footwear", label: "👟 Footwear" },
+  { id: "Accessories", label: "👜 Accessories" },
+  { id: "Other", label: "📦 Other" },
 ];
 
-const PRESET_OCCASIONS = [
-  "Casual",
-  "Office",
-  "Party",
-  "Date",
-  "Wedding",
-  "Gym",
-  "Travel",
-  "Lounge",
+const SUBCATEGORY_MAP: Record<string, string[]> = {
+  "Top": ["T-Shirt", "Shirt", "Polo Shirt", "Blouse", "Tank Top", "Crop Top", "Sweater", "Hoodie", "Sweatshirt", "Cardigan", "Tunic", "Kurta"],
+  "Bottom": ["Jeans", "Trousers", "Pants", "Chinos", "Shorts", "Skirt", "Leggings", "Joggers", "Sweatpants", "Cargo Pants"],
+  "One-Piece": ["Dress", "Jumpsuit", "Romper", "Playsuit"],
+  "Outerwear": ["Jacket", "Blazer", "Coat", "Trench Coat", "Puffer", "Vest", "Overcoat", "Leather Jacket", "Denim Jacket"],
+  "Footwear": ["Sneakers", "Running Shoes", "Boots", "Sandals", "Heels", "Flats", "Loafers", "Formal Shoes", "Slippers", "Slides", "Mules"],
+  "Accessories": ["Bag", "Backpack", "Belt", "Wallet", "Watch", "Sunglasses", "Hat", "Cap", "Scarf", "Gloves", "Tie", "Jewelry"],
+  "Other": ["Other"]
+};
+
+const OCCASIONS_LIST = [
+  "Everyday", "Casual", "Work / Office", "Business", "Formal", "Semi-Formal", "Party", "Wedding", "Festive / Celebration", "Traditional / Cultural", "Date / Romantic", "Dinner", "Evening", "Night Out", "Travel", "Vacation / Resort", "Beach", "Outdoor", "Sports / Active", "Gym / Workout", "Lounge / Home", "School / University", "Interview", "Ceremony", "Religious / Spiritual", "Funeral / Memorial"
 ];
+
 
 const PRESET_SEASONS = [
   "All Season",
@@ -141,6 +146,7 @@ export default function ScanResultScreen() {
   const [brand, setBrand] = useState("");
   const [careInstructions, setCareInstructions] = useState("");
   const [notes, setNotes] = useState("");
+  const [rating, setRating] = useState(5);
 
   // Custom Occasion Modal state
   const [customOccasionInput, setCustomOccasionInput] = useState("");
@@ -161,15 +167,28 @@ export default function ScanResultScreen() {
       data.name ||
       `${data.color || data.primaryColor || ""} ${data.subCategory || data.category || "Item"}`.trim();
     setName(resolvedName || "Wardrobe Item");
-    setCategory(data.category || "Top");
-    setSubCategory(data.subCategory || "");
+    
+    // Normalize Category
+    const normCat = MACRO_CATEGORIES.find(c => c.id.toLowerCase() === (data.category || "").toLowerCase())?.id || "Top";
+    setCategory(normCat);
+    
+    // Normalize Subcategory
+    const allowedSubcats = SUBCATEGORY_MAP[normCat] || SUBCATEGORY_MAP["Other"];
+    const normSub = allowedSubcats.find(s => s.toLowerCase() === (data.subCategory || "").toLowerCase()) || allowedSubcats[0];
+    setSubCategory(normSub);
+    
     setColor(data.color || data.primaryColor || "Unknown");
     setColorHex(data.colorHex || "#1E3A8A");
+    
     if (data.occasion && data.occasion.length > 0) {
-      setSelectedOccasions(data.occasion);
+      // Normalize occasions to match OCCASIONS_LIST
+      const normOccasions = data.occasion.map(o => OCCASIONS_LIST.find(ol => ol.toLowerCase() === o.toLowerCase()) || o).filter(Boolean);
+      setSelectedOccasions(normOccasions);
     }
     if (data.season && data.season.length > 0) {
-      setSelectedSeasons(data.season);
+      // Normalize seasons to match PRESET_SEASONS
+      const normSeasons = data.season.map(s => PRESET_SEASONS.find(ps => ps.toLowerCase() === s.toLowerCase()) || s).filter(Boolean);
+      setSelectedSeasons(normSeasons);
     }
     setBrand(data.brand && data.brand !== "Unknown" ? data.brand : "");
     setCareInstructions(data.careInstructions || "");
@@ -190,6 +209,7 @@ export default function ScanResultScreen() {
       }
 
       try {
+        addAppBreadcrumb('scan_and_add', 'Started processing image for scan result');
         setLoading(true);
 
         let aiImageUri = photoUri;
@@ -263,7 +283,9 @@ export default function ScanResultScreen() {
           result: (aiData || DEFAULT_RESULT) as unknown as Record<string, unknown>,
           isFavorite: false,
         });
-      } catch (err) {
+      } catch (err: any) {
+        const isTimeout = err.message?.toLowerCase().includes('timeout');
+        captureFeatureError(err, 'scan_and_add', 'process_scan', isTimeout ? 'ai_timeout' : 'ai_generation_failed');
         console.error("Failed to process scan:", err);
       } finally {
         setLoading(false);
@@ -348,6 +370,7 @@ export default function ScanResultScreen() {
       versatilityTags: [],
       careInstructions: careInstructions.trim(),
       notes: notes.trim(),
+      rating: rating,
       colorHex: colorHex || "#000000",
       imageUrl: savedImage,
       originalImageUrl: originalUrl || photoUri,
@@ -562,6 +585,39 @@ export default function ScanResultScreen() {
             />
           </View>
 
+          {/* 1.5. My Rating */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 14,
+              backgroundColor: "#161422",
+              borderRadius: 20,
+              padding: 16,
+            }}
+          >
+            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 10 }}>
+              My Rating
+            </Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Pressable
+                  key={star}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setRating(star);
+                  }}
+                  style={{ padding: 4 }}
+                >
+                  {star <= rating ? (
+                    <IconStarFilled size={32} color="#FFD700" />
+                  ) : (
+                    <IconStar size={32} color="#555" />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
           {/* 2. Macro Category Selector */}
           <View
             style={{
@@ -584,6 +640,8 @@ export default function ScanResultScreen() {
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       setCategory(cat.id);
+                      const newSubCats = SUBCATEGORY_MAP[cat.id] || SUBCATEGORY_MAP["Other"];
+                      setSubCategory(newSubCats[0]);
                     }}
                     style={{
                       backgroundColor: isSelected ? "#7C6AFF" : "#2A2840",
@@ -610,24 +668,33 @@ export default function ScanResultScreen() {
 
             {/* SubCategory input if user wants to specify */}
             <View style={{ marginTop: 12 }}>
-              <Text style={{ color: "#888", fontSize: 11, fontWeight: "600", marginBottom: 4 }}>
+              <Text style={{ color: "#888", fontSize: 11, fontWeight: "600", marginBottom: 6 }}>
                 Sub-Type / Style
               </Text>
-              <TextInput
-                value={subCategory}
-                onChangeText={setSubCategory}
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 14,
-                  fontWeight: "600",
-                  backgroundColor: "#2A2840",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}
-                placeholder="e.g. Graphic Tee, Sneakers, Loafers, Backpack"
-                placeholderTextColor="#666"
-              />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {(SUBCATEGORY_MAP[MACRO_CATEGORIES.find(c => c.id.toLowerCase() === category.toLowerCase())?.id || "Other"] || SUBCATEGORY_MAP["Other"]).map((subCat) => {
+                  const isSelected = subCategory.toLowerCase() === subCat.toLowerCase();
+                  return (
+                    <Pressable
+                      key={subCat}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setSubCategory(subCat);
+                      }}
+                      style={{
+                        backgroundColor: isSelected ? "#7C6AFF" : "#2A2840",
+                        borderRadius: 12,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                      }}
+                    >
+                      <Text style={{ color: "#FFF", fontSize: 14, fontWeight: "700" }}>
+                        {subCat}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
             </View>
           </View>
 
@@ -680,7 +747,7 @@ export default function ScanResultScreen() {
             </View>
           </View>
 
-          {/* 4. Occasion Multi-Select Chips + Add Custom */}
+          {/* 4. Occasion Multi-Select Chips */}
           <View
             style={{
               marginHorizontal: 16,
@@ -694,16 +761,9 @@ export default function ScanResultScreen() {
               <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600" }}>
                 Occasion (Multi-Select)
               </Text>
-              <Pressable
-                onPress={() => setShowCustomOccasionModal(true)}
-                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-              >
-                <IconPlus size={14} color="#7C6AFF" />
-                <Text style={{ color: "#7C6AFF", fontSize: 12, fontWeight: "700" }}>Custom</Text>
-              </Pressable>
             </View>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {Array.from(new Set([...PRESET_OCCASIONS, ...selectedOccasions])).map((occ) => {
+              {OCCASIONS_LIST.map((occ) => {
                 const isSelected = selectedOccasions.includes(occ);
                 return (
                   <Pressable

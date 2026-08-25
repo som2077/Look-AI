@@ -90,38 +90,26 @@ type Season =
   | "Monsoon"
   | "All Season";
 
-const CATEGORIES: { id: CategoryId; label: string }[] = [
-  { id: "T-Shirt", label: "T-Shirt" },
-  { id: "Polo Shirt", label: "Polo Shirt" },
-  { id: "Shirt", label: "Shirt" },
-  { id: "Blouse", label: "Blouse" },
-  { id: "Crop Top", label: "Crop Top" },
-  { id: "Tank Top", label: "Tank Top" },
-  { id: "Hoodie", label: "Hoodie" },
-  { id: "Sweatshirt", label: "Sweatshirt" },
-  { id: "Sweater", label: "Sweater" },
-  { id: "Cardigan", label: "Cardigan" },
-  { id: "Jacket", label: "Jacket" },
-  { id: "Blazer", label: "Blazer" },
-  { id: "Coat", label: "Coat" },
-  { id: "Jeans", label: "Jeans" },
-  { id: "Trousers", label: "Trousers" },
-  { id: "Chinos", label: "Chinos" },
-  { id: "Cargo Pants", label: "Cargo Pants" },
-  { id: "Joggers", label: "Joggers" },
-  { id: "Shorts", label: "Shorts" },
-  { id: "Leggings", label: "Leggings" },
-  { id: "Skirt", label: "Skirt" },
-  { id: "Dress", label: "Dress" },
-  { id: "Jumpsuit", label: "Jumpsuit" },
-  { id: "Romper", label: "Romper" },
-  { id: "Suit", label: "Suit" },
-  { id: "Tracksuit", label: "Tracksuit" },
-  { id: "Co-ord Set", label: "Co-ord Set" },
-  { id: "Activewear", label: "Activewear" },
-  { id: "Swimwear", label: "Swimwear" },
-  { id: "Loungewear", label: "Loungewear" },
+const CATEGORIES = [
+  { id: "Top", label: "Top" },
+  { id: "Bottom", label: "Bottom" },
+  { id: "One-Piece", label: "One-Piece" },
+  { id: "Outerwear", label: "Outerwear" },
+  { id: "Footwear", label: "Footwear" },
+  { id: "Accessories", label: "Accessories" },
+  { id: "Other", label: "Other" },
 ];
+
+const SUBCATEGORY_MAP: Record<string, string[]> = {
+  "Top": ["T-Shirt", "Shirt", "Polo Shirt", "Blouse", "Tank Top", "Crop Top", "Sweater", "Hoodie", "Sweatshirt", "Cardigan", "Tunic", "Kurta"],
+  "Bottom": ["Jeans", "Trousers", "Pants", "Chinos", "Shorts", "Skirt", "Leggings", "Joggers", "Sweatpants", "Cargo Pants"],
+  "One-Piece": ["Dress", "Jumpsuit", "Romper", "Playsuit"],
+  "Outerwear": ["Jacket", "Blazer", "Coat", "Trench Coat", "Puffer", "Vest", "Overcoat", "Leather Jacket", "Denim Jacket"],
+  "Footwear": ["Sneakers", "Running Shoes", "Boots", "Sandals", "Heels", "Flats", "Loafers", "Formal Shoes", "Slippers", "Slides", "Mules"],
+  "Accessories": ["Bag", "Backpack", "Belt", "Wallet", "Watch", "Sunglasses", "Hat", "Cap", "Scarf", "Gloves", "Tie", "Jewelry"],
+  "Other": ["Other"]
+};
+
 
 const SEASONS: Season[] = [
   "Spring",
@@ -281,6 +269,7 @@ export default function ItemDetailsScreen() {
   // Form state — pre-filled by AI when scanned
   const [name, setName] = useState(initialName);
   const [category, setCategory] = useState<string>(initialCategory);
+  const [subCategory, setSubCategory] = useState<string>(userItem?.subCategory ?? "");
   const [color, setColor] = useState(initialColor);
   // Auto-resolve colorHex from COLOR_OPTIONS if not explicitly set
   const resolvedHex = (() => {
@@ -314,6 +303,7 @@ export default function ItemDetailsScreen() {
   const [activeSheet, setActiveSheet] = useState<
     | "name"
     | "category"
+    | "subCategory"
     | "occasion"
     | "season"
     | "rating"
@@ -756,15 +746,23 @@ export default function ItemDetailsScreen() {
                     fontWeight: "500",
                   }}
                 >
-                  {category === "top"
-                    ? "Tops > Shirt"
-                    : (CATEGORIES.find((c) => c.id === category)?.label ??
-                      category)}
+                  {CATEGORIES.find((c) => c.id === category)?.label ?? category}
                 </Text>
                 <IconChevronDown size={18} color="#D1D5DB" />
               </View>
             </Pressable>
 
+            {/* SubCategory */}
+            <Pressable
+              onPress={() => openSheet("subCategory")}
+              style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+            >
+              <Text style={{ fontSize: 15, color: "#000000", fontWeight: "500" }}>Sub-Category</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Text style={{ fontSize: 15, color: subCategory ? "#00000090" : "#D1D5DB", fontWeight: "500" }}>{subCategory || "Select"}</Text>
+                <IconChevronDown size={18} color="#D1D5DB" />
+              </View>
+            </Pressable>
             {/* Color */}
             <Pressable
               onPress={() => openSheet("color")}
@@ -1198,6 +1196,27 @@ export default function ItemDetailsScreen() {
                           </Pressable>
                         ))}
 
+                      
+                      {activeSheet === "subCategory" &&
+                        (SUBCATEGORY_MAP[CATEGORIES.find(c => c.id.toLowerCase() === category.toLowerCase())?.id || "Other"] || SUBCATEGORY_MAP["Other"]).map((subCat) => (
+                          <Pressable
+                            key={subCat}
+                            onPress={() => {
+                              setSubCategory(subCat);
+                              closeSheet();
+                            }}
+                            style={{
+                              flexDirection: "row", alignItems: "center", justifyContent: "center",
+                              paddingVertical: 14, borderRadius: 16, marginBottom: 8,
+                              backgroundColor: subCategory === subCat ? "#1D1A27" : "#fff",
+                              borderWidth: 1, borderColor: subCategory === subCat ? "#1D1A27" : "#E5E7EB",
+                            }}
+                          >
+                            <Text style={{ color: subCategory === subCat ? "#fff" : "#6B7280", fontSize: 14, fontWeight: "500" }}>
+                              {subCat}
+                            </Text>
+                          </Pressable>
+                        ))}
                       {activeSheet === "season" &&
                         SEASONS.map((s) => {
                           const isSelected = seasons.includes(s);

@@ -1,4 +1,5 @@
 import analytics from "@/shared/telemetry/analytics";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
@@ -26,6 +27,8 @@ export default function SetupAccountScreen() {
 
   const router = useRouter();
 
+
+
   const handleComplete = async () => {
     if (isInitializing || !user?.id) return;
     setHasAttempted(true);
@@ -33,6 +36,10 @@ export default function SetupAccountScreen() {
     const success = await completeOnboarding(user.id, supabase, user.imageUrl);
     if (success) {
       analytics().logEvent("onboarding_completed");
+      posthogAnalytics.captureEvent("onboarding_completed", { 
+        photo_count: 0,
+        total_steps: 3
+      });
       router.replace("/(root)/(tabs)" as never);
     }
   };

@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { uploadToCloudinary } from "@/shared/cloudinary/client";
 import { LabelAnalysis } from "./ai-scan";
+import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
 
 export interface SaveLabelParams {
   supabase: SupabaseClient;
@@ -15,6 +16,7 @@ export const saveLabelToDatabase = async ({
   photoUri,
   analysis,
 }: SaveLabelParams): Promise<boolean> => {
+  addAppBreadcrumb('cloth_label', 'Started saving cloth label to database');
   try {
     // 1. Upload image to Cloudinary
     // We upload to a specific folder 'wardrobe_labels' to keep it organized
@@ -44,6 +46,7 @@ export const saveLabelToDatabase = async ({
 
     return true;
   } catch (error) {
+    captureFeatureError(error, 'cloth_label', 'save_to_database', 'network_error');
     console.error("Error saving label:", error);
     return false;
   }

@@ -37,6 +37,7 @@ import {
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { StatusBar } from "expo-status-bar";
 import React, {
   useCallback,
@@ -550,6 +551,7 @@ const getSortIcon = (value: string, color: string) => {
 
 // Main Screen
 export default function WardrobeScreen() {
+  React.useEffect(() => { posthogAnalytics.captureEvent("wardrobe_viewed"); }, []);
   const { onScroll: hideTabBarOnScroll } = useScrollToHideTabBar();
   const router = useRouter();
   const { userId } = useAuth();

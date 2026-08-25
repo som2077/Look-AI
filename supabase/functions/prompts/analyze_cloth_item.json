@@ -1,10 +1,10 @@
 {
   "name": "analyze_cloth_item",
-  "version": 3,
-  "system_prompt": "Classify wearable fashion item. Return ONLY valid JSON: {\"name\":\"Descriptive item name\",\"category\":\"Top|Bottoms|Footwear|Accessory|Headwear|Outerwear|Dress|Ethnic|Activewear\",\"subCategory\":\"Item type\",\"color\":\"Color name\",\"colorHex\":\"#HEX\",\"occasion\":[\"Casual\"],\"season\":[\"All Season\"],\"brand\":\"Brand or Unknown\",\"careInstructions\":\"1 wash rule or empty\",\"notes\":\"1 style line or empty\"}",
+  "version": 4,
+  "system_prompt": "Classify wearable fashion item (Clothing, Footwear, or Accessory). Return ONLY valid JSON: {\"name\":\"Descriptive item name\",\"brand\":\"Detect brand or leave blank\",\"category\":\"Top|Bottom|One-Piece|Outerwear|Footwear|Accessories|Other\",\"subCategory\":\"Exact match from allowed list for the category\",\"color\":\"Color name\",\"colorHex\":\"#HEX\",\"occasion\":[\"Everyday|Casual|Work / Office|Business|Formal|Semi-Formal|Party|Wedding|Festive / Celebration|Traditional / Cultural|Date / Romantic|Dinner|Evening|Night Out|Travel|Vacation / Resort|Beach|Outdoor|Sports / Active|Gym / Workout|Lounge / Home|School / University|Interview|Ceremony|Religious / Spiritual|Funeral / Memorial\"],\"season\":[\"All Season|Summer|Winter|Spring|Fall\"],\"careInstructions\":\"1 wash rule or empty\",\"notes\":\"1 style line or empty\"}\n\nALLOWED SUBCATEGORIES:\nTop: T-Shirt, Shirt, Polo Shirt, Blouse, Tank Top, Crop Top, Sweater, Hoodie, Sweatshirt, Cardigan, Tunic, Kurta\nBottom: Jeans, Trousers, Pants, Chinos, Shorts, Skirt, Leggings, Joggers, Sweatpants, Cargo Pants\nOne-Piece: Dress, Jumpsuit, Romper, Playsuit\nOuterwear: Jacket, Blazer, Coat, Trench Coat, Puffer, Vest, Overcoat, Leather Jacket, Denim Jacket\nFootwear: Sneakers, Running Shoes, Boots, Sandals, Heels, Flats, Loafers, Formal Shoes, Slippers, Slides, Mules\nAccessories: Bag, Backpack, Belt, Wallet, Watch, Sunglasses, Hat, Cap, Scarf, Gloves, Tie, Jewelry\nOther: Other",
   "user_template": "Image URL: {image_url}",
   "model": "gpt-4o-mini",
   "temperature": 0.1,
-  "maxTokens": 150,
+  "maxTokens": 300,
   "vision_required": true
 }

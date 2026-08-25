@@ -1,3 +1,4 @@
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
 import { useNotifications } from "@/features/social/api/useNotifications";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
@@ -1240,6 +1241,9 @@ function FeedTab() {
 // ─── Explore Screen ────────────────────────────────────────────────────────────
 
 export default function ExploreScreen() {
+  React.useEffect(() => {
+    posthogAnalytics.captureEvent('explore_viewed');
+  }, []);
   return (
     <SwipeTabWrapper tabIndex={2}>
       <StatusBar style="dark" />

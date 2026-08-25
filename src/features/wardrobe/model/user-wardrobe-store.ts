@@ -1,3 +1,4 @@
+import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
@@ -86,7 +87,7 @@ export type UserOutfit = {
 };
 
 function generateUUID(): string {
-  return crypto.randomUUID();
+  return Crypto.randomUUID();
 }
 
 function isValidUUID(str: string): boolean {

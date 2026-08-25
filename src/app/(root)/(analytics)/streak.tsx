@@ -1,4 +1,5 @@
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { IconArrowLeft, IconShare2 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
@@ -204,6 +205,7 @@ function MilestoneItem({
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function StreakScreen() {
+  React.useEffect(() => { posthogAnalytics.captureEvent("streak_viewed", { streak_days: useStreakStore.getState().currentStreak }); }, []);
   const router = useRouter();
   const { currentStreak, longestStreak } = useStreakStore();
 

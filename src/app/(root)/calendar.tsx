@@ -1,3 +1,4 @@
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useAuth } from "@clerk/clerk-expo";
 // import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
@@ -38,6 +39,7 @@ import {
 import { Calendar as RNCalendar } from "react-native-calendars";
 import DatePicker from "react-native-date-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
 
 import {
   IconBell,
@@ -331,7 +333,8 @@ export default function CalendarScreen() {
           setLoggedOutfitsData(formatted);
         }
       } catch (err) {
-        console.log("Error fetching outfits:", err);
+        captureFeatureError(err, 'calendar', 'load', 'network_error');
+        console.error("Error fetching outfits:", err);
       } finally {
         if (isMounted) setIsLoadingOutfits(false);
       }
@@ -1097,6 +1100,7 @@ export default function CalendarScreen() {
             {/* Add plan Button */}
             <TouchableOpacity
               onPress={() => {
+                posthogAnalytics.captureEvent('outfit_plan_created', { occasion: 'planned' });
                 setLoggedOutfitsData((prev) => {
                   const existing = prev[selected.toDateString()] || [];
                   const combinedTime = new Date(selected);

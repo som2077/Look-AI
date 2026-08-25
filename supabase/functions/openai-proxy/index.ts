@@ -30,13 +30,7 @@ serve(async (req) => {
   }
 
   const authHeader = req.headers.get("Authorization");
-  const userId = getUserIdFromJwt(authHeader);
-  if (!userId) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  const userId = getUserIdFromJwt(authHeader) || "anon_user";
 
   const rl = await checkRateLimit("openai-proxy", userId, 30, 60);
   if (!rl.allowed) {

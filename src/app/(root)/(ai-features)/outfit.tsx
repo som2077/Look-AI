@@ -1,3 +1,5 @@
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
+import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
 import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { useStreakSync } from "@/features/streaks/api/useStreakSync";
 import { useStreakStore } from "@/features/streaks/model/useStreakStore";
@@ -77,7 +79,7 @@ export default function OutfitScreen() {
         setShowSuccessModal(true);
       }
     } catch (e) {
-      console.error(e);
+      captureFeatureError(e, 'virtual_try_on', 'download', 'unknown');
       showError("Failed to save.");
     }
   };
@@ -105,7 +107,7 @@ export default function OutfitScreen() {
         await Sharing.shareAsync(downloadedFile.uri);
       }
     } catch (e) {
-      console.error(e);
+      captureFeatureError(e, 'virtual_try_on', 'share', 'unknown');
       showError("Failed to share.");
     }
   };
@@ -177,7 +179,9 @@ export default function OutfitScreen() {
       return;
     }
 
+    addAppBreadcrumb('virtual_try_on', 'Started Virtual Try-On generation', { garmentCategory });
     setLoading(true);
+    const startTime = Date.now();
 
     try {
       // 1. Helper function to upload image to Supabase Storage
@@ -235,11 +239,14 @@ export default function OutfitScreen() {
         setResultImageUrl(data.resultUrl);
         // Increment local streak + sync to Supabase DB
         syncStreak("virtual_try_on");
+        posthogAnalytics.captureEvent('try_on_generation_completed', { duration_ms: Date.now() - startTime, success: true });
       } else {
         throw new Error("No result URL returned from AI");
       }
     } catch (e: any) {
-      console.error("Virtual Try-On Error:", e);
+      const durationMs = Date.now() - startTime;
+      const isTimeout = e.message?.toLowerCase().includes('timeout');
+      captureFeatureError(e, 'virtual_try_on', 'generation', isTimeout ? 'ai_timeout' : 'ai_generation_failed', { duration_ms: durationMs.toString() });
       Alert.alert(
         "Generation Failed",
         e.message || "An unexpected error occurred.",

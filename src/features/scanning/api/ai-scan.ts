@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "@/shared/supabase/client";
+import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
 import * as FileSystem from "expo-file-system";
 
 
@@ -101,6 +102,7 @@ export interface FullClothingAnalysis {
   season: string[];
   brand: string;
   careInstructions: string;
+  rating?: number;
   notes: string;
   // Validation flag — set to "Not Clothing" when image is rejected
   validationStatus?: "ok" | "not_clothing" | "full_body" | "multiple_items" | "unclear";
@@ -205,6 +207,36 @@ async function callOpenAIVision(
   };
 
   try {
+    const openAiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
+    if (openAiKey) {
+      console.log("[AI-Scan] Fast-Path: Calling OpenAI directly");
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openAiKey}`
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        console.warn("[AI-Scan] Direct OpenAI call failed", await res.text());
+        return null;
+      }
+      const data = await res.json();
+      
+      // Print token usage to console
+      if (data.usage) {
+        console.log(`[AI-Scan] Token Usage -> Input: ${data.usage.prompt_tokens} | Output: ${data.usage.completion_tokens} | Total: ${data.usage.total_tokens}`);
+      }
+      
+      const choice = data?.choices?.[0];
+      if (choice?.finish_reason === "content_filter") {
+        return JSON.stringify({ error: "SAFETY_VIOLATION" });
+      }
+      return choice?.message?.content || null;
+    }
+
+    // Fallback to edge function if no local key
     const { data, error } = await supabase.functions.invoke("openai-proxy", {
       body: { model: "gpt-4o-mini", body },
     });
@@ -214,6 +246,11 @@ async function callOpenAIVision(
       return null;
     } 
 
+    // Print token usage to console
+    if (data && data.usage) {
+      console.log(`[AI-Scan] Token Usage (Edge) -> Input: ${data.usage.prompt_tokens} | Output: ${data.usage.completion_tokens} | Total: ${data.usage.total_tokens}`);
+    }
+    
     const choice = data?.choices?.[0];
     if (choice?.finish_reason === "content_filter") {
       return JSON.stringify({ error: "SAFETY_VIOLATION" });
@@ -249,24 +286,31 @@ Check what is in the image:
 - If image is too blurry/dark to analyze → return: {"validationStatus": "unclear", "category": "Not Clothing", "confidence": 0}
 
 STEP 2: ANALYZE THE SINGLE FASHION ITEM.
-Valid items include: tops, bottoms, footwear, accessories, bags, ethnic wear, activewear, outerwear — for men or women.
+Return ONLY valid JSON using EXACTLY these constrained values:
 
-Return ONLY valid JSON:
+CATEGORIES: "Top" | "Bottom" | "One-Piece" | "Outerwear" | "Footwear" | "Accessories" | "Other"
+SUBCATEGORIES (must match Category):
+- Top: "T-Shirt", "Shirt", "Polo Shirt", "Blouse", "Tank Top", "Crop Top", "Sweater", "Hoodie", "Sweatshirt", "Cardigan", "Tunic", "Kurta"
+- Bottom: "Jeans", "Trousers", "Pants", "Chinos", "Shorts", "Skirt", "Leggings", "Joggers", "Sweatpants", "Cargo Pants"
+- One-Piece: "Dress", "Jumpsuit", "Romper", "Playsuit"
+- Outerwear: "Jacket", "Blazer", "Coat", "Trench Coat", "Puffer", "Vest", "Overcoat", "Leather Jacket", "Denim Jacket"
+- Footwear: "Sneakers", "Running Shoes", "Boots", "Sandals", "Heels", "Flats", "Loafers", "Formal Shoes", "Slippers", "Slides", "Mules"
+- Accessories: "Bag", "Backpack", "Belt", "Wallet", "Watch", "Sunglasses", "Hat", "Cap", "Scarf", "Gloves", "Tie", "Jewelry"
+- Other: "Other"
+
+OCCASIONS: "Everyday", "Casual", "Work / Office", "Business", "Formal", "Semi-Formal", "Party", "Wedding", "Festive / Celebration", "Traditional / Cultural", "Date / Romantic", "Dinner", "Evening", "Night Out", "Travel", "Vacation / Resort", "Beach", "Outdoor", "Sports / Active", "Gym / Workout", "Lounge / Home", "School / University", "Interview", "Ceremony", "Religious / Spiritual", "Funeral / Memorial"
+
+JSON FORMAT:
 {
   "name": "e.g. Navy Blue Hoodie, White Sneakers, Leather Tote Bag",
-  "category": "Top | Bottoms | Footwear | Accessory | Outerwear | Dress | Ethnic | Activewear | Headwear",
-  "subCategory": "e.g. Graphic Tee, Slim Fit Jeans, Chelsea Boots, Crossbody Bag",
+  "brand": "Detect brand text or leave blank",
+  "category": "<MUST BE ONE OF THE EXACT CATEGORIES ABOVE>",
+  "subCategory": "<MUST BE ONE OF THE EXACT SUBCATEGORIES FOR THE CATEGORY ABOVE>",
   "primaryColor": "White, Black, Blue, Navy, Red, Green, Yellow, Gray, Brown, Beige, Pink, Purple, Orange, Khaki",
-  "secondaryColors": [],
-  "pattern": "Solid | Striped | Checked | Printed | Floral | Camo | Geometric",
-  "fabricGuess": "Cotton | Denim | Wool | Polyester | Leather | Linen | Silk | Synthetic",
-  "fit": "Slim | Regular | Loose | Oversized | Fitted",
-  "sleeveType": "Full | Half | Sleeveless | null",
-  "neckType": "Round | V-neck | Collar | Polo | Turtleneck | null",
-  "season": ["All Season"],
-  "occasion": ["Casual"],
-  "careInstructions": "Machine wash cold, tumble dry low",
-  "notes": "1 short styling tip for this item",
+  "season": ["All Season", "Summer", "Winter", "Spring", "Fall"],
+  "occasion": ["<MUST BE FROM OCCASIONS LIST ABOVE>", "<CAN HAVE MULTIPLE>"],
+  "careInstructions": "Machine wash cold, tumble dry low etc",
+  "notes": "1 short styling tip",
   "colorHex": "#RRGGBB",
   "validationStatus": "ok",
   "confidence": 0.9
@@ -288,6 +332,7 @@ export async function analyzeClothingFull(
     brand: "Unknown",
     careInstructions: "Machine wash cold",
     notes: "A casual staple item",
+    rating: 5,
     validationStatus: "ok",
   });
 }
@@ -348,6 +393,8 @@ export async function analyzeClothLabel(
 
     return data.result as LabelAnalysis;
   } catch (err: any) {
+    const isTimeout = err.message?.toLowerCase().includes('timeout');
+    captureFeatureError(err, 'cloth_label', 'analyze', isTimeout ? 'ai_timeout' : 'ai_generation_failed');
     console.error("Error calling cloth-label-scan:", err);
     return {
       care_symbols: [],
@@ -491,7 +538,9 @@ export async function analyzeMultiClothingWardrobe(
     if (error) return null;
     const jsonText = data?.choices?.[0]?.message?.content;
     return parseJson(jsonText, null);
-  } catch (err) {
+  } catch (err: any) {
+    const isTimeout = err.message?.toLowerCase().includes('timeout');
+    captureFeatureError(err, 'wardrobe', 'ai_outfit_recommendation', isTimeout ? 'ai_timeout' : 'ai_generation_failed');
     console.error("[analyzeMultiClothingWardrobe] Error:", err);
     return null;
   }

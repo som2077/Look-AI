@@ -35,6 +35,7 @@ import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { IconAlertTriangle } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -178,6 +179,10 @@ const HomeCard = React.memo(function HomeCard({
 });
 
 export default function HomeScreen() {
+  React.useEffect(() => {
+    posthogAnalytics.captureEvent('home_viewed');
+  }, []);
+
   const { canAddWardrobe, wardrobeCount, wardrobeLimit } = usePremiumLimits();
   const [timeframe, setTimeframe] = useState<FilterTab>("Daily");
   const period = TAB_TO_PERIOD[timeframe];

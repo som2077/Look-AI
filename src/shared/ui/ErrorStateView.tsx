@@ -295,34 +295,36 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
                 fontWeight: "500",
               }}
             >
-              A runtime layout error was intercepted in the styling engine.
+              We're sorry, an unexpected error occurred. Our team has been notified.
             </Text>
 
-            {/* Error Message Trace Box */}
-            <View
-              style={{
-                width: "100%",
-                backgroundColor: "#F1F1F5",
-                borderRadius: 14,
-                padding: 12,
-                marginTop: 16,
-                marginBottom: 24,
-                maxHeight: 140,
-              }}
-            >
-              <ScrollView showsVerticalScrollIndicator={true}>
-                <Text
-                  style={{
-                    fontSize: 10,
-                    fontFamily: "monospace",
-                    color: "#EF4444",
-                    lineHeight: 14,
-                  }}
-                >
-                  {this.state.errorMessage || "Unknown rendering breakdown"}
-                </Text>
-              </ScrollView>
-            </View>
+            {/* Error Message Trace Box (Only visible in DEV) */}
+            {__DEV__ && (
+              <View
+                style={{
+                  width: "100%",
+                  backgroundColor: "#F1F1F5",
+                  borderRadius: 14,
+                  padding: 12,
+                  marginTop: 16,
+                  marginBottom: 24,
+                  maxHeight: 140,
+                }}
+              >
+                <ScrollView showsVerticalScrollIndicator={true}>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontFamily: "monospace",
+                      color: "#EF4444",
+                      lineHeight: 14,
+                    }}
+                  >
+                    {this.state.errorMessage || "Unknown rendering breakdown"}
+                  </Text>
+                </ScrollView>
+              </View>
+            )}
 
             {/* Reset / Reload Button */}
             <Pressable
@@ -331,6 +333,7 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
                 width: "100%",
                 height: 48,
                 borderRadius: 14,
+                marginTop: __DEV__ ? 0 : 24,
                 backgroundColor: "#4C36F5",
                 alignItems: "center",
                 justifyContent: "center",

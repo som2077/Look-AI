@@ -1,3 +1,5 @@
+import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import {
   ClothAnalysisResult,
   saveClothToWardrobe,
@@ -40,7 +42,9 @@ export default function ClothScanScreen() {
   const cameraRef = React.useRef<any>(null);
 
   const startAnalysis = async (base64Image: string) => {
+    addAppBreadcrumb('scan_and_add', 'Started clothing analysis');
     setIsLoading(true);
+    const startTime = Date.now();
     try {
       setProgressText("⬆️ Uploading & Analyzing...");
 
@@ -50,7 +54,7 @@ export default function ClothScanScreen() {
       });
 
       if (response.error) {
-        throw new Error(response.error.message || "Failed to analyze image");
+        throw new Error(response.error.message || "Request failed");
       }
 
       const result = response.data;
@@ -62,6 +66,8 @@ export default function ClothScanScreen() {
       setFormState(result.form_fields || {});
       setProgressText("✅ Ready to save");
     } catch (error: any) {
+      const isTimeout = error.message?.toLowerCase().includes('timeout');
+      captureFeatureError(error, 'scan_and_add', 'analyze', isTimeout ? 'ai_timeout' : 'ai_generation_failed', { duration_ms: (Date.now() - startTime).toString() });
       Alert.alert("Analysis Error", error.message);
     } finally {
       setIsLoading(false);
@@ -129,21 +135,22 @@ export default function ClothScanScreen() {
     setIsLoading(false);
 
     if (success) {
+      posthogAnalytics.captureEvent("wardrobe_item_added", { source: "scan", category: formState.category || "Top" });
       addItem({
         id: itemId,
         userId: targetUserId,
-        customName: formState.notes
-          ? `${formState.color ? formState.color + " " : ""}${formState.category || "Item"}`
-          : formState.brand
+        customName: formState.name || (formState.brand
           ? `${formState.brand} ${formState.category || "Item"}`
-          : formState.category || "Item",
+          : formState.category || "Item"),
         brand: formState.brand,
         category: formState.category || "Top",
+        subCategory: formState.subCategory || "Other",
         primaryColor: formState.color,
         season: formState.season ? [formState.season] : ["All Season"],
-        occasion: formState.occasion ? [formState.occasion] : ["Casual"],
+        occasion: formState.occasion ? (Array.isArray(formState.occasion) ? formState.occasion : [formState.occasion]) : ["Casual"],
         careInstructions: formState.careInstructions,
         notes: formState.notes,
+        rating: formState.rating ? parseInt(String(formState.rating)) : 5,
         imageUrl: analysisResult.bg_removed_url || analysisResult.original_url,
         originalImageUrl: analysisResult.original_url,
         confidence: 0.95,
@@ -164,6 +171,7 @@ export default function ClothScanScreen() {
         },
       ]);
     } else {
+      captureFeatureError(new Error(error || "Failed to save cloth"), 'scan_and_add', 'save_to_wardrobe', 'network_error');
       Alert.alert("Save Error", error || "Failed to save cloth to database");
     }
   };

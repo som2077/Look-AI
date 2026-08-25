@@ -21,6 +21,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import Svg, { Path } from "react-native-svg";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -263,7 +265,7 @@ export default function AddClothesCameraScreen() {
       });
       if (photo?.uri) navigateToResult(photo.uri, activeMode);
     } catch (e) {
-      console.warn("Camera capture failed", e);
+      captureFeatureError(e, 'scan_and_add', 'capture', 'unknown', { active_mode: activeMode });
     } finally {
       setCapturing(false);
     }

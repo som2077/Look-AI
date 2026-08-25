@@ -162,6 +162,7 @@ export default function BatchScanScreen() {
           versatilityTags: [],
           careInstructions: aiData.careInstructions || "",
           notes: aiData.notes || "",
+          rating: aiData.rating ? parseInt(String(aiData.rating)) : 5,
           colorHex: aiData.colorHex || "#000000",
           imageUrl: item.cloudinaryUrl || item.originalUri,
           originalImageUrl: item.originalUri,
@@ -480,7 +481,27 @@ function SimpleView({
                   <IconChevronDown size={16} color="#9CA3AF" />
                 </View>
               </View>
-              {/* 3. Color */}
+                            {/* 3. Brand */}
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Brand</Text>
+                <View style={styles.formValueContainer}>
+                  <Text style={styles.formValue} numberOfLines={1} ellipsizeMode="tail">
+                    {item.data?.brand || "—"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              {/* 3.5 Rating */}
+              <View style={styles.formRow}>
+                <Text style={styles.formLabel}>Rating</Text>
+                <View style={styles.formValueContainer}>
+                  <Text style={styles.formValue}>
+                    {item.data?.rating ? "⭐".repeat(item.data.rating) : "⭐⭐⭐⭐⭐"}
+                  </Text>
+                  <IconChevronDown size={16} color="#9CA3AF" />
+                </View>
+              </View>
+              {/* 4. Color */}
               <View style={styles.formRow}>
                 <Text style={styles.formLabel}>Color</Text>
                 <View style={styles.formValueContainer}>

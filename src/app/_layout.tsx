@@ -12,7 +12,8 @@ import {
 import { syncStoresWithUser } from "@/shared/storage/namespacedStorage";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import analytics from "@/shared/telemetry/analytics";
-import { initSentry, Sentry } from "@/shared/telemetry/sentry";
+import { getNavigationIntegration, initSentry, Sentry } from "@/shared/telemetry/sentry";
+import { initPostHog, posthogAnalytics } from "@/shared/telemetry/posthog";
 import {
   AppErrorBoundary,
   ErrorStateView,
@@ -40,8 +41,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../../global.css";
 
-// Initialize Sentry before any component renders
+// Initialize Sentry and PostHog before any component renders
 initSentry();
+initPostHog();
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -83,15 +85,26 @@ const RootNavigator = memo(function RootNavigator() {
   // Initialize RevenueCat
   useRevenueCat();
 
-  // Firebase screen tracking
+  // Firebase & PostHog screen tracking
   useEffect(() => {
     if (pathname) {
       analytics().logScreenView({
         screen_name: pathname,
         screen_class: pathname,
       });
+      posthogAnalytics.screen(pathname);
     }
   }, [pathname]);
+
+  // Sentry Navigation Tracking
+  useEffect(() => {
+    if (navigationRef.current) {
+      const integration = getNavigationIntegration() as any;
+      if (integration?.registerNavigationContainer) {
+        integration.registerNavigationContainer(navigationRef);
+      }
+    }
+  }, [navigationRef]);
 
   const loadOnboardingStatus = useCallback(
     async (uid: string, client: SupabaseClient) => {
@@ -132,14 +145,16 @@ const RootNavigator = memo(function RootNavigator() {
     [],
   );
 
-  // Firebase User Identification + Sentry User Context
+  // Firebase User Identification + Sentry & PostHog User Context
   useEffect(() => {
     if (userId) {
       analytics().setUserId(userId);
       Sentry.setUser({ id: userId });
+      posthogAnalytics.identifyUser(userId);
     } else {
       analytics().setUserId(null);
       Sentry.setUser(null);
+      posthogAnalytics.resetUser();
     }
   }, [userId]);
 

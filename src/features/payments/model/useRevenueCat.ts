@@ -1,3 +1,4 @@
+import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
 import { useAuth } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
 import Purchases, {
@@ -101,12 +102,14 @@ export function useRevenueCat() {
   };
 
   const purchasePackage = async (pack: PurchasesPackage) => {
+    addAppBreadcrumb('subscription', 'Started purchase checkout', { plan: pack.identifier });
     try {
       const { customerInfo } = await Purchases.purchasePackage(pack);
       checkProStatus(customerInfo);
       return true;
     } catch (e: any) {
       if (!e.userCancelled) {
+        captureFeatureError(e, 'subscription', 'purchase', 'network_error', { plan: pack.identifier });
         console.error("Purchase error:", e);
       }
       return false;
@@ -114,11 +117,13 @@ export function useRevenueCat() {
   };
 
   const restorePurchases = async () => {
+    addAppBreadcrumb('subscription', 'Started purchase restore');
     try {
       const customerInfo = await Purchases.restorePurchases();
       checkProStatus(customerInfo);
       return true;
     } catch (e: any) {
+      captureFeatureError(e, 'subscription', 'restore', 'network_error');
       console.error("Restore error:", e);
       return false;
     }

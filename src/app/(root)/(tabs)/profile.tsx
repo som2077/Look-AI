@@ -38,6 +38,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 
 // ─── Shared Components ───────────────────────────────────────────────────────
 
@@ -444,7 +445,10 @@ const ProfileScreenUI = ({
       {/* Unlock Pro Card */}
       <CardContainer>
         <Pressable
-          onPress={() => router.push("/(root)/subscription" as never)}
+          onPress={() => {
+            posthogAnalytics.captureEvent('upgrade_clicked', { source: 'profile_banner' });
+            router.push("/(root)/subscription" as never);
+          }}
           style={{
             width: "100%",
             height: 150,
