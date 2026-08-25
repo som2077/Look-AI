@@ -793,6 +793,36 @@ export default function ScanResultScreen() {
             </View>
           </View>
 
+          {/* 1.6 Brand / Design */}
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 14,
+              backgroundColor: "#161422",
+              borderRadius: 20,
+              padding: 16,
+            }}
+          >
+            <Text style={{ color: "#AAA", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+              Brand / Design
+            </Text>
+            <TextInput
+              value={brand}
+              onChangeText={setBrand}
+              style={{
+                color: "#FFFFFF",
+                fontSize: 16,
+                fontWeight: "600",
+                backgroundColor: "#2A2840",
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+              }}
+              placeholder="e.g. Nike, Zara, Graphic Tee"
+              placeholderTextColor="#666"
+            />
+          </View>
+
           {/* 5. Season Multi-Select Chips */}
           <View
             style={{

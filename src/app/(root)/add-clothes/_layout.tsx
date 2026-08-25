@@ -17,7 +17,6 @@ export default function AddClothesLayout() {
         <Stack.Screen name="scanning" options={{ gestureEnabled: false }} />
         <Stack.Screen name="form" />
         <Stack.Screen name="scan-result" />
-        <Stack.Screen name="barcode-result" />
         <Stack.Screen name="label-result" />
         <Stack.Screen name="fitcheck-result" />
         <Stack.Screen

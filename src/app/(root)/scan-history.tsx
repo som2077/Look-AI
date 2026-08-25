@@ -5,7 +5,6 @@ import {
 } from "@/features/scanning/model/scan-history-store";
 import { FlashList } from "@shopify/flash-list";
 import {
-  IconBarcode,
   IconHeart,
   IconHeartFilled,
   IconPhoto,
@@ -29,7 +28,6 @@ type FilterTab = "all" | ScanType;
 const FILTER_TABS: { id: FilterTab; label: string }[] = [
   { id: "all", label: "All" },
   { id: "cloth", label: "Cloth" },
-  { id: "barcode", label: "Barcode" },
   { id: "label", label: "Label" },
   { id: "fit-check", label: "Fit Check" },
 ];
@@ -39,7 +37,6 @@ const TYPE_META: Record<
   { label: string; color: string; Icon: React.ComponentType<any> }
 > = {
   cloth: { label: "Cloth Scan", color: "#7C6AFF", Icon: IconShirt },
-  barcode: { label: "Barcode", color: "#FEC466", Icon: IconBarcode },
   label: { label: "Care Label", color: "#01B3F7", Icon: IconTag },
   "fit-check": { label: "Fit Check", color: "#AB86F1", Icon: IconPhoto },
 };
@@ -60,8 +57,6 @@ function getResultSummary(item: ScanHistoryItem): string {
   switch (item.type) {
     case "cloth":
       return `${r.name ?? ""} • ${r.color ?? ""} ${r.material ?? ""}`.trim();
-    case "barcode":
-      return `${r.brand ?? "Unknown"} — ${r.itemName ?? "Clothing Item"}`;
     case "label":
       return `Wash: ${r.washTemp ?? "—"} • ${r.fabricComposition ?? "—"}`;
     case "fit-check":
@@ -322,7 +317,7 @@ export default function ScanHistoryScreen() {
                 paddingHorizontal: 40,
               }}
             >
-              Use the camera to scan clothing items, barcodes, or labels
+              Use the camera to scan clothing items or labels
             </Text>
           </View>
         ) : (

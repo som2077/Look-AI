@@ -122,7 +122,7 @@ const HomeCard = React.memo(function HomeCard({
             </Pressable>
           )}
           <WardrobeRingSummaryCard
-            wornPercentage={wardrobeCount / wardrobeLimit}
+            wornPercentage={stats.usagePercent}
             totalWorn={stats.raw.streakCount}
             wearCount={stats.raw.avgWears}
             neverCount={wardrobeCount}
@@ -134,6 +134,8 @@ const HomeCard = React.memo(function HomeCard({
               bottomRight: "Total Items",
             }}
             statColors={{
+              topLeft: "#01B3F7",
+              topRight: "#AB86F1",
               bottomLeft: "#FEC466",
               bottomRight: "#1D1A27",
             }}
@@ -207,15 +209,12 @@ export default function HomeScreen() {
   // WardrobeRingSummaryCard sanitizes progress itself, so pass raw ratios.
   const ringSegments = useMemo<readonly RingProgressSegment[]>(() => {
     return [
-      { ...RING_SEGMENT_BASE[0], progress: wardrobeCount / wardrobeLimit },
+      { ...RING_SEGMENT_BASE[0], progress: stats.usagePercent },
       { ...RING_SEGMENT_BASE[1], progress: stats.avgWearsPercent },
       { ...RING_SEGMENT_BASE[2], progress: stats.streakPercent },
-      {
-        ...RING_SEGMENT_BASE[3],
-        progress: stats.usagePercent, // Move wardrobe utilization to innermost ring
-      },
+      { ...RING_SEGMENT_BASE[3], progress: stats.totalItemsPercent },
     ];
-  }, [stats, wardrobeCount, wardrobeLimit]);
+  }, [stats]);
 
   const handleMomentumScrollEnd = useCallback((event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;

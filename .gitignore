@@ -46,3 +46,7 @@ app-example
 # dev artifacts
 lint-output.txt
 report.md
+patch_*.js
+fix_*.js
+test_*.js
+fix-*.js

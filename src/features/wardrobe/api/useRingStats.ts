@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSupabase } from "@/shared/supabase/use-supabase";
 import { fetchSupabaseRows } from "@/shared/supabase/use-supabase-query";
 import { useUser } from "@clerk/clerk-expo";
+import { useUserOutfitsStore } from "@/features/outfits/model/user-outfits-store";
+import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 
 export interface RingStats {
   usagePercent: number;
@@ -26,6 +28,21 @@ const getDaysInPeriod = (period: "daily" | "weekly" | "monthly" | "90_days"): nu
   return 90; // for '90_days'
 };
 
+const getPeriodStartTime = (period: "daily" | "weekly" | "monthly" | "90_days"): Date => {
+  const now = new Date();
+  const startTime = new Date();
+  if (period === "daily") {
+    startTime.setHours(0, 0, 0, 0);
+  } else if (period === "weekly") {
+    startTime.setDate(now.getDate() - 7);
+  } else if (period === "monthly") {
+    startTime.setDate(now.getDate() - 30);
+  } else {
+    startTime.setDate(now.getDate() - 90);
+  }
+  return startTime;
+};
+
 export function useRingStats(
   period: "daily" | "weekly" | "monthly" | "90_days" = "weekly",
   totalItems: number = 0,
@@ -34,26 +51,12 @@ export function useRingStats(
 ) {
   const { supabase } = useSupabase();
   const { user } = useUser();
-  const [stats, setStats] = useState<RingStats>({
-    usagePercent: 0,
-    avgWearsPercent: 0,
-    streakPercent: 0,
-    totalItemsPercent: 0,
-    raw: {
-      usagePercentNum: 0,
-      avgWears: 0,
-      streakCount: 0,
-      totalItems: 0,
-    },
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const userOutfits = useUserOutfitsStore((state) => state.outfits);
+  const wardrobeItems = useUserWardrobeStore((state) => state.items);
+  const wardrobeOutfits = useUserWardrobeStore((state) => state.outfits);
 
-  // Keep store-derived props (which change on wardrobe/streak churn) out of the
-  // effect deps so syncing the wardrobe doesn't re-fire this query every time.
-  const totalItemsRef = useRef(totalItems);
-  totalItemsRef.current = totalItems;
-  const currentStreakRef = useRef(currentStreak);
-  currentStreakRef.current = currentStreak;
+  const [wearLogs, setWearLogs] = useState<{ item_id: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -63,24 +66,10 @@ export function useRingStats(
       setIsLoading(true);
 
       try {
-        // 1. Total items are now passed as a prop, no need to query
-        const total = totalItemsRef.current || 0;
-
-        // 2. Set time filter based on period
         const now = new Date();
-        const startTime = new Date();
+        const startTime = getPeriodStartTime(period);
 
-        if (period === "daily") {
-          startTime.setHours(0, 0, 0, 0);
-        } else if (period === "weekly") {
-          startTime.setDate(now.getDate() - 7);
-        } else if (period === "monthly") {
-          startTime.setDate(now.getDate() - 30);
-        } else {
-          startTime.setDate(now.getDate() - 90);
-        }
-
-        // 3. Get wear logs for the period (shared 30s cache, keyed by period).
+        // Get wear logs for the period (shared 30s cache, keyed by period).
         const periodLogs = await fetchSupabaseRows<{ item_id: string }>({
           supabase,
           table: "wear_logs",
@@ -95,39 +84,8 @@ export function useRingStats(
               .limit(500), // bound the read — enough for usage/avg stats at scale
         });
 
-        const logs = periodLogs;
-
-        // 4. Calculate Usage %
-        const uniqueItemsWorn = new Set(logs.map((log) => log.item_id)).size;
-        const usagePercentNum = total > 0 ? Math.round((uniqueItemsWorn / total) * 100) : 0;
-
-        // 5. Calculate Avg Wears
-        const avgWears = uniqueItemsWorn > 0 ? +(logs.length / uniqueItemsWorn).toFixed(1) : 0;
-
-        // 6. Calculate Streak based on passed currentStreak
-        const streakCount = currentStreakRef.current;
-        const daysInPeriod = getDaysInPeriod(period);
-        // If daily and streak > 0, 100%. Otherwise normalize by period days.
-        let streakPercent = 0;
-        if (period === "daily") {
-          streakPercent = streakCount > 0 ? 1 : 0;
-        } else {
-          streakPercent = Math.min(streakCount / daysInPeriod, 1);
-        }
-
         if (isMounted) {
-          setStats({
-            usagePercent: usagePercentNum / 100, // 0-1 for ring
-            avgWearsPercent: Math.min(avgWears / AVG_WEARS_GOAL, 1),
-            streakPercent,
-            totalItemsPercent: Math.min(total / wardrobeLimit, 1),
-            raw: {
-              usagePercentNum,
-              avgWears,
-              streakCount,
-              totalItems: total,
-            },
-          });
+          setWearLogs(periodLogs || []);
         }
       } catch (err) {
         console.error("Error fetching ring stats:", err);
@@ -141,9 +99,100 @@ export function useRingStats(
     return () => {
       isMounted = false;
     };
-    // totalItems/currentStreak intentionally excluded — read via refs above.
-     
-  }, [supabase, user, period, wardrobeLimit]);
+  }, [supabase, user, period]);
+
+  const stats = useMemo<RingStats>(() => {
+    const total = totalItems || wardrobeItems.length || 0;
+    const now = new Date();
+    const startTime = getPeriodStartTime(period);
+    const startMs = startTime.getTime();
+    const nowMs = now.getTime();
+
+    const wornItemIds = new Set<string>();
+    let totalWearInstances = 0;
+
+    // 1. From Supabase wear_logs
+    wearLogs.forEach((log) => {
+      if (log.item_id) {
+        wornItemIds.add(log.item_id);
+        totalWearInstances++;
+      }
+    });
+
+    // 2. From useUserOutfitsStore outfits
+    userOutfits.forEach((outfit) => {
+      let isWithinPeriod = false;
+      if (outfit.scheduledDate) {
+        const parts = outfit.scheduledDate.split("-");
+        const outfitDate = new Date(
+          parseInt(parts[0], 10),
+          parseInt(parts[1], 10) - 1,
+          parseInt(parts[2], 10),
+        );
+        outfitDate.setHours(23, 59, 59, 999);
+        if (outfitDate.getTime() <= nowMs && outfitDate.getTime() >= startMs) {
+          isWithinPeriod = true;
+        }
+      } else if (outfit.createdAt >= startMs && outfit.createdAt <= nowMs) {
+        isWithinPeriod = true;
+      }
+
+      if (isWithinPeriod && Array.isArray(outfit.items)) {
+        outfit.items.forEach((itemId) => {
+          wornItemIds.add(itemId);
+          totalWearInstances++;
+        });
+      }
+    });
+
+    // 3. From useUserWardrobeStore wardrobeOutfits
+    wardrobeOutfits.forEach((outfit) => {
+      const createdAtMs = new Date(outfit.createdAt).getTime();
+      if (createdAtMs >= startMs && createdAtMs <= nowMs && Array.isArray(outfit.itemIds)) {
+        outfit.itemIds.forEach((itemId) => {
+          wornItemIds.add(itemId);
+          totalWearInstances++;
+        });
+      }
+    });
+
+    // 4. From wardrobeItems with lastWornDate
+    wardrobeItems.forEach((item) => {
+      if (item.lastWornDate) {
+        const lastWornMs = new Date(item.lastWornDate).getTime();
+        if (lastWornMs >= startMs && lastWornMs <= nowMs) {
+          wornItemIds.add(item.id);
+          totalWearInstances += Math.max(1, item.wearCount || 1);
+        }
+      }
+    });
+
+    const uniqueItemsWorn = wornItemIds.size;
+    const rawUsageFraction = total > 0 ? uniqueItemsWorn / total : 0;
+    const usagePercentNum = total > 0 ? Math.min(100, Math.round(rawUsageFraction * 100)) : 0;
+    const avgWears = uniqueItemsWorn > 0 ? +(totalWearInstances / uniqueItemsWorn).toFixed(1) : 0;
+
+    const daysInPeriod = getDaysInPeriod(period);
+    let streakPercent = 0;
+    if (period === "daily") {
+      streakPercent = currentStreak > 0 ? 1 : 0;
+    } else {
+      streakPercent = Math.min(currentStreak / daysInPeriod, 1);
+    }
+
+    return {
+      usagePercent: Math.min(1, rawUsageFraction), // 0-1 for ring
+      avgWearsPercent: Math.min(avgWears / AVG_WEARS_GOAL, 1),
+      streakPercent,
+      totalItemsPercent: wardrobeLimit > 0 ? Math.min(total / wardrobeLimit, 1) : 0,
+      raw: {
+        usagePercentNum,
+        avgWears,
+        streakCount: currentStreak,
+        totalItems: total,
+      },
+    };
+  }, [wearLogs, totalItems, wardrobeItems, userOutfits, wardrobeOutfits, currentStreak, wardrobeLimit, period]);
 
   return { stats, isLoading };
 }

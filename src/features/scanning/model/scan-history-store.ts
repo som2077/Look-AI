@@ -8,7 +8,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type ScanType = "cloth" | "barcode" | "label" | "fit-check";
+export type ScanType = "cloth" | "label" | "fit-check";
 
 export interface ScanHistoryItem {
   id: string;

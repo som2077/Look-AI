@@ -1,6 +1,6 @@
 /**
  * Gemini Scan Services — Extended AI scanning for Look AI
- * Handles: Full Cloth Scan, Barcode Image, Care Label OCR, Fit Check, Multi-Item Wardrobe Scan
+ * Handles: Full Cloth Scan, Care Label OCR, Fit Check, Multi-Item Wardrobe Scan
  */
 
 import { supabase } from "@/shared/supabase/client";
@@ -17,18 +17,6 @@ export interface OpenAIVisionResponse {
   }>;
 }
 
-export interface BarcodeAnalysis {
-  brand: string;
-  itemName: string;
-  size: string;
-  color: string;
-  price: string;
-  material: string;
-  rawText: string;
-  careInstructions?: string;
-  notes?: string;
-  error?: string;
-}
 
 export interface LabelAnalysis {
   care_symbols: {
@@ -171,7 +159,7 @@ async function prepareVisionImageUrl(imageUri: string): Promise<string> {
 async function callOpenAIVision(
   imageUri: string,
   prompt: string,
-  mode: "cloth" | "barcode" | "fitcheck" = "cloth",
+  mode: "cloth" | "fitcheck" = "cloth",
   maxTokens: number = 350
 ): Promise<string | null> {
   let url: string;
@@ -182,7 +170,7 @@ async function callOpenAIVision(
     return null;
   }
 
-  const detail = mode === "barcode" ? "auto" : "low";
+  const detail = "low";
 
   const body = {
     model: "gpt-4o-mini",
@@ -280,10 +268,8 @@ const CLOTH_PROMPT = `You are a STRICT fashion AI clothing analyzer. Analyze ima
 
 STEP 1: VALIDATE IMAGE TYPE.
 Check what is in the image:
-- If image shows a full body person wearing clothes → return: {"validationStatus": "full_body", "category": "Full Body", "confidence": 0}
-- If image shows multiple items at once → return: {"validationStatus": "multiple_items", "category": "Not Clothing", "confidence": 0}
-- If image has no clothing/fashion item at all (food, landscape, selfie, text) → return: {"validationStatus": "not_clothing", "category": "Not Clothing", "confidence": 0}
-- If image is too blurry/dark to analyze → return: {"validationStatus": "unclear", "category": "Not Clothing", "confidence": 0}
+- If image has no clothing/fashion item at all (e.g., food, landscape, text only) → return: {"validationStatus": "not_clothing", "category": "Not Clothing", "confidence": 0}
+- If image shows a full body person or multiple items → DO NOT REJECT. Instead, pick the MOST PROMINENT clothing item in the image and analyze it.
 
 STEP 2: ANALYZE THE SINGLE FASHION ITEM.
 Return ONLY valid JSON using EXACTLY these constrained values:
@@ -306,7 +292,7 @@ JSON FORMAT:
   "brand": "Detect brand text or leave blank",
   "category": "<MUST BE ONE OF THE EXACT CATEGORIES ABOVE>",
   "subCategory": "<MUST BE ONE OF THE EXACT SUBCATEGORIES FOR THE CATEGORY ABOVE>",
-  "primaryColor": "White, Black, Blue, Navy, Red, Green, Yellow, Gray, Brown, Beige, Pink, Purple, Orange, Khaki",
+  "color": "White, Black, Blue, Navy, Red, Green, Yellow, Gray, Brown, Beige, Pink, Purple, Orange, Khaki",
   "season": ["All Season", "Summer", "Winter", "Spring", "Fall"],
   "occasion": ["<MUST BE FROM OCCASIONS LIST ABOVE>", "<CAN HAVE MULTIPLE>"],
   "careInstructions": "Machine wash cold, tumble dry low etc",
@@ -337,50 +323,56 @@ export async function analyzeClothingFull(
   });
 }
 
-// ─── Barcode Image Analysis ───────────────────────────────────────────────────
-
-const BARCODE_PROMPT = `Extract product details from clothing tag image. Return JSON:
-{
-  "brand": "Brand or Unknown",
-  "itemName": "Item name or Clothing Item",
-  "size": "Size or Unknown",
-  "color": "Color or Unknown",
-  "price": "Price or Not visible",
-  "material": "Material or Unknown",
-  "rawText": "visible text"
-}`;
-
-export async function analyzeBarcodeImage(
-  imageUri: string,
-): Promise<BarcodeAnalysis> {
-  const text = await callOpenAIVision(imageUri, BARCODE_PROMPT, "barcode", 200);
-  return parseJson<BarcodeAnalysis>(text, {
-    brand: "Unknown",
-    itemName: "Clothing Item",
-    size: "Unknown",
-    color: "Unknown",
-    price: "Not visible",
-    material: "Unknown",
-    rawText: "",
-  });
-}
 
 // ─── Mode 2: Cloth Label OCR ──────────────────────────────────────────────────
+
+const LABEL_PROMPT = `Extract information from this clothing care label.
+Translate any foreign text into English.
+Return ONLY valid JSON using exactly this format:
+{
+  "care_symbols": [
+    {
+      "id": "e.g., wash_30, bleach_no, iron_low",
+      "category": "washing | bleaching | drying | ironing | dry_cleaning | wringing",
+      "label": "e.g., Machine wash cold",
+      "confidence": "high"
+    }
+  ],
+  "fabric_composition": [
+    {
+      "material": "e.g., Cotton",
+      "percentage": 100
+    }
+  ],
+  "brand": "brand name if visible, else null",
+  "size": "size if visible, else null",
+  "origin_text": "e.g., Made in China, else null",
+  "detected_language": "e.g., English, French, else null",
+  "original_text": "Extract all raw text visible on the label",
+  "translated_text": "Translate original_text to English if needed",
+  "label_standard_guess": "unclear",
+  "needs_user_review": false,
+  "review_notes": "Any caveats or null"
+}`;
 
 export async function analyzeClothLabel(
   imageUri: string,
 ): Promise<LabelAnalysis> {
-  try {
-    let payload: object;
-    if (imageUri.startsWith("http://") || imageUri.startsWith("https://")) {
-      const imageUrl = imageUri.includes("cloudinary.com") && !imageUri.includes("w_768")
-        ? imageUri.replace("/upload/", "/upload/w_768,c_limit,q_auto/")
-        : imageUri;
-      payload = { imageUrl };
-    } else {
-      const base64Image = await uriToBase64(imageUri);
-      payload = { base64Image };
-    }
+  const text = await callOpenAIVision(imageUri, LABEL_PROMPT, "cloth", 600);
+  return parseJson<LabelAnalysis>(text, {
+    care_symbols: [],
+    fabric_composition: [],
+    brand: null,
+    size: null,
+    origin_text: null,
+    detected_language: "English",
+    original_text: null,
+    translated_text: null,
+    label_standard_guess: "unclear",
+    needs_user_review: true,
+    review_notes: "Failed to parse properly.",
+  });
+}
 
     const { data, error: edgeError } = await supabase.functions.invoke(
       "cloth-label-scan",

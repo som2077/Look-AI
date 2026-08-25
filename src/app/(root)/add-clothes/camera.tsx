@@ -34,7 +34,7 @@ interface ModeConfig {
   label: string;
   Icon: React.ComponentType<{ size?: number; color?: string }>;
   hint: string;
-  frameStyle: "square" | "barcode" | "portrait" | "fullbody";
+  frameStyle: "square" | "portrait" | "fullbody";
 }
 
 // ─── Mode definitions ─────────────────────────────────────────────────────────

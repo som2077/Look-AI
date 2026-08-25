@@ -50,10 +50,30 @@ export const usePendingBatchStore = create<PendingBatchState>()(
           items: append ? [...state.items, ...newItems] : newItems,
         }));
 
-        // Fire and forget analysis for new items
-        newItems.forEach((item) => {
-          get().processBatchItem(item);
-        });
+        // Process batch items with concurrency limit (e.g. 2 at a time) to prevent OOM / Rate limits
+        const queue = [...newItems];
+        let active = 0;
+        const maxConcurrent = 3;
+        
+        const processNext = async () => {
+          if (queue.length === 0) return;
+          if (active >= maxConcurrent) return;
+          
+          active++;
+          const item = queue.shift();
+          if (item) {
+            try {
+              await get().processBatchItem(item);
+            } finally {
+              active--;
+              processNext();
+            }
+          }
+        };
+
+        for (let i = 0; i < maxConcurrent; i++) {
+          processNext();
+        }
       },
       updateItem: (id, updates) => {
         set((state) => ({
@@ -87,12 +107,15 @@ export const usePendingBatchStore = create<PendingBatchState>()(
 
           // 2. AI Analysis
           const aiData = await analyzeClothingFull(finalUri);
-          if (
-            !aiData ||
-            aiData.category === "Full Body" ||
-            aiData.category === "Not Clothing"
-          ) {
-            throw new Error("Invalid clothing image");
+          if (!aiData) {
+            throw new Error("Analysis returned no data");
+          }
+          
+          if (aiData.category === "Full Body" || aiData.category === "Not Clothing") {
+            // Graceful fallback instead of crashing the batch item
+            aiData.category = "Top";
+            aiData.subCategory = "Other";
+            aiData.name = "Unknown Item";
           }
 
           const customName =

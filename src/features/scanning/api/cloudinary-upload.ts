@@ -75,8 +75,10 @@ async function removeBackgroundLocal(fileUri: string): Promise<string> {
 
   // 1. FAST PATH: Direct API
   if (keys.length > 0) {
+    // Randomize starting index to prevent concurrent batch requests from hammering the same key
+    const startIndex = Math.floor(Math.random() * keys.length);
     for (let i = 0; i < keys.length; i++) {
-      const apiKey = keys[i];
+      const apiKey = keys[(startIndex + i) % keys.length];
       try {
         const formData = new FormData();
         formData.append("image_file_b64", base64Image);

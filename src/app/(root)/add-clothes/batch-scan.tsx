@@ -483,7 +483,7 @@ function SimpleView({
               </View>
                             {/* 3. Brand */}
               <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Brand</Text>
+                <Text style={styles.formLabel}>Brand / Design</Text>
                 <View style={styles.formValueContainer}>
                   <Text style={styles.formValue} numberOfLines={1} ellipsizeMode="tail">
                     {item.data?.brand || "—"}
