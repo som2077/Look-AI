@@ -7,7 +7,6 @@ export * from "./model/scan-history-store";
 
 // API
 export * from "./api/ai-scan";
-export * from "./api/ai-vision";
 export * from "./api/cloudinary-upload";
 
 // UI

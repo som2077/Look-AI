@@ -33,7 +33,7 @@ const ACTION_CARDS: ActionCard[] = [
     title: "Scan & Add",
     subtitle: "Point, snap, and it's in your wardrobe",
     icon: IconCamera,
-    route: "/(root)/log-outfit/camera",
+    route: "/(root)/add-clothes/camera",
     color: "#5ECFC2",
     chipText: "3 scans left",
   },
