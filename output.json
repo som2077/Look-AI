@@ -1,0 +1,260 @@
+{
+  "nodes": [
+    {
+      "id": "_github_issue_template_bug_report_bug_report",
+      "label": "Bug Report Template",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/.github/ISSUE_TEMPLATE/bug_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_github_issue_template_feature_request_feature_request",
+      "label": "Feature Request Template",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/.github/ISSUE_TEMPLATE/feature_request.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_github_pull_request_template_pull_request",
+      "label": "Pull Request Template",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/.github/PULL_REQUEST_TEMPLATE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_github_workflows_ci_ci_workflow",
+      "label": "CI Workflow",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/.github/workflows/ci.yml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "contributing_contributing_guide",
+      "label": "Contributing Guide",
+      "file_type": "document",
+      "source_file": "/home/som2077/Desktop/look-ai-app/CONTRIBUTING.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_contributing_detailed_contributing_guide",
+      "label": "Detailed Contributing Guide",
+      "file_type": "document",
+      "source_file": "/home/som2077/Desktop/look-ai-app/docs/CONTRIBUTING.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_deployment_deployment_guide",
+      "label": "Deployment Guide",
+      "file_type": "document",
+      "source_file": "/home/som2077/Desktop/look-ai-app/docs/DEPLOYMENT.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postman_globals_workspace_globals_postman_globals",
+      "label": "Postman Globals",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/postman/globals/workspace.globals.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "scripts_loadtest_readme_load_test",
+      "label": "K6 Load Test",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/scripts/loadtest/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_deployment_gemini_proxy",
+      "label": "Gemini Proxy Edge Function",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/docs/DEPLOYMENT.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_deployment_virtual_try_on",
+      "label": "Virtual Try On Edge Function",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/docs/DEPLOYMENT.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "skills_analytics_tracking_skill_analytics_tracking",
+      "label": "Analytics Tracking",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/skills/analytics-tracking/skill.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "skills_imagegen_frontend_mobile_skill_imagegen_mobile",
+      "label": "Imagegen Frontend Mobile",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/skills/imagegen-frontend-mobile/skill.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "skills_marketing_psychology_skill_marketing_psychology",
+      "label": "Marketing Psychology",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/skills/marketing-psychology/skill.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "skills_marketing_suite_skill_marketing_suite",
+      "label": "Marketing Suite",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/skills/marketing-suite/skill.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "graphify_out_transcripts_loading_starting_loading_starting",
+      "label": "Loading Starting Transcript",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/graphify-out/transcripts/loading_starting.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "graphify_out_transcripts_analysis_complete_analysis_complete",
+      "label": "Analysis Complete Transcript",
+      "file_type": "concept",
+      "source_file": "/home/som2077/Desktop/look-ai-app/graphify-out/transcripts/analysis-complete.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "contributing_contributing_guide",
+      "target": "docs_contributing_detailed_contributing_guide",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/som2077/Desktop/look-ai-app/CONTRIBUTING.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "skills_marketing_suite_skill_marketing_suite",
+      "target": "skills_marketing_psychology_skill_marketing_psychology",
+      "relation": "cites",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/som2077/Desktop/look-ai-app/skills/marketing-suite/skill.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_deployment_deployment_guide",
+      "target": "docs_deployment_gemini_proxy",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/som2077/Desktop/look-ai-app/docs/DEPLOYMENT.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_deployment_deployment_guide",
+      "target": "docs_deployment_virtual_try_on",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/som2077/Desktop/look-ai-app/docs/DEPLOYMENT.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "skills_marketing_suite_skill_marketing_suite",
+      "target": "skills_analytics_tracking_skill_analytics_tracking",
+      "relation": "cites",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/som2077/Desktop/look-ai-app/skills/marketing-suite/skill.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "marketing_skills",
+      "label": "Marketing Skills",
+      "nodes": [
+        "skills_analytics_tracking_skill_analytics_tracking",
+        "skills_marketing_psychology_skill_marketing_psychology",
+        "skills_marketing_suite_skill_marketing_suite"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/som2077/Desktop/look-ai-app/skills/marketing-suite/skill.md"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

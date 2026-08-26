@@ -237,7 +237,12 @@ export default function AddClothesFormScreen() {
   // Form state — pre-filled by AI when scanned
   const [name, setName] = useState(params.name ?? "");
   const [category, setCategory] = useState<string>(params.category ?? "top");
-  const [subCategory, setSubCategory] = useState<string>("");
+  const [subCategory, setSubCategory] = useState<string>(() => {
+    if (params.subCategory) return params.subCategory;
+    const catId = MACRO_CATEGORIES.find(c => c.id.toLowerCase() === (params.category ?? "top").toLowerCase())?.id || "Other";
+    const allowed = SUBCATEGORY_MAP[catId] || SUBCATEGORY_MAP["Other"];
+    return allowed[0] || "";
+  });
   const [color, setColor] = useState(params.color ?? "");
   // Auto-resolve colorHex from COLOR_OPTIONS if not explicitly set
   const [colorHex, setColorHex] = useState(() => {

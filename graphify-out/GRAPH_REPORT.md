@@ -1,359 +1,361 @@
 # Graph Report - look-ai-app  (2026-08-26)
 
 ## Corpus Check
-- Large corpus: 534 files · ~1,350,419 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
+- Large corpus: 532 files · ~1,350,521 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
 
 ## Summary
-- 3720 nodes · 7908 edges · 367 communities (163 shown, 204 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 134 edges (avg confidence: 0.87)
-- Token cost: 1,000 input · 1,000 output
+- 3718 nodes · 7901 edges · 369 communities (162 shown, 207 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 137 edges (avg confidence: 0.87)
+- Token cost: 1,500 input · 500 output
 
 ## Community Hubs (Navigation)
-- Live Browser Tools
-- Impeccable Detector Rules
-- Visual Contrast Detector
-- Svelte Component Injection
-- Svelte UI Adjustments
-- Impeccable CLI
-- Camera Screen
-- Screenshot Tools
-- Manual Edit Apply
-- Onboarding Screens
-- Design System Rules
-- Home Dashboard
-- Supabase Edge Functions
-- Impeccable Hook Lib
-- Live Browser UI Chrome
-- Community 15
-- Community 16
-- Community 17
-- Community 18
-- Community 19
-- Community 20
-- Community 21
-- Community 22
-- Community 23
-- Community 24
-- Community 25
-- Community 26
-- Community 27
-- Community 28
-- Community 29
-- Community 30
-- Community 31
-- Community 32
-- Community 33
-- Community 34
-- Community 35
-- Community 36
-- Community 37
-- Community 38
-- Community 39
-- Community 40
-- Community 41
-- Community 42
-- Community 43
-- Community 44
-- Community 45
-- Community 46
-- Community 47
-- Community 48
-- Community 49
-- Community 50
-- Community 51
-- Community 52
-- Community 53
-- Community 54
-- Community 55
-- Community 56
-- Community 57
-- Community 58
-- Community 59
-- Community 60
-- Community 61
-- Community 62
-- Community 63
-- Community 64
-- Community 65
-- Community 66
-- Community 67
-- Community 68
-- Community 69
-- Community 70
-- Community 71
-- Community 72
-- Community 73
-- Community 74
-- Community 75
-- Community 76
-- Community 77
-- Community 78
-- Community 79
-- Community 80
-- Community 81
-- Community 82
-- Community 83
-- Community 84
-- Community 85
-- Community 86
-- Community 87
-- Community 88
-- Community 89
-- Community 90
-- Community 91
-- Community 92
-- Community 93
-- Community 94
-- Community 95
-- Community 96
-- Community 97
-- Community 98
-- Community 99
-- Community 100
-- Community 101
-- Community 102
-- Community 103
-- Community 104
-- Community 105
-- Community 106
-- Community 107
-- Community 108
-- Community 109
-- Community 110
-- Community 111
-- Community 112
-- Community 113
-- Community 114
-- Community 115
-- Community 116
-- Community 117
-- Community 118
-- Community 119
-- Community 120
-- Community 121
-- Community 122
-- Community 123
-- Community 124
-- Community 125
-- Community 126
-- Community 127
-- Community 128
-- Community 129
-- Community 130
-- Community 131
-- Community 132
-- Community 133
-- Community 134
-- Community 135
-- Community 136
-- Community 137
-- Community 138
-- Community 139
-- Community 140
-- Community 141
-- Community 142
-- Community 143
-- Community 144
-- Community 145
-- Community 146
-- Community 147
-- Community 148
-- Community 149
-- Community 150
-- Community 151
-- Community 152
-- Community 153
-- Community 154
-- Community 155
-- Community 156
-- Community 157
-- Community 158
-- Community 159
-- Community 160
-- Community 161
-- Community 162
-- Community 163
-- Community 164
-- Community 165
-- Community 166
-- Community 167
-- Community 168
-- Community 169
-- Community 170
-- Community 171
-- Community 172
-- Community 173
-- Community 174
-- Community 175
-- Community 176
-- Community 177
-- Community 178
-- Community 179
-- Community 180
-- Community 181
-- Community 182
-- Community 183
-- Community 184
-- Community 185
-- Community 186
-- Community 187
-- Community 188
-- Community 189
-- Community 190
-- Community 191
-- Community 192
-- Community 193
-- Community 194
-- Community 195
-- Community 196
-- Community 197
-- Community 198
-- Community 199
-- Community 200
-- Community 201
-- Community 202
-- Community 203
-- Community 204
-- Community 205
-- Community 206
-- Community 207
-- Community 208
-- Community 209
-- Community 210
-- Community 211
-- Community 212
-- Community 213
-- Community 214
-- Community 215
-- Community 216
-- Community 217
-- Community 218
-- Community 219
-- Community 220
-- Community 221
-- Community 222
-- Community 223
-- Community 224
-- Community 225
-- Community 226
-- Community 227
-- Community 228
-- Community 229
-- Community 230
-- Community 231
-- Community 232
-- Community 233
-- Community 234
-- Community 235
-- Community 236
-- Community 237
-- Community 238
-- Community 239
-- Community 240
-- Community 241
-- Community 242
-- Community 243
-- Community 244
-- Community 245
-- Community 246
-- Community 247
-- Community 248
-- Community 249
-- Community 250
-- Community 251
-- Community 252
-- Community 253
-- Community 254
-- Community 255
-- Community 256
-- Community 257
-- Community 258
-- Community 259
-- Community 260
-- Community 261
-- Community 262
-- Community 263
-- Community 264
-- Community 265
-- Community 266
-- Community 267
-- Community 268
-- Community 280
-- Community 283
-- Community 285
-- Community 286
-- Community 288
-- Community 289
-- Community 290
-- Community 291
-- Community 292
-- Community 293
-- Community 294
-- Community 295
-- Community 296
-- Community 297
-- Community 298
-- Community 299
-- Community 300
-- Community 301
-- Community 302
-- Community 303
-- Community 304
-- Community 305
-- Community 306
-- Community 307
-- Community 308
-- Community 309
-- Community 310
-- Community 311
-- Community 312
-- Community 313
-- Community 314
-- Community 315
-- Community 316
-- Community 317
-- Community 318
-- Community 319
-- Community 320
-- Community 321
-- Community 322
-- Community 323
-- Community 324
-- Community 325
-- Community 326
-- Community 327
-- Community 328
-- Community 329
-- Community 330
-- Community 331
-- Community 332
-- Community 333
-- Community 334
-- Community 335
-- Community 336
-- Community 337
-- Community 338
-- Community 339
-- Community 340
-- Community 341
-- Community 342
-- Community 343
-- Community 344
-- Community 345
-- Community 346
-- Community 347
-- Community 349
-- Community 350
-- Community 351
-- Community 352
-- Community 353
-- Community 354
-- Community 355
-- Community 356
-- Community 357
-- Community 358
-- Community 359
-- Community 366
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Impeccable Agents Components
+- Wardrobe Store Components
+- Agents Skills Components
+- Apply Agents Components
+- Onboarding Root Components
+- Design Agents Components
+- Wardrobe Wardroberingsummarycard Components
+- Supabase Functions Components
+- Hook Agents Components
+- Agents Skills Components
+- Agents Skills Components
+- Impeccable Config Components
+- Live Agents Components
+- Svelte Agents Components
+- Package Devdependencies Components
+- Static Agents Components
+- Agents Skills Components
+- Scan Root Components
+- Agents Skills Components
+- Agents Skills Components
+- Hook Impeccable Components
+- Styling Outfit Components
+- Errorstateview Root Components
+- Root Streaks Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Root Calendar Components
+- Styling Root Components
+- Agents Skills Components
+- Agents Skills Components
+- Root Add Components
+- Tabs Root Components
+- Agents Skills Components
+- Root Realtime Components
+- Scanning Root Components
+- Weather Store Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Root Create Components
+- Live Agents Components
+- Agents Skills Components
+- Server Serve Components
+- Supabase Use Components
+- Agents Skills Components
+- Agents Skills Components
+- Root Scan Components
+- Impeccable Agents Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Impeccable Agents Components
+- Scanning Cloudinary Components
+- Live Agents Components
+- React Native Components
+- Ref Tsconfig Components
+- Root Analytics Components
+- Supabase Root Components
+- Social Trendfeed Components
+- Subscription Payments Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Wardrobe Saved Components
+- Navigation Customtabbar Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Live Agents Components
+- Agents Skills Components
+- Toast Store Components
+- Agents Skills Components
+- Impeccable Agents Components
+- Agents Skills Components
+- Agents Skills Components
+- Scripts Migrate Components
+- Auth Email Components
+- Services Providers Components
+- Csp Agents Components
+- Agents Skills Components
+- Pin Agents Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Live Agents Components
+- Android Assets Components
+- Score Root Components
+- Agents Skills Components
+- Scripts Generate Components
+- Scripts Loadtest Components
+- Test Mocks Components
+- Agents Skills Components
+- Scripts Updateimports Components
+- Test Mocks Components
+- Gesture Test Components
+- Agents Skills Components
+- Mcp Server Components
+- Scripts Fix Components
+- Scripts Generate Components
+- Wardrobe Root Components
+- Scripts Expo Components
+- Scripts Fix Components
+- Scripts Fix Components
+- Root Log Components
+- Darkgradientbackground Gradient Components
+- Swipeabletabs Navigation Components
+- Premiumgradientbackground Gradient Components
+- Test Mocks Components
+- Agents Skills Components
+- Agents Skills Components
+- Config Metro Components
+- Auth Sign Components
+- Root Add Components
+- Root Calendar Components
+- Occasionpicker Styling Components
+- Agents Skills Components
+- Docs Edge Components
+- Scripts Fix Components
+- Scripts Fix Components
+- Root Look Components
+- Root Log Components
+- Root Post Components
+- Emptystate Emptystateprops Components
+- Gradientbutton Gradientbuttonprops Components
+- Test Mocks Components
+- Agents Skills Components
+- Overdrive Agents Components
+- Hermes Plans Components
+- Assets Female Components
+- Assets Images Components
+- Assets Images Components
+- React Logo Components
+- Deployment Docs Components
+- Eslint Config Components
+- Scripts Fix Components
+- Scripts Fix Components
+- Scripts Fix Components
+- Scripts Fix Components
+- Scripts Pad Components
+- Scripts Patch Components
+- Scripts Patch Components
+- Marketing Skills Components
+- Affiliate Products Components
+- Get Started Components
+- Root Add Components
+- Root Privacy Components
+- Root Terms Components
+- Streak Config Components
+- Upcomingevents Upcomingeventsprops Components
+- Test Mocks Components
+- Firebase Test Components
+- Mcp Vscode Components
+- Agents Ponytail Components
+- Agents Skills Components
+- Strix Agents Components
+- Config Components
+- Assets Action Components
+- Assets Action Components
+- Badge Assets Components
+- Badge Assets Components
+- Badge Assets Components
+- Badge Assets Components
+- Assets Badge Components
+- Assets Badge Components
+- Assets Badge Components
+- Assets Badge Components
+- Assets Bodytypes Components
+- Assets Bodytypes Components
+- Assets Bodytypes Components
+- Male Proportions Components
+- Android Icon Components
+- Assets Rectangle Components
+- Assets Startimage Components
+- Assets Vector Components
+- Babel Preset Components
+- Contributing Guide Components
+- Database User Components
+- Architecture Docs Components
+- Expo Package Components
+- Expo Application Components
+- Expo Audio Components
+- Expo Auth Components
+- Expo Package Components
+- Expo Blur Components
+- Expo Calendar Components
+- Expo Camera Components
+- Expo Clipboard Components
+- Expo Crypto Components
+- Expo Dev Components
+- Expo Device Components
+- Expo Document Components
+- Expo File Components
+- Expo Font Components
+- Expo Google Components
+- Expo Haptics Components
+- Expo Image Components
+- Expo Linear Components
+- Expo Linking Components
+- Expo Localization Components
+- Expo Location Components
+- Expo Media Components
+- Expo Navigation Components
+- Expo Notifications Components
+- Expo Router Components
+- Expo Secure Components
+- Expo Sharing Components
+- Expo Status Components
+- Expo Symbols Components
+- Expo System Components
+- Expo Updates Components
+- Expo Web Components
+- Jest Config Components
+- Nativewind Package Components
+- Nativewind Env Components
+- Package Patch Components
+- Posthog React Components
+- Prettier Plugin Components
+- React Package Components
+- React Dom Components
+- React Native Components
+- Async Storage Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- Masked View Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Native Components
+- React Navigation Components
+- React Navigation Components
+- React Navigation Components
+- React Navigation Components
+- Sentry React Components
+- Shopify Flash Components
+- Supabase Package Components
+- Tabler Icons Components
+- Package Tailwindcss Components
+- Zustand Package Components
+- Config Env Components
+- Tailwind Config Components
+- Analytics Test Components
+- Messaging Test Components
+- Test Mocks Components
+- Purchases Test Components
+- Test Mocks Components
+- Test Mocks Components
+- Graphify Agents Components
+- Skill Agents Components
+- Skill Agents Components
+- Agents Openai Components
+- Agents Openai Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Interaction Agents Components
+- Agents Skills Components
+- Live Agents Components
+- Agents Skills Components
+- Agents Skills Components
+- Polish Agents Components
+- Product Agents Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Skills Components
+- Agents Workflows Components
+- Bug Report Components
+- Feature Request Components
+- Pull Request Components
+- Github Workflows Components
+- Structure Plan Components
+- Postman Resources Components
+- Assets Image Components
+- Assets Action Components
+- Assets Action Components
+- Android Assets Components
+- Android Assets Components
+- Android Assets Components
+- Android Assets Components
+- Android Assets Components
+- Android Assets Components
+- Android Assets Components
+- Android Assets Components
+- Android Assets Components
+- Icon Assets Components
+- Playstore Icon Components
+- Badge Gold Components
+- Assets Badge Components
+- Assets Bodytypes Components
+- Assets Bodytypes Components
+- Android Icon Components
+- Auth Bubbles Components
+- Auth Center Components
+- Auth Left Components
+- Auth Phone Components
+- Auth Right Components
+- Assets Images Components
+- Assets Images Components
+- Assets Images Components
+- Assets Images Components
+- Assets Images Components
+- Assets Images Components
+- Icon Assets Components
+- Assets Images Components
+- Assets Onboarding Components
+- Assets Polygon Components
+- Assets Scribblearrow Components
+- Database Community Components
+- Database Logged Components
+- Database Schema Components
+- Docs Edge Components
+- Docs Troubleshooting Components
+- Google Play Components
+- Analysis Complete Components
+- Loading Starting Components
+- Globals Postman Components
+- Readme Lookai Components
+- Readme Wardrobe Components
+- Report Cloudinary Components
+- Report Usecommunityposts Components
+- Scripts Loadtest Components
+- Skills Apple Components
+- Imagegen Mobile Components
 
 ## God Nodes (most connected - your core abstractions)
 1. `useSupabase()` - 51 edges
@@ -370,14 +372,14 @@
 ## Surprising Connections (you probably didn't know these)
 - `analyze-cloth-item Edge Function` --semantically_similar_to--> `analyze-cloth-item Edge Function`  [INFERRED] [semantically similar]
   SETUP.md → docs/API_EDGE_FUNCTIONS.md
+- `Contributing Guide` --semantically_similar_to--> `Detailed Contributing Guide`  [INFERRED] [semantically similar]
+  CONTRIBUTING.md → docs/CONTRIBUTING.md
 - `enableInlineEdit()` --indirect_call--> `own()`  [INFERRED]
   .agents/skills/impeccable/scripts/live-browser.js → .agents/skills/impeccable/scripts/live-browser-dom.js
 - `layoutFlowChildren()` --indirect_call--> `pickable()`  [INFERRED]
   .agents/skills/impeccable/scripts/live-browser.js → .agents/skills/impeccable/scripts/live-browser-dom.js
-- `Strix OSS CLI` --semantically_similar_to--> `Strix Cloud API`  [INFERRED] [semantically similar]
-  .agents/skills/penetration-testing-with-strix/SKILL.md → .agents/skills/managed-pentesting-with-strix/SKILL.md
-- `gemini-scan.ts` --references--> `gemini-proxy Edge Function`  [EXTRACTED]
-  report.md → docs/API_EDGE_FUNCTIONS.md
+- `StreakScreen()` --calls--> `useStreakStore`  [EXTRACTED]
+  src/app/(root)/(analytics)/streak.tsx → src/features/streaks/model/useStreakStore.ts
 
 ## Import Cycles
 - None detected.
@@ -392,592 +394,589 @@
 - **Android Adaptive Icon Components** — assets_images_android_icon_background_png_android_icon_background, assets_images_android_icon_foreground_png_android_icon_foreground, assets_images_android_icon_monochrome_png_android_icon_monochrome [INFERRED 0.95]
 - **Auth Screen Imagery Collection** — assets_images_auth_bubbles_hero_jpg_auth_bubbles_hero, assets_images_auth_center_jpg_auth_center, assets_images_auth_left_jpg_auth_left, assets_images_auth_right_jpg_auth_right, assets_images_auth_phone_png_auth_phone [INFERRED 0.85]
 - **Mirror Selfies Group** — assets_images_full_lenght_image, assets_images_mirror_selfie_girl_image, assets_images_mirror_selfie_guy_image [INFERRED 0.95]
+- **Marketing Skills** — skills_analytics_tracking_skill_analytics_tracking, skills_marketing_psychology_skill_marketing_psychology, skills_marketing_suite_skill_marketing_suite [INFERRED 0.85]
 
-## Communities (367 total, 204 thin omitted)
+## Communities (369 total, 207 thin omitted)
 
-### Community 0 - "Live Browser Tools"
+### Community 0 - "Agents Skills Components"
 Cohesion: 0.03
 Nodes (145): acceptedDomAlreadyClean(), addManualContextText(), applyGlobalBarLabelState(), applyPlaceholderSizingStyles(), applySvelteComponentVariantStyle(), bufferToBase64(), buildCollapsible(), buildColorModels() (+137 more)
 
-### Community 1 - "Impeccable Detector Rules"
+### Community 1 - "Agents Skills Components"
 Cohesion: 0.05
 Nodes (85): borderColorsFromStyle(), borderWidthsFromStyle(), checkBorders(), checkClippedOverflow(), checkCreamPalette(), checkElementBorders(), checkElementBordersDOM(), checkElementClippedOverflow() (+77 more)
 
-### Community 2 - "Visual Contrast Detector"
+### Community 2 - "Agents Skills Components"
 Cohesion: 0.06
 Nodes (68): addBrowserFindings(), addVisualContrastFindings(), addVisualContrastResult(), analyzeVisualContrast(), analyzeVisualContrastCandidate(), blendRgba(), browserColorsClose(), browserDesignSystemConfig() (+60 more)
 
-### Community 3 - "Svelte Component Injection"
+### Community 3 - "Agents Skills Components"
 Cohesion: 0.08
 Nodes (69): abortSvelteComponentInjection(), applyEditing(), buildInsertPlaceholderSnapshotFromDom(), buildLocatorForLeaf(), buildPickedAnchorSnapshot(), cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure() (+61 more)
 
-### Community 4 - "Svelte UI Adjustments"
+### Community 4 - "Agents Skills Components"
 Cohesion: 0.07
 Nodes (66): applyOriginalAttrsToSvelteAnchor(), applyParamDefaults(), applyParamValue(), applyPlaceholderDimensions(), applySavedSessionMeta(), buildParamsPanel(), clampVariantIndex(), closedClipPath() (+58 more)
 
-### Community 5 - "Impeccable CLI"
+### Community 5 - "Impeccable Agents Components"
 Cohesion: 0.07
 Nodes (47): confirm(), detectCli(), formatFindings(), formatFindingSummary(), handleStdin(), printUsage(), createBrowserDetector(), CSS_IN_JS_EXTENSIONS (+39 more)
 
-### Community 6 - "Camera Screen"
-Cohesion: 0.06
-Nodes (45): AddClothesCameraScreen(), FrameGuide(), getFrameDimensions(), ModeConfig, MODES, ScanMode, ClothScanScreen(), DEFAULT_RESULT (+37 more)
+### Community 6 - "Wardrobe Store Components"
+Cohesion: 0.05
+Nodes (49): AddClothesFormScreen(), CATEGORIES, CategoryId, COLOR_OPTIONS, FormParams, Occasion, OCCASIONS, Season (+41 more)
 
-### Community 7 - "Screenshot Tools"
+### Community 7 - "Agents Skills Components"
 Cohesion: 0.09
 Nodes (55): ae(), be(), bt(), Ce(), s(), Ct(), de(), dt() (+47 more)
 
-### Community 8 - "Manual Edit Apply"
+### Community 8 - "Apply Agents Components"
 Cohesion: 0.08
 Nodes (53): addOpToManualApplyChunk(), APPLY_EVENT_HARD_TIMEOUT_MS, APPLY_EVENT_SOFT_DEADLINE_MS, buildManualApplyAgentAction(), clearManualApplyTransaction(), collectManualApplyFiles(), compactManualApplyBatch(), compactManualApplyCandidates() (+45 more)
 
-### Community 9 - "Onboarding Screens"
+### Community 9 - "Onboarding Root Components"
 Cohesion: 0.09
-Nodes (34): AgeScreen(), BodyTypesScreen(), femaleBodyTypes, maleBodyTypes, GENDER_OPTIONS, GenderScreen(), HeightScreen(), NicknameScreen() (+26 more)
+Nodes (34): AgeScreen(), BodyTypesScreen(), femaleBodyTypes, maleBodyTypes, FullLengthPicsScreen(), GENDER_OPTIONS, GenderScreen(), HeightScreen() (+26 more)
 
-### Community 10 - "Design System Rules"
+### Community 10 - "Design Agents Components"
 Cohesion: 0.09
 Nodes (51): addColorObject(), addDesignColor(), addRoundedScale(), addRoundedToken(), addSidecarColors(), addSidecarRadii(), addTypographyFonts(), canonicalDesignFindingKey() (+43 more)
 
-### Community 11 - "Home Dashboard"
+### Community 11 - "Wardrobe Wardroberingsummarycard Components"
 Cohesion: 0.06
-Nodes (38): CardKey, CARDS, HomeCard, HomeCardProps, RING_SEGMENT_BASE, TAB_TO_PERIOD, { width: SCREEN_WIDTH }, useHasOutfitActivity() (+30 more)
+Nodes (39): CardKey, CARDS, HomeCard, HomeCardProps, RING_SEGMENT_BASE, TAB_TO_PERIOD, { width: SCREEN_WIDTH }, useHasOutfitActivity() (+31 more)
 
-### Community 12 - "Supabase Edge Functions"
+### Community 12 - "Supabase Functions Components"
 Cohesion: 0.09
 Nodes (34): corsHeaders, corsHeaders, promptConfig, corsHeaders, ALLOWED_MODELS, corsHeaders, modelEnum, ALLOWED_MODELS (+26 more)
 
-### Community 13 - "Impeccable Hook Lib"
+### Community 13 - "Hook Agents Components"
 Cohesion: 0.07
 Nodes (47): ACK_EXTS, ALLOWED_EXTS, applyPatchText(), clampByte(), CO_SCAN_STYLE_NAMES, coLocatedStylesheets(), colorIgnoreKey(), DEFAULT_CONFIG (+39 more)
 
-### Community 14 - "Live Browser UI Chrome"
+### Community 14 - "Agents Skills Components"
 Cohesion: 0.08
 Nodes (49): actionLabel(), applyConfigureBarChrome(), bindConfigureCountPillTooltip(), bindConfigureInlineControlHover(), bindConfigureModifierPillHover(), buildConfigureActionControl(), buildConfigureCountControl(), buildConfigureRow() (+41 more)
 
-### Community 15 - "Community 15"
+### Community 15 - "Agents Skills Components"
 Cohesion: 0.11
 Nodes (48): allEntryIds(), argVal(), buildRepairBatch(), candidatesForEntry(), changedFilesSinceSnapshot(), collectApplyOwnedFiles(), collectRollbackFiles(), commitManualEdits() (+40 more)
 
-### Community 16 - "Community 16"
+### Community 16 - "Impeccable Config Components"
 Cohesion: 0.10
 Nodes (47): applyDetectionConfigSource(), clampByte(), cleanIgnoreValueDisplay(), cloneDetectionConfig(), cloneRawDetectionConfig(), colorIgnoreKey(), DEFAULT_DETECTION_CONFIG, DETECTOR_CONFIG_KEYS (+39 more)
 
-### Community 17 - "Community 17"
+### Community 17 - "Live Agents Components"
 Cohesion: 0.09
 Nodes (45): assembleLiveBrowserScript(), assertLiveBrowserScriptParts(), LIVE_BROWSER_SCRIPT_PARTS, readLiveBrowserScriptParts(), resolveLiveBrowserScriptParts(), acknowledgePendingEvent(), activeSessionSummaries(), agentPollingConnected() (+37 more)
 
-### Community 18 - "Community 18"
+### Community 18 - "Svelte Agents Components"
 Cohesion: 0.09
 Nodes (47): applyLegacyDeferredAcceptsOnStartup(), appendCssToSvelteStyle(), appendSanitizedCssRule(), applyDeferredSvelteComponentAccepts(), bakeParamValuesInCss(), buildInsertVariantStub(), buildPropContract(), buildPropsScript() (+39 more)
 
-### Community 19 - "Community 19"
+### Community 19 - "Package Devdependencies Components"
 Cohesion: 0.04
 Nodes (46): cross-env, eslint, eslint-config-expo, hermes-parser, jest, jest-expo, devDependencies, cross-env (+38 more)
 
-### Community 20 - "Community 20"
-Cohesion: 0.06
-Nodes (35): AnimatedFlashList, BentoCard, CATEGORY_MAPPING, CategoryId, ClothingItem, EmptyState, FILTER_CHIPS, getCategoryIcon() (+27 more)
-
-### Community 21 - "Community 21"
-Cohesion: 0.07
-Nodes (34): FitCheckParams, FitCheckResultScreen(), { height: SCREEN_HEIGHT, width: SCREEN_WIDTH }, COLOR_PALETTES, formatDate(), formatTime(), getLiveWeatherString(), ITEMS (+26 more)
-
-### Community 22 - "Community 22"
+### Community 20 - "Static Agents Components"
 Cohesion: 0.08
 Nodes (34): applyStaticDeclaration(), buildBorderOverrideMap(), parseShorthand(), resolveVar(), buildStaticStyleMap(), buildStaticWindow(), collectStaticCssRules(), compareStaticPriority() (+26 more)
 
-### Community 23 - "Community 23"
+### Community 21 - "Agents Skills Components"
 Cohesion: 0.10
 Nodes (45): armPageChatForTyping(), attachSteerFocusDebug(), attachSteerFocusGuard(), clearSteerAwaitTimer(), clearSteerFocusRecoverTimer(), collapsePageChat(), expandPageChat(), finishVoiceSession() (+37 more)
 
-### Community 24 - "Community 24"
-Cohesion: 0.09
-Nodes (43): appendOriginToDirective(), buildTagBlock(), commentClose(), commentOpen(), CONFIG_PATH, detectLineEnding(), __dirname, ensureLiveGitIgnores() (+35 more)
+### Community 22 - "Scan Root Components"
+Cohesion: 0.10
+Nodes (33): ClothScanScreen(), DEFAULT_RESULT, LabelResultParams, LabelResultScreen(), DEFAULT_RESULT, MACRO_CATEGORIES, OCCASIONS_LIST, PRESET_SEASONS (+25 more)
 
-### Community 25 - "Community 25"
+### Community 23 - "Agents Skills Components"
 Cohesion: 0.08
-Nodes (39): checkBorders(), checkClippedOverflow(), checkElementBorders(), checkElementBordersDOM(), checkElementClippedOverflow(), checkElementClippedOverflowDOM(), checkElementItalicSerif(), checkElementItalicSerifDOM() (+31 more)
+Nodes (37): checkBorders(), checkClippedOverflow(), checkElementBorders(), checkElementBordersDOM(), checkElementClippedOverflow(), checkElementClippedOverflowDOM(), checkElementItalicSerif(), checkElementItalicSerifDOM() (+29 more)
 
-### Community 26 - "Community 26"
-Cohesion: 0.12
-Nodes (39): hasGeneratedHeader(), HEADER_MARKERS, isGeneratedFile(), isGitIgnored(), argVal(), buildInsertWrapperLines(), computeInsertLine(), INSERT_POSITIONS (+31 more)
-
-### Community 27 - "Community 27"
-Cohesion: 0.11
-Nodes (29): LOADING_PHRASES, OutfitScreen(), MILESTONES, StreakScreen(), T, { width: SCREEN_WIDTH }, Stat, SuccessScreen() (+21 more)
-
-### Community 28 - "Community 28"
+### Community 24 - "Agents Skills Components"
 Cohesion: 0.11
 Nodes (28): detectUrl(), runVisualContrastFallback(), serializeDesignSystemForBrowser(), runRegexMatchers(), collectStaticCssText(), STATIC_ELEMENT_RULES, captureVisualContrastCandidate(), compareScreenshotContrast() (+20 more)
 
-### Community 29 - "Community 29"
+### Community 25 - "Hook Impeccable Components"
 Cohesion: 0.14
 Nodes (39): ACTIONS, addIgnoreFile(), addIgnoreRule(), addIgnoreValue(), DETECTOR_CONFIG_KEYS, detectorSection(), fileHasImpeccableHookMarker(), HOOK_MANIFEST_TARGETS (+31 more)
 
-### Community 30 - "Community 30"
+### Community 26 - "Styling Outfit Components"
+Cohesion: 0.06
+Nodes (27): COLOR_PALETTES, formatDate(), formatTime(), getLiveWeatherString(), ITEMS, LastOutfit, OCCASIONS, OUTFIT_NAMES (+19 more)
+
+### Community 27 - "Errorstateview Root Components"
+Cohesion: 0.08
+Nodes (22): bootstrapSyncDone, RootLayout(), setupFirebaseNotifications(), RootNavigator, ProfileScreen(), OnboardingProvider(), FONT_ASSETS, FontFamily (+14 more)
+
+### Community 28 - "Root Streaks Components"
+Cohesion: 0.13
+Nodes (28): LOADING_PHRASES, OutfitScreen(), getTodayString(), RootLayout(), useLogAppOpen(), Stat, SuccessScreen(), getTodayString() (+20 more)
+
+### Community 29 - "Agents Skills Components"
 Cohesion: 0.11
 Nodes (37): allow(), bumpCursorDenial(), deny(), detectProposedHtml(), done(), escapeRegExp(), findingSignature(), firstMatch() (+29 more)
 
-### Community 31 - "Community 31"
+### Community 30 - "Agents Skills Components"
 Cohesion: 0.10
 Nodes (36): barPaletteForTheme(), brandMarkSvg(), buildDesignHeader(), buildSteerProcessingDots(), designPanelCss(), detectPageTheme(), ensureAgentPollTooltip(), fetchAgentPollingStatus() (+28 more)
 
-### Community 32 - "Community 32"
+### Community 31 - "Agents Skills Components"
+Cohesion: 0.13
+Nodes (35): argVal(), buildInsertWrapperLines(), computeInsertLine(), INSERT_POSITIONS, insertCli(), isInsertPosition(), resolveElementMatch(), buildSvelteComponentCssAuthoring() (+27 more)
+
+### Community 32 - "Agents Skills Components"
+Cohesion: 0.10
+Nodes (35): buildMissingTargetDirective(), buildResolvedContextDirective(), buildTargetSelectionDirective(), buildUpdateDirective(), cli(), compareSemver(), computeUpdateDirective(), DESIGN_NAMES (+27 more)
+
+### Community 33 - "Root Calendar Components"
 Cohesion: 0.09
 Nodes (29): CalendarScreen(), DAY_LABELS_SHORT, { height: SCREEN_HEIGHT }, isSameDay(), LoggedOutfit, MONTH_NAMES, CATEGORIES, CategoryId (+21 more)
 
-### Community 33 - "Community 33"
-Cohesion: 0.08
-Nodes (30): AddClothesFormScreen(), CATEGORIES, CategoryId, COLOR_OPTIONS, FormParams, Occasion, OCCASIONS, Season (+22 more)
-
-### Community 34 - "Community 34"
+### Community 34 - "Styling Root Components"
 Cohesion: 0.07
 Nodes (31): callPlanner(), getMockWeather(), LOADING_LABELS, Message, PlannerChatScreen(), PlannerContext, PlannerStep, styles (+23 more)
 
-### Community 35 - "Community 35"
+### Community 35 - "Agents Skills Components"
 Cohesion: 0.15
 Nodes (33): buildColor(), CANONICAL_SECTIONS, collectBullets(), collectColorValues(), collectParagraphs(), detectFormat(), extractColors(), extractComponents() (+25 more)
 
-### Community 36 - "Community 36"
+### Community 36 - "Agents Skills Components"
 Cohesion: 0.14
 Nodes (32): acceptCli(), argVal(), buildCarbonizeReplacement(), decodeHtmlAttr(), deindentContent(), detectCommentSyntax(), escapeRegExp(), expandReplaceRange() (+24 more)
 
-### Community 37 - "Community 37"
+### Community 37 - "Root Add Components"
+Cohesion: 0.08
+Nodes (24): BatchScanScreen(), styles, ViewMode, { width: SCREEN_WIDTH }, AddClothesCameraScreen(), FrameGuide(), getFrameDimensions(), ModeConfig (+16 more)
+
+### Community 38 - "Tabs Root Components"
+Cohesion: 0.07
+Nodes (27): AnimatedFlashList, BentoCard, CATEGORY_MAPPING, CategoryId, ClothingItem, EmptyState, FILTER_CHIPS, getCategoryIcon() (+19 more)
+
+### Community 39 - "Agents Skills Components"
 Cohesion: 0.14
 Nodes (31): applyMockWrites(), buildCopyEditBatchPrompt(), checkFrameworkSourceSyntax(), chooseCopyEditAgent(), COMMAND_AUTH_CACHE, commandAuthed(), commandExists(), compactBatchForPrompt() (+23 more)
 
-### Community 38 - "Community 38"
-Cohesion: 0.10
-Nodes (26): Outfit, UserOutfitsState, useDeleteAccount(), API_KEY, CLOUD_NAME, CloudinaryUploadResult, deleteFromCloudinary(), extractPublicIdFromUrl() (+18 more)
+### Community 40 - "Root Realtime Components"
+Cohesion: 0.09
+Nodes (22): NotificationsScreen(), timeAgoHelper(), FeedTab(), formatPostDateTime(), POPULAR_REACTIONS, TimelinePostCard, NotificationItem, NotificationsStore (+14 more)
 
-### Community 39 - "Community 39"
+### Community 41 - "Scanning Root Components"
+Cohesion: 0.10
+Nodes (21): AddClothesScanningScreen(), STEPS, { width: SCREEN_W }, AnalyzingScreen(), CHECKS, CHIPS, DetectChip, WardrobeCheck (+13 more)
+
+### Community 42 - "Weather Store Components"
+Cohesion: 0.11
+Nodes (23): OCCASIONS, OutfitItem, OutfitPreset, OutfitSuggestionScreen(), PRESETS, ScoreBlock, abbreviateState(), bestColorsForTemp() (+15 more)
+
+### Community 43 - "Agents Skills Components"
 Cohesion: 0.15
 Nodes (26): completionAckForAcceptResult(), completionTypeForAcceptResult(), augmentEventWithAcceptHandling(), buildAcceptScriptArgs(), buildPollReplyPayload(), DEFAULT_EVENT_LEASE_MS, EVENT_TYPES_NEEDING_AGENT_REPLY, fetchNextEvent() (+18 more)
 
-### Community 40 - "Community 40"
+### Community 44 - "Agents Skills Components"
 Cohesion: 0.15
 Nodes (27): checkColors(), checkElementAIPaletteDOM(), checkElementColors(), checkElementColorsDOM(), checkElementGlow(), checkElementGlowDOM(), checkElementIconTile(), checkElementIconTileDOM() (+19 more)
 
-### Community 41 - "Community 41"
+### Community 45 - "Agents Skills Components"
 Cohesion: 0.16
 Nodes (26): clearStoredManualApplyState(), fetchPendingCount(), handleManualEditActivity(), hasTextRows(), hidePendingApplyDock(), manualApplyLoadingText(), manualApplyStateKey(), manualEditEventForCurrentPage() (+18 more)
 
-### Community 42 - "Community 42"
+### Community 46 - "Agents Skills Components"
 Cohesion: 0.09
 Nodes (13): canCreateInsert(), clampPlaceholderSize(), computeInsertPosition(), groupSiblingRows(), hitSiblingInsertGap(), horizontalOverlap(), insertCreateDisabledReason(), insertLineCoords() (+5 more)
 
-### Community 43 - "Community 43"
+### Community 47 - "Root Create Components"
 Cohesion: 0.11
 Nodes (22): CATEGORY_MAPPING, CATEGORY_TABS, CategoryId, CreateOutfitScreen(), FILTER_CHIPS, getCategoryIcon(), getOccasionIcon(), getRatingIcon() (+14 more)
 
-### Community 44 - "Community 44"
-Cohesion: 0.12
-Nodes (17): PostDetailScreen(), FeedTab(), formatPostDateTime(), POPULAR_REACTIONS, TimelinePostCard, PublicUserProfileScreen(), CommunityPost, CommunityPostsStore (+9 more)
+### Community 48 - "Live Agents Components"
+Cohesion: 0.14
+Nodes (25): appendOriginToDirective(), buildTagBlock(), commentClose(), commentOpen(), CONFIG_PATH, detectLineEnding(), __dirname, ensureLiveGitIgnores() (+17 more)
 
-### Community 45 - "Community 45"
+### Community 49 - "Agents Skills Components"
 Cohesion: 0.15
 Nodes (25): analyzeSourceHint(), buildCandidatesForOp(), buildContextHintsByRef(), collectSearchFiles(), countOps(), decodeBasicHtml(), escapeRegExp(), findContextMatches() (+17 more)
 
-### Community 46 - "Community 46"
+### Community 50 - "Server Serve Components"
 Cohesion: 0.14
 Nodes (10): ConnInfo, Handler, hostnameForDisplay(), serve(), ServeInit, serveListener(), Server, ServerInit (+2 more)
 
-### Community 47 - "Community 47"
-Cohesion: 0.11
-Nodes (14): RootNavigator, Field, PersonalDetailsScreen(), ProfileScreen(), ProfileScreenUI(), useUserProfile(), getFCMToken(), requestUserPermission() (+6 more)
-
-### Community 48 - "Community 48"
-Cohesion: 0.14
-Nodes (17): getTodayString(), RootLayout(), useLogAppOpen(), FullLengthPicsScreen(), LOADING_MESSAGES, SetupAccountScreen(), CreateOutfitScreen(), useLogWears() (+9 more)
-
-### Community 49 - "Community 49"
+### Community 51 - "Supabase Use Components"
 Cohesion: 0.13
-Nodes (23): buildUpdateDirective(), compareSemver(), computeUpdateDirective(), DESIGN_NAMES, FALLBACK_DIRS, fetchLatestSkillVersion(), MONOREPO_FALLBACK_PROJECT_DIRS, MONOREPO_MARKER_FILES (+15 more)
+Nodes (19): PostDetailScreen(), PublicUserProfileScreen(), UserProfile, useUpdateProfile(), CommunityPostsStore, DUMMY_POSTS, removeOptimisticPosts(), useCommunityPosts() (+11 more)
 
-### Community 50 - "Community 50"
-Cohesion: 0.12
-Nodes (18): NotificationsScreen(), timeAgoHelper(), NotificationItem, NotificationsStore, useNotifications(), useNotificationsStore, useThrottledCallback(), ChannelEntry (+10 more)
-
-### Community 51 - "Community 51"
+### Community 52 - "Agents Skills Components"
 Cohesion: 0.20
 Nodes (22): checkColors(), checkElementAIPaletteDOM(), checkElementColors(), checkElementColorsDOM(), checkElementGlow(), checkElementGlowDOM(), checkElementIconTile(), checkElementIconTileDOM() (+14 more)
 
-### Community 52 - "Community 52"
+### Community 53 - "Agents Skills Components"
 Cohesion: 0.19
 Nodes (19): clearAppliedEntries(), args, buffer, cwd, pageUrlFilter, remaining, buildManualEditEvidence(), createManualEditRoutes() (+11 more)
 
-### Community 53 - "Community 53"
+### Community 54 - "Root Scan Components"
+Cohesion: 0.12
+Nodes (15): FitCheckParams, FitCheckResultScreen(), { height: SCREEN_HEIGHT, width: SCREEN_WIDTH }, FILTER_TABS, FilterTab, formatDate(), getResultSummary(), HistoryCard (+7 more)
+
+### Community 55 - "Impeccable Agents Components"
 Cohesion: 0.17
 Nodes (21): resolveProjectRoot(), CRITIQUE_DIR, firstExisting(), getDesignSidecarCandidates(), getDesignSidecarPath(), getImpeccableDir(), getLegacyLiveAnnotationsDir(), getLegacyLiveConfigPath() (+13 more)
 
-### Community 54 - "Community 54"
-Cohesion: 0.12
-Nodes (15): bootstrapSyncDone, RootLayout(), setupFirebaseNotifications(), FONT_ASSETS, FontFamily, FONTS, setupNotificationListeners(), initPostHog() (+7 more)
-
-### Community 55 - "Community 55"
+### Community 56 - "Agents Skills Components"
 Cohesion: 0.15
 Nodes (20): bumpEditCount(), dedupeAgainstCache(), depthIsSet(), ensureFile(), ensureSession(), findingCacheKey(), matchConfiguredExtension(), normalizeExtensionEntries() (+12 more)
 
-### Community 56 - "Community 56"
+### Community 57 - "Agents Skills Components"
 Cohesion: 0.12
 Nodes (20): averageRgb01(), captureChromeNodes(), captureElementFromRenderedAncestor(), captureElementToBlob(), compileShader(), cssColorToRgb01(), dominantRgb01(), findBackdropAncestor() (+12 more)
 
-### Community 57 - "Community 57"
-Cohesion: 0.14
-Nodes (20): borderColorsFromStyle(), borderWidthsFromStyle(), checkCreamPalette(), checkElementGptBorderShadow(), checkElementGptBorderShadowDOM(), checkElementQualityDOM(), checkGptThinBorderWideShadow(), checkQuality() (+12 more)
+### Community 58 - "Agents Skills Components"
+Cohesion: 0.13
+Nodes (20): checkElementOversizedH1(), checkElementOversizedH1DOM(), checkElementQuality(), checkElementQualityDOM(), checkOversizedH1(), checkQuality(), checkRepeatedSectionKickers(), checkRepeatedSectionKickersDOM() (+12 more)
 
-### Community 58 - "Community 58"
+### Community 59 - "Impeccable Agents Components"
 Cohesion: 0.21
 Nodes (17): isLiveServerPidReachable(), readLiveServerInfo(), completeCli(), completeThroughServer(), parseArgs(), readServerInfo(), collectManualApplyFiles(), manualApplyReplyCommand() (+9 more)
 
-### Community 59 - "Community 59"
-Cohesion: 0.11
-Nodes (19): babel-preset-expo, expo-constants, expo-image, expo-splash-screen, lottie-react-native, dependencies, babel-preset-expo, expo-constants (+11 more)
+### Community 60 - "Scanning Cloudinary Components"
+Cohesion: 0.17
+Nodes (17): useDeleteAccount(), API_KEY, CLOUD_NAME, CloudinaryUploadResult, deleteFromCloudinary(), extractPublicIdFromUrl(), removeBackgroundLocal(), uploadToCloudinaryWithBgRemoval() (+9 more)
 
-### Community 60 - "Community 60"
+### Community 61 - "Live Agents Components"
+Cohesion: 0.18
+Nodes (18): applySvelteKitLiveAdapter(), buildSvelteLiveRootComponent(), defaultSvelteLayout(), detectSvelteKitProject(), ensureSvelteLiveRootComponent(), escapeRegExp(), fileIncludes(), findSvelteKitAppHtml() (+10 more)
+
+### Community 62 - "React Native Components"
+Cohesion: 0.11
+Nodes (19): @clerk/clerk-expo, expo-constants, expo-image, expo-splash-screen, lottie-react-native, dependencies, @clerk/clerk-expo, expo-constants (+11 more)
+
+### Community 63 - "Ref Tsconfig Components"
 Cohesion: 0.11
 Nodes (18): ./assets/*, expo-env.d.ts, expo/tsconfig.base, .expo/types/**/*.ts, nativewind-env.d.ts, node_modules, server.ts, supabase/functions (+10 more)
 
-### Community 61 - "Community 61"
-Cohesion: 0.14
-Nodes (13): AnalyzingScreen(), CHECKS, CHIPS, DetectChip, WardrobeCheck, ScanningOverlay(), ScanningOverlayProps, Action (+5 more)
+### Community 64 - "Root Analytics Components"
+Cohesion: 0.12
+Nodes (13): MILESTONES, StreakScreen(), T, { width: SCREEN_WIDTH }, Field, PersonalDetailsScreen(), ProfileScreenUI(), useUserProfile() (+5 more)
 
-### Community 62 - "Community 62"
+### Community 65 - "Supabase Root Components"
+Cohesion: 0.20
+Nodes (12): LOADING_MESSAGES, SetupAccountScreen(), CreateOutfitScreen(), useLogWears(), createSupabaseClient(), ExpoSecureStoreAdapter, setSupabaseGlobalUserId(), setSupabaseTokenGetter() (+4 more)
+
+### Community 66 - "Social Trendfeed Components"
+Cohesion: 0.14
+Nodes (15): SectionBlock, TrendRowItem, CommunityPost, CATEGORIES, CATEGORY_CHART_DATA, CategoryType, CELEBRITY_TRENDS, GLOBAL_TRENDS (+7 more)
+
+### Community 67 - "Subscription Payments Components"
 Cohesion: 0.15
 Nodes (12): ManageSubscriptionScreen(), API_KEYS, useRevenueCat(), PaywallScreen(), styles, ACTION_CARDS, ActionCard, AddActionMenu() (+4 more)
 
-### Community 63 - "Community 63"
-Cohesion: 0.12
-Nodes (18): checkElementHeroEyebrow(), checkElementHeroEyebrowDOM(), checkElementOversizedH1(), checkElementOversizedH1DOM(), checkElementQuality(), checkHeroEyebrow(), checkOversizedH1(), checkRepeatedSectionKickers() (+10 more)
+### Community 68 - "Agents Skills Components"
+Cohesion: 0.22
+Nodes (13): resolveTargetSelection(), parseTargetOptions(), parseTargetPath(), TargetArgError, __dirname, ensureServerRunning(), globToRegex(), liveCli() (+5 more)
 
-### Community 64 - "Community 64"
-Cohesion: 0.16
-Nodes (12): BatchScanScreen(), styles, ViewMode, { width: SCREEN_WIDTH }, FullClothingAnalysis, BatchItem, BatchItemStatus, PendingBatchState (+4 more)
-
-### Community 65 - "Community 65"
-Cohesion: 0.16
-Nodes (15): OCCASIONS, OutfitItem, OutfitPreset, OutfitSuggestionScreen(), PRESETS, ScoreBlock, abbreviateState(), bestColorsForTemp() (+7 more)
-
-### Community 66 - "Community 66"
+### Community 69 - "Agents Skills Components"
 Cohesion: 0.20
 Nodes (17): beginEditPin(), buildAnnotationsForCapture(), buildPinElement(), cancelEditingPin(), clampPlaceholderSize(), finalizeEditingPin(), initAnnotOverlay(), localCoords() (+9 more)
 
-### Community 67 - "Community 67"
+### Community 70 - "Agents Skills Components"
 Cohesion: 0.20
 Nodes (14): createLiveBrowserSessionState(), clearHandled(), clearScrollY(), clearSession(), isHandled(), loadSession(), markHandled(), nextCheckpointRevision() (+6 more)
 
-### Community 68 - "Community 68"
+### Community 71 - "Wardrobe Saved Components"
 Cohesion: 0.15
 Nodes (13): AI_TIPS, OutfitLogDetailScreen(), styles, { width: SW }, SavedScreen(), { width: SCREEN_WIDTH }, INITIAL_COLLECTIONS, INITIAL_OUTFITS (+5 more)
 
-### Community 69 - "Community 69"
-Cohesion: 0.20
-Nodes (16): directChildDirs(), discoverRootsForPattern(), discoverTargetCandidates(), escapeRegExp(), expandSimplePattern(), findTargetExample(), hasFallbackWorkspaceChildren(), isExcludedByWorkspacePattern() (+8 more)
+### Community 72 - "Navigation Customtabbar Components"
+Cohesion: 0.16
+Nodes (10): AnimatedTabButton, CustomTabBar(), TAB_CONFIG, TabConfig, TabIconComponent, MaterialTopTabs, { Navigator }, UIStore (+2 more)
 
-### Community 70 - "Community 70"
+### Community 73 - "Agents Skills Components"
+Cohesion: 0.20
+Nodes (16): directChildDirs(), discoverRootsForPattern(), discoverTargetCandidates(), escapeRegExp(), expandSimplePattern(), findTargetExample(), isExcludedByWorkspacePattern(), isIgnoredWorkspaceDiscoveryDir() (+8 more)
+
+### Community 74 - "Agents Skills Components"
+Cohesion: 0.21
+Nodes (14): extractRegister(), loadContext(), safeRead(), cli(), COMMON_DEV_PORTS, devServerSignals(), gatherSignals(), gitSignals() (+6 more)
+
+### Community 75 - "Agents Skills Components"
 Cohesion: 0.16
 Nodes (16): addBrowserFindings(), addVisualContrastFindings(), addVisualContrastResult(), analyzeVisualContrast(), analyzeVisualContrastCandidate(), clearOverlays(), detachOverlay(), disconnectLazyVisualContrastObserver() (+8 more)
 
-### Community 71 - "Community 71"
+### Community 76 - "Agents Skills Components"
 Cohesion: 0.13
 Nodes (16): browserColorsClose(), browserHasDirectText(), browserRadiusTokens(), browserSampleText(), buildSelectorSegment(), checkElementDesignSystemDOM(), generateSelector(), isBrowserDesignColorAllowed() (+8 more)
 
-### Community 72 - "Community 72"
-Cohesion: 0.17
-Nodes (13): SectionBlock, TrendRowItem, CATEGORIES, CATEGORY_CHART_DATA, CategoryType, CELEBRITY_TRENDS, GLOBAL_TRENDS, LOCAL_TRENDS (+5 more)
-
-### Community 73 - "Community 73"
-Cohesion: 0.14
-Nodes (8): AIPickData, AIPickOfTheDayCard, AIPickOfTheDayCardProps, DEFAULT_DATA, styles, OutfitAnalyzingCard, styles, WeatherOutfitCard
-
-### Community 74 - "Community 74"
+### Community 77 - "Agents Skills Components"
 Cohesion: 0.20
 Nodes (15): blendRgba(), clampByte(), firstCssUrl(), getLayerValue(), loadVisualContrastImage(), parseObjectPosition(), parsePositionPair(), parsePositionToken() (+7 more)
 
-### Community 75 - "Community 75"
+### Community 78 - "Agents Skills Components"
+Cohesion: 0.18
+Nodes (15): borderColorsFromStyle(), borderWidthsFromStyle(), checkCreamPalette(), checkElementGptBorderShadow(), checkElementGptBorderShadowDOM(), checkGptThinBorderWideShadow(), creamFromClassList(), cssColorAlpha() (+7 more)
+
+### Community 79 - "Agents Skills Components"
 Cohesion: 0.19
 Nodes (10): createLiveBrowserDomHelpers(), cssId(), liveUiRoot(), makeFrozenAnchor(), own(), pickable(), rectIsUsableAnchor(), uiAppend() (+2 more)
 
-### Community 76 - "Community 76"
-Cohesion: 0.20
-Nodes (12): PlanOutfitScreen(), styles, HomeScreen(), useUserOutfitsStore, getDaysInPeriod(), getPeriodStartTime(), RingStats, useRingStats() (+4 more)
+### Community 80 - "Agents Skills Components"
+Cohesion: 0.16
+Nodes (14): contextSourcePath(), contextSourceStatus(), firstExisting(), isCandidateProjectRoot(), isPathInside(), isPathInsideOrEqual(), nearestProjectLikeRoot(), resolveCandidateContextSummary() (+6 more)
 
-### Community 77 - "Community 77"
-Cohesion: 0.24
-Nodes (12): extractRegister(), cli(), COMMON_DEV_PORTS, devServerSignals(), gatherSignals(), gitSignals(), hasCode(), latestCritique() (+4 more)
-
-### Community 79 - "Community 79"
+### Community 82 - "Live Agents Components"
 Cohesion: 0.25
 Nodes (12): FORBIDDEN_MANUAL_EDIT_TEXT_CHARS, INSERT_POSITIONS, isValidId(), isValidVariantId(), validateAnnotationFields(), validateEvent(), validateInsertGenerate(), validateManualEditEvent() (+4 more)
 
-### Community 80 - "Community 80"
+### Community 83 - "Agents Skills Components"
 Cohesion: 0.22
 Nodes (11): applyEvent(), baseSnapshot(), COMPLETED_PHASES, getReadableJournalPath(), loadCachedOrRebuild(), getJournalPath(), getSnapshotPath(), rebuildSnapshotFromJournal() (+3 more)
 
-### Community 81 - "Community 81"
-Cohesion: 0.19
-Nodes (11): UserProfile, useUpdateProfile(), CacheEntry, FetchRowsOptions, fetchSupabaseRows(), getCacheKey(), inFlight, invalidateSupabaseCache() (+3 more)
+### Community 84 - "Toast Store Components"
+Cohesion: 0.21
+Nodes (10): PlanOutfitScreen(), styles, showToast(), ToastItem, ToastStore, ToastType, useToastStore, styles (+2 more)
 
-### Community 82 - "Community 82"
+### Community 85 - "Agents Skills Components"
 Cohesion: 0.15
 Nodes (13): Adapt, Animate, Audit, Bolder, Brand, Clarify, Codex, Colorize (+5 more)
 
-### Community 83 - "Community 83"
+### Community 86 - "Impeccable Agents Components"
 Cohesion: 0.32
 Nodes (11): kebab(), listSnapshotsForSlug(), main(), nowFilenameStamp(), parseFrontmatter(), readLatestSnapshot(), readTrend(), serializeFrontmatter() (+3 more)
 
-### Community 84 - "Community 84"
+### Community 87 - "Agents Skills Components"
 Cohesion: 0.18
 Nodes (13): browserDesignSystemConfig(), browserFindingsFromMap(), browserPrimaryFont(), checkBrowserDesignSystemSources(), checkHtmlPatterns(), checkPageQualityDOM(), checkPageQualityFromDoc(), checkTypography() (+5 more)
 
-### Community 85 - "Community 85"
+### Community 88 - "Agents Skills Components"
 Cohesion: 0.17
 Nodes (13): applyConfigSource(), applyDetectorConfigSource(), cloneDefaultConfig(), detectorSection(), hookSection(), ignoreValueFilesKey(), mergeExtensions(), mergeIgnoreValues() (+5 more)
 
-### Community 86 - "Community 86"
+### Community 89 - "Scripts Migrate Components"
 Cohesion: 0.17
 Nodes (11): dirs, ensureDir(), fs, importReplacements, moveDirs, moveMap, path, root (+3 more)
 
-### Community 87 - "Community 87"
+### Community 90 - "Auth Email Components"
 Cohesion: 0.28
 Nodes (12): EmailAuthScreen(), EmailFlow, formatMissingField(), getErrorMessage(), getIncompleteVerificationMessage(), getMissingFields(), getMissingRequirementsMessage(), getProfileFromEmail() (+4 more)
 
-### Community 88 - "Community 88"
-Cohesion: 0.20
-Nodes (12): findMonorepoRoot(), firstExisting(), hasGitBoundary(), isCandidateProjectRoot(), nearestProjectLikeRoot(), resolveContext(), resolveContextDir(), resolveEnvContextDir() (+4 more)
-
-### Community 89 - "Community 89"
-Cohesion: 0.32
-Nodes (11): loadContext(), resolveTargetSelection(), safeRead(), __dirname, ensureServerRunning(), globToRegex(), liveCli(), missingLiveContext() (+3 more)
-
-### Community 90 - "Community 90"
+### Community 91 - "Services Providers Components"
 Cohesion: 0.17
 Nodes (5): IAIServiceProvider, IAnalyticsProvider, IPaywallProvider, NoOpAnalyticsProvider, NoOpPaywallProvider
 
-### Community 91 - "Community 91"
+### Community 92 - "Csp Agents Components"
 Cohesion: 0.20
 Nodes (10): detectCsp(), INLINE_HEADER_SIGNALS, LAYOUT_EXTS, MONOREPO_HELPER_SIGNALS, NUXT_ROUTE_RULES_SIGNALS, NUXT_SECURITY_SIGNALS, SCAN_EXTS, SKIP_DIRS (+2 more)
 
-### Community 92 - "Community 92"
+### Community 93 - "Agents Skills Components"
 Cohesion: 0.24
 Nodes (7): args, buildWeights(), hashUnit(), pickSeed(), seed, SEEDS, weightedPick()
 
-### Community 93 - "Community 93"
+### Community 94 - "Pin Agents Components"
 Cohesion: 0.25
 Nodes (9): __dirname, findHarnessDirs(), generatePinnedSkill(), HARNESS_DIRS, loadCommandMetadata(), pin(), root, unpin() (+1 more)
 
-### Community 94 - "Community 94"
-Cohesion: 0.27
-Nodes (9): AddClothesScanningScreen(), STEPS, { width: SCREEN_W }, analyzeClothingImage(), ClothingAnalysis, getFallbackAnalysis(), prepareVisionImageUrl(), uriToBase64() (+1 more)
-
-### Community 95 - "Community 95"
-Cohesion: 0.35
-Nodes (8): ApiError, backoffDelay(), isTransientError(), sleep(), isRetryableStatus(), request(), RequestOptions, wireAbort()
-
-### Community 96 - "Community 96"
+### Community 95 - "Agents Skills Components"
 Cohesion: 0.40
 Nodes (9): addRules(), applyInlineIgnores(), getSet(), hasDirectives(), isInlineIgnored(), normalizeRule(), parseInlineIgnores(), parseRuleList() (+1 more)
 
-### Community 97 - "Community 97"
+### Community 96 - "Agents Skills Components"
 Cohesion: 0.36
 Nodes (10): cleanIgnoreValueDisplay(), extractFindingIgnoreValue(), extractFindingIgnoreValueRaw(), extractMotionIgnoreValue(), filterFindings(), formatFindingIgnoreCommand(), isIgnoredFindingValue(), normalizeIgnoreRule() (+2 more)
 
-### Community 98 - "Community 98"
+### Community 97 - "Agents Skills Components"
 Cohesion: 0.27
 Nodes (10): bindEditBadgeProxy(), editBadgeProxyTargets(), initEditBadge(), initEditBadgeHitProxies(), positionEditBadge(), proxyMouseEvent(), setImportantStyle(), styleEditBadgeProxy() (+2 more)
 
-### Community 99 - "Community 99"
+### Community 98 - "Live Agents Components"
 Cohesion: 0.29
 Nodes (8): appendStyleToLiveUiRoot(), appendToLiveUiRoot(), escapeCssIdent(), getLiveUiElementById(), LIVE_CHROME_MOUNT_CONTRACT, LIVE_UI_COMPONENT_IDS, LIVE_UI_SURFACES, resolveLiveUiRoot()
 
-### Community 100 - "Community 100"
+### Community 99 - "Android Assets Components"
 Cohesion: 0.20
 Nodes (10): Web Launcher Stylized Eye Logo, Stylized Eye Logo Design Concept, Android HDPI Stylized Eye Logo, Android HDPI Foreground Stylized Eye Logo, Android HDPI Round Stylized Eye Logo, Android LDPI Stylized Eye Logo, Android LDPI Round Stylized Eye Logo, Android MDPI Stylized Eye Logo (+2 more)
 
-### Community 101 - "Community 101"
+### Community 100 - "Score Root Components"
 Cohesion: 0.20
 Nodes (8): AchievementBadge, AchievementBadgeProps, BreakdownCategory, CategoryRow, Period, ProgressCircle, SCORE_PERIODS, ScoreData
 
-### Community 102 - "Community 102"
-Cohesion: 0.29
-Nodes (7): ToastItem, ToastStore, ToastType, useToastStore, styles, TOAST_COLORS, ToastProvider()
-
-### Community 103 - "Community 103"
+### Community 101 - "Agents Skills Components"
 Cohesion: 0.28
 Nodes (9): checkElementTextOverflowDOM(), classSelector(), clippedByInset(), clippedByRect(), expandBoxShorthand(), firstMetricLengthPx(), isRenderedForBrowserRule(), isScreenReaderOnlyTextStyle() (+1 more)
 
-### Community 104 - "Community 104"
+### Community 102 - "Scripts Generate Components"
 Cohesion: 0.22
 Nodes (6): fs, NOTES, outPath, path, samples, TOTAL_SAMPLES
 
-### Community 105 - "Community 105"
+### Community 103 - "Scripts Loadtest Components"
 Cohesion: 0.33
 Nodes (8): authTokenFor(), base64url(), MAX_VUS, mintJwt(), mix(), options, POSTS, setup()
 
-### Community 106 - "Community 106"
+### Community 104 - "Test Mocks Components"
 Cohesion: 0.22
 Nodes (8): namespacedAsyncStorage, namespacedSecureStorage, registerStoreRehydration, registerStoreReset, rehydrateAllUserStores, resetAllUserStores, setStorageUserId, syncStoresWithUser
 
-### Community 107 - "Community 107"
-Cohesion: 0.29
-Nodes (8): buildMissingTargetDirective(), buildResolvedContextDirective(), buildTargetSelectionDirective(), cli(), hasTargetOption(), parseCliOptions(), pathExistsForTarget(), shouldWarnMissingTarget()
-
-### Community 108 - "Community 108"
+### Community 105 - "Agents Skills Components"
 Cohesion: 0.32
 Nodes (8): cursorBlockMessage(), clampGroupedToBudget(), clampToBudget(), directiveFooter(), formatFindingLine(), quoteCommandArg(), renderGroupedTemplate(), renderTemplate()
 
-### Community 109 - "Community 109"
+### Community 106 - "Scripts Updateimports Components"
 Cohesion: 0.29
 Nodes (7): dirsToScan, extensions, fs, path, processFile(), replacements, scanDir()
 
-### Community 110 - "Community 110"
+### Community 107 - "Test Mocks Components"
 Cohesion: 0.25
 Nodes (7): deleteItemAsync, getItemAsync, isLoaded, setBackgroundColorAsync, setButtonStyleAsync, setItemAsync, useFonts
 
-### Community 112 - "Community 112"
-Cohesion: 0.43
-Nodes (4): parseTargetOptions(), parseTargetPath(), TargetArgError, resolveLiveTarget()
-
-### Community 113 - "Community 113"
+### Community 109 - "Agents Skills Components"
 Cohesion: 0.62
 Nodes (7): elementMatchesOriginalMarkup(), findLiveElementForOriginalMarkup(), findLiveElementFromAnchorSnapshot(), isUsableInjectionAnchor(), normalizeElementClassName(), parseOriginalMarkupElement(), resolveLiveInjectionAnchor()
 
-### Community 114 - "Community 114"
+### Community 110 - "Mcp Server Components"
 Cohesion: 0.29
 Nodes (6): npx, clerk, expo, sentry, shadcn, supabase
 
-### Community 115 - "Community 115"
+### Community 111 - "Scripts Fix Components"
 Cohesion: 0.29
 Nodes (5): __dirname, { fileURLToPath }, fs, path, root
 
-### Community 116 - "Community 116"
+### Community 112 - "Scripts Generate Components"
 Cohesion: 0.29
 Nodes (5): badgeDir, colorMap, files, fs, path
 
-### Community 117 - "Community 117"
+### Community 113 - "Wardrobe Root Components"
 Cohesion: 0.29
 Nodes (5): CATEGORIES_PROGRESS, HighlightItem, RANGE_DATA, RANGES, RangeType
 
-### Community 118 - "Community 118"
-Cohesion: 0.33
-Nodes (6): contextSourcePath(), contextSourceStatus(), isPathInside(), isPathInsideOrEqual(), nearestPackageRootBetween(), resolveCandidateContextSummary()
-
-### Community 119 - "Community 119"
+### Community 114 - "Scripts Expo Components"
 Cohesion: 0.33
 Nodes (5): args, child, cmd, { execSync }, { spawn }
 
-### Community 120 - "Community 120"
+### Community 115 - "Scripts Fix Components"
 Cohesion: 0.33
 Nodes (4): fs, path, replacements, root
 
-### Community 121 - "Community 121"
+### Community 116 - "Scripts Fix Components"
 Cohesion: 0.33
 Nodes (4): dirsToWalk, files, fs, path
 
-### Community 122 - "Community 122"
+### Community 117 - "Root Log Components"
 Cohesion: 0.33
 Nodes (4): DONTS, DOS, s, STEPS
 
-### Community 123 - "Community 123"
+### Community 118 - "Darkgradientbackground Gradient Components"
 Cohesion: 0.33
 Nodes (5): DarkGradientBackground, GRADIENT_COLORS, GRADIENT_END, GRADIENT_LOCATIONS, GRADIENT_START
 
-### Community 124 - "Community 124"
+### Community 119 - "Swipeabletabs Navigation Components"
 Cohesion: 0.33
 Nodes (4): styles, SwipeableTabsProps, TabConfig, { width: SCREEN_WIDTH }
 
-### Community 125 - "Community 125"
+### Community 120 - "Premiumgradientbackground Gradient Components"
 Cohesion: 0.33
 Nodes (5): GRADIENT_COLORS, GRADIENT_END, GRADIENT_LOCATIONS, GRADIENT_START, PremiumGradientBackground
 
-### Community 127 - "Community 127"
+### Community 122 - "Agents Skills Components"
+Cohesion: 0.40
+Nodes (5): checkElementHeroEyebrow(), checkElementHeroEyebrowDOM(), checkHeroEyebrow(), isAccentColor(), resolveVarRefs()
+
+### Community 123 - "Agents Skills Components"
+Cohesion: 0.60
+Nodes (4): hasGeneratedHeader(), HEADER_MARKERS, isGeneratedFile(), isGitIgnored()
+
+### Community 124 - "Config Metro Components"
 Cohesion: 0.40
 Nodes (4): config, { getDefaultConfig }, path, { withNativeWind }
 
-### Community 128 - "Community 128"
+### Community 125 - "Auth Sign Components"
 Cohesion: 0.50
 Nodes (4): getErrorMessage(), SignIn(), SLIDES, { width: PAGE_WIDTH }
 
-### Community 129 - "Community 129"
+### Community 126 - "Root Add Components"
 Cohesion: 0.40
 Nodes (3): OptionCard, OPTIONS, s
 
-### Community 130 - "Community 130"
+### Community 127 - "Root Calendar Components"
 Cohesion: 0.40
 Nodes (3): CalendarEvent, HOURS, styles
 
-### Community 131 - "Community 131"
+### Community 128 - "Occasionpicker Styling Components"
 Cohesion: 0.40
 Nodes (3): OccasionPickerProps, OCCASIONS, styles
 
-### Community 132 - "Community 132"
+### Community 129 - "Agents Skills Components"
 Cohesion: 0.50
 Nodes (3): candidates, detectorPath, __dirname
 
-### Community 133 - "Community 133"
+### Community 130 - "Docs Edge Components"
 Cohesion: 0.50
 Nodes (4): analyze-cloth-item Edge Function, gemini-proxy Edge Function, gemini-scan.ts, analyze-cloth-item Edge Function
 
-### Community 134 - "Community 134"
+### Community 131 - "Scripts Fix Components"
 Cohesion: 0.50
 Nodes (3): fs, path, replacements
 
-### Community 135 - "Community 135"
+### Community 132 - "Scripts Fix Components"
 Cohesion: 0.50
 Nodes (3): files, fs, path
 
-### Community 141 - "Community 141"
+### Community 138 - "Test Mocks Components"
 Cohesion: 0.50
 Nodes (3): getFCMToken, requestUserPermission, setupNotificationListeners
 
-### Community 142 - "Community 142"
+### Community 139 - "Agents Skills Components"
 Cohesion: 0.67
 Nodes (3): DESIGN.md, Design System, PRODUCT.md
 
-### Community 143 - "Community 143"
+### Community 140 - "Overdrive Agents Components"
 Cohesion: 0.67
 Nodes (3): Overdrive Mode, View Transitions API, WebGL
 
-### Community 144 - "Community 144"
+### Community 141 - "Hermes Plans Components"
 Cohesion: 0.67
 Nodes (3): scan-result.tsx, useScanHistoryStore, useUserWardrobeStore
 
-### Community 145 - "Community 145"
+### Community 142 - "Assets Female Components"
 Cohesion: 0.67
 Nodes (3): Curvy Female Body Shape (Hourglass), Female Body Proportions (Clean Diagram), Female Body Proportions (Labeled Diagram)
 
-### Community 146 - "Community 146"
+### Community 143 - "Assets Images Components"
 Cohesion: 0.67
 Nodes (3): Blue Chevron Icon, Look AI Brand Logo, Blue Chevron Blueprint
 
-### Community 147 - "Community 147"
+### Community 144 - "Assets Images Components"
 Cohesion: 0.67
 Nodes (3): Combined Male and Female Mirror Selfies, Female Mirror Selfie, Male Mirror Selfie
 
-### Community 148 - "Community 148"
+### Community 145 - "React Logo Components"
 Cohesion: 0.67
 Nodes (3): React Logo 2x, React Logo 3x, React Logo
 
+### Community 146 - "Deployment Docs Components"
+Cohesion: 0.67
+Nodes (3): Deployment Guide, Gemini Proxy Edge Function, Virtual Try On Edge Function
+
+### Community 155 - "Marketing Skills Components"
+Cohesion: 0.67
+Nodes (3): Analytics Tracking, Marketing Psychology, Marketing Suite
+
 ## Knowledge Gaps
-- **889 isolated node(s):** `COMMON_DEV_PORTS`, `SCANNABLE_EXT`, `SOURCE_DIRS`, `PRODUCT_NAMES`, `DESIGN_NAMES` (+884 more)
+- **891 isolated node(s):** `COMMON_DEV_PORTS`, `SCANNABLE_EXT`, `SOURCE_DIRS`, `PRODUCT_NAMES`, `DESIGN_NAMES` (+886 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **204 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **207 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useSupabase()` connect `Community 48` to `Community 32`, `Community 34`, `Camera Screen`, `Community 38`, `Onboarding Screens`, `Community 44`, `Community 76`, `Community 47`, `Community 81`, `Community 50`, `Community 54`, `Community 27`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Why does `useUserWardrobeStore` connect `Community 33` to `Community 64`, `Community 32`, `Community 34`, `Camera Screen`, `Community 43`, `Community 76`, `Community 48`, `Community 81`, `Community 20`?**
+- **Why does `useSupabase()` connect `Supabase Root Components` to `Root Calendar Components`, `Styling Root Components`, `Wardrobe Store Components`, `Root Realtime Components`, `Onboarding Root Components`, `Scanning Cloudinary Components`, `Supabase Use Components`, `Scan Root Components`, `Errorstateview Root Components`, `Root Streaks Components`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
+- **Why does `useUserWardrobeStore` connect `Wardrobe Store Components` to `Root Calendar Components`, `Styling Root Components`, `Supabase Root Components`, `Root Add Components`, `Tabs Root Components`, `Root Create Components`, `Supabase Use Components`, `Scan Root Components`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `Community 59` to `Community 256`, `Community 257`, `Community 258`, `Community 259`, `Community 260`, `Community 261`, `Community 262`, `Community 263`, `Community 264`, `Community 265`, `Community 266`, `Community 267`, `Community 268`, `Community 19`, `Community 195`, `Community 198`, `Community 199`, `Community 200`, `Community 201`, `Community 202`, `Community 203`, `Community 204`, `Community 205`, `Community 206`, `Community 207`, `Community 208`, `Community 209`, `Community 210`, `Community 211`, `Community 212`, `Community 213`, `Community 214`, `Community 215`, `Community 216`, `Community 217`, `Community 218`, `Community 219`, `Community 220`, `Community 221`, `Community 222`, `Community 223`, `Community 224`, `Community 225`, `Community 226`, `Community 227`, `Community 228`, `Community 229`, `Community 230`, `Community 232`, `Community 234`, `Community 235`, `Community 236`, `Community 237`, `Community 238`, `Community 239`, `Community 240`, `Community 241`, `Community 242`, `Community 243`, `Community 244`, `Community 245`, `Community 246`, `Community 247`, `Community 248`, `Community 249`, `Community 250`, `Community 251`, `Community 252`, `Community 253`, `Community 254`, `Community 255`?**
+- **Why does `dependencies` connect `React Native Components` to `React Navigation Components`, `Sentry React Components`, `Shopify Flash Components`, `Supabase Package Components`, `Tabler Icons Components`, `Package Tailwindcss Components`, `Zustand Package Components`, `Package Devdependencies Components`, `Babel Preset Components`, `Expo Package Components`, `Expo Application Components`, `Expo Audio Components`, `Expo Auth Components`, `Expo Package Components`, `Expo Blur Components`, `Expo Calendar Components`, `Expo Camera Components`, `Expo Clipboard Components`, `Expo Crypto Components`, `Expo Dev Components`, `Expo Device Components`, `Expo Document Components`, `Expo File Components`, `Expo Font Components`, `Expo Google Components`, `Expo Haptics Components`, `Expo Image Components`, `Expo Linear Components`, `Expo Linking Components`, `Expo Localization Components`, `Expo Location Components`, `Expo Media Components`, `Expo Navigation Components`, `Expo Notifications Components`, `Expo Router Components`, `Expo Secure Components`, `Expo Sharing Components`, `Expo Status Components`, `Expo Symbols Components`, `Expo System Components`, `Expo Updates Components`, `Expo Web Components`, `Nativewind Package Components`, `Package Patch Components`, `Posthog React Components`, `Prettier Plugin Components`, `React Package Components`, `React Dom Components`, `React Native Components`, `Async Storage Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `Masked View Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Native Components`, `React Navigation Components`, `React Navigation Components`, `React Navigation Components`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **What connects `COMMON_DEV_PORTS`, `SCANNABLE_EXT`, `SOURCE_DIRS` to the rest of the system?**
-  _889 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Live Browser Tools` be split into smaller, more focused modules?**
+  _891 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Agents Skills Components` be split into smaller, more focused modules?**
   _Cohesion score 0.02758363619420371 - nodes in this community are weakly interconnected._
-- **Should `Impeccable Detector Rules` be split into smaller, more focused modules?**
+- **Should `Agents Skills Components` be split into smaller, more focused modules?**
   _Cohesion score 0.04517508687516707 - nodes in this community are weakly interconnected._
-- **Should `Visual Contrast Detector` be split into smaller, more focused modules?**
+- **Should `Agents Skills Components` be split into smaller, more focused modules?**
   _Cohesion score 0.06142410015649452 - nodes in this community are weakly interconnected._

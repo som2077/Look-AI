@@ -395,6 +395,7 @@ export const OutfitAnalyzingCard = React.memo(function OutfitAnalyzingCard() {
             photoUri: outfit.imageUri,
             name: outfit.name,
             category: aiData?.category,
+            subCategory: aiData?.subCategory || aiData?.subcategory,
             color: aiData?.primaryColor,
             occasion: aiData?.occasion?.[0] || "Casual",
             season: aiData?.season?.[0] || "All",
