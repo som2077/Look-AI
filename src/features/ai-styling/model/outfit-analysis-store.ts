@@ -331,7 +331,7 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>()(
                 ].slice(0, 3);
                 outfitScore = 95;
               } else if (currentMode === "label") {
-                outfitName = "Clothing Label";
+                outfitName = aiData.title || "Care Label";
                 outfitSubtitle = "Care Instructions";
                 outfitTags = ["Care Label", "Scan"];
                 outfitScore = 100;

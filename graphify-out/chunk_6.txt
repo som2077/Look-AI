@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xhdpi/app-android.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xhdpi/app-android_foreground.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xhdpi/app-android_round.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xxhdpi/app-android.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xxhdpi/app-android_foreground.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xxhdpi/app-android_round.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xxxhdpi/app-android.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xxxhdpi/app-android_foreground.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-xxxhdpi/app-android_round.png
+/home/som2077/Desktop/look-ai-app/assets/android/playstore-icon-padded.png

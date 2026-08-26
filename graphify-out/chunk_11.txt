@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/images/favicon.png
+/home/som2077/Desktop/look-ai-app/assets/images/full-lenght.png
+/home/som2077/Desktop/look-ai-app/assets/images/getStartedLogo.png
+/home/som2077/Desktop/look-ai-app/assets/images/google-icon-logo-svgrepo-com.png
+/home/som2077/Desktop/look-ai-app/assets/images/icon.png
+/home/som2077/Desktop/look-ai-app/assets/images/kribb.png
+/home/som2077/Desktop/look-ai-app/assets/images/mirror_selfie_girl.jpg
+/home/som2077/Desktop/look-ai-app/assets/images/mirror_selfie_guy.jpg
+/home/som2077/Desktop/look-ai-app/assets/images/notched_shield.jpg
+/home/som2077/Desktop/look-ai-app/assets/images/partial-react-logo.png

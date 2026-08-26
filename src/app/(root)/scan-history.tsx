@@ -58,7 +58,7 @@ function getResultSummary(item: ScanHistoryItem): string {
     case "cloth":
       return `${r.name ?? ""} • ${r.color ?? ""} ${r.material ?? ""}`.trim();
     case "label":
-      return `Wash: ${r.washTemp ?? "—"} • ${r.fabricComposition ?? "—"}`;
+      return `${r.title || "Care Label"} • Care Instructions`;
     case "fit-check":
       return `Score: ${r.fitScore ?? "—"}/100 • ${r.rating ?? "—"}`;
     default:

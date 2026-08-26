@@ -17,6 +17,12 @@ export const saveLabelToDatabase = async ({
   analysis,
 }: SaveLabelParams): Promise<boolean> => {
   addAppBreadcrumb('cloth_label', 'Started saving cloth label to database');
+  
+  if (analysis.is_valid_apparel === false) {
+    console.warn("Attempted to save an invalid label. Aborting save.");
+    return false;
+  }
+  
   try {
     // 1. Upload image to Cloudinary
     // We upload to a specific folder 'wardrobe_labels' to keep it organized
@@ -30,12 +36,8 @@ export const saveLabelToDatabase = async ({
     const { error } = await supabase.from("saved_labels").insert({
       user_id: userId,
       image_url: cloudinaryUrl,
-      brand: analysis.brand,
-      size: analysis.size,
-      fabric_composition: analysis.fabric_composition,
       care_symbols: analysis.care_symbols,
-      original_text: analysis.original_text,
-      translated_text: analysis.translated_text,
+      translated_text: analysis.instructions, // Saving instructions here to avoid DB migration
       label_standard_guess: analysis.label_standard_guess,
     });
 

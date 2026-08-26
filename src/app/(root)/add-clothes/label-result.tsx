@@ -11,6 +11,7 @@ import {
   IconArrowLeft,
   IconBleachOff,
   IconBookmark,
+  IconCircleFilled,
   IconDotsVertical,
   IconIroning1,
   IconShirt,
@@ -42,14 +43,11 @@ type LabelResultParams = {
 };
 
 const DEFAULT_RESULT: LabelAnalysis = {
+  is_valid_apparel: true,
+  rejection_reason: null,
   care_symbols: [],
-  fabric_composition: [],
-  brand: null,
-  size: null,
-  origin_text: null,
-  detected_language: null,
-  original_text: null,
-  translated_text: null,
+  title: null,
+  instructions: null,
   label_standard_guess: "unclear",
   needs_user_review: true,
   review_notes: "Could not read label data",
@@ -130,7 +128,7 @@ export default function LabelResultScreen() {
       if (success) {
         addSavedItem({
           id: `label-${Date.now()}`,
-          name: result.brand ? `${result.brand} Label` : "Care Label",
+          name: "Care Label",
           occasion: "cloth label",
           wears: 0,
           image: photoUri,
@@ -362,7 +360,7 @@ export default function LabelResultScreen() {
               {formattedTime}
             </Text>
           </View>
-          <Pressable
+          {result.is_valid_apparel !== false && (<Pressable
             onPress={handleSave}
             style={{
               width: 33,
@@ -379,247 +377,200 @@ export default function LabelResultScreen() {
             }}
           >
             <IconBookmark size={20} color="#1D1A27" />
-          </Pressable>
+          </Pressable>)}
         </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 120 }}
         >
-          {/* Warnings */}
-          {result.needs_user_review && (
-            <View
-              style={{
-                marginBottom: 16,
-                backgroundColor: "#FEF2F2",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-                padding: 16,
-                borderRadius: 16,
-                flexDirection: "row",
-                alignItems: "flex-start",
-                borderWidth: 1,
-                borderColor: "#FCA5A5",
-              }}
-            >
-              <IconAlertTriangle
-                size={20}
-                color="#EF4444"
-                style={{ marginTop: 2, marginRight: 10 }}
-              />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: "#991B1B",
-                    fontWeight: "700",
-                    marginBottom: 4,
-                  }}
-                >
-                  Review Needed
-                </Text>
-                <Text
-                  style={{ color: "#B91C1C", fontSize: 13, lineHeight: 18 }}
-                >
-                  {result.review_notes ||
-                    "The AI could not confidently read all symbols or standards."}
-                </Text>
+
+          {result.is_valid_apparel === false ? (
+            <View style={{ marginTop: 20, alignItems: "center", paddingHorizontal: 20 }}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "#FEF2F2", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <IconAlertTriangle size={32} color="#EF4444" />
               </View>
-            </View>
-          )}
+              <Text style={{ fontSize: 20, fontWeight: "700", color: "#111827", textAlign: "center", marginBottom: 8 }}>
+                Invalid Label
+              </Text>
+              <Text style={{ fontSize: 15, color: "#4B5563", textAlign: "center", lineHeight: 22, marginBottom: 32 }}>
+                {result.rejection_reason || "This does not appear to be a clothing, footwear, or accessory label. Please scan a valid apparel label."}
+              </Text>
 
-          {/* Core Info */}
-          {(result.brand || result.size) && (
-            <View
-              style={{
-                marginBottom: 16,
-                backgroundColor: "#FFF",
-                padding: 16,
-                borderRadius: 16,
-              }}
-            >
-              {result.brand && (
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "700",
-                    color: "#111827",
-                    marginBottom: 4,
-                  }}
-                >
-                  {result.brand}
-                </Text>
-              )}
-              {result.size && (
-                <Text style={{ fontSize: 14, color: "#4B5563" }}>
-                  Size: {result.size}
-                </Text>
-              )}
-            </View>
-          )}
-
-          {/* Care Symbols List */}
-          {result.care_symbols && result.care_symbols.length > 0 && (
-            <View
-              style={{
-                marginBottom: 16,
-                backgroundColor: "#FFF",
-                padding: 16,
-                borderRadius: 16,
-              }}
-            >
-              <Text
+              <Pressable
+                onPress={() => router.back()}
                 style={{
-                  fontSize: 16,
-                  fontWeight: "700",
-                  color: "#4B5563",
-                  marginBottom: 16,
+                  backgroundColor: "#111827",
+                  paddingVertical: 16,
+                  paddingHorizontal: 32,
+                  borderRadius: 28,
+                  width: "100%",
+                  alignItems: "center"
                 }}
               >
-                Care Instructions
-              </Text>
-              {result.care_symbols.map((symbol, idx) => (
+                <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "600" }}>
+                  Try Again
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <>
+              {/* Warnings */}
+              {result.needs_user_review && (
                 <View
-                  key={idx}
                   style={{
+                    marginBottom: 16,
+                    backgroundColor: "#FEF2F2",
+                    padding: 16,
+                    borderRadius: 16,
                     flexDirection: "row",
                     alignItems: "flex-start",
-                    marginBottom: 16,
+                    borderWidth: 1,
+                    borderColor: "#FCA5A5",
                   }}
                 >
-                  <View
-                    style={{
-                      width: 32,
-                      alignItems: "center",
-                      marginRight: 12,
-                      marginTop: 2,
-                    }}
-                  >
-                    {symbol.category === "washing" && (
-                      <IconWashMachine size={22} color="#9CA3AF" />
-                    )}
-                    {symbol.category === "ironing" && (
-                      <IconIroning1 size={22} color="#9CA3AF" />
-                    )}
-                    {symbol.category === "bleaching" && (
-                      <IconBleachOff size={22} color="#9CA3AF" />
-                    )}
-                    {symbol.category === "drying" && (
-                      <IconWind size={22} color="#9CA3AF" />
-                    )}
-                    {symbol.category === "professional_care" && (
-                      <IconShirt size={22} color="#9CA3AF" />
-                    )}
-                    {symbol.category === "wringing" && (
-                      <IconShirt size={22} color="#9CA3AF" />
-                    )}
-                  </View>
+                  <IconAlertTriangle
+                    size={20}
+                    color="#EF4444"
+                    style={{ marginTop: 2, marginRight: 10 }}
+                  />
                   <View style={{ flex: 1 }}>
                     <Text
                       style={{
-                        fontSize: 14,
+                        color: "#991B1B",
                         fontWeight: "700",
-                        color: "#374151",
-                        lineHeight: 20,
+                        marginBottom: 4,
                       }}
                     >
-                      {symbol.label}
+                      Review Needed
                     </Text>
                     <Text
-                      style={{
-                        fontSize: 12,
-                        color: "#9CA3AF",
-                        marginTop: 4,
-                        textTransform: "capitalize",
-                      }}
+                      style={{ color: "#B91C1C", fontSize: 13, lineHeight: 18 }}
                     >
-                      {symbol.category.replace("_", " ")}
+                      {result.review_notes ||
+                        "The AI could not confidently read all symbols or standards."}
                     </Text>
                   </View>
                 </View>
-              ))}
-            </View>
-          )}
+              )}
 
-          {/* Composition */}
-          {result.fabric_composition &&
-            result.fabric_composition.length > 0 && (
-              <View
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  borderRadius: 16,
-                  padding: 16,
-                  marginBottom: 16,
-                }}
-              >
-                <Text
+              {/* Care Symbols List */}
+              {result.care_symbols && result.care_symbols.length > 0 && (
+                <View
                   style={{
-                    color: "#4B5563",
-                    fontSize: 16,
-                    fontWeight: "700",
-                    marginBottom: 12,
+                    marginBottom: 16,
+                    backgroundColor: "#FFF",
+                    padding: 16,
+                    borderRadius: 16,
                   }}
                 >
-                  Fabric Composition
-                </Text>
-                {result.fabric_composition.map((comp, idx) => (
-                  <View
-                    key={idx}
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginBottom: 6,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "#6B7280",
-                        fontSize: 14,
-                        fontWeight: "500",
-                      }}
-                    >
-                      {comp.material}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#374151",
-                        fontSize: 14,
-                        fontWeight: "700",
-                      }}
-                    >
-                      {comp.percentage ? `${comp.percentage}%` : "Unknown"}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
-          {/* Translations */}
-          {result.translated_text && (
-            <View
-              style={{
-                backgroundColor: "#F3F4F6",
-                borderRadius: 16,
-                padding: 16,
-                marginBottom: 16,
-              }}
-            >
+                  {result.title && (
               <Text
                 style={{
-                  color: "#4B5563",
-                  fontSize: 14,
-                  fontWeight: "700",
-                  marginBottom: 8,
+                  color: "#111827",
+                  fontSize: 18,
+                  fontWeight: "800",
+                  marginBottom: 4,
                 }}
               >
-                Translated Text ({result.detected_language})
+                {result.title}
               </Text>
-              <Text style={{ color: "#4B5563", fontSize: 13, lineHeight: 20 }}>
-                {result.translated_text}
-              </Text>
-            </View>
+            )}
+            <Text
+              style={{
+                color: "#4B5563",
+                fontSize: 16,
+                fontWeight: "700",
+                marginBottom: 12,
+              }}
+            >
+              Care Instructions
+            </Text>
+                  {result.care_symbols.map((symbol) => (
+                    <View
+                      key={symbol.id}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 12,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 40,
+                          alignItems: "center",
+                          marginRight: 12,
+                          marginTop: 2,
+                        }}
+                      >
+                        
+                        {symbol.category === "washing" ? <IconWashMachine size={22} color="#9CA3AF" /> :
+                         symbol.category === "ironing" ? <IconIroning1 size={22} color="#9CA3AF" /> :
+                         symbol.category === "bleaching" ? <IconBleachOff size={22} color="#9CA3AF" /> :
+                         symbol.category === "drying" ? <IconWind size={22} color="#9CA3AF" /> :
+                         symbol.category === "professional_care" ? <IconShirt size={22} color="#9CA3AF" /> :
+                         symbol.category === "wringing" ? <IconShirt size={22} color="#9CA3AF" /> :
+                         symbol.category === "dry_cleaning" ? <IconShirt size={22} color="#9CA3AF" /> :
+                         <IconCircleFilled size={22} color="#9CA3AF" />}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontWeight: "700",
+                            color: "#374151",
+                            lineHeight: 20,
+                          }}
+                        >
+                          {symbol.label}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#9CA3AF",
+                            marginTop: 4,
+                            textTransform: "capitalize",
+                          }}
+                        >
+                          {symbol.category.replace("_", " ")}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Instructions */}
+              {result.instructions && (
+                <View
+                  style={{
+                    backgroundColor: "#F3F4F6",
+                    borderRadius: 16,
+                    padding: 16,
+                    marginBottom: 16,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#4B5563",
+                      fontSize: 14,
+                      fontWeight: "700",
+                      marginBottom: 8,
+                    }}
+                  >
+                    AI Care Notes
+                  </Text>
+                  <Text style={{ color: "#4B5563", fontSize: 13, lineHeight: 20 }}>
+                    {result.instructions}
+                  </Text>
+                </View>
+              )}
+            </>
           )}
         </ScrollView>
 
         {/* Fixed Footer */}
-        <View
+        {result.is_valid_apparel !== false && (<View
           style={{
             position: "absolute",
             bottom: 0,
@@ -689,7 +640,7 @@ export default function LabelResultScreen() {
               Done
             </Text>
           </Pressable>
-        </View>
+        </View>)}
       </View>
     </View>
   );

@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/images/polygon.png
+/home/som2077/Desktop/look-ai-app/assets/images/react-logo.png
+/home/som2077/Desktop/look-ai-app/assets/images/react-logo@2x.png
+/home/som2077/Desktop/look-ai-app/assets/images/react-logo@3x.png
+/home/som2077/Desktop/look-ai-app/assets/images/selfi3rd.jpg
+/home/som2077/Desktop/look-ai-app/assets/images/splash-icon.png
+/home/som2077/Desktop/look-ai-app/assets/images/trust1.png
+/home/som2077/Desktop/look-ai-app/assets/onboarding_fullPIC.png
+/home/som2077/Desktop/look-ai-app/assets/startImage.png
+/home/som2077/Desktop/look-ai-app/assets/startImage1.png

@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/action-menu/two.png
+/home/som2077/Desktop/look-ai-app/assets/android/ic_launcher-web.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-hdpi/app-android.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-hdpi/app-android_foreground.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-hdpi/app-android_round.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-ldpi/app-android.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-ldpi/app-android_round.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-mdpi/app-android.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-mdpi/app-android_foreground.png
+/home/som2077/Desktop/look-ai-app/assets/android/mipmap-mdpi/app-android_round.png

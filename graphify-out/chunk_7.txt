@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/android/playstore-icon.png
+/home/som2077/Desktop/look-ai-app/assets/badge/10-gold.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/10.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/100-gold.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/100.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/15-gold.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/15.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/20-gold.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/20.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/3-gold.svg

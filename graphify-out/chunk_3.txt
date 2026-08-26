@@ -1,0 +1,17 @@
+/home/som2077/Desktop/look-ai-app/GOOGLE_PLAY_BILLING_SETUP.md
+/home/som2077/Desktop/look-ai-app/README.md
+/home/som2077/Desktop/look-ai-app/SETUP.md
+/home/som2077/Desktop/look-ai-app/docs/API_EDGE_FUNCTIONS.md
+/home/som2077/Desktop/look-ai-app/docs/ARCHITECTURE.md
+/home/som2077/Desktop/look-ai-app/docs/CONTRIBUTING.md
+/home/som2077/Desktop/look-ai-app/docs/DEPLOYMENT.md
+/home/som2077/Desktop/look-ai-app/docs/TROUBLESHOOTING.md
+/home/som2077/Desktop/look-ai-app/postman/globals/workspace.globals.yaml
+/home/som2077/Desktop/look-ai-app/report.md
+/home/som2077/Desktop/look-ai-app/scripts/loadtest/README.md
+/home/som2077/Desktop/look-ai-app/skills/analytics-tracking/skill.md
+/home/som2077/Desktop/look-ai-app/skills/apple-design/SKILL.md
+/home/som2077/Desktop/look-ai-app/skills/imagegen-frontend-mobile/skill.md
+/home/som2077/Desktop/look-ai-app/skills/marketing-psychology/skill.md
+/home/som2077/Desktop/look-ai-app/skills/marketing-suite/skill.md
+/home/som2077/Desktop/look-ai-app/ts_errors.txt

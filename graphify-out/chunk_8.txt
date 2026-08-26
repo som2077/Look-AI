@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/badge/3.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/5-gold.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/5.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/50-gold.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/50.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/60-gold.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/60.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/70-gold.svg
+/home/som2077/Desktop/look-ai-app/assets/badge/70.svg
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/female/Athletic.png

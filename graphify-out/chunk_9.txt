@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/female/Average.jpg
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/female/Curvy.jpg
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/female/Plus.jpg
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/female/slim.jpg
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/male/Athletic.jpg
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/male/Average.jpg
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/male/plus.jpg
+/home/som2077/Desktop/look-ai-app/assets/bodytypes/male/slim.jpg
+/home/som2077/Desktop/look-ai-app/assets/fitImage/female-proportions-clean.jpg
+/home/som2077/Desktop/look-ai-app/assets/fitImage/female-proportions.jpg

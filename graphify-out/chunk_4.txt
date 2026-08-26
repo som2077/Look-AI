@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/789835.svg
+/home/som2077/Desktop/look-ai-app/assets/Polygon.svg
+/home/som2077/Desktop/look-ai-app/assets/Rectangle 125.png
+/home/som2077/Desktop/look-ai-app/assets/Rectangle 126.png
+/home/som2077/Desktop/look-ai-app/assets/ScribbleArrow.svg
+/home/som2077/Desktop/look-ai-app/assets/Vector.svg
+/home/som2077/Desktop/look-ai-app/assets/Vector1.png
+/home/som2077/Desktop/look-ai-app/assets/action-menu/four.png
+/home/som2077/Desktop/look-ai-app/assets/action-menu/one.png
+/home/som2077/Desktop/look-ai-app/assets/action-menu/three.png

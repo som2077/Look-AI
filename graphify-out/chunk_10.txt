@@ -1,0 +1,10 @@
+/home/som2077/Desktop/look-ai-app/assets/fitImage/male-proportions-clean.jpg
+/home/som2077/Desktop/look-ai-app/assets/fitImage/male-proportions.jpg
+/home/som2077/Desktop/look-ai-app/assets/images/android-icon-background.png
+/home/som2077/Desktop/look-ai-app/assets/images/android-icon-foreground.png
+/home/som2077/Desktop/look-ai-app/assets/images/android-icon-monochrome.png
+/home/som2077/Desktop/look-ai-app/assets/images/auth-phone.png
+/home/som2077/Desktop/look-ai-app/assets/images/auth_bubbles_hero.jpg
+/home/som2077/Desktop/look-ai-app/assets/images/auth_center.jpg
+/home/som2077/Desktop/look-ai-app/assets/images/auth_left.jpg
+/home/som2077/Desktop/look-ai-app/assets/images/auth_right.jpg

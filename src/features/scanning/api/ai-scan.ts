@@ -4,7 +4,7 @@
  */
 
 import { supabase } from "@/shared/supabase/client";
-import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
+import { captureFeatureError } from "@/shared/telemetry/sentry";
 import * as FileSystem from "expo-file-system";
 
 
@@ -19,22 +19,16 @@ export interface OpenAIVisionResponse {
 
 
 export interface LabelAnalysis {
+  is_valid_apparel: boolean;
+  rejection_reason: string | null;
   care_symbols: {
     id: string;
     category: string;
     label: string;
     confidence: "high" | "medium" | "low";
   }[];
-  fabric_composition: {
-    material: string;
-    percentage: number | null;
-  }[];
-  brand: string | null;
-  size: string | null;
-  origin_text: string | null;
-  detected_language: string | null;
-  original_text: string | null;
-  translated_text: string | null;
+  title: string | null;
+  instructions: string | null;
   label_standard_guess: "iso_ginetex" | "astm" | "unclear";
   needs_user_review: boolean;
   review_notes: string | null;
@@ -159,7 +153,7 @@ async function prepareVisionImageUrl(imageUri: string): Promise<string> {
 async function callOpenAIVision(
   imageUri: string,
   prompt: string,
-  mode: "cloth" | "fitcheck" = "cloth",
+  mode: "cloth" | "fitcheck" | "label" = "cloth",
   maxTokens: number = 350
 ): Promise<string | null> {
   let url: string;
@@ -173,7 +167,7 @@ async function callOpenAIVision(
   const detail = "low";
 
   const body = {
-    model: "gpt-4o-mini",
+    model: mode === "label" ? "gpt-4o" : "gpt-4o-mini",
     temperature: 0.2,
     max_tokens: maxTokens,
     response_format: { type: "json_object" },
@@ -326,84 +320,36 @@ export async function analyzeClothingFull(
 
 // ─── Mode 2: Cloth Label OCR ──────────────────────────────────────────────────
 
-const LABEL_PROMPT = `Extract information from this clothing care label.
-Translate any foreign text into English.
-Return ONLY valid JSON using exactly this format:
+const LABEL_PROMPT = `Analyze this image. Check if it is a care/brand label for clothing, footwear, or accessories.
+If it is NOT an apparel label (e.g., food, electronics, random object), set "is_valid_apparel" to false, provide a "rejection_reason", and return null for the rest.
+If valid, extract care symbols and generate a care guide. Return JSON:
 {
-  "care_symbols": [
-    {
-      "id": "e.g., wash_30, bleach_no, iron_low",
-      "category": "washing | bleaching | drying | ironing | dry_cleaning | wringing",
-      "label": "e.g., Machine wash cold",
-      "confidence": "high"
-    }
-  ],
-  "fabric_composition": [
-    {
-      "material": "e.g., Cotton",
-      "percentage": 100
-    }
-  ],
-  "brand": "brand name if visible, else null",
-  "size": "size if visible, else null",
-  "origin_text": "e.g., Made in China, else null",
-  "detected_language": "e.g., English, French, else null",
-  "original_text": "Extract all raw text visible on the label",
-  "translated_text": "Translate original_text to English if needed",
+  "is_valid_apparel": true or false,
+  "rejection_reason": "Explanation if false, else null",
+  "care_symbols": [{"id": "wash","category": "washing","label": "Wash cold","confidence": "high"}],
+  "title": "A short, descriptive title related to the item (e.g., Cotton T-Shirt Care Guide, Denim Washing Instructions)",
+  "instructions": "Write a short, friendly, and conversational paragraph explaining how to care for this item. Do NOT use numbered lists or bullet points. Speak naturally like a human giving helpful advice.",
   "label_standard_guess": "unclear",
   "needs_user_review": false,
-  "review_notes": "Any caveats or null"
+  "review_notes": "null"
 }`;
 
 export async function analyzeClothLabel(
   imageUri: string,
 ): Promise<LabelAnalysis> {
-  const text = await callOpenAIVision(imageUri, LABEL_PROMPT, "cloth", 600);
+  const text = await callOpenAIVision(imageUri, LABEL_PROMPT, "label", 600);
   return parseJson<LabelAnalysis>(text, {
+    is_valid_apparel: false,
+    rejection_reason: "Failed to parse the image properly.",
     care_symbols: [],
-    fabric_composition: [],
-    brand: null,
-    size: null,
-    origin_text: null,
-    detected_language: "English",
-    original_text: null,
-    translated_text: null,
+    title: null,
+    instructions: null,
     label_standard_guess: "unclear",
     needs_user_review: true,
-    review_notes: "Failed to parse properly.",
+    review_notes: "Parse error.",
   });
 }
 
-    const { data, error: edgeError } = await supabase.functions.invoke(
-      "cloth-label-scan",
-      { body: payload }
-    );
-
-    if (edgeError || !data?.success) {
-      throw new Error(edgeError?.message || data?.error || "Label scan failed");
-    }
-
-    return data.result as LabelAnalysis;
-  } catch (err: any) {
-    const isTimeout = err.message?.toLowerCase().includes('timeout');
-    captureFeatureError(err, 'cloth_label', 'analyze', isTimeout ? 'ai_timeout' : 'ai_generation_failed');
-    console.error("Error calling cloth-label-scan:", err);
-    return {
-      care_symbols: [],
-      fabric_composition: [],
-      brand: null,
-      size: null,
-      origin_text: null,
-      detected_language: null,
-      original_text: null,
-      translated_text: null,
-      label_standard_guess: "unclear",
-      needs_user_review: true,
-      review_notes: "Could not analyze label.",
-      error: err.message,
-    };
-  }
-}
 
 // ─── Mode 3: Fit Check Analysis ───────────────────────────────────────────────
 
