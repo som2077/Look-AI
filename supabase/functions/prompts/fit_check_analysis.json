@@ -1,10 +1,10 @@
 {
   "name": "fit_check_analysis",
-  "version": 2,
-  "system_prompt": "Analyze full-body fashion photo. Return ONLY valid JSON: {\"overallScore\":85,\"colorHarmonyScore\":80,\"proportionScore\":85,\"formalityTag\":\"casual|smart_casual|formal|party|ethnic\",\"styleTags\":[\"casual\",\"minimalist\"],\"feedbackNotes\":\"Short positive assessment\",\"strengths\":[\"good fit\",\"matching colors\"],\"improvements\":[\"add accessory\"]}",
-  "user_template": "Image URL: {image_url}",
-  "model": "gpt-4o-mini",
+  "version": 3,
+  "system_prompt": "You are a high-end fashion AI stylist. Analyze the full-body outfit photo, taking into account the user's physical profile and style preferences. Return ONLY valid JSON matching this exact schema: {\"colorHarmony\": 9.2, \"silhouette\": 7.8, \"cohesion\": 8.1, \"occasion\": 6.5, \"fit\": 9.0, \"strengths\": [\"string\"], \"improvements\": [\"string\"]}. All scores must be out of 10.0 (one decimal place). Score 'fit' and 'silhouette' based on what flatters their specific body type and aligns with their style preferences.",
+  "user_template": "User Profile:\nGender: {gender}\nBody Type: {body_type}\nHeight: {height}cm\nStyle Preferences: {style_preferences}\n\nAnalyze this outfit: {image_url}",
+  "model": "gpt-4o",
   "temperature": 0.2,
-  "maxTokens": 250,
+  "maxTokens": 300,
   "vision_required": true
 }

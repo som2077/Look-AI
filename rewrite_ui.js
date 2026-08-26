@@ -1,4 +1,6 @@
-import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+const fs = require('fs');
+
+const code = `import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { FitCheckAnalysis } from "@/features/scanning/api/ai-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import {
@@ -13,18 +15,18 @@ import {
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState } from "react";
 import {
   Image,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Stop, Rect, Line } from "react-native-svg";
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 
 type FitCheckParams = {
   scanId?: string;
@@ -47,7 +49,7 @@ const GradientScoreBar = ({ score, max = 10 }: { score: number, max?: number }) 
             </LinearGradient>
           </Defs>
           <Rect width="100%" height="6" y="1" rx="3" fill="url(#scoreGrad)" />
-          <Line x1={`${percent}%`} y1="-6" x2={`${percent}%`} y2="14" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" />
+          <Line x1={\`\${percent}%\`} y1="-6" x2={\`\${percent}%\`} y2="14" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" />
         </Svg>
       </View>
 
@@ -73,7 +75,7 @@ const MetricBar = ({ label, score }: { label: string; score: number }) => {
     <View className="flex-row items-center w-full mb-4 h-[52px] bg-gray-100 rounded-full relative overflow-hidden shadow-sm">
       <View
         className="absolute top-0 left-0 bottom-0 rounded-full flex-row items-center justify-between"
-        style={{ width: `${percentage}%` }}
+        style={{ width: \`\${percentage}%\` }}
       >
         <ExpoLinearGradient
           colors={colors as [string, string]}
@@ -89,13 +91,13 @@ const MetricBar = ({ label, score }: { label: string; score: number }) => {
              <IconPointFilled size={12} color={percentage > 45 ? "white" : "gray"} />
           </View>
           <Text
-            className={`font-bold text-[16px] ${percentage > 45 ? "text-white" : "text-gray-900"}`}
+            className={\`font-bold text-[16px] \${percentage > 45 ? "text-white" : "text-gray-900"}\`}
           >
             {label}
           </Text>
         </View>
         <Text
-          className={`font-black text-[16px] ${percentage > 85 ? "text-white" : "text-gray-900"}`}
+          className={\`font-black text-[16px] \${percentage > 85 ? "text-white" : "text-gray-900"}\`}
         >
           {score.toFixed(1)}
         </Text>
@@ -111,9 +113,6 @@ export default function FitCheckResultScreen() {
   const scans = useScanHistoryStore((s) => s.scans);
   const removeScan = useScanHistoryStore((s) => s.removeScan);
   const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
-  
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['30%', '85%'], []);
 
   const scan = scans.find((s) => s.id === params.scanId);
   const result = scan?.result as unknown as FitCheckAnalysis;
@@ -155,11 +154,6 @@ export default function FitCheckResultScreen() {
   else if (overallScore >= 6.0) { overallLabel = "Decent"; badgeColor = "bg-[#0EA5E9]"; }
 
   const photoUri = scan?.thumbnail;
-  
-  // Format the time as 10:10 PM
-  const scanTime = scan?.createdAt 
-    ? new Date(scan.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) 
-    : '10:10 PM';
 
   return (
     <View className="flex-1 bg-black">
@@ -181,10 +175,10 @@ export default function FitCheckResultScreen() {
       />
 
       {/* Top Floating Header */}
-      <SafeAreaView edges={["top"]} className="z-10 absolute w-full pointer-events-box-none">
-        <View className="flex-row items-center justify-between px-5 pt-2 pointer-events-auto">
+      <SafeAreaView edges={["top"]} className="z-10 absolute w-full">
+        <View className="flex-row items-center justify-between px-5 pt-2">
           <Pressable
-            onPress={() => router.replace("/(root)/(tabs)" as never)}
+            onPress={() => router.back()}
             className="w-10 h-10 rounded-full bg-white/90 items-center justify-center shadow-sm"
           >
             <IconArrowLeft size={20} color="#111827" />
@@ -259,23 +253,20 @@ export default function FitCheckResultScreen() {
         </Modal>
       )}
 
-      {/* Bottom Sheet for Data */}
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={0}
-        snapPoints={snapPoints}
-        backgroundStyle={{ backgroundColor: '#F8F9FA', borderRadius: 32 }}
-        handleIndicatorStyle={{ backgroundColor: '#D1D5DB', width: 40 }}
+      {/* Scrollable Content */}
+      <ScrollView
+        className="flex-1 z-10"
+        showsVerticalScrollIndicator={false}
       >
-        <BottomSheetScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-          <View className="px-5 pt-2">
-            
-            {/* Header Title, Time & Icons */}
+        {/* Transparent spacer to push content down so the image is visible */}
+        <View style={{ height: 350 }} />
+
+        {/* Bottom Sheet Container */}
+        <View className="bg-[#F8F9FA] rounded-t-[32px] pt-6 pb-[100px] min-h-screen">
+          <View className="px-5">
+            {/* Header Title & Icons */}
             <View className="flex-row justify-between items-start mb-6">
               <View>
-                <View className="bg-gray-200/60 rounded-full px-3 py-1 self-start mb-3">
-                  <Text className="text-gray-700 text-[12px] font-medium">{scanTime}</Text>
-                </View>
                 <Text className="text-[28px] font-bold text-[#111827]">Perfect look</Text>
                 <Text className="text-[14px] font-medium text-gray-700 mt-1">Breakdown your style</Text>
               </View>
@@ -293,7 +284,7 @@ export default function FitCheckResultScreen() {
                   
                   <View className="flex-row items-center flex-1 justify-end pb-1">
                     <Text className="text-[12px] text-gray-700 mr-3">Your look is</Text>
-                    <View className={`${badgeColor} px-3.5 py-1 rounded-full`}>
+                    <View className={\`\${badgeColor} px-3.5 py-1 rounded-full\`}>
                       <Text className="text-white text-[12px] font-bold">{overallLabel}</Text>
                     </View>
                     <Pressable className="ml-3 p-1">
@@ -326,7 +317,7 @@ export default function FitCheckResultScreen() {
               <View className="pr-2">
                 {/* Strengths */}
                 {result.strengths?.map((strength, idx) => (
-                  <View key={`str-${idx}`} className="flex-row items-start mb-3.5">
+                  <View key={\`str-\${idx}\`} className="flex-row items-start mb-3.5">
                     <View className="mt-0.5 mr-3 bg-green-50 rounded-full p-0.5">
                       <IconCircleCheckFilled size={18} color="#10B981" />
                     </View>
@@ -338,7 +329,7 @@ export default function FitCheckResultScreen() {
 
                 {/* Improvements */}
                 {result.improvements?.map((improvement, idx) => (
-                  <View key={`imp-${idx}`} className="flex-row items-start mt-3.5">
+                  <View key={\`imp-\${idx}\`} className="flex-row items-start mt-3.5">
                     <View className="mt-1.5 mr-4 ml-1">
                       <View className="w-2.5 h-2.5 bg-[#EF4444] rounded-full" />
                     </View>
@@ -350,8 +341,11 @@ export default function FitCheckResultScreen() {
               </View>
             </View>
           </View>
-        </BottomSheetScrollView>
-      </BottomSheet>
+        </View>
+      </ScrollView>
     </View>
   );
 }
+`;
+
+fs.writeFileSync('src/app/(root)/add-clothes/fitcheck-result.tsx', code);

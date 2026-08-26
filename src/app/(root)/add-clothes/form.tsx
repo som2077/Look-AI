@@ -223,6 +223,7 @@ type FormParams = {
   notes?: string;
   brand?: string;
   careInstructions?: string;
+  subCategory?: string;
 };
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
@@ -239,7 +240,7 @@ export default function AddClothesFormScreen() {
   const [category, setCategory] = useState<string>(params.category ?? "top");
   const [subCategory, setSubCategory] = useState<string>(() => {
     if (params.subCategory) return params.subCategory;
-    const catId = MACRO_CATEGORIES.find(c => c.id.toLowerCase() === (params.category ?? "top").toLowerCase())?.id || "Other";
+    const catId = CATEGORIES.find(c => c.id.toLowerCase() === (params.category ?? "top").toLowerCase())?.id || "Other";
     const allowed = SUBCATEGORY_MAP[catId] || SUBCATEGORY_MAP["Other"];
     return allowed[0] || "";
   });

@@ -1,4 +1,8 @@
-import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+import re
+with open('src/app/(root)/add-clothes/fitcheck-result.tsx', 'r') as f:
+    content = f.read()
+
+new_code = """import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { FitCheckAnalysis } from "@/features/scanning/api/ai-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import {
@@ -13,18 +17,18 @@ import {
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState } from "react";
 import {
   Image,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Stop, Rect, Line } from "react-native-svg";
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 
 type FitCheckParams = {
   scanId?: string;
@@ -111,9 +115,6 @@ export default function FitCheckResultScreen() {
   const scans = useScanHistoryStore((s) => s.scans);
   const removeScan = useScanHistoryStore((s) => s.removeScan);
   const removeOutfit = useOutfitAnalysisStore((s) => s.removeOutfit);
-  
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['30%', '85%'], []);
 
   const scan = scans.find((s) => s.id === params.scanId);
   const result = scan?.result as unknown as FitCheckAnalysis;
@@ -155,11 +156,6 @@ export default function FitCheckResultScreen() {
   else if (overallScore >= 6.0) { overallLabel = "Decent"; badgeColor = "bg-[#0EA5E9]"; }
 
   const photoUri = scan?.thumbnail;
-  
-  // Format the time as 10:10 PM
-  const scanTime = scan?.createdAt 
-    ? new Date(scan.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) 
-    : '10:10 PM';
 
   return (
     <View className="flex-1 bg-black">
@@ -181,18 +177,18 @@ export default function FitCheckResultScreen() {
       />
 
       {/* Top Floating Header */}
-      <SafeAreaView edges={["top"]} className="z-10 absolute w-full pointer-events-box-none">
-        <View className="flex-row items-center justify-between px-5 pt-2 pointer-events-auto">
+      <SafeAreaView edges={["top"]} className="z-10 absolute w-full">
+        <View className="flex-row items-center justify-between px-5 pt-2">
           <Pressable
-            onPress={() => router.replace("/(root)/(tabs)" as never)}
-            className="w-10 h-10 rounded-full bg-white/90 items-center justify-center shadow-sm"
+            onPress={() => router.back()}
+            className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm"
           >
             <IconArrowLeft size={20} color="#111827" />
           </Pressable>
-          <Text className="text-white font-bold text-[17px]">Fit Check</Text>
+          <Text className="text-white font-bold text-lg">Fit Check</Text>
           <Pressable
             onPress={() => setShowMenu(true)}
-            className="w-10 h-10 rounded-full bg-white/90 items-center justify-center shadow-sm"
+            className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm"
           >
             <IconDots size={20} color="#111827" />
           </Pressable>
@@ -259,25 +255,22 @@ export default function FitCheckResultScreen() {
         </Modal>
       )}
 
-      {/* Bottom Sheet for Data */}
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={0}
-        snapPoints={snapPoints}
-        backgroundStyle={{ backgroundColor: '#F8F9FA', borderRadius: 32 }}
-        handleIndicatorStyle={{ backgroundColor: '#D1D5DB', width: 40 }}
+      {/* Scrollable Content */}
+      <ScrollView
+        className="flex-1 z-10"
+        showsVerticalScrollIndicator={false}
       >
-        <BottomSheetScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-          <View className="px-5 pt-2">
-            
-            {/* Header Title, Time & Icons */}
+        {/* Transparent spacer to push content down so the image is visible */}
+        <View style={{ height: 350 }} />
+
+        {/* Bottom Sheet Container */}
+        <View className="bg-[#F8F9FA] rounded-t-[32px] pt-6 pb-[100px] min-h-screen">
+          <View className="px-5">
+            {/* Header Title & Icons */}
             <View className="flex-row justify-between items-start mb-6">
               <View>
-                <View className="bg-gray-200/60 rounded-full px-3 py-1 self-start mb-3">
-                  <Text className="text-gray-700 text-[12px] font-medium">{scanTime}</Text>
-                </View>
-                <Text className="text-[28px] font-bold text-[#111827]">Perfect look</Text>
-                <Text className="text-[14px] font-medium text-gray-700 mt-1">Breakdown your style</Text>
+                <Text className="text-3xl font-bold text-[#111827]">Perfect look</Text>
+                <Text className="text-[15px] font-medium text-gray-700 mt-1">Breakdown your style</Text>
               </View>
               <Pressable onPress={() => setShowMenu(true)} className="mt-1 p-1">
                 <IconBookmark size={24} color="#111827" />
@@ -285,7 +278,7 @@ export default function FitCheckResultScreen() {
             </View>
 
             {/* Card 1: Overall Score */}
-            <View className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 mb-4" style={{ elevation: 2 }}>
+            <View className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 mb-4" style={{ elevation: 2 }}>
                <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-[44px] font-light tracking-tighter text-[#111827] leading-none">
                     {overallScore.toFixed(2)}
@@ -306,7 +299,7 @@ export default function FitCheckResultScreen() {
             </View>
 
             {/* Card 2: Metrics and Feedback */}
-            <View className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 mb-6" style={{ elevation: 2 }}>
+            <View className="bg-white rounded-[32px] p-5 shadow-sm border border-gray-100 mb-6" style={{ elevation: 2 }}>
               <View className="mb-2">
                 <MetricBar label="Color Harmony" score={result.colorHarmony} />
                 <MetricBar label="Silhouette" score={result.silhouette} />
@@ -350,8 +343,12 @@ export default function FitCheckResultScreen() {
               </View>
             </View>
           </View>
-        </BottomSheetScrollView>
-      </BottomSheet>
+        </View>
+      </ScrollView>
     </View>
   );
 }
+"""
+
+with open('src/app/(root)/add-clothes/fitcheck-result.tsx', 'w') as f:
+    f.write(new_code)

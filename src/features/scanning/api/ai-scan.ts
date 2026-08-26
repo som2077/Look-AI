@@ -35,41 +35,16 @@ export interface LabelAnalysis {
   error?: string;
 }
 
+import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
+
 export interface FitCheckAnalysis {
-  fitScore: number;
-  ratingTitle: string;
-  ratingSubtitle: string;
-  silhouette: {
-    bodyShape: string;
-    waistBalance: string;
-    topRatio: number;
-    bottomRatio: number;
-    explanation: string;
-  };
-  fitPrecision: {
-    shoulderFit: { status: "Perfect" | "Tight" | "Loose"; text: string };
-    sleeveLength: { status: "Perfect" | "Short" | "Long"; text: string };
-    trouserBreak: { status: "Perfect" | "Short" | "Long"; text: string };
-  };
-  colorTheory: {
-    hexColors: string[];
-    harmony: string;
-    contrastExplanation: string;
-  };
-  styleCategory: {
-    archetype: string;
-    trendScore: number;
-  };
-  actionableFixes: {
-    problem: string;
-    solution: string;
-  }[];
-  outfitPieces: {
-    top: string | null;
-    bottom: string | null;
-    footwear: string | null;
-    accessories: string | null;
-  };
+  colorHarmony: number;
+  silhouette: number;
+  cohesion: number;
+  occasion: number;
+  fit: number;
+  strengths: string[];
+  improvements: string[];
   error?: string;
 }
 
@@ -353,83 +328,39 @@ export async function analyzeClothLabel(
 
 // ─── Mode 3: Fit Check Analysis ───────────────────────────────────────────────
 
-const FITCHECK_PROMPT = `Analyze this full-body outfit photo. Return ONLY valid JSON:
-{
-  "fitScore": number 0-100,
-  "ratingTitle": "Short title (e.g. 'Good Fit ✨')",
-  "ratingSubtitle": "1 line description",
-  "silhouette": {
-    "bodyShape": "Rectangle, Hourglass, Triangle, or Oval",
-    "waistBalance": "Standard Balance",
-    "topRatio": 50,
-    "bottomRatio": 50,
-    "explanation": "Brief proportion note"
-  },
-  "fitPrecision": {
-    "shoulderFit": { "status": "Perfect", "text": "Fits well" },
-    "sleeveLength": { "status": "Perfect", "text": "Good length" },
-    "trouserBreak": { "status": "Perfect", "text": "Good break" }
-  },
-  "colorTheory": {
-    "hexColors": ["#RRGGBB", "#RRGGBB"],
-    "harmony": "Neutral",
-    "contrastExplanation": "Short contrast note"
-  },
-  "styleCategory": {
-    "archetype": "Casual",
-    "trendScore": 75
-  },
-  "actionableFixes": [
-    { "problem": "Issue", "solution": "Fix suggestion" }
-  ],
-  "outfitPieces": {
-    "top": "Top item description",
-    "bottom": "Bottom item description",
-    "footwear": "Shoes description",
-    "accessories": null
-  }
-}`;
+const getFitcheckPrompt = (profile: { bodyType: string, height: number, stylePreferences: string[], gender: string }) => `You are a high-end fashion AI stylist. Analyze the full-body outfit photo, taking into account the user's physical profile and style preferences. Return ONLY valid JSON matching this exact schema: {"colorHarmony": 9.2, "silhouette": 7.8, "cohesion": 8.1, "occasion": 6.5, "fit": 9.0, "strengths": ["string"], "improvements": ["string"]}. All scores must be out of 10.0 (one decimal place). Score 'fit' and 'silhouette' based on what flatters their specific body type and aligns with their style preferences.
+
+User Profile:
+Gender: ${profile.gender || 'Not specified'}
+Body Type: ${profile.bodyType || 'Not specified'}
+Height: ${profile.height ? profile.height + 'cm' : 'Not specified'}
+Style Preferences: ${profile.stylePreferences?.join(", ") || 'Not specified'}
+
+Analyze this outfit:`;
 
 export async function analyzeFitCheck(
   imageUri: string,
 ): Promise<FitCheckAnalysis> {
+  const state = useOnboardingState.getState();
   
-
   const fallbackData: FitCheckAnalysis = {
-    fitScore: 85,
-    ratingTitle: "Fallback Result",
-    ratingSubtitle: "Unable to analyze completely.",
-    silhouette: {
-      bodyShape: "Balanced",
-      waistBalance: "Standard Balance",
-      topRatio: 50,
-      bottomRatio: 50,
-      explanation: "Fallback proportions.",
-    },
-    fitPrecision: {
-      shoulderFit: { status: "Perfect", text: "N/A" },
-      sleeveLength: { status: "Perfect", text: "N/A" },
-      trouserBreak: { status: "Perfect", text: "N/A" },
-    },
-    colorTheory: {
-      hexColors: ["#1D1A27", "#F9FAFB"],
-      harmony: "Neutral",
-      contrastExplanation: "Fallback contrast.",
-    },
-    styleCategory: {
-      archetype: "Casual",
-      trendScore: 50,
-    },
-    actionableFixes: [],
-    outfitPieces: {
-      top: null,
-      bottom: null,
-      footwear: null,
-      accessories: null,
-    },
+    colorHarmony: 8.0,
+    silhouette: 8.0,
+    cohesion: 8.0,
+    occasion: 8.0,
+    fit: 8.0,
+    strengths: ["Great attempt!"],
+    improvements: ["Could not fully analyze the image. Please try again with a clearer photo."],
   };
 
-  const text = await callOpenAIVision(imageUri, FITCHECK_PROMPT, "fitcheck", 400);
+  const prompt = getFitcheckPrompt({
+    bodyType: state.bodyType,
+    height: state.height,
+    stylePreferences: state.stylePreferences,
+    gender: state.gender,
+  });
+
+  const text = await callOpenAIVision(imageUri, prompt, "fitcheck", 400);
   return parseJson<FitCheckAnalysis>(text, fallbackData);
 }
 

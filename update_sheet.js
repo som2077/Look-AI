@@ -1,4 +1,6 @@
-import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
+const fs = require('fs');
+
+const code = `import { useOutfitAnalysisStore } from "@/features/ai-styling/model/outfit-analysis-store";
 import { FitCheckAnalysis } from "@/features/scanning/api/ai-scan";
 import { useScanHistoryStore } from "@/features/scanning/model/scan-history-store";
 import {
@@ -47,7 +49,7 @@ const GradientScoreBar = ({ score, max = 10 }: { score: number, max?: number }) 
             </LinearGradient>
           </Defs>
           <Rect width="100%" height="6" y="1" rx="3" fill="url(#scoreGrad)" />
-          <Line x1={`${percent}%`} y1="-6" x2={`${percent}%`} y2="14" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" />
+          <Line x1={\`\${percent}%\`} y1="-6" x2={\`\${percent}%\`} y2="14" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" />
         </Svg>
       </View>
 
@@ -73,7 +75,7 @@ const MetricBar = ({ label, score }: { label: string; score: number }) => {
     <View className="flex-row items-center w-full mb-4 h-[52px] bg-gray-100 rounded-full relative overflow-hidden shadow-sm">
       <View
         className="absolute top-0 left-0 bottom-0 rounded-full flex-row items-center justify-between"
-        style={{ width: `${percentage}%` }}
+        style={{ width: \`\${percentage}%\` }}
       >
         <ExpoLinearGradient
           colors={colors as [string, string]}
@@ -89,13 +91,13 @@ const MetricBar = ({ label, score }: { label: string; score: number }) => {
              <IconPointFilled size={12} color={percentage > 45 ? "white" : "gray"} />
           </View>
           <Text
-            className={`font-bold text-[16px] ${percentage > 45 ? "text-white" : "text-gray-900"}`}
+            className={\`font-bold text-[16px] \${percentage > 45 ? "text-white" : "text-gray-900"}\`}
           >
             {label}
           </Text>
         </View>
         <Text
-          className={`font-black text-[16px] ${percentage > 85 ? "text-white" : "text-gray-900"}`}
+          className={\`font-black text-[16px] \${percentage > 85 ? "text-white" : "text-gray-900"}\`}
         >
           {score.toFixed(1)}
         </Text>
@@ -293,7 +295,7 @@ export default function FitCheckResultScreen() {
                   
                   <View className="flex-row items-center flex-1 justify-end pb-1">
                     <Text className="text-[12px] text-gray-700 mr-3">Your look is</Text>
-                    <View className={`${badgeColor} px-3.5 py-1 rounded-full`}>
+                    <View className={\`\${badgeColor} px-3.5 py-1 rounded-full\`}>
                       <Text className="text-white text-[12px] font-bold">{overallLabel}</Text>
                     </View>
                     <Pressable className="ml-3 p-1">
@@ -326,7 +328,7 @@ export default function FitCheckResultScreen() {
               <View className="pr-2">
                 {/* Strengths */}
                 {result.strengths?.map((strength, idx) => (
-                  <View key={`str-${idx}`} className="flex-row items-start mb-3.5">
+                  <View key={\`str-\${idx}\`} className="flex-row items-start mb-3.5">
                     <View className="mt-0.5 mr-3 bg-green-50 rounded-full p-0.5">
                       <IconCircleCheckFilled size={18} color="#10B981" />
                     </View>
@@ -338,7 +340,7 @@ export default function FitCheckResultScreen() {
 
                 {/* Improvements */}
                 {result.improvements?.map((improvement, idx) => (
-                  <View key={`imp-${idx}`} className="flex-row items-start mt-3.5">
+                  <View key={\`imp-\${idx}\`} className="flex-row items-start mt-3.5">
                     <View className="mt-1.5 mr-4 ml-1">
                       <View className="w-2.5 h-2.5 bg-[#EF4444] rounded-full" />
                     </View>
@@ -355,3 +357,6 @@ export default function FitCheckResultScreen() {
     </View>
   );
 }
+`;
+
+fs.writeFileSync('src/app/(root)/add-clothes/fitcheck-result.tsx', code);
