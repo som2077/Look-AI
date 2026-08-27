@@ -52,42 +52,52 @@ serve(async (req) => {
     // Ensure the model matches what the client asked for (enforced by enum)
     openAiBody.model = model;
 
-    console.log(`[openai-proxy] Received request for model: ${model}`);
+    console.log(\`[openai-proxy] Received request for model: \${model}, streaming: \${!!openAiBody.stream}\`);
     
     const openAiKey =
       Deno.env.get("OPENAI_API_KEY") ||
       Deno.env.get("EXPO_PUBLIC_OPENAI_API_KEY");
 
     if (!openAiKey) {
-      console.error(`[openai-proxy] Missing OPENAI_API_KEY environment variable`);
+      console.error(\`[openai-proxy] Missing OPENAI_API_KEY environment variable\`);
       throw new Error("Missing OPENAI_API_KEY environment variable");
     }
 
-    const url = `https://api.openai.com/v1/chat/completions`;
-    console.log(`[openai-proxy] Forwarding request to OpenAI...`);
-
+    const url = \`https://api.openai.com/v1/chat/completions\`;
     const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${openAiKey}`,
+        "Authorization": \`Bearer \${openAiKey}\`,
       },
       body: JSON.stringify(openAiBody),
     });
 
-    console.log(`[openai-proxy] OpenAI responded with status: ${res.status}`);
-    const data = await res.json();
-    
     if (!res.ok) {
-      console.error(`[openai-proxy] OpenAI error response:`, JSON.stringify(data));
-    } else {
-      console.log(`[openai-proxy] OpenAI success, tokens used: ${data.usage?.total_tokens}`);
+      console.error(\`[openai-proxy] OpenAI error response status: \${res.status}\`);
+      const data = await res.text();
+      return new Response(data, {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: res.status,
+      });
     }
 
-    return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: res.status,
-    });
+    if (openAiBody.stream) {
+      return new Response(res.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    } else {
+      const data = await res.json();
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: res.status,
+      });
+    }
   } catch (error) {
     return validationErrorResponse(error, corsHeaders);
   }

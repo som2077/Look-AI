@@ -4,14 +4,14 @@ import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { FlashList } from "@shopify/flash-list";
 import {
-  IconArrowNarrowRight,
+  IconArrowNarrowUp,
   IconBell,
   IconDots,
   IconMoodPlus,
-  IconPhoto,
   IconPlus,
+  IconPlusFilled,
   IconTrash,
-  IconX,
+  IconX
 } from "@tabler/icons-react-native";
 import { ResizeMode, Video } from "expo-av";
 import { Image } from "expo-image";
@@ -28,18 +28,48 @@ import {
   PanResponder,
   RefreshControl,
   Image as RNImage,
+  Text as RNText,
+  TextInput as RNTextInput,
   ScrollView,
-  Text,
-  TextInput,
+  StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
 import ImageViewer from "react-native-image-zoom-viewer";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+
+const Text = (props: any) => {
+  const { style, ...rest } = props;
+  const flatStyle = StyleSheet.flatten(style || {});
+  let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
+  
+  if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
+  else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
+  else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
+  else if (flatStyle.fontWeight === "800") fontFamily = "BricolageGrotesque_800ExtraBold";
+
+  const { fontWeight, ...cleanStyle } = flatStyle;
+  return <RNText {...rest} style={[cleanStyle, { fontFamily }]} />;
+};
+
+const TextInput = (props: any) => {
+  const { style, ...rest } = props;
+  const flatStyle = StyleSheet.flatten(style || {});
+  let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
+  
+  if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
+  else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
+  else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
+  else if (flatStyle.fontWeight === "800") fontFamily = "BricolageGrotesque_800ExtraBold";
+
+  const { fontWeight, ...cleanStyle } = flatStyle;
+  return <RNTextInput {...rest} style={[cleanStyle, { fontFamily }]} />;
+};
 
 import { useOnboardingState } from "@/features/onboarding/model/onboarding-store";
 import { useUser } from "@clerk/clerk-expo";
+import { LinearGradient } from "expo-linear-gradient";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,6 +108,7 @@ function RepliesBottomSheet({
   onAddReply?: (content: string) => void;
 }) {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const [replyText, setReplyText] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
@@ -132,7 +163,7 @@ function RepliesBottomSheet({
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+        <View style={{ flex: 1, justifyContent: "flex-end", }}>
           {/* Overlay Background */}
           <View
             style={{
@@ -153,20 +184,23 @@ function RepliesBottomSheet({
 
           <Animated.View
             style={{
-              backgroundColor: "#FFFFFF",
+              backgroundColor: "#ffffff",
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
               paddingBottom: 20,
-              maxHeight: SCREEN_HEIGHT * 0.8,
+              maxHeight: SCREEN_HEIGHT * 0.85,
+              flexShrink: 1,
+              marginTop: insets.top + 10,
               transform: [{ translateY: slideAnim }],
             }}
           >
-            <View {...panResponder.panHandlers} style={{ paddingBottom: 16 }}>
+            <View {...panResponder.panHandlers} style={{ paddingBottom: 16,  }}>
               <View
                 style={{
                   alignItems: "center",
                   paddingTop: 14,
                   paddingBottom: 6,
+                  // marginBottom: 1,
                 }}
               >
                 <View
@@ -174,11 +208,11 @@ function RepliesBottomSheet({
                     width: 40,
                     height: 4,
                     borderRadius: 2,
-                    backgroundColor: "#E2E2EA",
+                    backgroundColor: "#000000",
                   }}
                 />
               </View>
-              <Text
+              {/* <Text
                 style={{
                   textAlign: "center",
                   fontSize: 18,
@@ -187,7 +221,7 @@ function RepliesBottomSheet({
                 }}
               >
                 Replies
-              </Text>
+              </Text> */}
             </View>
 
             <ScrollView
@@ -230,7 +264,7 @@ function RepliesBottomSheet({
                 comments.map((comment: any) => (
                   <View
                     key={comment.id}
-                    style={{ flexDirection: "row", marginBottom: 12, gap: 8 }}
+                    style={{ flexDirection: "row", marginBottom: 10, gap: 8 }}
                   >
                     <Image
                       source={{
@@ -249,12 +283,12 @@ function RepliesBottomSheet({
                     <View
                       style={{
                         flex: 1,
-                        backgroundColor: "#F3F4F6",
+                        backgroundColor: "#F8F7FC",
                         padding: 10,
                         borderRadius: 12,
                       }}
                     >
-                      <Text
+                      <RNText
                         style={{
                           fontWeight: "600",
                           fontSize: 13,
@@ -265,7 +299,7 @@ function RepliesBottomSheet({
                         {comment.user_profiles?.nickname ||
                           comment.user_profiles?.username ||
                           "Style Explorer"}
-                      </Text>
+                      </RNText>
                       <Text style={{ fontSize: 14, color: "#4B5563" }}>
                         {comment.content}
                       </Text>
@@ -278,62 +312,74 @@ function RepliesBottomSheet({
             {!isMyPost && (
               <View
                 style={{
-                  paddingHorizontal: 20,
-                  paddingTop: 12,
+                  paddingHorizontal: 12,
+                  paddingVertical: 12,
+                  paddingBottom: 10,
                   borderTopWidth: 1,
                   borderTopColor: "#F3F4F6",
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 10,
                 }}
               >
-                <TextInput
-                  placeholder="Type your reply..."
-                  placeholderTextColor="#9CA3AF"
-                  value={replyText}
-                  onChangeText={setReplyText}
+                <View
                   style={{
+                    flexDirection: "row",
+                    alignItems: "center",
                     flex: 1,
-                    height: 40,
-                    backgroundColor: "#F3F4F6",
+                    backgroundColor: "#F9FAFB",
                     borderRadius: 20,
-                    paddingHorizontal: 16,
-                    fontSize: 14,
-                    color: "#1D1A27",
                     borderWidth: 1,
                     borderColor: "#E5E7EB",
-                  }}
-                />
-                <TouchableOpacity
-                  disabled={isSubmittingReply || !replyText.trim()}
-                  onPress={async () => {
-                    setIsSubmittingReply(true);
-                    const success = await addComment(post.id, replyText.trim());
-                    setIsSubmittingReply(false);
-                    if (success) {
-                      onAddReply?.(replyText.trim());
-                      setReplyText("");
-                    }
-                  }}
-                  style={{
-                    backgroundColor: replyText.trim() ? "#3B82F6" : "#D1D5DB",
-                    paddingHorizontal: 16,
-                    height: 40,
-                    borderRadius: 20,
-                    justifyContent: "center",
-                    alignItems: "center",
+                    paddingHorizontal: 6,
+                    paddingVertical: 4,
+                    minHeight: 44,
                   }}
                 >
-                  <Text
+                  <TextInput
+                    placeholder="Type your reply..."
+                    placeholderTextColor="#9CA3AF"
+                    value={replyText}
+                    onChangeText={setReplyText}
                     style={{
-                      color: "#FFFFFF",
-                      fontWeight: "600",
+                      flex: 1,
                       fontSize: 14,
+                      color: "#1D1A27",
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                    }}
+                  />
+                  <TouchableOpacity
+                    disabled={isSubmittingReply || !replyText.trim()}
+                    onPress={async () => {
+                      setIsSubmittingReply(true);
+                      const success = await addComment(post.id, replyText.trim());
+                      setIsSubmittingReply(false);
+                      if (success) {
+                        onAddReply?.(replyText.trim());
+                        setReplyText("");
+                      }
+                    }}
+                    style={{
+                      backgroundColor: replyText.trim() ? "#1D1A27" : "#E5E7EB",
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginLeft: 4,
                     }}
                   >
-                    Send
-                  </Text>
-                </TouchableOpacity>
+                    {isSubmittingReply ? (
+                      <ActivityIndicator size="small" color={replyText.trim() ? "#FFFFFF" : "#9CA3AF"} />
+                    ) : (
+                      <IconArrowNarrowUp
+                        strokeWidth={2.5}
+                        size={16}
+                        color={replyText.trim() ? "#FFFFFF" : "#9CA3AF"}
+                      />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </Animated.View>
@@ -475,7 +521,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
         flexDirection: "row",
         alignItems: "flex-start",
         marginBottom: 24,
-        backgroundColor:"fff00"
+        backgroundColor: "fff00"
       }}
     >
       {/* Left Column: Squircle Avatar */}
@@ -509,7 +555,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
               gap: 10,
             }}
           >
-            <Text
+            <RNText
               style={{
                 fontSize: 15,
                 fontWeight: "700",
@@ -517,7 +563,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
               }}
             >
               {displayUsername}
-            </Text>
+            </RNText>
             <Text
               style={{
                 fontSize: 13,
@@ -677,8 +723,8 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  backgroundColor: isMine ? "#EFF6FF" : "#F3F4F6",
-                  borderColor: isMine ? "#93C5FD" : "#E5E7EB",
+                  backgroundColor: isMine ? "#F8F7FC" : "#F8F7FC",
+                  borderColor: isMine ? "#E5E7EB" : "#E5E7EB",
                   borderWidth: 1,
                   paddingHorizontal: 10,
                   paddingVertical: 5,
@@ -708,14 +754,14 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
               width: 32,
               height: 32,
               borderRadius: 16,
-              backgroundColor: "#F3F4F6",
+              backgroundColor: "#F8F7FC",
               borderColor: "#E5E7EB",
               borderWidth: 1,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <IconMoodPlus size={18} color="#6B7280" />
+            <IconMoodPlus size={18} color="#00000095" />
           </TouchableOpacity>
         </View>
 
@@ -727,17 +773,17 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
               flexDirection: "row",
               flexWrap: "wrap",
               gap: 3,
-              backgroundColor: "#FFFFFF",
+              backgroundColor: "#F8F7FC",
               borderColor: "#E5E7EB",
               borderWidth: 1,
               borderRadius: 50,
               padding: 5,
               marginTop: 8,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.08,
-              shadowRadius: 6,
-              elevation: 2,
+              // shadowColor: "#000",
+              // shadowOffset: { width: 0, height: 2 },
+              // shadowOpacity: 0.08,
+              // shadowRadius: 6,
+              // elevation: 2,
             }}
           >
             {POPULAR_REACTIONS.map((emoji) => (
@@ -750,9 +796,9 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
                 }}
                 style={{
                   padding: 7,
-                  borderRadius: 8,
+                  borderRadius: 50,
                   backgroundColor: myReactions.includes(emoji)
-                    ? "#EFF6FF"
+                    ? "#ffffff"
                     : "transparent",
                 }}
               >
@@ -808,7 +854,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
             style={{
               fontSize: 14,
               fontWeight: "500",
-              color: "#6B7280",
+              color: "#00000095",
               marginLeft: "auto",
             }}
           >
@@ -861,7 +907,7 @@ function FeedTab() {
 
   const [inputText, setInputText] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<RNTextInput>(null);
   const scrollViewRef = useRef<any>(null);
   const [isComposing, setIsComposing] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
@@ -946,7 +992,7 @@ function FeedTab() {
     <View
       style={{
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "transparent",
         paddingBottom: keyboardHeight > 0 ? keyboardHeight : 90,
       }}
     >
@@ -967,6 +1013,7 @@ function FeedTab() {
           style={{
             fontSize: 24,
             fontWeight: "800",
+            fontFamily: "BricolageGrotesque_800ExtraBold",
             color: "#1D1A27",
             letterSpacing: -0.5,
           }}
@@ -981,7 +1028,7 @@ function FeedTab() {
               borderRadius: 100,
               borderWidth: 1,
               borderColor: "#E2E2EA",
-              backgroundColor: "#F8F7FC",
+              backgroundColor: "#F8F7FC95",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -999,7 +1046,7 @@ function FeedTab() {
               borderRadius: 100,
               borderWidth: 1,
               borderColor: "#E2E2EA",
-              backgroundColor: "#F8F7FC",
+              backgroundColor: "#F8F7FC95",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -1121,17 +1168,17 @@ function FeedTab() {
       {isComposing && (
         <View
           style={{
-            backgroundColor: "#FFFFFF",
-            borderTopWidth: 1,
+            // backgroundColor: "#FFFFFF",
+            borderTopWidth: 0.7,
             borderTopColor: "#F3F4F6",
-            paddingHorizontal: 16,
+            paddingHorizontal: 12,
             paddingVertical: 12,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 6,
-            elevation: 4,
-            // marginBottom: 10,
+            // shadowColor: "#000",
+            // shadowOffset: { width: 0, height: -2 },
+            // shadowOpacity: 0.05,
+            // shadowRadius: 6,
+            // elevation: 4,
+            // marginTop: 10,
           }}
         >
           {imageUri && (
@@ -1168,22 +1215,28 @@ function FeedTab() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 12,
-              marginBottom: 23,
+              backgroundColor: "#F9FAFB",
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: "#E5E7EB",
+              paddingHorizontal: 6,
+              paddingVertical: 4,
+              minHeight: 48,
             }}
           >
             <TouchableOpacity
               onPress={pickImage}
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "#000000ff",
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: "#000000",
                 justifyContent: "center",
                 alignItems: "center",
+                marginRight: 8,
               }}
             >
-              <IconPhoto size={20} color="#ffffffff" />
+              <IconPlusFilled size={18} color="#FFFFFF" />
             </TouchableOpacity>
 
             <TextInput
@@ -1194,15 +1247,9 @@ function FeedTab() {
               onChangeText={setInputText}
               style={{
                 flex: 1,
-                height: 42,
-                backgroundColor: "#F9FAFB",
-                borderRadius: 21,
-                paddingHorizontal: 16,
                 fontSize: 15,
                 color: "#1D1A27",
-                borderWidth: 1,
-                borderColor: "#E5E7EB",
-                // textAlign:"center"
+                paddingVertical: 8,
               }}
             />
 
@@ -1210,13 +1257,14 @@ function FeedTab() {
               onPress={handleSend}
               disabled={uploading || (!inputText.trim() && !imageUri)}
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
                 backgroundColor:
-                  inputText.trim() || imageUri ? "#1D1A27" : "#F3F4F6",
+                  inputText.trim() || imageUri ? "#1D1A27" : "#E5E7EB",
                 justifyContent: "center",
                 alignItems: "center",
+                marginLeft: 8,
               }}
             >
               {uploading ? (
@@ -1225,7 +1273,7 @@ function FeedTab() {
                   color={inputText.trim() || imageUri ? "#FFFFFF" : "#9CA3AF"}
                 />
               ) : (
-                <IconArrowNarrowRight
+                <IconArrowNarrowUp
                   strokeWidth={2.5}
                   size={18}
                   color={inputText.trim() || imageUri ? "#FFFFFF" : "#9CA3AF"}
@@ -1248,12 +1296,19 @@ export default function ExploreScreen() {
   return (
     <SwipeTabWrapper tabIndex={2}>
       <StatusBar style="dark" />
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: "#F8FAFB" }}
-        edges={["top", "bottom"]}
-      >
-        <FeedTab />
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <LinearGradient
+          colors={["#DDDCEA", "#FFFFFF"]}
+          locations={[0, 0.2]}
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        />
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "transparent" }}
+          edges={["top", "bottom"]}
+        >
+          <FeedTab />
+        </SafeAreaView>
+      </View>
     </SwipeTabWrapper>
   );
 }

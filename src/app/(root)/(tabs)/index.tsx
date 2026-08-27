@@ -165,7 +165,7 @@ const HomeCard = React.memo(function HomeCard({
           <WeatherOutfitCard />
           <Pressable
             onPress={() =>
-              router.push("/(root)/(ai-features)/outfit-suggestion" as never)
+              router.push("/(root)/(ai-features)/stylist-chat" as never)
             }
           >
             <LookAIBanner

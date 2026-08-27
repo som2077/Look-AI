@@ -4,12 +4,11 @@ import {
   subscribeToWardrobeRealtime,
   useUserWardrobeStore,
 } from "@/features/wardrobe/model/user-wardrobe-store";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { SkeletonList } from "@/shared/ui/Skeleton";
-import { useAuth } from "@clerk/clerk-expo";
-// import { PremiumGradientBackground } from "@/shared/ui/PremiumGradientBackground";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
-// import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
+import { useAuth } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import {
   IconAdjustmentsHorizontal,
@@ -36,8 +35,8 @@ import {
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { StatusBar } from "expo-status-bar";
 import React, {
   useCallback,
@@ -52,11 +51,26 @@ import {
   Modal,
   PanResponder,
   Pressable,
+  Text as RNText,
   ScrollView,
-  Text,
+  StyleSheet,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const Text = (props: any) => {
+  const { style, ...rest } = props;
+  const flatStyle = StyleSheet.flatten(style || {});
+  let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
+
+  if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
+  else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
+  else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
+  else if (flatStyle.fontWeight === "800") fontFamily = "BricolageGrotesque_800ExtraBold";
+
+  const { fontWeight, ...cleanStyle } = flatStyle;
+  return <RNText {...rest} style={[cleanStyle, { fontFamily }]} />;
+};
 
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 
@@ -353,12 +367,10 @@ const EmptyState = React.memo(function EmptyState({
 function BottomSheet({
   visible,
   onClose,
-  title,
   children,
 }: {
   visible: boolean;
   onClose: () => void;
-  title: string;
   children: React.ReactNode;
 }) {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -437,7 +449,7 @@ function BottomSheet({
               style={{
                 width: 40,
                 height: 4,
-                borderRadius: 2,
+                borderRadius: 20,
                 backgroundColor: "#E2E2EA",
               }}
             />
@@ -715,7 +727,7 @@ export default function WardrobeScreen() {
     else if (activeSort === "least_worn")
       items = [...items].sort((a, b) => a.wears - b.wears);
     return items;
-  }, [displayItems, activeFilters, activeSort]);
+  }, [displayItems, activeFilters, activeSort, outfits]);
 
   const activeFiltersCount =
     (activeFilters.category !== "all" ? 1 : 0) +
@@ -767,156 +779,124 @@ export default function WardrobeScreen() {
 
   return (
     <SwipeTabWrapper tabIndex={1}>
-      {/* <PremiumGradientBackground> */}
-      {/* <AppGradientBackground> */}
       <StatusBar style="dark" />
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: "#ffffff" }}
-        edges={["top", "bottom"]}
-      >
-        {/* Header */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 16,
-            height: HEADER_HEIGHT,
-            zIndex: 10,
-            backgroundColor: "transparent",
-            marginBottom: 7,
-            marginTop: 7,
-          }}
+      <View style={{ flex: 1 }}>
+        <LinearGradient
+          colors={["#DDDCEA", "#FFFFFF"]}
+          locations={[0, 0.2]}
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        />
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "transparent" }}
+          edges={["top", "bottom"]}
         >
-          <View>
-            <Text
-              style={{
-                fontSize: 24,
-                color: "#1D1A27",
-                fontWeight: "800",
-              }}
-            >
-              Wardrobe
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-2">
-            <Pressable
-              onPress={handleAddClothesGallery}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 100,
-                borderWidth: 1,
-                borderColor: "#E2E2EA",
-                backgroundColor: "#F8F7FC",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <IconPlus size={20} color="#1D1A27" strokeWidth={1.8} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Filter Toolbar Row */}
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingBottom: 10,
-            paddingTop: 2,
-            backgroundColor: "transparent",
-            // marginBottom:5
-          }}
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8, alignItems: "center" }}
+          {/* Header */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              height: HEADER_HEIGHT,
+              zIndex: 10,
+              backgroundColor: "transparent",
+              marginBottom: 7,
+              marginTop: 7,
+            }}
           >
-            {/* Filter icon - blue dot when active */}
-            <Pressable
-              onPress={openCategory}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 14,
-                borderWidth: 0.7,
-                borderColor: "#E2E2EA",
-                backgroundColor: "#F8F7FC",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <IconAdjustmentsHorizontal
-                size={20}
-                color="#1D1A27"
-                strokeWidth={1.8}
-              />
-              {hasActiveFilter && (
-                <View
-                  style={{
-                    position: "absolute",
-                    top: 6,
-                    right: 6,
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: "#3B82F6",
-                    borderWidth: 1.5,
-                    borderColor: "#FFFFFF",
-                  }}
-                />
-              )}
-            </Pressable>
-
-            {/* Sort dropdown pill */}
-            <Pressable
-              onPress={openSort}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                borderRadius: 50,
-                borderWidth: 0.7,
-                borderColor: "#E2E2EA",
-                backgroundColor: "#F8F7FC",
-                height: 44,
-              }}
-            >
+            <View>
               <Text
                 style={{
-                  fontSize: 14,
-                  fontWeight: "500",
+                  fontSize: 24,
                   color: "#1D1A27",
+                  fontWeight: "800",
                 }}
               >
-                {sortLabel}
+                Wardrobe
               </Text>
-              <IconChevronDown size={14} color="#6B7280" strokeWidth={2.5} />
-            </Pressable>
-
-            {/* Active filter removable chip */}
-            {hasActiveFilter && (
+            </View>
+            <View className="flex-row items-center gap-2">
               <Pressable
-                onPress={() =>
-                  setActiveFilters({
-                    category: "all",
-                    occasion: "all",
-                    season: "all",
-                    rating: 0,
-                  })
-                }
+                onPress={handleAddClothesGallery}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 100,
+                  borderWidth: 1,
+                  borderColor: "#E2E2EA",
+                  backgroundColor: "#F8F7FC95",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconPlus size={20} color="#1D1A27" strokeWidth={1.8} />
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Filter Toolbar Row */}
+          <View
+            style={{
+              paddingHorizontal: 16,
+              paddingBottom: 10,
+              paddingTop: 2,
+              backgroundColor: "transparent",
+            }}
+          >
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, alignItems: "center" }}
+            >
+              {/* Filter icon - blue dot when active */}
+              <Pressable
+                onPress={openCategory}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  borderWidth: 0.7,
+                  borderColor: "#E2E2EA",
+                  backgroundColor: "#F8F7FC95",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconAdjustmentsHorizontal
+                  size={20}
+                  color="#1D1A27"
+                  strokeWidth={1.8}
+                />
+                {hasActiveFilter && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      right: 6,
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: "#3B82F6",
+                      borderWidth: 1.5,
+                      borderColor: "#FFFFFF",
+                    }}
+                  />
+                )}
+              </Pressable>
+
+              {/* Sort dropdown pill */}
+              <Pressable
+                onPress={openSort}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 5,
+                  gap: 4,
                   paddingHorizontal: 14,
                   paddingVertical: 10,
                   borderRadius: 50,
-                  borderWidth: 0,
-                  backgroundColor: "#1D1A27",
+                  borderWidth: 0.7,
+                  borderColor: "#E2E2EA",
+                  backgroundColor: "#F8F7FC95",
                   height: 44,
                 }}
               >
@@ -924,127 +904,157 @@ export default function WardrobeScreen() {
                   style={{
                     fontSize: 14,
                     fontWeight: "500",
-                    color: "#FFFFFF",
-                    // marginRight:10
+                    color: "#1D1A27",
                   }}
                 >
-                  {categoryLabel}
+                  {sortLabel}
                 </Text>
-                <IconX size={13} color="#FFFFFF" strokeWidth={2.5} />
+                <IconChevronDown size={14} color="#6B7280" strokeWidth={2.5} />
               </Pressable>
-            )}
-          </ScrollView>
-        </View>
 
-        {/* Category Tabs Strip (plain text) */}
-        <View
-          style={{
-            borderBottomWidth: 1,
-            borderBottomColor: "#F0F0F0",
-            marginBottom: 0,
-          }}
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              gap: 20,
-              alignItems: "center",
-            }}
-          >
-            {HORIZONTAL_TABS.map((tab) => {
-              const isActive = activeFilters.category === tab.value;
-              return (
+              {/* Active filter removable chip */}
+              {hasActiveFilter && (
                 <Pressable
-                  key={tab.value}
                   onPress={() =>
                     setActiveFilters({
-                      ...activeFilters,
-                      category: isActive ? "all" : (tab.value as any),
+                      category: "all",
+                      occasion: "all",
+                      season: "all",
+                      rating: 0,
                     })
                   }
-                  style={{ paddingBottom: 12, position: "relative" }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderRadius: 50,
+                    borderWidth: 0,
+                    backgroundColor: "#1D1A27",
+                    height: 44,
+                  }}
                 >
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: isActive ? "600" : "400",
-                      color: isActive ? "#000000" : "#9B9BAF",
+                      fontWeight: "500",
+                      color: "#FFFFFF",
                     }}
                   >
-                    {tab.label}
+                    {categoryLabel}
                   </Text>
-                  {isActive && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        bottom: -1,
-                        left: 0,
-                        right: 0,
-                        height: 2,
-                        backgroundColor: "#000000",
-                      }}
-                    />
-                  )}
+                  <IconX size={13} color="#FFFFFF" strokeWidth={2.5} />
                 </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
+              )}
+            </ScrollView>
+          </View>
 
-        {/* Grid */}
-        <View style={{ flex: 1, zIndex: 1 }}>
-          {combinedData.length === 0 ? (
-            isSyncing ? (
-              // First DB sync in flight — show placeholders instead of the
-              // empty state, which would flash before the rows arrive.
-              <SkeletonList count={6} cardHeight={140} />
+          {/* Category Tabs Strip (plain text) */}
+          <View
+            style={{
+              borderBottomWidth: 1,
+              borderBottomColor: "#F0F0F0",
+              marginBottom: 0,
+            }}
+          >
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                gap: 20,
+                alignItems: "center",
+              }}
+            >
+              {HORIZONTAL_TABS.map((tab) => {
+                const isActive = activeFilters.category === tab.value;
+                return (
+                  <Pressable
+                    key={tab.value}
+                    onPress={() =>
+                      setActiveFilters({
+                        ...activeFilters,
+                        category: isActive ? "all" : (tab.value as any),
+                      })
+                    }
+                    style={{ paddingBottom: 12, position: "relative" }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: isActive ? "600" : "400",
+                        color: isActive ? "#000000" : "#9B9BAF",
+                      }}
+                    >
+                      {tab.label}
+                    </Text>
+                    {isActive && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          bottom: -1,
+                          left: 0,
+                          right: 0,
+                          height: 2,
+                          backgroundColor: "#000000",
+                        }}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Grid */}
+          <View style={{ flex: 1, zIndex: 1 }}>
+            {combinedData.length === 0 ? (
+              isSyncing ? (
+                // First DB sync in flight — show placeholders instead of the
+                // empty state, which would flash before the rows arrive.
+                <SkeletonList count={6} cardHeight={140} />
+              ) : (
+                <Animated.ScrollView
+                  showsVerticalScrollIndicator={false}
+                  onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: true, listener: hideTabBarOnScroll },
+                  )}
+                  scrollEventThrottle={16}
+                >
+                  <EmptyState onAdd={handleAddClothesGallery} />
+                </Animated.ScrollView>
+              )
             ) : (
-              <Animated.ScrollView
+              <AnimatedFlashList
+                data={combinedData}
+                key="grid-view"
                 showsVerticalScrollIndicator={false}
                 onScroll={Animated.event(
                   [{ nativeEvent: { contentOffset: { y: scrollY } } }],
                   { useNativeDriver: true, listener: hideTabBarOnScroll },
                 )}
                 scrollEventThrottle={16}
-              >
-                <EmptyState onAdd={handleAddClothesGallery} />
-              </Animated.ScrollView>
-            )
-          ) : (
-            <AnimatedFlashList
-              data={combinedData}
-              key="grid-view"
-              showsVerticalScrollIndicator={false}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                { useNativeDriver: true, listener: hideTabBarOnScroll },
-              )}
-              scrollEventThrottle={16}
-              contentContainerStyle={{
-                paddingBottom: 140,
-                paddingTop: 10,
-                paddingHorizontal: GRID_PADDING,
-              }}
-              numColumns={NUM_COLUMNS}
-              renderItem={renderGridItem}
-            />
-          )}
-        </View>
-      </SafeAreaView>
-      {/* </PremiumGradientBackground> */}
-      {/* <AppGradientBackground> */}
-
+                contentContainerStyle={{
+                  paddingBottom: 140,
+                  paddingTop: 10,
+                  paddingHorizontal: GRID_PADDING,
+                }}
+                numColumns={NUM_COLUMNS}
+                renderItem={renderGridItem}
+              />
+            )}
+          </View>
+        </SafeAreaView>
+      </View>
       {/* Filter Bottom Sheet */}
       <BottomSheet
         visible={isCategoryOpen}
         onClose={() => setIsCategoryOpen(false)}
-        title="Filters"
       >
         <ScrollView
           style={{ maxHeight: SCREEN_HEIGHT * 0.7 }}
-          // contentContainerStyle={{ paddingBottom: 32 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Category Section */}
@@ -1055,7 +1065,6 @@ export default function WardrobeScreen() {
               color: "#1D1A27",
               paddingHorizontal: 16,
               marginTop: 10,
-              textAlign: "center",
               marginBottom: 13,
             }}
           >
@@ -1066,8 +1075,7 @@ export default function WardrobeScreen() {
               flexDirection: "row",
               flexWrap: "wrap",
               paddingHorizontal: 16,
-              // paddingVertical:12,
-              justifyContent: "center",
+              justifyContent: "flex-start",
               gap: 10,
               paddingBottom: 16,
             }}
@@ -1089,7 +1097,7 @@ export default function WardrobeScreen() {
                     gap: 6,
                     paddingHorizontal: 16,
                     paddingVertical: 10,
-                    borderRadius: 50,
+                    borderRadius: 20,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
@@ -1120,7 +1128,6 @@ export default function WardrobeScreen() {
               fontWeight: "600",
               color: "#1D1A27",
               paddingHorizontal: 16,
-              textAlign: "center",
               marginTop: 10,
               marginBottom: 13,
             }}
@@ -1133,7 +1140,7 @@ export default function WardrobeScreen() {
               flexWrap: "wrap",
               paddingHorizontal: 16,
               gap: 10,
-              justifyContent: "center",
+              justifyContent: "flex-start",
               paddingBottom: 16,
             }}
           >
@@ -1147,7 +1154,7 @@ export default function WardrobeScreen() {
                 gap: 6,
                 paddingHorizontal: 16,
                 paddingVertical: 10,
-                borderRadius: 50,
+                borderRadius: 20,
                 backgroundColor:
                   tempFilters.occasion === "all" ? "#1D1A27" : "#F4F4F6",
                 borderWidth: tempFilters.occasion === "all" ? 0 : 1,
@@ -1182,7 +1189,7 @@ export default function WardrobeScreen() {
                     gap: 6,
                     paddingHorizontal: 16,
                     paddingVertical: 10,
-                    borderRadius: 50,
+                    borderRadius: 20,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
@@ -1212,7 +1219,7 @@ export default function WardrobeScreen() {
               paddingHorizontal: 16,
               marginTop: 10,
               marginBottom: 13,
-              textAlign: "center",
+              textAlign: "left",
             }}
           >
             Season
@@ -1223,7 +1230,7 @@ export default function WardrobeScreen() {
               flexWrap: "wrap",
               paddingHorizontal: 16,
               gap: 10,
-              justifyContent: "center",
+              justifyContent: "flex-start",
               paddingBottom: 16,
             }}
           >
@@ -1235,7 +1242,7 @@ export default function WardrobeScreen() {
                 gap: 6,
                 paddingHorizontal: 16,
                 paddingVertical: 10,
-                borderRadius: 50,
+                borderRadius: 20,
                 backgroundColor:
                   tempFilters.season === "all" ? "#1D1A27" : "#F4F4F6",
                 borderWidth: tempFilters.season === "all" ? 0 : 1,
@@ -1270,7 +1277,7 @@ export default function WardrobeScreen() {
                     gap: 6,
                     paddingHorizontal: 16,
                     paddingVertical: 10,
-                    borderRadius: 50,
+                    borderRadius: 20,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
@@ -1300,7 +1307,7 @@ export default function WardrobeScreen() {
               paddingHorizontal: 16,
               marginTop: 10,
               marginBottom: 13,
-              textAlign: "center",
+              textAlign: "left",
             }}
           >
             Minimum Rating
@@ -1312,7 +1319,7 @@ export default function WardrobeScreen() {
               paddingHorizontal: 16,
               gap: 10,
               paddingBottom: 16,
-              justifyContent: "center",
+              justifyContent: "flex-start",
             }}
           >
             {[0, 1, 2, 3, 4, 5].map((rating) => {
@@ -1327,7 +1334,7 @@ export default function WardrobeScreen() {
                     gap: 6,
                     paddingHorizontal: 16,
                     paddingVertical: 10,
-                    borderRadius: 50,
+                    borderRadius: 20,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
@@ -1407,13 +1414,11 @@ export default function WardrobeScreen() {
       <BottomSheet
         visible={isSortOpen}
         onClose={() => setIsSortOpen(false)}
-        title="Sort by"
       >
         <View
           style={{
             paddingHorizontal: 20,
             gap: 8,
-            // paddingTop: 4,
             paddingBottom: 20,
           }}
         >
