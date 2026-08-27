@@ -24,6 +24,7 @@ import {
   useWeatherStore,
   type WeatherData,
 } from "@/features/weather/model/weather-store";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { AddClothesCTA } from "@/shared/ui/AddClothesCTA";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { CalendarPlanBanner } from "@/shared/ui/CalendarPlanBanner";
@@ -35,7 +36,6 @@ import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { IconAlertTriangle } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
-import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,

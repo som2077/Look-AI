@@ -1,6 +1,6 @@
-import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { useCommunityPosts } from "@/features/social/api/useCommunityPosts";
 import { useNotifications } from "@/features/social/api/useNotifications";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { FlashList } from "@shopify/flash-list";
 import {
@@ -403,7 +403,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
   // Feed only carries a cheap count aggregate — actual comments load on demand.
   const countAggregate = (post as any).comments_count?.[0]?.count ?? (post as any).post_comments?.[0]?.count;
   const replyCount = commentsLoaded ? comments.length : (countAggregate ?? 0);
-  
+
   // Use loaded comments if available, otherwise use recent_comments from feed
   const sourceComments = commentsLoaded ? comments : ((post as any).recent_comments || []);
 
@@ -467,7 +467,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
     isCurrentUser && user?.imageUrl
       ? user.imageUrl
       : post.user_profiles?.avatar_url ||
-        "https://api.dicebear.com/7.x/avataaars/png?seed=" + post.user_id;
+      "https://api.dicebear.com/7.x/avataaars/png?seed=" + post.user_id;
 
   return (
     <View
@@ -475,6 +475,7 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
         flexDirection: "row",
         alignItems: "flex-start",
         marginBottom: 24,
+        backgroundColor:"fff00"
       }}
     >
       {/* Left Column: Squircle Avatar */}
@@ -1248,7 +1249,7 @@ export default function ExploreScreen() {
     <SwipeTabWrapper tabIndex={2}>
       <StatusBar style="dark" />
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+        style={{ flex: 1, backgroundColor: "#F8FAFB" }}
         edges={["top", "bottom"]}
       >
         <FeedTab />
