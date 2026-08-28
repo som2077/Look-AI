@@ -34,19 +34,35 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  Text,
+  StyleSheet,
+  Text as RNText,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { posthogAnalytics } from "@/shared/telemetry/posthog";
+
+const Text = (props: any) => {
+  const { style, ...rest } = props;
+  const flatStyle = StyleSheet.flatten(style || {});
+  let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
+  
+  if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
+  else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
+  else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
+  else if (flatStyle.fontWeight === "800") fontFamily = "BricolageGrotesque_800ExtraBold";
+
+  // Delete fontWeight to avoid react-native font overriding bugs
+  const { fontWeight, ...cleanStyle } = flatStyle;
+  return <RNText style={[cleanStyle, { fontFamily }]} {...rest} />;
+};
 
 // ─── Shared Components ───────────────────────────────────────────────────────
 
 const SectionTitle = ({ title }: { title: string }) => (
   <Text
     style={{
-      fontSize: 16,
-      fontWeight: "500",
+      fontSize: 18,
+      fontFamily: "BricolageGrotesque_800ExtraBold",
       color: "#1D1D1D",
       marginBottom: 9,
       marginTop: 24,
@@ -431,13 +447,13 @@ const ProfileScreenUI = ({
           )}
         </View>
         <View style={{ flex: 1, justifyContent: "center", marginBottom: 4 }}>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
+          <RNText style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
             {displayName}
-          </Text>
+          </RNText>
           {displayUsername ? (
-            <Text style={{ fontSize: 14, color: "#6B7280", marginTop: 2 }}>
+            <RNText style={{ fontSize: 14, color: "#6B7280", marginTop: 2 }}>
               @{displayUsername}
-            </Text>
+            </RNText>
           ) : null}
         </View>
       </CardContainer>
@@ -492,7 +508,7 @@ const ProfileScreenUI = ({
               style={{
                 color: "rgba(255,255,255,0.9)",
                 fontSize: 14,
-                fontWeight: "500",
+                fontWeight: "800",
                 textAlign: "center",
                 marginBottom: 20,
               }}

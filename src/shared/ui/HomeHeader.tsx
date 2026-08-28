@@ -19,12 +19,12 @@ export const HomeHeader = React.memo(function HomeHeader() {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        marginTop: 7,
+        // marginTop: 1,
       }}
     >
       <ExpoImage
         source={require("@/assets/images/getStartedLogo.png")}
-        style={{ height: 56, width: 180, marginLeft: -32 }}
+        style={{ height: 66, width: 180, marginLeft: -32 }}
         contentFit="contain"
         cachePolicy="memory-disk"
       />

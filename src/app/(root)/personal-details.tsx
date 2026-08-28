@@ -15,8 +15,22 @@ import {
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text as RNText, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const Text = (props: any) => {
+  const { style, ...rest } = props;
+  const flatStyle = StyleSheet.flatten(style || {});
+  let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
+  
+  if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
+  else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
+  else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
+  else if (flatStyle.fontWeight === "800") fontFamily = "BricolageGrotesque_800ExtraBold";
+
+  const { fontWeight, ...cleanStyle } = flatStyle;
+  return <RNText style={[cleanStyle, { fontFamily }]} {...rest} />;
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
