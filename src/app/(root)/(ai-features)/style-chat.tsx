@@ -1,4 +1,4 @@
-import { IconArrowNarrowUp, IconPlusFilled } from "@tabler/icons-react-native";
+import { IconArrowNarrowUp } from "@tabler/icons-react-native";
 import React, { useEffect, useRef, useState } from 'react';
 import { FlatList, Keyboard, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { OpenAI, isReactElement, useChat } from 'react-native-gen-ui';
@@ -31,8 +31,7 @@ Rules:
 - Hinglish mein baat karo (Roman script).
 - You MUST ALWAYS use the suggest_outfit tool to suggest outfits. DO NOT output outfit images or text as markdown in the chat bubble. Always call the tool.
 - Organize suggestions logically by Top, Bottom, Footwear, Accessories.
-- Outfit suggest karne se PEHLE show_weather tool call karo (if applicable).
-- Date mention ho to ALWAYS show_date_picker call karo.
+- If you need to show weather or dates, call the 'show_weather' and 'show_date_picker' tools SEPARATELY. NEVER combine their names into a single call (e.g. do not invent "show_date_pickershow_weather").
 `;
 
 // Tracks live keyboard height so we can push the input bar above it reliably (Android + iOS)
@@ -73,7 +72,7 @@ export default function StyleChatScreen() {
         parameters: z.object({
           city: z.string(),
           temperature: z.number(),
-          condition: z.enum(['sunny', 'cloudy', 'rainy', 'humid', 'cold', 'windy', 'hazy']),
+          condition: z.enum(['sunny','cloudy','rainy','humid','cold','windy','hazy','clear']),
           ai_tip: z.string().describe('One-line Hinglish styling tip'),
         }),
         render: (args) => ({
