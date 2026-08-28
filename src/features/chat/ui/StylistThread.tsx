@@ -56,24 +56,13 @@ export const StylistThread = () => {
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
               <ComposerPrimitive.Input
-                render={({ value, onChangeText, onFocus, onBlur, ...rest }: any) => (
-                  <TextInput
-                    {...rest}
-                    value={value}
-                    onChangeText={onChangeText}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    placeholder="Ask about outfits..."
-                    placeholderTextColor="#9CA3AF"
-                    style={styles.input}
-                    multiline
-                  />
-                )}
+                placeholder="Ask about outfits..."
+                placeholderTextColor="#9CA3AF"
+                style={styles.input}
+                multiline
               />
-              <ComposerPrimitive.Send asChild>
-                 <TouchableOpacity style={styles.sendButton}>
-                   <IconSend size={20} color="#FFFFFF" />
-                 </TouchableOpacity>
+              <ComposerPrimitive.Send style={styles.sendButton}>
+                <IconSend size={20} color="#FFFFFF" />
               </ComposerPrimitive.Send>
             </View>
           </View>

@@ -1,6 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Text, View } from "react-native";
+import { Text, View, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 
 interface LookAIBannerProps {
   score?: number; // 0 to 10
@@ -11,9 +12,12 @@ export const LookAIBanner = React.memo(function LookAIBanner({
 }: LookAIBannerProps) {
   const clampedScore = Math.max(0, Math.min(10, score));
   const progressPercent = (clampedScore / 10) * 100;
+  const router = useRouter();
 
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => router.push("/(root)/(ai-features)/style-chat")}
       style={{
         marginTop: 5,
         backgroundColor: "#FFFFFF",
@@ -96,6 +100,6 @@ export const LookAIBanner = React.memo(function LookAIBanner({
         Weather-friendly style starts here. Find outfits curated for
         today&apos;s forecast. Tap to see outfit suggestions.
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 });

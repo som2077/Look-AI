@@ -1,7 +1,7 @@
 import { useStylistRuntime } from '@/features/chat/model/useStylistRuntime';
 import { CalendarCard, OutfitCard } from '@/features/chat/ui/GenerativeCards';
 import { StylistThread } from '@/features/chat/ui/StylistThread';
-import { useWardrobeStore } from '@/features/wardrobe/model/user-wardrobe-store';
+import { useUserWardrobeStore } from '@/features/wardrobe/model/user-wardrobe-store';
 import { AssistantRuntimeProvider, makeAssistantTool } from '@assistant-ui/react-native';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
@@ -17,7 +17,7 @@ const WardrobeSearchTool = makeAssistantTool({
   }),
   execute: async (args) => {
     // Note: since this is executed out of band, we'll need to fetch store data directly
-    const items = useWardrobeStore.getState().items;
+    const items = useUserWardrobeStore.getState().items;
     
     const matches = items.filter((item: any) => {
       let match = true;

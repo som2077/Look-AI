@@ -19,6 +19,7 @@ const config: ExpoConfig = {
   android: {
     package: "com.lookai.android",
     versionCode: 1,
+    
     allowBackup: false,
     permissions: [
       "READ_MEDIA_IMAGES",
@@ -46,7 +47,7 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     googleServicesFile: "./google-services.json",
-    softwareKeyboardLayoutMode: "resize",
+    softwareKeyboardLayoutMode: "pan",
   } as any,
 
 
@@ -131,4 +132,3 @@ const config: ExpoConfig = {
 };
 
 export default config;
-
