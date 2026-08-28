@@ -12,12 +12,25 @@ import { useAuth } from "@clerk/clerk-expo";
 import { FlashList } from "@shopify/flash-list";
 import {
   IconAdjustmentsHorizontal,
+  IconBeach,
+  IconBriefcase,
+  IconBuilding,
   IconChevronDown,
   IconClock,
+  IconDiamond,
   IconHanger,
+  IconLeaf,
+  IconMoon,
   IconPlus,
+  IconRun,
+  IconShirt,
+  IconShoe,
+  IconSnowflake,
+  IconStarFilled,
+  IconSun,
   IconTrendingDown,
   IconTrendingUp,
+  IconUmbrella,
   IconX,
 } from "@tabler/icons-react-native";
 import { Image as ExpoImage } from "expo-image";
@@ -354,10 +367,12 @@ const EmptyState = React.memo(function EmptyState({
 function BottomSheet({
   visible,
   onClose,
+  title,
   children,
 }: {
   visible: boolean;
   onClose: () => void;
+  title: string;
   children: React.ReactNode;
 }) {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -436,7 +451,7 @@ function BottomSheet({
               style={{
                 width: 40,
                 height: 4,
-                borderRadius: 20,
+                borderRadius: 2,
                 backgroundColor: "#E2E2EA",
               }}
             />
@@ -448,9 +463,91 @@ function BottomSheet({
   );
 }
 
+const getCategoryIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all clothes":
+      return <IconHanger size={size} color={color} />;
+    case "tops":
+    case "jackets":
+    case "hoodies":
+    case "outerwear":
+      return <IconShirt size={size} color={color} />;
+    case "bottoms":
+      return <IconHanger size={size} color={color} />;
+    case "shoes":
+      return <IconShoe size={size} color={color} />;
+    case "bags":
+    case "accessories":
+      return <IconBriefcase size={size} color={color} />;
+    case "dresses":
+    case "ethnic":
+      return <IconDiamond size={size} color={color} />;
+    case "activewear":
+    case "sportswear":
+      return <IconRun size={size} color={color} />;
+    case "formal":
+      return <IconBuilding size={size} color={color} />;
+    default:
+      return null;
+  }
+};
 
+const getOccasionIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all occasions":
+      return <IconHanger size={size} color={color} />;
+    case "gym":
+    case "sports":
+    case "outdoor":
+      return <IconRun size={size} color={color} />;
+    case "beach":
+    case "travel":
+      return <IconBeach size={size} color={color} />;
+    case "sleepwear":
+    case "lounge":
+      return <IconMoon size={size} color={color} />;
+    case "office":
+    case "interview":
+    case "business casual":
+      return <IconBuilding size={size} color={color} />;
+    case "party":
+    case "wedding":
+    case "date night":
+    case "festive":
+      return <IconDiamond size={size} color={color} />;
+    default:
+      return null;
+  }
+};
 
+const getSeasonIcon = (label: string, color: string) => {
+  const size = 16;
+  switch (label.toLowerCase()) {
+    case "all seasons":
+      return <IconLeaf size={size} color={color} />;
+    case "summer":
+      return <IconSun size={size} color={color} />;
+    case "winter":
+      return <IconSnowflake size={size} color={color} />;
+    case "spring":
+    case "autumn":
+      return <IconLeaf size={size} color={color} />;
+    case "monsoon":
+      return <IconUmbrella size={size} color={color} />;
+    default:
+      return null;
+  }
+};
 
+const getRatingIcon = (label: string, color: string) => {
+  const size = 16;
+  if (label.includes("Stars") || label === "Any Rating") {
+    return <IconStarFilled size={size} color={color} />;
+  }
+  return null;
+};
 
 const getSortIcon = (value: string, color: string) => {
   const size = 18;
@@ -632,7 +729,7 @@ export default function WardrobeScreen() {
     else if (activeSort === "least_worn")
       items = [...items].sort((a, b) => a.wears - b.wears);
     return items;
-  }, [displayItems, activeFilters, activeSort, outfits]);
+  }, [displayItems, activeFilters, activeSort]);
 
   const activeFiltersCount =
     (activeFilters.category !== "all" ? 1 : 0) +
@@ -746,6 +843,7 @@ export default function WardrobeScreen() {
               paddingBottom: 10,
               paddingTop: 2,
               backgroundColor: "transparent",
+              // marginBottom:5
             }}
           >
             <ScrollView
@@ -845,6 +943,7 @@ export default function WardrobeScreen() {
                       fontSize: 14,
                       fontWeight: "500",
                       color: "#FFFFFF",
+                      // marginRight:10
                     }}
                   >
                     {categoryLabel}
@@ -957,9 +1056,11 @@ export default function WardrobeScreen() {
       <BottomSheet
         visible={isCategoryOpen}
         onClose={() => setIsCategoryOpen(false)}
+        title="Filters"
       >
         <ScrollView
           style={{ maxHeight: SCREEN_HEIGHT * 0.7 }}
+          // contentContainerStyle={{ paddingBottom: 32 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Category Section */}
@@ -970,6 +1071,7 @@ export default function WardrobeScreen() {
               color: "#1D1A27",
               paddingHorizontal: 16,
               marginTop: 10,
+              // textAlign: "center",
               marginBottom: 13,
             }}
           >
@@ -980,6 +1082,7 @@ export default function WardrobeScreen() {
               flexDirection: "row",
               flexWrap: "wrap",
               paddingHorizontal: 16,
+              // paddingVertical:12,
               justifyContent: "flex-start",
               gap: 10,
               paddingBottom: 16,
@@ -1002,12 +1105,16 @@ export default function WardrobeScreen() {
                     gap: 6,
                     paddingHorizontal: 16,
                     paddingVertical: 10,
-                    borderRadius: 10,
+                    borderRadius: 30,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
                   }}
                 >
+                  {getCategoryIcon(
+                    chip.label,
+                    isActive ? "#FFFFFF" : "#6B7280",
+                  )}
                   <Text
                     style={{
                       fontSize: 14,
@@ -1029,6 +1136,7 @@ export default function WardrobeScreen() {
               fontWeight: "600",
               color: "#1D1A27",
               paddingHorizontal: 16,
+              // textAlign: "center",
               marginTop: 10,
               marginBottom: 13,
             }}
@@ -1055,13 +1163,17 @@ export default function WardrobeScreen() {
                 gap: 6,
                 paddingHorizontal: 16,
                 paddingVertical: 10,
-                borderRadius: 10,
+                borderRadius: 30,
                 backgroundColor:
                   tempFilters.occasion === "all" ? "#1D1A27" : "#F4F4F6",
                 borderWidth: tempFilters.occasion === "all" ? 0 : 1,
                 borderColor: "#E2E2EA",
               }}
             >
+              {getOccasionIcon(
+                "all occasions",
+                tempFilters.occasion === "all" ? "#FFFFFF" : "#6B7280",
+              )}
               <Text
                 style={{
                   fontSize: 14,
@@ -1086,12 +1198,13 @@ export default function WardrobeScreen() {
                     gap: 6,
                     paddingHorizontal: 16,
                     paddingVertical: 10,
-                    borderRadius: 10,
+                    borderRadius: 50,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
                   }}
                 >
+                  {getOccasionIcon(occ, isActive ? "#FFFFFF" : "#6B7280")}
                   <Text
                     style={{
                       fontSize: 14,
@@ -1115,7 +1228,7 @@ export default function WardrobeScreen() {
               paddingHorizontal: 16,
               marginTop: 10,
               marginBottom: 13,
-              textAlign: "left",
+              textAlign: "center",
             }}
           >
             Season
@@ -1126,7 +1239,7 @@ export default function WardrobeScreen() {
               flexWrap: "wrap",
               paddingHorizontal: 16,
               gap: 10,
-              justifyContent: "flex-start",
+              justifyContent: "center",
               paddingBottom: 16,
             }}
           >
@@ -1138,13 +1251,17 @@ export default function WardrobeScreen() {
                 gap: 6,
                 paddingHorizontal: 16,
                 paddingVertical: 10,
-                borderRadius: 10,
+                borderRadius: 50,
                 backgroundColor:
                   tempFilters.season === "all" ? "#1D1A27" : "#F4F4F6",
                 borderWidth: tempFilters.season === "all" ? 0 : 1,
                 borderColor: "#E2E2EA",
               }}
             >
+              {getSeasonIcon(
+                "all seasons",
+                tempFilters.season === "all" ? "#FFFFFF" : "#6B7280",
+              )}
               <Text
                 style={{
                   fontSize: 14,
@@ -1169,12 +1286,13 @@ export default function WardrobeScreen() {
                     gap: 6,
                     paddingHorizontal: 16,
                     paddingVertical: 10,
-                    borderRadius: 10,
+                    borderRadius: 50,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
                   }}
                 >
+                  {getSeasonIcon(sea, isActive ? "#FFFFFF" : "#6B7280")}
                   <Text
                     style={{
                       fontSize: 14,
@@ -1198,7 +1316,7 @@ export default function WardrobeScreen() {
               paddingHorizontal: 16,
               marginTop: 10,
               marginBottom: 13,
-              textAlign: "left",
+              textAlign: "center",
             }}
           >
             Minimum Rating
@@ -1210,7 +1328,7 @@ export default function WardrobeScreen() {
               paddingHorizontal: 16,
               gap: 10,
               paddingBottom: 16,
-              justifyContent: "flex-start",
+              justifyContent: "center",
             }}
           >
             {[0, 1, 2, 3, 4, 5].map((rating) => {
@@ -1225,12 +1343,16 @@ export default function WardrobeScreen() {
                     gap: 6,
                     paddingHorizontal: 16,
                     paddingVertical: 10,
-                    borderRadius: 10,
+                    borderRadius: 50,
                     backgroundColor: isActive ? "#1D1A27" : "#F4F4F6",
                     borderWidth: isActive ? 0 : 1,
                     borderColor: "#E2E2EA",
                   }}
                 >
+                  {getRatingIcon(
+                    rating === 0 ? "Any Rating" : `${rating}+ Stars`,
+                    isActive ? "#FFFFFF" : "#6B7280",
+                  )}
                   <Text
                     style={{
                       fontSize: 14,
@@ -1285,7 +1407,7 @@ export default function WardrobeScreen() {
             style={{
               flex: 2,
               paddingVertical: 16,
-              borderRadius: 18,
+              borderRadius: 30,
               backgroundColor: "#1D1A27",
               alignItems: "center",
             }}
@@ -1301,11 +1423,13 @@ export default function WardrobeScreen() {
       <BottomSheet
         visible={isSortOpen}
         onClose={() => setIsSortOpen(false)}
+        title="Sort by"
       >
         <View
           style={{
             paddingHorizontal: 20,
             gap: 8,
+            // paddingTop: 4,
             paddingBottom: 20,
           }}
         >
