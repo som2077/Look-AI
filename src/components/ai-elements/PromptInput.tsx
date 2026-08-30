@@ -1,17 +1,16 @@
 /**
- * PromptInput — auto-resizing text input with a tools slot and a
- * submit button. Follows the Vercel AI Elements PromptInput design:
- * a card-style container with proper side margins, a tools slot on
- * the left, a textarea in the middle, and a submit button on the
- * right that always remains visible.
+ * PromptInput — light cream pill bar with a dark `+` (attach) button on
+ * the left, a growing multiline text input in the middle, and a single
+ * circular send button on the right.
  *
- * Visual states for the submit button:
- *  - idle + empty      → muted (light gray bg, muted arrow icon)
- *  - idle + has text   → active (dark bg, white arrow, soft shadow)
- *  - streaming         → stop (red bg, filled stop icon)
+ * Visual states for the send button:
+ *  - idle + empty      → muted (dim gray circle, dim arrow)
+ *  - idle + has text   → active (dark circle, white arrow)
+ *  - streaming         → stop (red circle, filled stop icon)
  *
- * The whole input area is wrapped in an outer View with proper
- * horizontal padding so it never bleeds edge-to-edge.
+ * The bar background is a warm off-white so it sits visually above the
+ * screen surface without feeling like a heavy dark slab. The dark `+`
+ * button anchors the left edge and reads as a primary action.
  */
 import React, { useCallback, useRef, useState } from "react";
 import {
@@ -26,14 +25,16 @@ import {
 import {
   IconArrowNarrowUp,
   IconPlayerStopFilled,
+  IconPlus,
 } from "@tabler/icons-react-native";
-import { colors, font, FONT_FAMILY, radii, space } from "./theme";
+import { colors, FONT_FAMILY, space } from "./theme";
 
 const MAX_LINES = 5;
 const LINE_HEIGHT = 22;
 const MIN_INPUT_HEIGHT = 24;
 const VERTICAL_PADDING = 12;
-const SUBMIT_SIZE = 40;
+const SUBMIT_SIZE = 36;
+const ATTACH_SIZE = 36;
 
 export interface PromptInputProps {
   value: string;
@@ -46,6 +47,8 @@ export interface PromptInputProps {
   style?: ViewStyle;
   /** Max characters; default 2000. */
   maxLength?: number;
+  /** Fires when the user taps the `+` (attach) button. */
+  onAttachPress?: () => void;
 }
 
 export function PromptInput({
@@ -54,12 +57,13 @@ export function PromptInput({
   onSubmit,
   isStreaming = false,
   tools,
-  placeholder = "Ask StyleAI…",
+  placeholder = "Type a message…",
   style,
   maxLength = 2000,
+  onAttachPress,
 }: PromptInputProps) {
   // We use a separate state for the content height so the input can
-  // grow with content but the submit button never gets pushed out of
+  // grow with content but the send button never gets pushed out of
   // view (the bar has a fixed-ish minHeight; the input grows inside
   // it, capped at MAX_LINES).
   const [contentHeight, setContentHeight] = useState(MIN_INPUT_HEIGHT);
@@ -78,7 +82,7 @@ export function PromptInput({
 
   const canSubmit = value.trim().length > 0 && !isStreaming;
 
-  const handlePress = useCallback(() => {
+  const handleSubmitPress = useCallback(() => {
     if (isStreaming) {
       // TODO(v2): wire to useChat abort hook.
       return;
@@ -93,12 +97,24 @@ export function PromptInput({
     <View style={[styles.outer, style]}>
       {tools ? <View style={styles.tools}>{tools}</View> : null}
       <View style={styles.bar}>
+        <Pressable
+          onPress={onAttachPress}
+          hitSlop={6}
+          style={({ pressed }) => [
+            styles.attach,
+            pressed && styles.pressed,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Attach"
+        >
+          <IconPlus size={18} color={colors.textInverse} strokeWidth={2.4} />
+        </Pressable>
         <TextInput
           ref={inputRef}
           value={value}
           onChangeText={onChange}
           placeholder={placeholder}
-          placeholderTextColor={colors.textSubtle}
+          placeholderTextColor="rgba(29,26,39,0.45)"
           multiline
           maxLength={maxLength}
           onContentSizeChange={handleContentSizeChange}
@@ -128,36 +144,28 @@ export function PromptInput({
           ]}
         />
         <Pressable
-          onPress={handlePress}
+          onPress={handleSubmitPress}
           disabled={!canSubmit && !isStreaming}
-          hitSlop={8}
+          hitSlop={6}
           style={({ pressed }) => [
             styles.submit,
-            {
-              backgroundColor: isStreaming
-                ? colors.error
-                : canSubmit
-                ? colors.text
-                : colors.surface,
-              borderColor: isStreaming
-                ? colors.error
-                : canSubmit
-                ? colors.text
-                : colors.border,
-              opacity: pressed ? 0.85 : 1,
-              transform: [{ scale: pressed ? 0.92 : 1 }],
-            },
+            isStreaming
+              ? styles.submitStop
+              : canSubmit
+              ? styles.submitActive
+              : styles.submitIdle,
+            pressed && styles.pressed,
           ]}
           accessibilityRole="button"
           accessibilityLabel={isStreaming ? "Stop generating" : "Send message"}
         >
           {isStreaming ? (
-            <IconPlayerStopFilled size={16} color={colors.textInverse} />
+            <IconPlayerStopFilled size={14} color={colors.textInverse} />
           ) : (
             <IconArrowNarrowUp
-              size={20}
-              color={canSubmit ? colors.textInverse : colors.textSubtle}
-              strokeWidth={2.8}
+              size={18}
+              color={canSubmit ? colors.textInverse : "rgba(29,26,39,0.35)"}
+              strokeWidth={2.4}
             />
           )}
         </Pressable>
@@ -167,17 +175,16 @@ export function PromptInput({
 }
 
 const styles = StyleSheet.create({
-  // Outer: the chat-bar wrapper. Horizontal padding gives the inner
-  // card a floating look with side margins. The bar is clearly
-  // inset from the screen edges (16px on each side) so it never
-  // bleeds edge-to-edge.
+  // Outer: the chat-bar wrapper. No top divider — the bar is a
+  // self-contained floating surface. 10pt side padding so the
+  // bar breathes from the screen edge. Extra paddingBottom is
+  // added by the screen (insets.bottom + 8) to clear the home
+  // indicator.
   outer: {
-    paddingHorizontal: space.lg,
+    paddingHorizontal: 10,
     paddingTop: space.sm,
     paddingBottom: space.sm,
     backgroundColor: colors.bg,
-    borderTopWidth: 0.5,
-    borderTopColor: colors.borderSubtle,
   },
   tools: {
     flexDirection: "row",
@@ -185,55 +192,82 @@ const styles = StyleSheet.create({
     columnGap: space.xs,
     marginBottom: space.xs,
   },
-  // Bar: the floating input card. Distinct gray surface so it reads
-  // as a card against the white page. Side margins come from the
-  // outer container's paddingHorizontal; this is just the rounded
-  // card with input + button.
+  // Bar: the floating input. Warm off-white surface, full pill radius,
+  // hairline border. Inner padding is tight on both sides (4pt) so the
+  // `+` and send buttons sit flush against the bar edge.
   bar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radii.xl + 6,
+    backgroundColor: "#F5F3F0",
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.border,
-    paddingLeft: space.md + 2,
+    borderColor: "rgba(29,26,39,0.08)",
+    paddingLeft: 4,
     paddingRight: 4,
     paddingVertical: 4,
-    minHeight: 48,
+    minHeight: 50,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 2,
+  },
+  // Attach (`+`) button: solid dark circle on the left, white plus
+  // icon. The dark fill is the primary visual anchor of the bar —
+  // it must read as a clearly separated circle against the cream
+  // background, not blend in. A subtle drop shadow lifts it off
+  // the surface.
+  attach: {
+    width: ATTACH_SIZE,
+    height: ATTACH_SIZE,
+    borderRadius: ATTACH_SIZE / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.focus,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.18,
+    shadowRadius: 2,
+    elevation: 2,
   },
   // Input: flex:1 so it takes remaining width. Height grows with
-  // content (capped at MAX_LINES). scrollEnabled so the user can
-  // scroll within the input rather than push the submit button.
+  // content (capped at MAX_LINES). Dark text + soft-muted placeholder
+  // to read against the cream bar.
   input: {
     flex: 1,
-    fontSize: font.body + 1,
-    lineHeight: LINE_HEIGHT,
+    fontSize: 15,
+    lineHeight: 22,
     color: colors.text,
     fontFamily: FONT_FAMILY["400"],
-    paddingTop: Platform.OS === "ios" ? 8 : VERTICAL_PADDING,
-    paddingBottom: Platform.OS === "ios" ? 8 : VERTICAL_PADDING,
-    paddingHorizontal: 2,
-    minHeight: MIN_INPUT_HEIGHT + VERTICAL_PADDING,
-    maxHeight: MAX_LINES * LINE_HEIGHT + VERTICAL_PADDING,
+    paddingTop: Platform.OS === "ios" ? 10 : 12,
+    paddingBottom: Platform.OS === "ios" ? 10 : 12,
+    paddingHorizontal: space.sm,
+    minHeight: 24,
+    maxHeight: MAX_LINES * LINE_HEIGHT + 20,
   },
-  // Submit: 40x40 fixed circle, always visible, never grows.
+  // Submit: 36x36 fixed circle, always visible, never grows.
+  // Idle = warm gray circle that is clearly distinct from the cream
+  // bar (the previous shade #E8E4DD was too close to the bar tint
+  // and read as flat). Active = solid dark when text is present.
+  // Stop = red when streaming. Matches the Image #23 reference:
+  // a quiet light circle that becomes a solid dark pop once the
+  // user has typed something.
   submit: {
     width: SUBMIT_SIZE,
     height: SUBMIT_SIZE,
     borderRadius: SUBMIT_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: space.sm,
-    borderWidth: 1.5,
-    shadowColor: colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 4,
-    elevation: 3,
+    marginLeft: 4,
   },
+  submitActive: {
+    backgroundColor: colors.focus,
+  },
+  submitIdle: {
+    backgroundColor: "#D4D0C8",
+  },
+  submitStop: {
+    backgroundColor: colors.error,
+  },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.94 }] },
 });

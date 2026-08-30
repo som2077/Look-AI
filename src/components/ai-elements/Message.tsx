@@ -52,13 +52,15 @@ const styles = StyleSheet.create({
   rowSystem: {
     justifyContent: "center",
   },
+  // User bubble — light gray surface, dark text, all sides equally
+  // rounded. Matches the Claude reference: subtle, not a heavy
+  // dark pill. Sits at 80% max width so long messages wrap.
   bubbleUser: {
     maxWidth: "80%",
     backgroundColor: colors.userBubble,
     paddingHorizontal: space.md + 2,
     paddingVertical: space.sm + 2,
-    borderRadius: radii.xl,
-    borderBottomRightRadius: 6,
+    borderRadius: radii.lg,
   },
   bubbleSystem: {
     maxWidth: "85%",

@@ -30,7 +30,7 @@ export const useSupabase = () => {
 
       try {
         const getSupabaseToken = isSignedIn
-          ? () => getTokenRef.current({ template: "supabase" })
+          ? () => getTokenRef.current({ template: "supabase2" })
           : undefined;
 
         setSupabaseTokenGetter(getSupabaseToken);

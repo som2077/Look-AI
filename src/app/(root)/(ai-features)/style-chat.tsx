@@ -2,17 +2,19 @@
 // edge function. Rebuilt on top of AI Elements-style components
 // (`src/components/ai-elements/`) for the visual language: assistant
 // messages render full-width and transparent; user messages sit in a
-// secondary-bg bubble on the right; tool outputs are wrapped in a
+// light gray bubble on the right; tool outputs are wrapped in a
 // collapsible `Tool` shell with a status badge; streaming shows a
 // blinking caret at the end of the assistant text.
+//
+// UI layout (post-refresh): a top bar with a back arrow, the
+// "StyleAI" title centered, and a peach `+` button on the right
+// that opens a confirmation modal before clearing the conversation.
 
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import {
-  IconCheck,
-  IconCopy,
-  IconRefresh,
+  IconChevronLeft,
 } from '@tabler/icons-react-native';
-import * as Clipboard from 'expo-clipboard';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Keyboard,
@@ -30,13 +32,12 @@ import {
   Conversation,
   Loader,
   Message,
-  MessageAction,
-  MessageActions,
   MessageResponse,
   PromptInput,
   Tool,
   colors,
   font,
+  FONT_FAMILY,
   space,
   useStreamingCaret,
 } from '@/components/ai-elements';
@@ -57,6 +58,7 @@ import { CalendarSavingIndicator } from '@/components/chat/skeletons/CalendarSav
 import { OutfitLoadingSkeleton } from '@/components/chat/skeletons/OutfitLoadingSkeleton';
 
 import { makeStyleChatTransport } from '@/features/chat/model/chatTransport';
+import { useChatLocation } from '@/features/chat/hooks/useChatLocation';
 import { useStreakSync } from '@/features/streaks/api/useStreakSync';
 import { useSupabase } from '@/shared/supabase/use-supabase';
 import { trackAiUsage } from '@/shared/telemetry/ai-usage';
@@ -98,6 +100,104 @@ LANGUAGE: Hinglish (Roman script) by default. Do NOT switch to English just beca
 export default function StyleChatScreen() {
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
+  const router = useRouter();
+
+  const handleBack = useCallback(() => {
+    if (router.canGoBack && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(root)/(tabs)' as any);
+  }, [router]);
+
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <View style={[styles.screenBody, { paddingBottom: keyboardHeight }]}>
+        <TopBar title="StyleAI" onBack={handleBack} />
+        <ChatBody />
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Top bar — back arrow on the left, centered title. The right slot
+ * is intentionally empty: a `+` / "new chat" button was tried and
+ * removed because the screen has no clear path to "new chat" that
+ * doesn't feel like a destructive shortcut mid-conversation.
+ */
+function TopBar({
+  title,
+  onBack,
+}: {
+  title: string;
+  onBack: () => void;
+}) {
+  return (
+    <View style={topBarStyles.bar}>
+      <TouchableOpacity
+        onPress={onBack}
+        style={topBarStyles.leftBtn}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel="Back"
+      >
+        <IconChevronLeft size={26} color={colors.text} strokeWidth={2.2} />
+      </TouchableOpacity>
+      <View style={topBarStyles.titleSlot} pointerEvents="none">
+        <Text style={topBarStyles.title} numberOfLines={1}>
+          {title}
+        </Text>
+      </View>
+      {/* Right spacer so the title stays optically centered (back
+          button on the left has a hitSlop but no right counterpart). */}
+      <View style={topBarStyles.rightSpacer} />
+    </View>
+  );
+}
+
+const topBarStyles = StyleSheet.create({
+  bar: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    backgroundColor: colors.bg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderSubtle,
+  },
+  leftBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleSlot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.text,
+    letterSpacing: -0.2,
+    fontFamily: FONT_FAMILY['600'],
+  },
+  rightSpacer: {
+    width: 40,
+    height: 40,
+  },
+});
+
+/**
+ * ChatBody — owns useChat (input, messages, streaming, tools).
+ * Extracted from the screen so the top bar and the list/input
+ * stay readable on their own; nothing else forces a remount now
+ * that the `+` "new chat" button is gone.
+ */
+function ChatBody() {
+  const insets = useSafeAreaInsets();
 
   const { getToken, isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
@@ -114,7 +214,7 @@ export default function StyleChatScreen() {
         return;
       }
       try {
-        const t = await getToken({ template: 'supabase' });
+        const t = await getToken({ template: 'supabase2' });
         if (!cancelled) setAuthToken(t ?? null);
       } catch {
         if (!cancelled) setAuthToken(null);
@@ -134,14 +234,22 @@ export default function StyleChatScreen() {
     }
   }, [isLoaded, isSignedIn]);
 
+  // The user's most recent GPS coordinates, captured on chat open by
+  // `useWeatherStore.fetchWeather()`. `null` until permission is granted
+  // and a snapshot exists. Passed to the chat transport so the edge
+  // function can render the weather card for the user's actual area
+  // instead of asking for a city.
+  const chatLocation = useChatLocation();
+
   const openAi = useMemo(() => {
     const basePath = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/style-chat`;
     return makeStyleChatTransport({
       basePath,
       authToken: authToken ?? 'pending',
       prepare: { turns: 8, maxMessageChars: 1500, compactToolCalls: true },
+      userLocation: chatLocation,
     }) as unknown as OpenAI;
-  }, [authToken]);
+  }, [authToken, chatLocation]);
 
   // Save handler — inserts into logged_outfits and bumps the streak.
   const handleSaveOutfit = useCallback(
@@ -180,9 +288,13 @@ export default function StyleChatScreen() {
       tools: {
         show_weather: {
           description:
-            'Display the weather for a city as a UI card. Pass only the city (and an optional date for a forecast day). The client fills in the real temperature/condition from Open-Meteo; you only write the one-line ai_tip in Hinglish.',
+            'Display the weather for a UI card. The user\'s current location is provided in <user_location>lat=… lon=… locality=…</user_location> in your system prompt — pass the locality (or "Your area" if missing) as the `city` arg. The client fills in real coordinates and fetches Open-Meteo; you only write the one-line ai_tip in Hinglish.',
           parameters: z.object({
-            city: z.string().describe('City name, e.g. "Mumbai"'),
+            city: z
+              .string()
+              .describe(
+                'Locality from <user_location>locality=…</user_location> in the system prompt, e.g. "Andheri, IN" or "Mumbai". Pass "Your area" if the locality is missing.',
+              ),
             date: z
               .string()
               .describe('Optional YYYY-MM-DD; omit for today')
@@ -192,11 +304,17 @@ export default function StyleChatScreen() {
               .describe('One-line Hinglish styling tip based on the weather'),
           }),
           render: async function* (args: any) {
+            // Prefer real GPS coordinates from `useChatLocation` when
+            // available — the edge function will hit Open-Meteo directly
+            // without a geocode step, so the card shows the user's actual
+            // current area. Fall back to the city the model wrote (legacy
+            // path; also used on web / before the user grants location).
+            const live = chatLocation;
             yield (
               <Tool name="show_weather" status="running" defaultOpen>
                 <WeatherCard
                   data={{
-                    city: args.city,
+                    city: live?.locality ?? args.city,
                     temperature: 0,
                     condition: 'clear',
                     ai_tip: args.ai_tip,
@@ -207,10 +325,14 @@ export default function StyleChatScreen() {
             );
             try {
               const base = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/style-chat`;
-              const params = new URLSearchParams({
-                action: 'weather',
-                city: args.city,
-              });
+              const params = new URLSearchParams({ action: 'weather' });
+              if (live) {
+                params.set('lat', String(live.lat));
+                params.set('lon', String(live.lon));
+                if (live.locality) params.set('locality', live.locality);
+              } else {
+                params.set('city', args.city);
+              }
               if (args.date) params.set('date', args.date);
               const token =
                 authToken && authToken !== 'pending' ? authToken : '';
@@ -680,23 +802,6 @@ export default function StyleChatScreen() {
       return (
         <Message key={index} from="assistant">
           <MessageResponse content={text} isStreaming={isLastAssistantStreaming} />
-          {!isStreaming || index !== messages.length - 1 ? (
-            <MessageActions>
-              <MessageAction
-                label="Copy"
-                onPress={async () => {
-                  try {
-                    await Clipboard.setStringAsync(text);
-                  } catch {
-                    // best-effort
-                  }
-                }}
-              >
-                <IconCopy size={14} color={colors.text} strokeWidth={2} />
-              </MessageAction>
-              <RetryAction lastUserText={lastUserText} onRetry={retryLastMessage} />
-            </MessageActions>
-          ) : null}
         </Message>
       );
     }
@@ -707,94 +812,58 @@ export default function StyleChatScreen() {
     (m) => isReactElement(m) || m.role !== 'system',
   );
 
-  const lastUserText = useMemo(() => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m: any = messages[i];
-      if (m?.role === 'user' && typeof m.content === 'string' && m.content.trim()) {
-        return m.content;
-      }
-    }
-    return null;
-  }, [messages]);
-  const canRetryLastMessage = !!lastUserText;
-  const retryLastMessage = useCallback(() => {
-    if (!lastUserText) return;
-    handleSubmit(`${lastUserText} (use ONE tool only, pick the most useful one)`);
-  }, [lastUserText, handleSubmit]);
-
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={[styles.container, { paddingBottom: keyboardHeight }]}>
-        <Conversation
-          data={visibleMessages}
-          renderItem={renderItem}
-          keyExtractor={(_item, index) => index.toString()}
-          ListFooterComponent={
-            isStreaming ? (
-              <Loader caption="StyleAI is thinking…" />
-            ) : error ? (
-              <InlineChatError
-                message={error.message}
-                canRetry={canRetryLastMessage}
-                onRetry={retryLastMessage}
-              />
-            ) : null
-          }
-        />
+    <View style={chatBodyStyles.fill}>
+      <Conversation
+        data={visibleMessages}
+        renderItem={renderItem}
+        keyExtractor={(_item, index) => index.toString()}
+        contentContainerStyle={chatBodyStyles.listContent}
+        ListFooterComponent={
+          isStreaming ? (
+            <Loader caption="StyleAI is thinking…" />
+          ) : error ? (
+            <InlineChatError message={error.message} />
+          ) : null
+        }
+      />
 
-        <View
-          style={[
-            styles.inputOuterContainer,
-            { paddingBottom: Math.max(insets.bottom, 8) },
-          ]}
-        >
-          <PromptInput
-            value={input}
-            onChange={onInputChange}
-            onSubmit={() => handleSubmit(input)}
-            isStreaming={isStreaming}
-            placeholder="Ask StyleAI..."
-          />
-        </View>
+      <View
+        style={[
+          chatBodyStyles.inputOuter,
+          { paddingBottom: Math.max(insets.bottom, 8) },
+        ]}
+      >
+        <PromptInput
+          value={input}
+          onChange={onInputChange}
+          onSubmit={() => handleSubmit(input)}
+          isStreaming={isStreaming}
+          placeholder="Ask StyleAI..."
+        />
       </View>
     </View>
   );
 }
 
-// Sub-component for the Retry action — small icon button. Sits outside
-// the main render so it can be memoized per-render only when needed.
-function RetryAction({
-  lastUserText,
-  onRetry,
-}: {
-  lastUserText: string | null;
-  onRetry: () => void;
-}) {
-  if (!lastUserText) return null;
-  return (
-    <MessageAction label="Retry" onPress={onRetry}>
-      <IconRefresh size={14} color={colors.text} strokeWidth={2} />
-    </MessageAction>
-  );
-}
+const chatBodyStyles = StyleSheet.create({
+  fill: { flex: 1 },
+  // Extra top padding on the list so the first message doesn't
+  // collide with the top bar's hairline border.
+  listContent: { paddingTop: space.sm },
+  inputOuter: { backgroundColor: colors.bg },
+});
 
+// Sub-component for the Retry action — small icon button. Sits outside
 const userTextStyle = {
-  color: colors.textInverse,
+  color: colors.text,
   fontSize: font.body,
   lineHeight: 22,
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  inputOuterContainer: {
-    backgroundColor: colors.bg,
-    // Horizontal padding is set on the PromptInput.outer itself, but
-    // we mirror it here so the floating card stays inset from the
-    // screen edges even if the inner component is swapped later.
-    paddingHorizontal: 0,
-    // Soft top border matches the chat list divider so the bar reads
-    // as a separate surface (not a continuation of the message list).
-  },
+  screen: { flex: 1, backgroundColor: colors.bg },
+  screenBody: { flex: 1 },
 });
 
 /**

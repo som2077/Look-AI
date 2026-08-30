@@ -21,7 +21,7 @@ import {
   getUserIdFromJwt,
   rateLimitBody,
 } from "../_shared/rate-limit.ts";
-import { fetchWeather } from "../_shared/weather.ts";
+import { fetchWeather, fetchWeatherAt } from "../_shared/weather.ts";
 import { createUserClient } from "../_shared/supabase-client.ts";
 
 declare const Deno: any;
@@ -64,7 +64,7 @@ Rules:
 - Never reference wardrobe items, outfits, or events that are NOT in the "Recent User State" section below. If the user asks about something that isn't in the context, say you don't have that info and offer to scan a new item.
 - Avoid filler openers ("Sure!", "Here's…", "Of course!"). Start with the substance.
 - If you're unsure between two tools, pick the one whose output the user can act on most directly.
-- For show_weather: if the user's "home_city" is in the context, default to it without asking. Only ask the user for a city if home_city is missing AND they didn't name one.
+- For show_weather: the user's current GPS location is provided in a <user_location>lat=… lon=… locality=…</user_location> block appended to this prompt. Pass the locality (or "Your area" if locality is missing) as the 'city' arg — the client fills in real coordinates automatically. NEVER ask the user for a city.
 
 Outfit suggestions (HARD rules):
 - For suggest_outfit, you MUST pass \`items[].id\` for every item, copying the [id] tag from the "### Wardrobe" list in the 24h context below. Do NOT invent item names — the resolver on the server drops any item whose id is not in the user's wardrobe.
@@ -80,7 +80,22 @@ Outfit explanations (very important — users want to understand WHY):
 - For every outfit you suggest, put ONE short sentence in the \`why\` field of that outfit explaining the pick. Focus on: weather fit ("breathable cotton for 32°C"), occasion match ("dark colors work for evening"), or color balance ("white tee breaks up the black jacket").
 - Plain Hinglish (Roman script) by default. Mirror the user's language if they wrote in English.
 - NO fashion jargon: never use words like "monochrome", "tonal", "athleisure", "elevated basics", "capsule", "quiet luxury". Just say what the outfit does in everyday words.
-- Keep the \`why\` field to 1 short sentence — the user will see it on the outfit card.`;
+- Keep the \`why\` field to 1 short sentence — the user will see it on the outfit card.
+
+Plain text alongside \`suggest_outfit\` (HARD rule — prevents the card from being shown twice):
+- The streamed plain text that you write BEFORE the \`suggest_outfit\` tool call must be ONE short Hinglish sentence (max ~15 words). Its job is to add NEW information, not to re-list the card.
+- NEVER include any of the following in the plain text while also calling \`suggest_outfit\`:
+  - Markdown image syntax (no \`![alt](url)\` of wardrobe items)
+  - Bullet points or numbered lists describing the items
+  - The \`why\` or \`style_note\` text — those fields are already shown on the card
+  - Markdown headings (\`#\`, \`##\`) for the card content
+- Examples of CORRECT plain text (use one of these styles):
+  - "Pehla wala try karo — ya agar doosra mood ho toh batao."
+  - "Aur variety ke liye 2-3 items aur scan karo, abhi wardrobe chhota hai."
+- Examples of WRONG plain text (the model sometimes does this — never again):
+  - ❌ "Here's what you can wear for a casual day:\\n\\n![shirt](url)\\n![jeans](url)\\n\\n• Style Note: Smart-Casual\\n• Why: Mix of cozy and semi-formal"
+  - ❌ "## Outfit\\n- Gray hoodie\\n- Blue jeans\\n- White tee"
+`;
 
 const FORCED_MODEL = "gpt-4o-mini";
 const MAX_OUTPUT_TOKENS = 800;
@@ -130,16 +145,32 @@ Deno.serve(async (req: Request) => {
       }
       const city = url.searchParams.get("city")?.trim();
       const date = url.searchParams.get("date")?.trim() || undefined;
-      if (!city) {
+      // Lat/lon + reverse-geocoded locality, when the client has them
+      // (the chat always passes these on real devices). Coordinate-based
+      // lookups skip the geocode step, so they're both faster and more
+      // accurate than asking the model for a city name.
+      const latParam = url.searchParams.get("lat");
+      const lonParam = url.searchParams.get("lon");
+      const locality = url.searchParams.get("locality")?.trim() || null;
+      const lat = latParam ? Number(latParam) : NaN;
+      const lon = lonParam ? Number(lonParam) : NaN;
+      const hasCoords = Number.isFinite(lat) && Number.isFinite(lon);
+
+      if (!hasCoords && !city) {
         return new Response(
-          JSON.stringify({ error: "Missing city parameter" }),
+          JSON.stringify({ error: "Missing city or lat/lon parameter" }),
           { status: 400, headers: { ...CORS, "Content-Type": "application/json" } },
         );
       }
-      const snap = await fetchWeather(city, date);
+      const snap = hasCoords
+        ? await fetchWeatherAt(lat, lon, locality, date)
+        : await fetchWeather(city!, date);
       if (!snap) {
         return new Response(
-          JSON.stringify({ error: "Weather lookup failed", city }),
+          JSON.stringify({
+            error: "Weather lookup failed",
+            ...(hasCoords ? { locality } : { city }),
+          }),
           { status: 502, headers: { ...CORS, "Content-Type": "application/json" } },
         );
       }
@@ -380,6 +411,27 @@ Deno.serve(async (req: Request) => {
     const stream = body.stream === true;
     const clientTools = Array.isArray(body.tools) ? body.tools : undefined;
 
+    // `userLocation` is the device's actual GPS coordinates, attached by
+    // the chat client on every send. We inject it into the system prompt
+    // so the model can use the real location for weather lookups instead
+    // of asking the user or falling back to a stale `home_city`.
+    const rawLocation = isObject(body.userLocation) ? body.userLocation : null;
+    const userLat = rawLocation && Number.isFinite(Number(rawLocation.lat))
+      ? Number(rawLocation.lat)
+      : null;
+    const userLon = rawLocation && Number.isFinite(Number(rawLocation.lon))
+      ? Number(rawLocation.lon)
+      : null;
+    const userLocality = typeof rawLocation?.locality === "string" &&
+        rawLocation.locality.trim().length > 0
+      ? rawLocation.locality.trim()
+      : null;
+    const hasUserLocation = userLat !== null && userLon !== null;
+    const userLocationBlock = hasUserLocation
+      ? `\n\n<user_location>lat=${userLat!.toFixed(3)} lon=${userLon!.toFixed(3)}` +
+        `${userLocality ? ` locality=${userLocality}` : ""}</user_location>`
+      : "";
+
     if (messages.length === 0) {
       return new Response(
         JSON.stringify({ error: "messages array is required" }),
@@ -403,9 +455,12 @@ Deno.serve(async (req: Request) => {
     // The system prompt we send to OpenAI is BASE_SYSTEM_PROMPT + 24h block.
     // We use prompt_cache_key so OpenAI caches BASE_SYSTEM_PROMPT across
     // turns; the 24h block is per-user and also stable within a session.
+    // The <user_location> block is appended right after the base prompt so
+    // it's part of the same cached prefix when the user is in one place
+    // (the common case).
     const systemContent = ctx.block
-      ? `${BASE_SYSTEM_PROMPT}\n\n${ctx.block}`
-      : BASE_SYSTEM_PROMPT;
+      ? `${BASE_SYSTEM_PROMPT}${userLocationBlock}\n\n${ctx.block}`
+      : `${BASE_SYSTEM_PROMPT}${userLocationBlock}`;
 
     // Append to (not replace) any client-provided system message. The
     // client sends a tiny Hinglish reminder; replacing it would erase

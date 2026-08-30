@@ -103,23 +103,25 @@ async function geocode(city: string): Promise<GeocodeResult | null> {
 }
 
 /**
- * Fetch today's forecast for a city. Returns null on any failure.
+ * Hit Open-Meteo's forecast endpoint and shape the response into our
+ * `WeatherSnapshot`. Returns `null` on any failure.
  *
- * @param city Free-text city name, e.g. "Mumbai" or "Brooklyn, NY".
- * @param forecastDate YYYY-MM-DD; defaults to today (UTC).
+ * Shared by both `fetchWeather(city)` (which geocodes first) and the new
+ * `fetchWeatherAt(lat, lon)` (which already has coordinates from the
+ * device). Splitting this out keeps the public surface focused and
+ * prevents two divergent copies of the WMO mapping from drifting.
  */
-export async function fetchWeather(
-  city: string,
+async function fetchWeatherRaw(
+  latitude: number,
+  longitude: number,
+  label: string,
   forecastDate?: string,
 ): Promise<WeatherSnapshot | null> {
   try {
-    const geo = await geocode(city);
-    if (!geo) return null;
-
     const date = forecastDate ?? new Date().toISOString().slice(0, 10);
     const url =
-      `https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}` +
-      `&longitude=${geo.longitude}` +
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}` +
+      `&longitude=${longitude}` +
       `&daily=temperature_2m_max,precipitation_probability_max,weathercode` +
       `&current=temperature_2m,relative_humidity_2m,wind_speed_10m` +
       `&hourly=temperature_2m,weathercode,precipitation_probability` +
@@ -185,7 +187,7 @@ export async function fetchWeather(
     }
 
     return {
-      city: `${geo.name}${geo.country ? ", " + geo.country : ""}`,
+      city: label,
       temperatureC: tempC,
       condition,
       humidity,
@@ -199,4 +201,51 @@ export async function fetchWeather(
     console.warn("[weather] fetch failed:", err);
     return null;
   }
+}
+
+/**
+ * Fetch today's forecast for a city. Returns null on any failure.
+ *
+ * @param city Free-text city name, e.g. "Mumbai" or "Brooklyn, NY".
+ * @param forecastDate YYYY-MM-DD; defaults to today (UTC).
+ */
+export async function fetchWeather(
+  city: string,
+  forecastDate?: string,
+): Promise<WeatherSnapshot | null> {
+  const geo = await geocode(city);
+  if (!geo) return null;
+  const label = `${geo.name}${geo.country ? ", " + geo.country : ""}`;
+  return fetchWeatherRaw(geo.latitude, geo.longitude, label, forecastDate);
+}
+
+/**
+ * Fetch today's forecast for a specific lat/lon. Skips geocoding — the
+ * caller already has coordinates (usually from the device's GPS).
+ *
+ * @param locality Pre-resolved label like "Andheri, IN" used as the
+ *   `city` field of the snapshot. Pass `null` if the device's reverse
+ *   geocode returned nothing (a generic "Your area" label is added by
+ *   the caller before rendering).
+ * @param forecastDate YYYY-MM-DD; defaults to today (UTC).
+ */
+export async function fetchWeatherAt(
+  latitude: number,
+  longitude: number,
+  locality: string | null,
+  forecastDate?: string,
+): Promise<WeatherSnapshot | null> {
+  // Reject the (0, 0) sentinel — it's either an uninitialized device or
+  // the middle of the Atlantic. Either way, no useful forecast.
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    (Math.abs(latitude) < 0.01 && Math.abs(longitude) < 0.01)
+  ) {
+    return null;
+  }
+  const label = locality && locality.trim().length > 0
+    ? locality.trim()
+    : "Your area";
+  return fetchWeatherRaw(latitude, longitude, label, forecastDate);
 }

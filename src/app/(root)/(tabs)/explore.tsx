@@ -1073,7 +1073,7 @@ function FeedTab() {
       </View>
 
       {/* Main Content Area */}
-      <View style={{ flex: 1, paddingHorizontal: 20, marginTop: 10,  }}>
+      <View style={{ flex: 1, paddingHorizontal: 20, marginTop: 10, }}>
         {loading ? (
           <View
             style={{
@@ -1083,7 +1083,7 @@ function FeedTab() {
             }}
           >
             <Video
-            // className="items-center justify-center"
+              // className="items-center justify-center"
               source={require("@/assets/loading_starting.webm")}
               style={{ width: 50, height: 50 }}
               shouldPlay
@@ -1091,7 +1091,7 @@ function FeedTab() {
               isMuted
               resizeMode={ResizeMode.CONTAIN}
             />
-          
+
           </View>
         ) : posts.length === 0 ? (
           <View

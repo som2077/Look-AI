@@ -7,6 +7,16 @@ import { create } from "zustand";
 export interface WeatherData {
   city: string;
   state: string;
+  /**
+   * Device GPS coordinates captured alongside the weather snapshot. Used
+   * by the chat (`useChatLocation`) to send real location to the
+   * style-chat edge function on every send, so the AI's weather card
+   * shows the user's actual area — not a guessed city. May be `null`
+   * if the snapshot came from somewhere other than the device (e.g. a
+   * future server-side fallback).
+   */
+  latitude: number | null;
+  longitude: number | null;
   isLive: boolean;
   temperatureCelsius: number;
   feelsLike: number;
@@ -255,6 +265,8 @@ export const useWeatherStore = create<WeatherStore>((set, get) => ({
         data: {
           city,
           state: abbreviateState(state),
+          latitude,
+          longitude,
           isLive: true,
           temperatureCelsius: temp,
           feelsLike,

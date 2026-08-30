@@ -3,10 +3,10 @@ import { OnboardingHeader } from "@/features/onboarding/ui/onboarding/Onboarding
 import { createSupabaseClient } from "@/shared/supabase/client";
 import analytics from "@/shared/telemetry/analytics";
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import { IconInfoCircle, IconUpload, IconX } from "@tabler/icons-react-native";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { IconInfoCircle, IconUpload, IconX } from "@tabler/icons-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -71,7 +71,7 @@ export default function FullLengthPicsScreen() {
     setUploading(true);
     try {
       const supabase = createSupabaseClient(() =>
-        getToken({ template: "supabase" }),
+        getToken({ template: "supabase2" }),
       );
 
       for (const asset of selectedImages) {

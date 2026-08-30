@@ -7,7 +7,7 @@
 export const colors = {
   // Surfaces
   bg: "#FFFFFF",
-  surface: "#F2F2F7", // assistant panel / input bar
+  surface: "#F2F2F7", // assistant panel / light user bubble
   surfaceMuted: "#F9FAFB", // hover / skeleton
   border: "#E5E7EB",
   borderSubtle: "#F1F1F4",
@@ -19,13 +19,17 @@ export const colors = {
   textInverse: "#FFFFFF",
 
   // Accents
-  userBubble: "#1D1A27", // secondary bg for user messages
+  userBubble: "#F2F2F7", // light-gray user message bubble (was #1D1A27)
   focus: "#1D1A27",
   warn: "#92400E",
   warnBg: "#FEF3C7",
   warnBorder: "#FCD34D",
   success: "#10B981",
   error: "#EF4444",
+
+  // Brand
+  brand: "#FF7A45", // peach accent (top-bar "+" button)
+  brandBg: "#FFE7DA", // soft peach wash (used sparingly for confirmation backdrop)
 
   // Status badges
   statusPending: "#9CA3AF",

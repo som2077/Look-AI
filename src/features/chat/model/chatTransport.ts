@@ -44,16 +44,25 @@ export interface PreparedOpenAIOptions {
  * `authToken` is the Clerk session JWT (without the "Bearer " prefix). It
  * is baked into the OpenAI instance at construction time. If the token
  * rotates, the caller should construct a new `PreparedOpenAI`.
+ *
+ * `userLocation` (optional) is the device's most recent GPS coordinates,
+ * read from `useWeatherStore` by the caller. When provided, it's attached
+ * to every chat-completion body as `userLocation: { lat, lon, locality }`.
+ * The style-chat edge function reads this and injects it into the system
+ * prompt as `<user_location>...</user_location>`. OpenAI itself ignores
+ * the extra field; the wiring is purely for our edge function.
  */
 export class PreparedOpenAI {
   private inner: OpenAI;
   private prepare: PrepareOptions;
+  private userLocation: UserLocationPayload | null;
 
   constructor(opts: {
     apiKey: string;
     model: string;
     basePath?: string;
     prepare?: PrepareOptions;
+    userLocation?: UserLocationPayload | null;
   }) {
     // The library sets `Authorization: Bearer ${this.api.apiKey}` on every
     // EventSource. We pass the Clerk JWT as `apiKey` so the header is
@@ -65,11 +74,24 @@ export class PreparedOpenAI {
       basePath: opts.basePath,
     });
     this.prepare = opts.prepare ?? {};
+    this.userLocation = opts.userLocation ?? null;
+  }
+
+  /**
+   * Update the location attached to subsequent requests. Call this whenever
+   * the user grants location permission or moves to a new place (we re-read
+   * from `useWeatherStore` so this rarely needs to be called directly).
+   * Passing `null` clears the override.
+   */
+  setUserLocation(loc: UserLocationPayload | null): void {
+    this.userLocation = loc;
   }
 
   /**
    * Mirror of `OpenAI.createChatCompletion`. Runs `prepareMessages` on the
-   * params first, then delegates to the real client.
+   * params first, then delegates to the real client. Attaches the
+   * `userLocation` payload to the params before delegating, so it lands
+   * in the body sent to the edge function.
    */
   async createChatCompletion(
     params: Omit<ChatCompletionCreateParams, "model" | "temperature" | "stream">,
@@ -79,9 +101,26 @@ export class PreparedOpenAI {
       ? (params as any).messages
       : [];
     const prepared = prepareMessages(messages, this.prepare);
-    const nextParams = { ...params, messages: prepared } as typeof params;
+    const nextParams = {
+      ...params,
+      messages: prepared,
+      // The edge function reads this and injects it into the system
+      // prompt. Extra fields are forwarded by `serializeParams` in
+      // `react-native-gen-ui/lib/openai/chat-completion.js`.
+      ...(this.userLocation ? { userLocation: this.userLocation } : {}),
+    } as typeof params;
     return this.inner.createChatCompletion(nextParams, callbacks);
   }
+}
+
+/**
+ * Shape of the location payload sent on every chat request. Kept narrow
+ * on purpose: the edge function only needs lat/lon + a display label.
+ */
+export interface UserLocationPayload {
+  lat: number;
+  lon: number;
+  locality: string | null;
 }
 
 /**
@@ -95,17 +134,24 @@ export class PreparedOpenAI {
  * still loading) is allowed — the instance is still constructed, and the
  * caller is expected not to call `handleSubmit` until the real token
  * arrives and a new instance is built.
+ *
+ * `userLocation` is the device's most recent GPS coordinates (from
+ * `useChatLocation`). When provided, every chat-completion body sent by
+ * this transport will include `userLocation: { lat, lon, locality }`,
+ * which the edge function injects into the system prompt.
  */
 export function makeStyleChatTransport(opts: {
   basePath: string;
   /** The user's Clerk "supabase" template JWT (no "Bearer " prefix). */
   authToken: string;
   prepare?: PrepareOptions;
+  userLocation?: UserLocationPayload | null;
 }): PreparedOpenAI {
   return new PreparedOpenAI({
     apiKey: opts.authToken,
     model: "gpt-4o-mini",
     basePath: opts.basePath,
     prepare: opts.prepare,
+    userLocation: opts.userLocation ?? null,
   });
 }
