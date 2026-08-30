@@ -6,7 +6,7 @@ export default function Index() {
     <View className="flex-1 items-center justify-center bg-white">
       <Video
         source={require("@/assets/loading_starting.webm")}
-        style={{ width: 30, height: 30 }}
+        style={{ width: 50, height: 50 }}
         shouldPlay
         isLooping
         isMuted

@@ -1,4 +1,5 @@
 import { posthogAnalytics } from "@/shared/telemetry/posthog";
+import { trackAiUsage } from "@/shared/telemetry/ai-usage";
 import { captureFeatureError, addAppBreadcrumb } from "@/shared/telemetry/sentry";
 import { useRevenueCat } from "@/features/payments/model/useRevenueCat";
 import { useStreakSync } from "@/features/streaks/api/useStreakSync";
@@ -240,6 +241,11 @@ export default function OutfitScreen() {
         // Increment local streak + sync to Supabase DB
         syncStreak("virtual_try_on");
         posthogAnalytics.captureEvent('try_on_generation_completed', { duration_ms: Date.now() - startTime, success: true });
+        // Track AI usage for the profile section (fire-and-forget).
+        void trackAiUsage("virtual_try_on", {
+          status: "completed",
+          duration_ms: Date.now() - startTime,
+        });
       } else {
         throw new Error("No result URL returned from AI");
       }

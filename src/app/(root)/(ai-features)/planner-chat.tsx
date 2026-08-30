@@ -4,6 +4,7 @@ import PlannerOutfitCard, { SuggestedItem } from "@/features/ai-styling/ui/Plann
 import WeatherCard, { WeatherData } from "@/features/ai-styling/ui/WeatherCard";
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { trackAiUsage } from "@/shared/telemetry/ai-usage";
 import { useUser } from "@clerk/clerk-expo";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react-native";
@@ -298,6 +299,12 @@ export default function PlannerChatScreen() {
       } catch {
         addMsg({ role: "model", text: "Plan saved! I'll send you a reminder the day before. 🎉" });
       }
+
+      // Track AI usage for the profile section (fire-and-forget).
+      void trackAiUsage("planner_chat", {
+        occasion: ctx.occasion ?? null,
+        date: ctx.date?.toISOString().split("T")[0] ?? null,
+      });
 
       // Go back to calendar after 2.5 s
       setTimeout(() => router.back(), 2500);

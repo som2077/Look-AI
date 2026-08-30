@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "@/shared/supabase/client";
+import { trackAiUsage } from "@/shared/telemetry/ai-usage";
 import { captureFeatureError } from "@/shared/telemetry/sentry";
 import * as FileSystem from "expo-file-system";
 
@@ -275,6 +276,8 @@ export async function analyzeClothingFull(
   imageUri: string,
 ): Promise<FullClothingAnalysis> {
   const text = await callOpenAIVision(imageUri, CLOTH_PROMPT, "cloth", 400);
+  // Track successful AI invocation (fire-and-forget).
+  void trackAiUsage("cloth_scan", { model: "gpt-4o-mini" });
   return parseJson<FullClothingAnalysis>(text, {
     name: "Fashion Item",
     category: "Top",
@@ -313,6 +316,8 @@ export async function analyzeClothLabel(
   imageUri: string,
 ): Promise<LabelAnalysis> {
   const text = await callOpenAIVision(imageUri, LABEL_PROMPT, "label", 600);
+  // Track successful AI invocation (fire-and-forget).
+  void trackAiUsage("cloth_label", { model: "gpt-4o" });
   return parseJson<LabelAnalysis>(text, {
     is_valid_apparel: false,
     rejection_reason: "Failed to parse the image properly.",
@@ -342,7 +347,7 @@ export async function analyzeFitCheck(
   imageUri: string,
 ): Promise<FitCheckAnalysis> {
   const state = useOnboardingState.getState();
-  
+
   const fallbackData: FitCheckAnalysis = {
     colorHarmony: 8.0,
     silhouette: 8.0,
@@ -361,6 +366,8 @@ export async function analyzeFitCheck(
   });
 
   const text = await callOpenAIVision(imageUri, prompt, "fitcheck", 400);
+  // Track successful AI invocation (fire-and-forget).
+  void trackAiUsage("fit_check", { model: "gpt-4o-mini" });
   return parseJson<FitCheckAnalysis>(text, fallbackData);
 }
 
@@ -406,6 +413,12 @@ export async function analyzeMultiClothingWardrobe(
 
     if (error) return null;
     const jsonText = data?.choices?.[0]?.message?.content;
+    // Track successful AI invocation (fire-and-forget).
+    void trackAiUsage("multi_item_recommendation", {
+      model: "gpt-4o-mini",
+      item_count: urisToProcess.length,
+      occasion: occasion ?? null,
+    });
     return parseJson(jsonText, null);
   } catch (err: any) {
     const isTimeout = err.message?.toLowerCase().includes('timeout');

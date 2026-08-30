@@ -54,11 +54,11 @@ export const usePendingBatchStore = create<PendingBatchState>()(
         const queue = [...newItems];
         let active = 0;
         const maxConcurrent = 3;
-        
+
         const processNext = async () => {
           if (queue.length === 0) return;
           if (active >= maxConcurrent) return;
-          
+
           active++;
           const item = queue.shift();
           if (item) {
@@ -110,7 +110,7 @@ export const usePendingBatchStore = create<PendingBatchState>()(
           if (!aiData) {
             throw new Error("Analysis returned no data");
           }
-          
+
           if (aiData.category === "Full Body" || aiData.category === "Not Clothing") {
             // Graceful fallback instead of crashing the batch item
             aiData.category = "Top";

@@ -108,6 +108,10 @@ export type AnalyticsEventMap = {
 
   // Screen
   screen_viewed: { screen_name: string };
+
+  // AI Usage tracking (mirrors the ai_usage_events table)
+  ai_usage_tracked: { feature_key: string };
+  ai_usage_section_viewed: undefined;
 };
 
 // Internal client instance

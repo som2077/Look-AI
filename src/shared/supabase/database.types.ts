@@ -464,6 +464,32 @@ export interface Database {
           created_at?: string;
         };
       };
+      ai_usage_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          feature_key: string;
+          feature_label: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          feature_key: string;
+          feature_label: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          feature_key?: string;
+          feature_label?: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+      };
       user_gamification: {
         Row: {
           user_id: string;

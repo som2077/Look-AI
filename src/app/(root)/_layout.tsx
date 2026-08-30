@@ -142,6 +142,10 @@ export default function RootLayout() {
         name="notifications"
         options={{ animation: "slide_from_right" }}
       />
+      <Stack.Screen
+        name="ai-usage/[feature]"
+        options={{ animation: "slide_from_right" }}
+      />
     </Stack>
   );
 }

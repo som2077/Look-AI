@@ -1,5 +1,12 @@
 import { useDeleteAccount } from "@/features/profile/api/useDeleteAccount";
 import { useUserProfile } from "@/features/profile/api/useProfile";
+import { AiUsageSection } from "@/features/profile/ui/AiUsageSection";
+import {
+  CardContainer,
+  ListItem,
+  SectionTitle,
+  Text,
+} from "@/features/profile/ui/SectionPrimitives";
 import {
   getFCMToken,
   requestUserPermission,
@@ -11,7 +18,6 @@ import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import {
   IconBell,
-  IconChevronRight,
   IconLogout,
   IconMail,
   IconNotes,
@@ -41,108 +47,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { posthogAnalytics } from "@/shared/telemetry/posthog";
 
-const Text = (props: any) => {
-  const { style, ...rest } = props;
-  const flatStyle = StyleSheet.flatten(style || {});
-  let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
-  
-  if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
-  else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
-  else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
-  else if (flatStyle.fontWeight === "800") fontFamily = "BricolageGrotesque_800ExtraBold";
-
-  // Delete fontWeight to avoid react-native font overriding bugs
-  const { fontWeight, ...cleanStyle } = flatStyle;
-  return <RNText style={[cleanStyle, { fontFamily }]} {...rest} />;
-};
-
 // ─── Shared Components ───────────────────────────────────────────────────────
-
-const SectionTitle = ({ title }: { title: string }) => (
-  <Text
-    style={{
-      fontSize: 18,
-      fontFamily: "BricolageGrotesque_800ExtraBold",
-      color: "#1D1D1D",
-      marginBottom: 9,
-      marginTop: 24,
-      marginLeft: 10,
-    }}
-  >
-    {title}
-  </Text>
-);
-
-const CardContainer = ({
-  children,
-  style,
-}: {
-  children: React.ReactNode;
-  style?: any;
-}) => (
-  <View
-    style={[
-      {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 20,
-        overflow: "hidden",
-        borderColor: "#E5E7EB",
-        borderWidth: 0.4,
-        shadowColor: "#00000040",
-        shadowOpacity: 0.04,
-        shadowRadius: 24,
-        shadowOffset: { width: 0, height: 12 },
-        elevation: 10,
-      },
-      style,
-    ]}
-  >
-    {children}
-  </View>
-);
-
-const ListItem = ({
-  icon,
-  title,
-  onPress,
-  hasBorder = true,
-  rightElement,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  onPress?: () => void;
-  hasBorder?: boolean;
-  rightElement?: React.ReactNode;
-}) => (
-  <>
-    <Pressable
-      onPress={onPress}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-      }}
-    >
-      <View style={{ marginRight: 12 }}>{icon}</View>
-      <Text
-        style={{ flex: 1, fontSize: 14, color: "#1D1D1D", fontWeight: "400" }}
-      >
-        {title}
-      </Text>
-      {rightElement || <IconChevronRight size={18} color="#1D1D1D" />}
-    </Pressable>
-    {hasBorder && (
-      <View
-        style={{
-          height: 1,
-          backgroundColor: "#E5E7EB60",
-          marginHorizontal: 16,
-        }}
-      />
-    )}
-  </>
-);
 
 const CustomSwitch = ({
   value,
@@ -556,6 +461,10 @@ const ProfileScreenUI = ({
             }
           />
         </CardContainer>
+
+        {/* AI Usage Section */}
+        <SectionTitle title="AI Usage" />
+        <AiUsageSection />
 
         {/* Support & Legal Section */}
         <SectionTitle title="Support & Legal" />

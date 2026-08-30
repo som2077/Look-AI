@@ -43,7 +43,7 @@ const Text = (props: any) => {
   const { style, ...rest } = props;
   const flatStyle = StyleSheet.flatten(style || {});
   let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
-  
+
   if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
   else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
   else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
@@ -57,7 +57,7 @@ const TextInput = (props: any) => {
   const { style, ...rest } = props;
   const flatStyle = StyleSheet.flatten(style || {});
   let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
-  
+
   if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
   else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
   else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
@@ -194,7 +194,7 @@ function RepliesBottomSheet({
               transform: [{ translateY: slideAnim }],
             }}
           >
-            <View {...panResponder.panHandlers} style={{ paddingBottom: 16,  }}>
+            <View {...panResponder.panHandlers} style={{ paddingBottom: 16, }}>
               <View
                 style={{
                   alignItems: "center",
@@ -1073,33 +1073,25 @@ function FeedTab() {
       </View>
 
       {/* Main Content Area */}
-      <View style={{ flex: 1, paddingHorizontal: 20, marginTop: 10 }}>
+      <View style={{ flex: 1, paddingHorizontal: 20, marginTop: 10,  }}>
         {loading ? (
           <View
             style={{
               alignItems: "center",
-              marginTop: 180,
+              marginTop: 350,
               justifyContent: "center",
             }}
           >
             <Video
-              source={require("../../../../assets/loading.webm")}
-              style={{ width: 250, height: 220 }}
+            // className="items-center justify-center"
+              source={require("@/assets/loading_starting.webm")}
+              style={{ width: 50, height: 50 }}
               shouldPlay
               isLooping
               isMuted
               resizeMode={ResizeMode.CONTAIN}
             />
-            <Text
-              style={{
-                marginTop: -30,
-                fontSize: 16,
-                fontWeight: "600",
-                color: "#1D1A27",
-              }}
-            >
-              Processing...
-            </Text>
+          
           </View>
         ) : posts.length === 0 ? (
           <View

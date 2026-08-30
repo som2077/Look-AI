@@ -163,10 +163,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#00000090",
     fontWeight: "500",
-    backgroundColor:"#FFFFFF",
-    paddingVertical:3,
-    paddingHorizontal:8,
-    borderRadius:40
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 40
   },
   statusText: {
     fontSize: 13,

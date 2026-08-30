@@ -216,7 +216,7 @@ export default function CalendarScreen() {
         const index = t.getDate() - 1 + 5; // +5 for buffer days
         if (dateStripRef.current) {
           dateStripRef.current.scrollToOffset({
-            offset: index * 90,
+            offset: index * 80,
             animated: false,
           });
         }
@@ -451,7 +451,7 @@ export default function CalendarScreen() {
                   const index = t.getDate() - 1 + 5; // +5 for buffer days
                   if (dateStripRef.current) {
                     dateStripRef.current.scrollToOffset({
-                      offset: index * 90,
+                      offset: index * 80,
                       animated: true,
                     });
                   }
@@ -492,10 +492,10 @@ export default function CalendarScreen() {
             keyExtractor={(d) => d.toISOString()}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
-              paddingHorizontal: Dimensions.get("window").width / 2 - 45,
+              paddingHorizontal: Dimensions.get("window").width / 2 - 40,
               alignItems: "flex-end",
             }}
-            snapToInterval={90}
+            snapToInterval={80}
             decelerationRate="fast"
             initialNumToRender={15}
             windowSize={5}
@@ -504,7 +504,7 @@ export default function CalendarScreen() {
               const index = t.getDate() - 1 + 5;
               if (dateStripRef.current) {
                 dateStripRef.current.scrollToOffset({
-                  offset: index * 90,
+                  offset: index * 80,
                   animated: false,
                 });
               }
@@ -515,14 +515,14 @@ export default function CalendarScreen() {
             )}
             onMomentumScrollEnd={(e) => {
               const offsetX = e.nativeEvent.contentOffset.x;
-              const index = Math.round(offsetX / 90);
+              const index = Math.round(offsetX / 80);
               if (days[index]) {
                 handleDaySelect(days[index]);
               }
             }}
             getItemLayout={(data, index) => ({
-              length: 90,
-              offset: 90 * index,
+              length: 80,
+              offset: 80 * index,
               index,
             })}
             renderItem={({ item: d, index }) => {
@@ -534,14 +534,14 @@ export default function CalendarScreen() {
               const hasOutfit = !!combinedOutfitsData[d.toDateString()]?.length;
               const log = combinedOutfitsData[d.toDateString()]?.[0];
 
-              const ITEM_PITCH = 90;
+              const ITEM_PITCH = 80;
               const scale = dateStripScrollX.interpolate({
                 inputRange: [
                   (index - 1) * ITEM_PITCH,
                   index * ITEM_PITCH,
                   (index + 1) * ITEM_PITCH,
                 ],
-                outputRange: [1, 1.15, 1],
+                outputRange: [1, 1.12, 1],
                 extrapolate: "clamp",
               });
               const hasPlan = combinedOutfitsData[d.toDateString()]?.some(
@@ -562,8 +562,8 @@ export default function CalendarScreen() {
                 <Animated.View
                   style={{
                     alignItems: "center",
-                    width: 80,
-                    marginHorizontal: 5,
+                    width: 64,
+                    marginHorizontal: 8,
                     marginTop: 20,
                     justifyContent: "center",
                     transform: [{ translateX }],
@@ -586,7 +586,7 @@ export default function CalendarScreen() {
                       }
                     }}
                     activeOpacity={0.8}
-                    style={{ alignItems: "center", width: 80 }}
+                    style={{ alignItems: "center", width: 64 }}
                   >
                     {/* Dot indicators (Today and Plans) */}
                     <View
@@ -648,18 +648,11 @@ export default function CalendarScreen() {
                     {/* Card */}
                     <Animated.View
                       style={{
-                        width: 80,
-                        height: 120,
+                        width: 64,
+                        height: 84,
                         marginTop: 4,
-                        borderRadius: 16,
-                        backgroundColor: isSelected ? "#1D1A27" : "#F8F8FA",
-                        borderWidth: isSelected ? 0 : 1,
-                        borderColor: isSelected ? "transparent" : "#E9EBF8",
-                        shadowColor: isSelected ? "#1D1A27" : "transparent",
-                        shadowOpacity: isSelected ? 0.08 : 0,
-                        shadowRadius: 12,
-                        shadowOffset: { width: 0, height: 1 },
-                        elevation: isSelected ? 2 : 0,
+                        borderRadius: 20,
+                        backgroundColor: isSelected ? "#1D1A27" : "#F0F1F4",
                         alignItems: "center",
                         justifyContent: "center",
                         overflow: "hidden",
@@ -675,8 +668,8 @@ export default function CalendarScreen() {
                         />
                       ) : (
                         <IconCalendarPlus
-                          size={26}
-                          color={isSelected ? "#FFFFFF" : "#00000060"}
+                          size={22}
+                          color={isSelected ? "#FFFFFF" : "#9CA3AF"}
                           strokeWidth={1.5}
                         />
                       )}
@@ -744,19 +737,32 @@ export default function CalendarScreen() {
               isLooping={false}
               resizeMode={ResizeMode.CONTAIN}
             />
-            <Text
-              style={{
-                fontSize: 15,
-                lineHeight: 22,
-                color: "#4B5563",
-                fontWeight: "500",
-                marginTop: -40,
-                textAlign: "center",
-                paddingHorizontal: 20,
-              }}
-            >
-              No plans yet. {`\n`} Tap a date to style your day.
-            </Text>
+            <View style={{ marginTop: -40, alignItems: "center" }}>
+              <Text
+                style={{
+                  fontSize: 15,
+                  lineHeight: 22,
+                  color: "#1F1F1F",
+                  fontWeight: "600",
+                  textAlign: "center",
+                }}
+              >
+                No plans yet.
+              </Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  lineHeight: 20,
+                  color: "#6B7280",
+                  fontWeight: "500",
+                  textAlign: "center",
+                  marginTop: 4,
+                  paddingHorizontal: 20,
+                }}
+              >
+                Tap a date to style your day.
+              </Text>
+            </View>
           </View>
         )}
 
