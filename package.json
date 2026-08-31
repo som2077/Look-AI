@@ -1,6 +1,6 @@
 {
   "name": "Look AI",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "version": "4.2.9",
   "scripts": {
     "start": "cross-env UV_THREADPOOL_SIZE=16 expo start --max-workers 4",

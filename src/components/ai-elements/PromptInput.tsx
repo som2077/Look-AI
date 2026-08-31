@@ -1,47 +1,38 @@
 /**
- * PromptInput — light cream pill bar with a dark `+` (attach) button on
- * the left, a growing multiline text input in the middle, and a single
- * circular send button on the right.
- *
- * Visual states for the send button:
- *  - idle + empty      → muted (dim gray circle, dim arrow)
- *  - idle + has text   → active (dark circle, white arrow)
- *  - streaming         → stop (red circle, filled stop icon)
- *
- * The bar background is a warm off-white so it sits visually above the
- * screen surface without feeling like a heavy dark slab. The dark `+`
- * button anchors the left edge and reads as a primary action.
+ * PromptInput — Modern AI prompt card matching ChatGPT/Quantum 3 interface:
+ * Multi-line text input on top, plus attach (+), model selector (Quantum 3 ⌵),
+ * microphone, and voice waveform / send / stop button on the bottom.
  */
+import {
+  ArrowUp,
+  ChevronDown,
+  Mic,
+  Plus,
+  Square,
+} from "lucide-react-native";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Keyboard,
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   TextInput,
   View,
   ViewStyle,
 } from "react-native";
-import {
-  IconArrowNarrowUp,
-  IconPlayerStopFilled,
-  IconPlus,
-} from "@tabler/icons-react-native";
 import { colors, FONT_FAMILY, space } from "./theme";
 
 const MAX_LINES = 5;
 const LINE_HEIGHT = 22;
-const MIN_INPUT_HEIGHT = 24;
-const VERTICAL_PADDING = 12;
-const SUBMIT_SIZE = 36;
-const ATTACH_SIZE = 36;
+const MIN_INPUT_HEIGHT = 38;
 
 export interface PromptInputProps {
   value: string;
   onChange: (next: string) => void;
   onSubmit: () => void;
   isStreaming?: boolean;
-  /** Rendered in the left tools slot (above the input). */
+  /** Rendered in the left tools slot (above the card). */
   tools?: React.ReactNode;
   placeholder?: string;
   style?: ViewStyle;
@@ -49,6 +40,14 @@ export interface PromptInputProps {
   maxLength?: number;
   /** Fires when the user taps the `+` (attach) button. */
   onAttachPress?: () => void;
+  /** Fires when the user taps the microphone button. */
+  onMicPress?: () => void;
+  /** Fires when the user taps the voice mode / waveform button. */
+  onVoicePress?: () => void;
+  /** Fires when the user taps the model selector. */
+  onModelPress?: () => void;
+  /** Model name displayed in the center pill. Defaults to "Quantum 3". */
+  modelName?: string;
 }
 
 export function PromptInput({
@@ -57,15 +56,15 @@ export function PromptInput({
   onSubmit,
   isStreaming = false,
   tools,
-  placeholder = "Type a message…",
+  placeholder = "How can I help you today?",
   style,
   maxLength = 2000,
   onAttachPress,
+  onMicPress,
+  onVoicePress,
+  onModelPress,
+  modelName = "Quantum 3",
 }: PromptInputProps) {
-  // We use a separate state for the content height so the input can
-  // grow with content but the send button never gets pushed out of
-  // view (the bar has a fixed-ish minHeight; the input grows inside
-  // it, capped at MAX_LINES).
   const [contentHeight, setContentHeight] = useState(MIN_INPUT_HEIGHT);
   const inputRef = useRef<TextInput>(null);
 
@@ -84,37 +83,28 @@ export function PromptInput({
 
   const handleSubmitPress = useCallback(() => {
     if (isStreaming) {
-      // TODO(v2): wire to useChat abort hook.
+      onSubmit();
       return;
     }
     if (canSubmit) {
       Keyboard.dismiss();
       onSubmit();
+    } else if (onVoicePress) {
+      onVoicePress();
     }
-  }, [isStreaming, canSubmit, onSubmit]);
+  }, [isStreaming, canSubmit, onSubmit, onVoicePress]);
 
   return (
     <View style={[styles.outer, style]}>
       {tools ? <View style={styles.tools}>{tools}</View> : null}
-      <View style={styles.bar}>
-        <Pressable
-          onPress={onAttachPress}
-          hitSlop={6}
-          style={({ pressed }) => [
-            styles.attach,
-            pressed && styles.pressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Attach"
-        >
-          <IconPlus size={18} color={colors.textInverse} strokeWidth={2.4} />
-        </Pressable>
+      <View style={styles.card}>
+        {/* Top Text Input */}
         <TextInput
           ref={inputRef}
           value={value}
           onChangeText={onChange}
           placeholder={placeholder}
-          placeholderTextColor="rgba(29,26,39,0.45)"
+          placeholderTextColor="#7E776C"
           multiline
           maxLength={maxLength}
           onContentSizeChange={handleContentSizeChange}
@@ -125,65 +115,105 @@ export function PromptInput({
             }
           }}
           blurOnSubmit={false}
-          // Use scrollEnabled so a very tall input is scrollable inside
-          // its own bounds rather than pushing the submit off-screen.
           scrollEnabled
-          // Don't auto-capitalize: users frequently type Hinglish/short
-          // messages in lowercase ("ya", "hi", "thanks"), and the
-          // Android keyboard's default `sentences` mode forces the first
-          // letter of every sentence into CAPS which they then have to
-          // manually un-cap. `none` lets them type exactly what they want.
           autoCapitalize="none"
           autoCorrect={false}
-          textAlignVertical="center"
+          textAlignVertical="top"
           style={[
             styles.input,
-            {
-              height: contentHeight + VERTICAL_PADDING,
-            },
+            { height: contentHeight },
           ]}
         />
-        <Pressable
-          onPress={handleSubmitPress}
-          disabled={!canSubmit && !isStreaming}
-          hitSlop={6}
-          style={({ pressed }) => [
-            styles.submit,
-            isStreaming
-              ? styles.submitStop
-              : canSubmit
-                ? styles.submitActive
-                : styles.submitIdle,
-            pressed && styles.pressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={isStreaming ? "Stop generating" : "Send message"}
-        >
-          {isStreaming ? (
-            <IconPlayerStopFilled size={14} color={colors.textInverse} />
-          ) : (
-            <IconArrowNarrowUp
-              size={18}
-              color={canSubmit ? colors.textInverse : "rgba(29,26,39,0.35)"}
-              strokeWidth={2.4}
-            />
-          )}
-        </Pressable>
+
+        {/* Bottom Action Row */}
+        <View style={styles.actionRow}>
+          {/* Left: Attach (+) Button */}
+          <Pressable
+            onPress={onAttachPress}
+            hitSlop={6}
+            style={({ pressed }) => [
+              styles.attachBtn,
+              pressed && styles.pressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Attach"
+          >
+            <Plus size={18} color="#221E19" strokeWidth={2.4} />
+          </Pressable>
+
+          {/* Center: Model Selector Pill */}
+          <Pressable
+            onPress={onModelPress}
+            hitSlop={6}
+            style={({ pressed }) => [
+              styles.modelSelector,
+              pressed && styles.pressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={`Model: ${modelName}`}
+          >
+            <Text style={styles.modelText}>{modelName}</Text>
+            <ChevronDown size={15} color="#3E382E" strokeWidth={2.2} />
+          </Pressable>
+
+          {/* Right: Mic + Voice/Send Button */}
+          <View style={styles.rightActions}>
+            <Pressable
+              onPress={onMicPress}
+              hitSlop={6}
+              style={({ pressed }) => [
+                styles.micBtn,
+                pressed && styles.pressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Voice input"
+            >
+              <Mic size={22} color="#221E19" strokeWidth={2} />
+            </Pressable>
+
+            <Pressable
+              onPress={handleSubmitPress}
+              hitSlop={6}
+              style={({ pressed }) => [
+                styles.voiceSendBtn,
+                isStreaming && styles.voiceSendBtnStop,
+                pressed && styles.pressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isStreaming
+                  ? "Stop generating"
+                  : canSubmit
+                    ? "Send message"
+                    : "Voice mode"
+              }
+            >
+              {isStreaming ? (
+                <Square size={14} color="#FAF7F2" fill="#FAF7F2" />
+              ) : canSubmit ? (
+                <ArrowUp size={20} color="#FAF7F2" strokeWidth={2.6} />
+              ) : (
+                <View style={styles.waveform}>
+                  <View style={[styles.waveBar, { height: 7 }]} />
+                  <View style={[styles.waveBar, { height: 13 }]} />
+                  <View style={[styles.waveBar, { height: 19 }]} />
+                  <View style={[styles.waveBar, { height: 13 }]} />
+                  <View style={[styles.waveBar, { height: 7 }]} />
+                </View>
+              )}
+            </Pressable>
+          </View>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // Outer: the chat-bar wrapper. No top divider — the bar is a
-  // self-contained floating surface. 10pt side padding so the
-  // bar breathes from the screen edge. Extra paddingBottom is
-  // added by the screen (insets.bottom + 8) to clear the home
-  // indicator.
   outer: {
-    paddingHorizontal: 10,
-    paddingTop: space.sm,
-    paddingBottom: space.sm,
+    paddingHorizontal: 12,
+    paddingTop: 6,
+    paddingBottom: 6,
     backgroundColor: colors.bg,
   },
   tools: {
@@ -192,71 +222,98 @@ const styles = StyleSheet.create({
     columnGap: space.xs,
     marginBottom: space.xs,
   },
-  // Bar: the floating input. Quiet warm-paper surface, full pill
-  // radius, hairline border. No drop shadow — the bar is calm.
-  bar: {
+  card: {
+    backgroundColor: "#FBF9F5",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E6E0D6",
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 1.5 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  input: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: "#1F1B16",
+    fontFamily: FONT_FAMILY["400"],
+    paddingHorizontal: 4,
+    paddingTop: 0,
+    paddingBottom: 6,
+    minHeight: MIN_INPUT_HEIGHT,
+    maxHeight: MAX_LINES * LINE_HEIGHT + 10,
+  },
+  actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingLeft: 4,
-    paddingRight: 4,
-    paddingVertical: 4,
-    minHeight: 50,
+    justifyContent: "space-between",
+    paddingTop: 4,
+    paddingBottom: 2,
   },
-  // Attach (`+`) button — quiet ghost: thin clay border, paper
-  // fill, clay plus icon. Reads as secondary so the send button
-  // (ink-filled, primary) gets the weight.
-  attach: {
-    width: ATTACH_SIZE,
-    height: ATTACH_SIZE,
-    borderRadius: ATTACH_SIZE / 2,
+  attachBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#ECE7DE",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.bg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  // Input: flex:1 so it takes remaining width. Height grows with
-  // content (capped at MAX_LINES). Dark text + soft-muted placeholder
-  // to read against the cream bar.
-  input: {
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.text,
-    fontFamily: FONT_FAMILY["400"],
-    paddingTop: Platform.OS === "ios" ? 10 : 12,
-    paddingBottom: Platform.OS === "ios" ? 10 : 12,
-    paddingHorizontal: space.sm,
-    minHeight: 24,
-    maxHeight: MAX_LINES * LINE_HEIGHT + 20,
+  modelSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
   },
-  // Submit: 36x36 fixed circle, always visible, never grows.
-  // Idle = warm gray circle that is clearly distinct from the cream
-  // bar (the previous shade #E8E4DD was too close to the bar tint
-  // and read as flat). Active = solid dark when text is present.
-  // Stop = red when streaming. Matches the Image #23 reference:
-  // a quiet light circle that becomes a solid dark pop once the
-  // user has typed something.
-  submit: {
-    width: SUBMIT_SIZE,
-    height: SUBMIT_SIZE,
-    borderRadius: SUBMIT_SIZE / 2,
+  modelText: {
+    fontSize: 14,
+    color: "#3E382E",
+    fontFamily: FONT_FAMILY["500"],
+  },
+  rightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
+  },
+  micBtn: {
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: 4,
   },
-  submitActive: {
-    backgroundColor: colors.focus,
+  voiceSendBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#1F1B16",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  submitIdle: {
-    backgroundColor: colors.surface,
-  },
-  submitStop: {
+  voiceSendBtnStop: {
     backgroundColor: colors.error,
   },
-  pressed: { opacity: 0.85, transform: [{ scale: 0.94 }] },
+  waveform: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 2.5,
+  },
+  waveBar: {
+    width: 2.2,
+    borderRadius: 1.5,
+    backgroundColor: "#FAF7F2",
+  },
+  pressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.94 }],
+  },
 });

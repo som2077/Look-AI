@@ -29,7 +29,8 @@ export function useRevenueCat() {
 
     const init = async () => {
       try {
-        Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+        Purchases.setLogLevel(LOG_LEVEL.ERROR);
+        Purchases.setLogHandler(() => {});
 
         const key = API_KEYS.google;
 

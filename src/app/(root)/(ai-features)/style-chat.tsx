@@ -117,7 +117,12 @@ export default function StyleChatScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <View style={[styles.screenBody, { paddingBottom: keyboardHeight }]}>
+      <View
+        style={[
+          styles.screenBody,
+          { paddingBottom: Platform.OS === "ios" ? keyboardHeight : 0 },
+        ]}
+      >
         <ChatBodyWithHeader onBack={handleBack} />
       </View>
     </View>
@@ -797,6 +802,10 @@ function ChatBody({
     onStreamingChange(isStreaming);
   }, [isStreaming, onStreamingChange]);
 
+  const keyboardHeight = useKeyboardHeight();
+  const inputBarHeight = 96 + space.sm * 2;
+  const fabBottom = Math.max(insets.bottom, 8) + inputBarHeight + 8; // +8 = breathing room
+
   return (
     <View style={chatBodyStyles.fill}>
       {header}
@@ -806,12 +815,18 @@ function ChatBody({
         keyExtractor={keyExtractor}
         contentContainerStyle={chatBodyStyles.listContent}
         ListFooterComponent={ListFooter}
+        fabBottom={fabBottom}
       />
 
       <View
         style={[
           chatBodyStyles.inputOuter,
-          { paddingBottom: Math.max(insets.bottom, 8) },
+          {
+            paddingBottom:
+              Platform.OS === "android" && keyboardHeight > 0
+                ? 4
+                : Math.max(insets.bottom, 8),
+          },
         ]}
       >
         <PromptInput
@@ -819,7 +834,7 @@ function ChatBody({
           onChange={onInputChange}
           onSubmit={handlePromptSubmit}
           isStreaming={isStreaming}
-          placeholder="Ask StyleAI..."
+          placeholder="How can I help you today?"
         />
       </View>
     </View>

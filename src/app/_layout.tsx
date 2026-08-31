@@ -1,3 +1,4 @@
+import "@/shared/config/suppress-logs";
 import {
   OnboardingProvider,
   useOnboardingState,
