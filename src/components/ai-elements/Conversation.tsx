@@ -7,7 +7,7 @@
 import React, { useEffect } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { IconArrowDown } from "@tabler/icons-react-native";
-import { colors, radii, space } from "./theme";
+import { colors, space } from "./theme";
 import { useScrollToBottom } from "./useScrollToBottom";
 
 export interface ConversationProps<T> {
@@ -83,8 +83,14 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
+    // Anchor the FAB to the full width and use marginHorizontal:
+    // auto so it actually centers inside its absolutely-positioned
+    // parent (alignSelf doesn't center absolutely-positioned children
+    // on the cross axis on every platform).
+    left: 0,
+    right: 0,
     bottom: space.lg,
-    alignSelf: "center",
+    marginHorizontal: "auto",
     width: 38,
     height: 38,
     borderRadius: 19,

@@ -16,6 +16,8 @@ export type {
 } from "./types";
 
 export { StreamingCursor } from "./StreamingCursor";
+export { StreamingDot } from "./StreamingDot";
+export { ChatHeader } from "./ChatHeader";
 export { Badge } from "./Badge";
 export { Spinner } from "./Spinner";
 export { IconButton } from "./IconButton";

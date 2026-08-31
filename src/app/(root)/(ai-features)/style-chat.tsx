@@ -1,19 +1,24 @@
 // Style Chat — generative-UI screen backed by the `style-chat` Supabase
 // edge function. Rebuilt on top of AI Elements-style components
-// (`src/components/ai-elements/`) for the visual language: assistant
-// messages render full-width and transparent; user messages sit in a
-// light gray bubble on the right; tool outputs are wrapped in a
-// collapsible `Tool` shell with a status badge; streaming shows a
-// blinking caret at the end of the assistant text.
+// (`src/components/ai-elements/`) for the visual language.
 //
-// UI layout (post-refresh): a top bar with a back arrow, the
-// "StyleAI" title centered, and a peach `+` button on the right
-// that opens a confirmation modal before clearing the conversation.
+// Visual identity: an atelier mood-board. Warm paper background,
+// hairline rules, deep clay accent. The header carries a small
+// pulsing clay dot that animates while StyleAI is streaming —
+// the screen's signature ornament.
+//
+// Layout:
+//   - Top bar: back arrow + "Style Chat" with pulsing AI dot +
+//     quiet refresh button on the right.
+//   - User messages: dark ink bubble on the right (cream text).
+//   - Assistant messages: full-width transparent text with a
+//     streaming caret at the end of the last message.
+//   - Tool outputs: rendered as the user-facing card directly
+//     (the technical `Tool` wrapper with its name + status badge
+//     is suppressed inside the chat — the card's own title is
+//     the user-facing header).
 
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import {
-  IconChevronLeft,
-} from '@tabler/icons-react-native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -29,10 +34,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import {
+  ChatHeader,
   colors,
   Conversation,
   font,
-  FONT_FAMILY,
   Loader,
   Message,
   MessageResponse,
@@ -113,82 +118,36 @@ export default function StyleChatScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <View style={[styles.screenBody, { paddingBottom: keyboardHeight }]}>
-        <TopBar title="Style Chat" onBack={handleBack} />
-        <ChatBody />
+        <ChatBodyWithHeader onBack={handleBack} />
       </View>
     </View>
   );
 }
 
 /**
- * Top bar — back arrow on the left, centered title. The right slot
- * is intentionally empty: a `+` / "new chat" button was tried and
- * removed because the screen has no clear path to "new chat" that
- * doesn't feel like a destructive shortcut mid-conversation.
+ * Composes the header (which knows about streaming) and the chat body
+ * (which owns the chat state) into a single screen. The header reads
+ * `isStreaming` from `useChat` so the pulsing clay dot animates only
+ * while StyleAI is generating.
  */
-function TopBar({
-  title,
-  onBack,
-}: {
-  title: string;
-  onBack: () => void;
-}) {
+function ChatBodyWithHeader({ onBack }: { onBack: () => void }) {
+  const [streaming, setStreaming] = useState(false);
+
+  // Streaming state is exposed by the chat body via a setter on a
+  // ref-like pattern. We pass it down so the header can react.
   return (
-    <View style={topBarStyles.bar}>
-      <TouchableOpacity
-        onPress={onBack}
-        style={topBarStyles.leftBtn}
-        hitSlop={12}
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-      >
-        <IconChevronLeft size={26} color={colors.text} strokeWidth={2.2} />
-      </TouchableOpacity>
-      <View style={topBarStyles.titleSlot} pointerEvents="none">
-        <Text style={topBarStyles.title} numberOfLines={1}>
-          {title}
-        </Text>
-      </View>
-      {/* Right spacer so the title stays optically centered (back
-          button on the left has a hitSlop but no right counterpart). */}
-      <View style={topBarStyles.rightSpacer} />
-    </View>
+    <ChatBody
+      onStreamingChange={setStreaming}
+      header={
+        <ChatHeader
+          title="Style Chat"
+          streaming={streaming}
+          onBack={onBack}
+        />
+      }
+    />
   );
 }
-
-const topBarStyles = StyleSheet.create({
-  bar: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    backgroundColor: colors.bg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderSubtle,
-  },
-  leftBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  titleSlot: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.text,
-    letterSpacing: -0.2,
-    fontFamily: FONT_FAMILY['600'],
-  },
-  rightSpacer: {
-    width: 40,
-    height: 40,
-  },
-});
 
 /**
  * ChatBody — owns useChat (input, messages, streaming, tools).
@@ -196,7 +155,13 @@ const topBarStyles = StyleSheet.create({
  * stay readable on their own; nothing else forces a remount now
  * that the `+` "new chat" button is gone.
  */
-function ChatBody() {
+function ChatBody({
+  onStreamingChange,
+  header,
+}: {
+  onStreamingChange: (streaming: boolean) => void;
+  header: React.ReactNode;
+}) {
   const insets = useSafeAreaInsets();
 
   const { getToken, isSignedIn, isLoaded } = useAuth();
@@ -517,8 +482,7 @@ function ChatBody() {
                   data={args}
                   onConfirm={(date, time) => {
                     handleSubmit(
-                      `I picked ${date} at ${time}. Occasion: ${
-                        args.occasion || 'event'
+                      `I picked ${date} at ${time}. Occasion: ${args.occasion || 'event'
                       }`
                     );
                   }}
@@ -770,18 +734,6 @@ function ChatBody() {
   // Determine which message is the last assistant one (for streaming cursor).
   const { isLastAssistantStreaming } = useStreamingCaret(messages, isStreaming);
 
-  // Helper: extract plain text from an assistant message for the Copy action.
-  const getAssistantText = useCallback((content: unknown): string => {
-    if (typeof content === 'string') return content;
-    if (Array.isArray(content)) {
-      return content
-        .map((c: any) => (typeof c === 'string' ? c : c?.text ?? ''))
-        .filter(Boolean)
-        .join('\n');
-    }
-    return '';
-  }, []);
-
   // Render a single message. Three branches: tool output (ReactElement),
   // assistant text, user text. Each is wrapped in <Message from=...>.
   // Wrapped in useCallback so <Conversation> doesn't re-render every row
@@ -840,8 +792,14 @@ function ChatBody() {
     [messages],
   );
 
+  // Bubble the streaming state up to the header so the clay dot can pulse.
+  useEffect(() => {
+    onStreamingChange(isStreaming);
+  }, [isStreaming, onStreamingChange]);
+
   return (
     <View style={chatBodyStyles.fill}>
+      {header}
       <Conversation
         data={visibleMessages}
         renderItem={renderItem}

@@ -1,24 +1,22 @@
 // OutfitSuggestionCard — rich outfit suggestion with reasoning + Save.
 //
-// Visual design (premium lookbook feel):
+// Visual design (atelier mood-board feel):
 //   ┌─────────────────────────────────────┐
-//   │  [hero image — 1:1 square]          │   The "focal piece" — usually
-//   │                                     │   the first item. Soft rounded
-//   │                                     │   corners, no harsh border.
-//   │  ●  ●  ●  ●      (thumbnails)       │   Remaining items as small dots
-//   │                                     │   so the user knows the rest.
+//   │  CASUAL COLLEGE LOOK                │   Italic small-caps eyebrow in
+//   │                                     │   deep clay — feels like a
+//   │  [hero image — 4:5 portrait]         │   curatorial label, not a UI tag.
 //   │                                     │
-//   │  CASUAL COLLEGE LOOK                │   Small uppercase eyebrow label
+//   │  ●  ●  ●  ●   (filmstrip thumbs)    │   Remaining items as a horizontal
+//   │                                     │   strip below the hero.
+//   │  Gray hoodie · Blue jeans · Tee     │   Item names joined by middots.
 //   │                                     │
-//   │  Gray hoodie + blue jeans + white   │   Italic "why" in muted ink
-//   │  tee — relaxed but put-together    │
-//   │                                     │
-//   │  Comfy for classes.                 │   "style_note" — small caption
+//   │  ╭ Why this works ────────────╮     │   Italic "why" in clay wash
+//   │  │ Comfy for classes.         │     │
+//   │  ╰────────────────────────────╯     │
 //   │                                     │
 //   │  ┌─ pill ────────────────────┐      │
-//   │  │  ♡  Save to my looks      │      │   Pill save button with heart
+//   │  │  ♡  Save to my looks      │      │
 //   │  └───────────────────────────┘      │
-//   │  ✓ Saved to your looks              │   Confirmed state
 //   └─────────────────────────────────────┘
 //
 // Data shape (consumed from the resolve-outfit endpoint):
@@ -46,6 +44,7 @@ import {
   IconCheck,
   IconSparkles,
 } from "@tabler/icons-react-native";
+import { colors, FONT_FAMILY, font, radii, space } from "@/components/ai-elements";
 
 export interface OutfitSuggestionItem {
   id?: string;
@@ -78,7 +77,9 @@ export interface OutfitSuggestionCardProps {
 }
 
 const CARD_WIDTH = 296;
-const HERO_SIZE = CARD_WIDTH - 32; // paddingHorizontal 16 on each side
+const CARD_PADDING = 14;
+const HERO_W = CARD_WIDTH - CARD_PADDING * 2;
+const HERO_H = Math.round(HERO_W * 1.2); // 4:5 portrait
 const THUMB_SIZE = 44;
 const THUMB_GAP = 8;
 
@@ -105,12 +106,14 @@ export function OutfitSuggestionCard({ data, onSave }: OutfitSuggestionCardProps
     outfits.length > 0;
 
   if (note && outfits.length === 0) {
-    // Empty-state: only the note is shown, no carousel.
     return (
       <View style={styles.container}>
+        <Text style={styles.title}>
+          {`Here's what you can wear for ${occasion}:`}
+        </Text>
         <View style={styles.emptyCard}>
           <View style={styles.emptyIconWrap}>
-            <IconSparkles size={22} color="#7C3AED" strokeWidth={1.8} />
+            <IconSparkles size={20} color={colors.brand} strokeWidth={1.6} />
           </View>
           <Text style={styles.emptyTitle}>No items found</Text>
           <Text style={styles.emptyBody}>{note}</Text>
@@ -132,7 +135,7 @@ export function OutfitSuggestionCard({ data, onSave }: OutfitSuggestionCardProps
         {outfits.length === 0 ? (
           <View style={styles.emptyCard}>
             <View style={styles.emptyIconWrap}>
-              <IconSparkles size={22} color="#7C3AED" strokeWidth={1.8} />
+              <IconSparkles size={20} color={colors.brand} strokeWidth={1.6} />
             </View>
             <Text style={styles.emptyTitle}>No items found</Text>
             <Text style={styles.emptyBody}>
@@ -149,10 +152,10 @@ export function OutfitSuggestionCard({ data, onSave }: OutfitSuggestionCardProps
       </ScrollView>
       {showVarietyHint ? (
         <View style={styles.hint}>
-          <IconSparkles size={14} color="#9A3412" strokeWidth={1.8} />
+          <IconSparkles size={13} color={colors.brand} strokeWidth={1.8} />
           <Text style={styles.hintText}>
-            Aur variety ke liye 2-3 items aur scan karo — abhi wardrobe
-            mein sirf {wardrobe_size} hain.
+            For more variety, scan 2-3 more pieces — your wardrobe
+            currently has only {wardrobe_size}.
           </Text>
         </View>
       ) : null}
@@ -190,8 +193,12 @@ function OutfitColumn({
 
   return (
     <View style={styles.card}>
-      {/* Hero image — the first item in the outfit. Falls back to a soft
-          gradient + emoji if the item has no photo. */}
+      {/* Italic small-caps eyebrow label in clay — the curatorial
+          headline that tells the user what kind of look this is. */}
+      <Text style={styles.labelEyebrow}>{outfit.label}</Text>
+
+      {/* Hero image — 4:5 portrait, less dominant than a square.
+          Falls back to a soft warm surface + emoji if no photo. */}
       {hasItems ? (
         <View style={styles.heroWrap}>
           {hero?.image_url ? (
@@ -201,7 +208,8 @@ function OutfitColumn({
               <Text style={styles.heroFallbackEmoji}>👕</Text>
             </View>
           )}
-          {/* Hero's category pill — small, top-left. */}
+          {/* Category pill — quiet, sits on a clay-tinted wash so it
+              doesn't shout over the hero. */}
           {hero?.category ? (
             <View style={styles.heroBadge}>
               <Text style={styles.heroBadgeText}>{hero.category}</Text>
@@ -210,7 +218,15 @@ function OutfitColumn({
         </View>
       ) : null}
 
-      {/* Rest of the items as small thumbnails. */}
+      {/* Item names — a single italic line of the pieces joined by
+          middots, just under the hero. Reads as a caption, not a list. */}
+      {hasItems ? (
+        <Text style={styles.itemNames} numberOfLines={2}>
+          {outfit.items.map((it) => it.name).join(" · ")}
+        </Text>
+      ) : null}
+
+      {/* Filmstrip of remaining items as small thumbnails. */}
       {hasItems && restItems.length > 0 ? (
         <View style={styles.thumbsRow}>
           {restItems.map((it, j) => (
@@ -224,30 +240,21 @@ function OutfitColumn({
         </View>
       ) : null}
 
-      {/* Label (eyebrow style) + the full names of every item. */}
-      <View style={styles.labelBlock}>
-        <Text style={styles.labelEyebrow}>{outfit.label}</Text>
-        {hasItems ? (
-          <Text style={styles.itemNames} numberOfLines={2}>
-            {outfit.items.map((it) => it.name).join(" · ")}
-          </Text>
-        ) : null}
-      </View>
-
-      {/* "Why this works" reasoning. */}
+      {/* "Why this works" reasoning — italic on a clay wash. */}
       {outfit.why ? (
         <View style={styles.whyBlock}>
-          <IconSparkles size={13} color="#7C3AED" strokeWidth={1.8} />
+          <IconSparkles size={13} color={colors.brand} strokeWidth={1.8} />
           <Text style={styles.whyText}>{outfit.why}</Text>
         </View>
       ) : null}
 
-      {/* Style note (one-line caption). */}
+      {/* Style note — quiet italic caption. */}
       {outfit.style_note ? (
         <Text style={styles.note}>{outfit.style_note}</Text>
       ) : null}
 
-      {/* Save / Saved pill. */}
+      {/* Save / Saved pill — clay-tinted idle, ink-tinted active,
+          moss-tinted confirmed. States are visually distinct. */}
       {onSave ? (
         <TouchableOpacity
           style={[
@@ -260,19 +267,15 @@ function OutfitColumn({
           activeOpacity={0.85}
         >
           {saving ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={colors.textInverse} />
           ) : saved ? (
             <>
-              <IconCheck size={15} color="#FFFFFF" strokeWidth={2.4} />
+              <IconCheck size={15} color={colors.textInverse} strokeWidth={2.4} />
               <Text style={styles.saveBtnTextDone}>Saved to your looks</Text>
             </>
           ) : (
             <>
-              <IconBookmark
-                size={15}
-                color="#FFFFFF"
-                strokeWidth={2}
-              />
+              <IconBookmark size={15} color={colors.brand} strokeWidth={2} />
               <Text style={styles.saveBtnText}>Save to my looks</Text>
             </>
           )}
@@ -291,77 +294,97 @@ function OutfitColumn({
 }
 
 const styles = StyleSheet.create({
-  container: { paddingLeft: 16, marginBottom: 12 },
+  container: { paddingLeft: space.lg, marginBottom: space.md },
   title: {
-    fontSize: 17,
+    fontSize: font.h2,
     fontWeight: '600',
     marginBottom: 14,
-    color: '#1F2937',
-    letterSpacing: -0.2,
+    color: colors.text,
+    letterSpacing: -0.3,
+    fontFamily: FONT_FAMILY['600'],
   },
-  scroll: { gap: 14, paddingRight: 16 },
-  // Card — soft, premium feel matching WeatherCard's 24px radius.
+  scroll: { gap: 12, paddingRight: space.lg },
+  // Card — soft warm surface, hairline border, no harsh shadow.
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: CARD_PADDING,
     width: CARD_WIDTH,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
     borderWidth: 1,
-    borderColor: '#F1F1F4',
+    borderColor: colors.borderSubtle,
   },
-  // Hero image — square, fills the card width minus padding.
+  // Eyebrow label — italic small-caps in clay. Reads as a curatorial
+  // caption, not a UI tag. 1.4px tracking and uppercase spacing keep
+  // it tight against the hero image below.
+  labelEyebrow: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.6,
+    color: colors.brand,
+    textTransform: 'uppercase',
+    fontStyle: 'italic',
+    fontFamily: FONT_FAMILY['600'],
+    marginBottom: 10,
+  },
+  // Hero image — 4:5 portrait, smaller than the previous 1:1 square.
   heroWrap: {
-    width: HERO_SIZE,
-    height: HERO_SIZE,
+    width: HERO_W,
+    height: HERO_H,
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.surfaceMuted,
     position: 'relative',
+    marginBottom: 12,
   },
   hero: { width: '100%', height: '100%' },
   heroFallback: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.surfaceMuted,
   },
   heroFallbackEmoji: { fontSize: 56 },
-  // Category pill that sits over the hero image (top-left).
+  // Category pill over the hero — clay-tinted wash, never bright white.
   heroBadge: {
     position: 'absolute',
     top: 10,
     left: 10,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(247,233,218,0.94)',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 999,
   },
   heroBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#1F2937',
-    letterSpacing: 0.4,
+    color: colors.brand,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
+    fontFamily: FONT_FAMILY['700'],
   },
-  // Thumbnails of the remaining items in a row.
+  // Item names — italic, soft ink. A caption, not a list.
+  itemNames: {
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 18,
+    fontStyle: 'italic',
+    fontFamily: FONT_FAMILY['400'],
+    marginBottom: 12,
+  },
+  // Thumbnails — a small filmstrip below the hero.
   thumbsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     columnGap: THUMB_GAP,
-    marginTop: 12,
+    marginBottom: 14,
   },
   thumb: {
     width: THUMB_SIZE,
     height: THUMB_SIZE,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
-    borderColor: '#F1F1F4',
+    borderColor: colors.borderSubtle,
   },
   thumbImage: { width: '100%', height: '100%' },
   thumbFallback: { alignItems: 'center', justifyContent: 'center' },
@@ -369,75 +392,74 @@ const styles = StyleSheet.create({
   thumbOverflow: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.surfaceMuted,
   },
-  thumbOverflowText: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
-  // Label + item names block.
-  labelBlock: { marginTop: 14 },
-  labelEyebrow: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    color: '#6B7280',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  itemNames: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-    lineHeight: 20,
-    letterSpacing: -0.1,
-  },
-  // "Why this works" — light purple wash, sparkle icon prefix.
+  thumbOverflowText: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
+  // "Why this works" — italic on clay wash, ink accent.
   whyBlock: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     columnGap: 8,
-    marginTop: 12,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: colors.brandBg,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    marginBottom: 10,
   },
   whyText: {
     flex: 1,
     fontSize: 13,
-    color: '#4C1D95',
-    lineHeight: 18,
+    color: colors.text,
+    lineHeight: 19,
     fontStyle: 'italic',
+    fontFamily: FONT_FAMILY['400'],
   },
-  // Style note (small caption below the why).
+  // Style note (small caption).
   note: {
     fontSize: 12,
-    color: '#9CA3AF',
-    marginTop: 8,
+    color: colors.textMuted,
     lineHeight: 17,
+    marginBottom: 6,
+    fontFamily: FONT_FAMILY['400'],
   },
-  // Pill-shaped save button.
+  // Save button — clay-tinted idle, ink active, moss confirmed.
   saveBtn: {
-    marginTop: 14,
-    backgroundColor: '#1D1A27',
+    marginTop: 12,
+    backgroundColor: colors.brandBg,
     borderRadius: 999,
-    paddingVertical: 12,
+    paddingVertical: 11,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     columnGap: 8,
+    borderWidth: 1,
+    borderColor: colors.brand,
   },
-  saveBtnSaving: { backgroundColor: '#4B5563' },
-  saveBtnDone: { backgroundColor: '#10B981' },
-  saveBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600', letterSpacing: 0.1 },
-  saveBtnTextDone: { color: '#FFFFFF', fontSize: 13, fontWeight: '600', letterSpacing: 0.1 },
+  saveBtnSaving: { backgroundColor: colors.textMuted, borderColor: colors.textMuted },
+  saveBtnDone: { backgroundColor: colors.success, borderColor: colors.success },
+  saveBtnText: {
+    color: colors.brand,
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.1,
+    fontFamily: FONT_FAMILY['600'],
+  },
+  saveBtnTextDone: {
+    color: colors.textInverse,
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.1,
+    fontFamily: FONT_FAMILY['600'],
+  },
   // Empty card.
   emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
     padding: 22,
     width: CARD_WIDTH,
     borderWidth: 1,
-    borderColor: '#F1F1F4',
+    borderColor: colors.borderSubtle,
     borderStyle: 'dashed',
     alignItems: 'flex-start',
   },
@@ -445,7 +467,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: colors.brandBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -453,31 +475,31 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.text,
     marginBottom: 6,
+    fontFamily: FONT_FAMILY['600'],
   },
   emptyBody: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textMuted,
     lineHeight: 19,
+    fontFamily: FONT_FAMILY['400'],
   },
   emptyOutfitBody: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 10,
     padding: 12,
     marginTop: 12,
   },
-  emptyOutfitText: { fontSize: 12, color: '#6B7280', lineHeight: 17 },
-  // Low-wardrobe hint shown under the cards.
+  emptyOutfitText: { fontSize: 12, color: colors.textMuted, lineHeight: 17 },
+  // Low-wardrobe hint.
   hint: {
-    marginTop: 10,
-    marginRight: 16,
+    marginTop: 12,
+    marginRight: space.lg,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#FFF7ED',
+    backgroundColor: colors.brandBg,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#FED7AA',
     flexDirection: 'row',
     alignItems: 'flex-start',
     columnGap: 8,
@@ -485,7 +507,8 @@ const styles = StyleSheet.create({
   hintText: {
     flex: 1,
     fontSize: 12,
-    color: '#9A3412',
+    color: colors.text,
     lineHeight: 17,
+    fontFamily: FONT_FAMILY['400'],
   },
 });

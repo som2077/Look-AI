@@ -2,40 +2,45 @@
  * Design tokens for AI Elements-style components.
  * Light theme for v1. Structure allows additive dark mode later
  * (wrap in `getTheme(mode)` returning the same shape).
+ *
+ * Aesthetic: atelier mood-board. Warm paper background, deep clay
+ * accent, hairline rules. Feels like a curator's table, not a chat
+ * app. Every value below has a reason rooted in the product (your
+ * actual clothes, not generic AI).
  */
 
 export const colors = {
-  // Surfaces
-  bg: "#FFFFFF",
-  surface: "#F2F2F7", // assistant panel / light user bubble
-  surfaceMuted: "#F9FAFB", // hover / skeleton
-  border: "#E5E7EB",
-  borderSubtle: "#F1F1F4",
+  // Surfaces — warm paper, not pure white
+  bg: "#FAF7F2",
+  surface: "#F2EDE4", // assistant panel / muted bubble
+  surfaceMuted: "#F4EFE6", // hover / skeleton
+  border: "#E2D9C8",
+  borderSubtle: "#ECE4D4",
 
-  // Text
-  text: "#1D1A27",
-  textMuted: "#6B7280",
-  textSubtle: "#9CA3AF",
-  textInverse: "#FFFFFF",
+  // Text — soft black, warmer than #1D1A27
+  text: "#1F1B16",
+  textMuted: "#6F6657",
+  textSubtle: "#A39885",
+  textInverse: "#FAF7F2",
 
   // Accents
-  userBubble: "#F2F2F7", // light-gray user message bubble (was #1D1A27)
-  focus: "#1D1A27",
+  userBubble: "#1F1B16", // dark bubble on right (Claude convention)
+  focus: "#1F1B16",
   warn: "#92400E",
   warnBg: "#FEF3C7",
   warnBorder: "#FCD34D",
-  success: "#10B981",
-  error: "#EF4444",
+  success: "#7C8A4A", // olive-moss (not generic green) — earth, not tech
+  error: "#B23A2A", // brick, not neon red
 
-  // Brand
-  brand: "#FF7A45", // peach accent (top-bar "+" button)
-  brandBg: "#FFE7DA", // soft peach wash (used sparingly for confirmation backdrop)
+  // Brand — deep clay/burnt sienna. Earth dye, not terracotta.
+  brand: "#B8541E",
+  brandBg: "#F7E9DA",
 
   // Status badges
-  statusPending: "#9CA3AF",
-  statusRunning: "#1D1A27",
-  statusDone: "#10B981",
-  statusError: "#EF4444",
+  statusPending: "#A39885",
+  statusRunning: "#1F1B16",
+  statusDone: "#7C8A4A",
+  statusError: "#B23A2A",
 } as const;
 
 export const space = {
@@ -57,7 +62,7 @@ export const radii = {
 
 export const font = {
   body: 15,
-  small: 12,
+  small: 13,
   caption: 11,
   h2: 17,
   code: 13,

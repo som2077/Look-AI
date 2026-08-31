@@ -152,8 +152,8 @@ export function PromptInput({
             isStreaming
               ? styles.submitStop
               : canSubmit
-              ? styles.submitActive
-              : styles.submitIdle,
+                ? styles.submitActive
+                : styles.submitIdle,
             pressed && styles.pressed,
           ]}
           accessibilityRole="button"
@@ -192,43 +192,32 @@ const styles = StyleSheet.create({
     columnGap: space.xs,
     marginBottom: space.xs,
   },
-  // Bar: the floating input. Warm off-white surface, full pill radius,
-  // hairline border. Inner padding is tight on both sides (4pt) so the
-  // `+` and send buttons sit flush against the bar edge.
+  // Bar: the floating input. Quiet warm-paper surface, full pill
+  // radius, hairline border. No drop shadow — the bar is calm.
   bar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F3F0",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(29,26,39,0.08)",
+    borderColor: colors.border,
     paddingLeft: 4,
     paddingRight: 4,
     paddingVertical: 4,
     minHeight: 50,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  // Attach (`+`) button: solid dark circle on the left, white plus
-  // icon. The dark fill is the primary visual anchor of the bar —
-  // it must read as a clearly separated circle against the cream
-  // background, not blend in. A subtle drop shadow lifts it off
-  // the surface.
+  // Attach (`+`) button — quiet ghost: thin clay border, paper
+  // fill, clay plus icon. Reads as secondary so the send button
+  // (ink-filled, primary) gets the weight.
   attach: {
     width: ATTACH_SIZE,
     height: ATTACH_SIZE,
     borderRadius: ATTACH_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.focus,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.18,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   // Input: flex:1 so it takes remaining width. Height grows with
   // content (capped at MAX_LINES). Dark text + soft-muted placeholder
@@ -264,7 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.focus,
   },
   submitIdle: {
-    backgroundColor: "#D4D0C8",
+    backgroundColor: colors.surface,
   },
   submitStop: {
     backgroundColor: colors.error,
