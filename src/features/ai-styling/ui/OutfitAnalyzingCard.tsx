@@ -1,3 +1,11 @@
+import { cloudinaryUrl } from "@/shared/cloudinary/transform";
+import {
+  IconLeaf,
+  IconSnowflake,
+  IconSun,
+  IconUmbrella,
+} from "@tabler/icons-react-native";
+import { FlashList } from "@shopify/flash-list";
 import { Image as ExpoImage } from "expo-image";
 import React, {
   useCallback,
@@ -6,7 +14,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Dimensions, FlatList, Pressable, Text, View } from "react-native";
+import { Dimensions, Pressable, Text, View } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 
 import {
@@ -29,6 +37,33 @@ const CARD_WIDTH = Dimensions.get("window").width - CARD_H_MARGIN * 2;
 const SCAN_MODE_ROUTES: Record<"label" | "fit-check", { pathname: string }> = {
   label: { pathname: "/(root)/add-clothes/label-result" },
   "fit-check": { pathname: "/(root)/add-clothes/fitcheck-result" },
+};
+
+const getSeasonIcon = (
+  label: string,
+  color: string = "#FFFFFF",
+  size: number = 12,
+) => {
+  const norm = label.toLowerCase().trim();
+  if (norm.includes("summer") || norm.includes("sunny") || norm.includes("hot")) {
+    return <IconSun size={size} color={color} strokeWidth={2} />;
+  }
+  if (norm.includes("winter") || norm.includes("cold") || norm.includes("snow")) {
+    return <IconSnowflake size={size} color={color} strokeWidth={2} />;
+  }
+  if (
+    norm.includes("spring") ||
+    norm.includes("autumn") ||
+    norm.includes("fall") ||
+    norm.includes("season") ||
+    norm.includes("leaf")
+  ) {
+    return <IconLeaf size={size} color={color} strokeWidth={2} />;
+  }
+  if (norm.includes("monsoon") || norm.includes("rain")) {
+    return <IconUmbrella size={size} color={color} strokeWidth={2} />;
+  }
+  return <IconLeaf size={size} color={color} strokeWidth={2} />;
 };
 
 // ─── Slide type: either a completed outfit or the in-progress analysis ───────
@@ -58,6 +93,31 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
   outfitIndex: number;
   onViewDetails: (i: number) => void;
 }) {
+  const displaySubtitle = useMemo(() => {
+    if (outfit.clothingData) {
+      const cat = outfit.clothingData.category;
+      const subCat = outfit.clothingData.subCategory;
+      if (cat && subCat && cat.toLowerCase() !== subCat.toLowerCase()) {
+        return `${cat} · ${subCat}`;
+      }
+      if (cat || subCat) {
+        return cat || subCat;
+      }
+    }
+    return outfit.subtitle;
+  }, [outfit.clothingData, outfit.subtitle]);
+
+  const displayTags: string[] = useMemo(() => {
+    if (
+      outfit.clothingData?.season &&
+      Array.isArray(outfit.clothingData.season) &&
+      outfit.clothingData.season.length > 0
+    ) {
+      return outfit.clothingData.season.slice(0, 2);
+    }
+    return (outfit.tags || []).slice(0, 2);
+  }, [outfit.clothingData, outfit.tags]);
+
   return (
     <Pressable
       style={{ width: CARD_WIDTH }}
@@ -73,7 +133,7 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
           }}
         >
           <ExpoImage
-            source={{ uri: outfit.imageUri }}
+            source={{ uri: cloudinaryUrl(outfit.imageUri, "thumbnail") }}
             style={{ width: "100%", height: "100%" }}
             contentFit="contain"
             cachePolicy="memory"
@@ -115,23 +175,27 @@ const CompletedCardSlide = React.memo(function CompletedCardSlide({
                 fontFamily: "TikTokSans16pt-Regular",
               }}
             >
-              {outfit.subtitle}
+              {displaySubtitle}
             </Text>
             <View className="flex-row flex-wrap gap-[6px]">
-              {outfit.tags.slice(0, 2).map((tag) => (
+              {displayTags.map((tag: string) => (
                 <View
                   key={tag}
-                  className="rounded-[6px] px-5 py-[5px]"
+                  className="rounded-[6px] px-3 py-[4px]"
                   style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
                     borderWidth: 1,
                     borderColor: "#E9EBF8",
                     backgroundColor: "#000000",
                     borderRadius: 8,
                   }}
                 >
+                  {getSeasonIcon(tag, "#FFFFFF", 12)}
                   <Text
                     style={{
-                      color: "#ffffff",
+                      color: "#FFFFFF",
                       fontSize: 11,
                       fontFamily: "TikTokSans16pt-Medium",
                     }}
@@ -196,7 +260,7 @@ const AnalyzingCardSlide = React.memo(function AnalyzingCardSlide({
           className="overflow-hidden justify-center items-center rounded-[24px]"
         >
           <ExpoImage
-            source={{ uri: imageUri }}
+            source={{ uri: cloudinaryUrl(imageUri, "card") }}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             blurRadius={5}
@@ -265,7 +329,7 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
   handleViewDetails: (index: number) => void;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList<CardSlide>>(null);
+  const listRef = useRef<any>(null);
 
   // The analyzing slide (if present) is always first in its group.
   const hasAnalyzing = slides[0]?.type === "analyzing";
@@ -274,7 +338,7 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
   useEffect(() => {
     if (hasAnalyzing && slides.length > 1) {
       const timer = setTimeout(() => {
-        flatListRef.current?.scrollToIndex({ index: 0, animated: true });
+        listRef.current?.scrollToIndex({ index: 0, animated: true });
       }, 200);
       return () => clearTimeout(timer);
     }
@@ -322,8 +386,8 @@ const ModeGroupCarousel = React.memo(function ModeGroupCarousel({
 
   return (
     <View className="mb-2">
-      <FlatList
-        ref={flatListRef}
+      <FlashList
+        ref={listRef}
         data={slides}
         keyExtractor={keyExtractor}
         renderItem={renderItem}

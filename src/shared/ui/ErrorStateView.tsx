@@ -194,6 +194,12 @@ export function ErrorStateView({ onRetry }: { onRetry: () => Promise<void> }) {
 
 interface BoundaryProps {
   children: ReactNode;
+  /**
+   * Optional screen name to attach to the Sentry tag. Defaults to
+   * "AppErrorBoundary". Use this when wrapping a specific screen so the
+   * crash report can be filtered by screen in Sentry.
+   */
+  screen?: string;
 }
 
 interface BoundaryState {
@@ -212,9 +218,11 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
   }
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    const screenTag = this.props.screen ?? "AppErrorBoundary";
     // Report to Sentry with component stack context
     Sentry.withScope((scope) => {
-      scope.setTag("errorBoundary", "AppErrorBoundary");
+      scope.setTag("errorBoundary", screenTag);
+      scope.setTag("screen", screenTag);
       scope.setExtras({
         componentStack: errorInfo.componentStack,
         errorBoundary: true,
@@ -222,7 +230,11 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
       Sentry.captureException(error);
     });
 
-    console.error("Uncaught runtime layout error:", error, errorInfo);
+    console.error(
+      `Uncaught runtime error in ${screenTag}:`,
+      error,
+      errorInfo,
+    );
   }
 
   private handleReset = () => {

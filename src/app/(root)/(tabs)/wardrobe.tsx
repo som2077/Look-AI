@@ -281,12 +281,42 @@ const BentoCard = React.memo(function BentoCard({
             source={{ uri: item.image }}
             style={{ width: "100%", height: "100%" }}
             contentFit="contain"
+            recyclingKey={item.id}
+            cachePolicy="memory-disk"
           />
         ) : (
           <View style={{ flex: 1, backgroundColor: "#F3F4F6" }} />
         )}
       </View>
     </Pressable>
+  );
+});
+
+// Grid item wrapper — keeps the press handler stable so React.memo on
+// BentoCard can actually short-circuit re-renders when the row's data
+// hasn't changed.
+const WardrobeGridItem = React.memo(function WardrobeGridItem({
+  item,
+  onSavedPress,
+}: {
+  item: ClothingItem;
+  onSavedPress: (image: string | null) => void;
+}) {
+  const handlePress = useCallback(() => {
+    if (item.category.startsWith("saved_")) {
+      onSavedPress(item.image ?? null);
+    }
+  }, [item.category, item.image, onSavedPress]);
+
+  return (
+    <View style={{ padding: GRID_GAP / 2 }}>
+      <BentoCard
+        item={item}
+        width={ITEM_WIDTH}
+        height={ITEM_HEIGHT}
+        onPress={item.category.startsWith("saved_") ? handlePress : undefined}
+      />
+    </View>
   );
 });
 
@@ -631,22 +661,16 @@ export default function WardrobeScreen() {
     [userItems],
   );
 
+  const handleSelectSavedImage = useCallback(
+    (image: string | null) => setSelectedSavedImage(image),
+    [],
+  );
+
   const renderGridItem = useCallback(
-    ({ item }: { item: any }) => (
-      <View style={{ padding: GRID_GAP / 2 }}>
-        <BentoCard
-          item={item}
-          width={ITEM_WIDTH}
-          height={ITEM_HEIGHT}
-          onPress={
-            item.category.startsWith("saved_")
-              ? () => setSelectedSavedImage(item.image ?? null)
-              : undefined
-          }
-        />
-      </View>
+    ({ item }: { item: ClothingItem }) => (
+      <WardrobeGridItem item={item} onSavedPress={handleSelectSavedImage} />
     ),
-    [setSelectedSavedImage],
+    [handleSelectSavedImage],
   );
 
   // Combine and sort
@@ -1046,7 +1070,7 @@ export default function WardrobeScreen() {
                   paddingHorizontal: GRID_PADDING,
                 }}
                 numColumns={NUM_COLUMNS}
-                renderItem={renderGridItem}
+                renderItem={renderGridItem as any}
               />
             )}
           </View>

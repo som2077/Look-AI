@@ -321,13 +321,24 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>()(
 
             if (aiData) {
               if (currentMode === "scan-cloth") {
-                outfitName = aiData.name || aiData.subCategory || aiData.category || "Wardrobe Item";
-                outfitSubtitle = `${aiData.color || aiData.primaryColor || "Item"} · ${aiData.category || "Closet"}`;
-                outfitTags = [
-                  ...(aiData.occasion || []),
-                  ...(aiData.season || []),
-                  "AI Stylist",
-                ].slice(0, 3);
+                outfitName =
+                  aiData.name ||
+                  aiData.subCategory ||
+                  aiData.category ||
+                  "Wardrobe Item";
+                const cat = aiData.category || "Clothing";
+                const subCat = aiData.subCategory || "";
+                outfitSubtitle =
+                  subCat && cat.toLowerCase() !== subCat.toLowerCase()
+                    ? `${cat} · ${subCat}`
+                    : cat;
+                const seasons =
+                  Array.isArray(aiData.season) && aiData.season.length > 0
+                    ? aiData.season
+                    : Array.isArray(aiData.occasion) && aiData.occasion.length > 0
+                    ? aiData.occasion
+                    : ["All Season"];
+                outfitTags = seasons.slice(0, 2);
                 outfitScore = 95;
               } else if (currentMode === "label") {
                 outfitName = aiData.title || "Care Label";

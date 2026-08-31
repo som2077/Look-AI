@@ -10,8 +10,10 @@
 // The card splits the screen in half and shows the AI's reasoning
 // underneath. The verdict is the headline — "right wins because X".
 
+import { cloudinaryUrl } from "@/shared/cloudinary/transform";
+import { Image } from "expo-image";
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export interface CompareSide {
   title: string;
@@ -32,7 +34,12 @@ function Side({ data, side, highlight }: { data: CompareSide; side: "left" | "ri
   return (
     <View style={[styles.side, highlight ? styles.sideHighlight : null]}>
       {data.image_url ? (
-        <Image source={{ uri: data.image_url }} style={styles.image} />
+        <Image
+          source={{ uri: cloudinaryUrl(data.image_url, "card") }}
+          style={styles.image}
+          cachePolicy="memory-disk"
+          recyclingKey={`compare-${side}`}
+        />
       ) : (
         <View style={[styles.image, styles.imageFallback]}>
           <Text style={styles.imageFallbackText}>👗</Text>

@@ -784,32 +784,60 @@ function ChatBody() {
 
   // Render a single message. Three branches: tool output (ReactElement),
   // assistant text, user text. Each is wrapped in <Message from=...>.
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
-    // Tool output (already wrapped in a <Tool> shell by the renderer).
-    if (isReactElement(item)) {
-      return <View key={index}>{item}</View>;
-    }
+  // Wrapped in useCallback so <Conversation> doesn't re-render every row
+  // on every keystroke in the input.
+  const renderItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => {
+      // Tool output (already wrapped in a <Tool> shell by the renderer).
+      if (isReactElement(item)) {
+        return <View key={index}>{item}</View>;
+      }
 
-    const text = (item.content ?? '').toString();
-    if (item.role === 'user') {
-      return (
-        <Message key={index} from="user">
-          <Text style={userTextStyle}>{text}</Text>
-        </Message>
-      );
+      const text = (item.content ?? '').toString();
+      if (item.role === 'user') {
+        return (
+          <Message key={index} from="user">
+            <Text style={userTextStyle}>{text}</Text>
+          </Message>
+        );
+      }
+      if (item.role === 'assistant' && (text || isLastAssistantStreaming)) {
+        return (
+          <Message key={index} from="assistant">
+            <MessageResponse
+              content={text}
+              isStreaming={isLastAssistantStreaming}
+            />
+          </Message>
+        );
+      }
+      return null;
+    },
+    [isLastAssistantStreaming],
+  );
+
+  const keyExtractor = useCallback(
+    (_item: unknown, index: number) => index.toString(),
+    [],
+  );
+
+  const handlePromptSubmit = useCallback(() => {
+    handleSubmit(input);
+  }, [handleSubmit, input]);
+
+  const ListFooter = useMemo(() => {
+    if (isStreaming) {
+      return <Loader caption="StyleAI is thinking…" />;
     }
-    if (item.role === 'assistant' && (text || isLastAssistantStreaming)) {
-      return (
-        <Message key={index} from="assistant">
-          <MessageResponse content={text} isStreaming={isLastAssistantStreaming} />
-        </Message>
-      );
+    if (error) {
+      return <InlineChatError message={error.message} />;
     }
     return null;
-  };
+  }, [isStreaming, error]);
 
-  const visibleMessages = messages.filter(
-    (m) => isReactElement(m) || m.role !== 'system',
+  const visibleMessages = useMemo(
+    () => messages.filter((m) => isReactElement(m) || m.role !== 'system'),
+    [messages],
   );
 
   return (
@@ -817,15 +845,9 @@ function ChatBody() {
       <Conversation
         data={visibleMessages}
         renderItem={renderItem}
-        keyExtractor={(_item, index) => index.toString()}
+        keyExtractor={keyExtractor}
         contentContainerStyle={chatBodyStyles.listContent}
-        ListFooterComponent={
-          isStreaming ? (
-            <Loader caption="StyleAI is thinking…" />
-          ) : error ? (
-            <InlineChatError message={error.message} />
-          ) : null
-        }
+        ListFooterComponent={ListFooter}
       />
 
       <View
@@ -837,7 +859,7 @@ function ChatBody() {
         <PromptInput
           value={input}
           onChange={onInputChange}
-          onSubmit={() => handleSubmit(input)}
+          onSubmit={handlePromptSubmit}
           isStreaming={isStreaming}
           placeholder="Ask StyleAI..."
         />

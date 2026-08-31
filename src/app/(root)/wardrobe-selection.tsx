@@ -1,28 +1,88 @@
 import { useUserWardrobeStore } from "@/features/wardrobe/model/user-wardrobe-store";
+import { cloudinaryUrl } from "@/shared/cloudinary/transform";
 import {
   IconArrowLeft,
   IconCheck,
   IconPhoto,
 } from "@tabler/icons-react-native";
+import { FlashList } from "@shopify/flash-list";
+import { Image as ExpoImage } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Dimensions,
-  Image,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const H_PADDING = 24;
+const GUTTER = 8;
+const NUM_COLUMNS = 3;
+const ITEM_WIDTH = (SCREEN_WIDTH - H_PADDING * 2 - GUTTER * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+
+interface SelectionItem {
+  id: string;
+  uri: string;
+  isSelected: boolean;
+}
+
+const SelectionTile = React.memo(function SelectionTile({
+  uri,
+  isSelected,
+  itemWidth,
+  onToggle,
+}: {
+  uri: string;
+  isSelected: boolean;
+  itemWidth: number;
+  onToggle: (uri: string) => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={() => onToggle(uri)}
+      style={{ position: "relative" }}
+    >
+      <ExpoImage
+        source={{ uri: cloudinaryUrl(uri, "thumbnail") }}
+        style={{
+          width: itemWidth,
+          height: itemWidth,
+          borderRadius: 12,
+          borderWidth: isSelected ? 3 : 0,
+          borderColor: "#111827",
+        }}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        recyclingKey={uri}
+      />
+      {isSelected && (
+        <View
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            backgroundColor: "#111827",
+            borderRadius: 12,
+            padding: 4,
+          }}
+        >
+          <IconCheck size={14} color="#FFFFFF" />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+});
+
 export default function WardrobeSelectionScreen() {
   const router = useRouter();
   const wardrobeItems = useUserWardrobeStore((state) => state.items);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
-  const toggleSelection = (uri: string) => {
+  const toggleSelection = useCallback((uri: string) => {
     setSelectedImages((prev) => {
       if (prev.includes(uri)) {
         return prev.filter((item) => item !== uri);
@@ -32,10 +92,10 @@ export default function WardrobeSelectionScreen() {
       }
       return [...prev, uri];
     });
-  };
+  }, []);
 
-  const openGallery = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+  const openGallery = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       selectionLimit: 5 - selectedImages.length,
@@ -46,17 +106,40 @@ export default function WardrobeSelectionScreen() {
       const newUris = result.assets.map((asset) => asset.uri);
       setSelectedImages((prev) => [...prev, ...newUris].slice(0, 5));
     }
-  };
+  }, [selectedImages.length]);
 
-  const handleDone = () => {
+  const handleDone = useCallback(() => {
     router.replace({
       pathname: "/calendar",
       params: { selectedImages: JSON.stringify(selectedImages) },
     });
-  };
+  }, [router, selectedImages]);
 
-  const screenWidth = Dimensions.get("window").width;
-  const itemWidth = (screenWidth - 48 - 16) / 3;
+  const items = useMemo<SelectionItem[]>(() => {
+    return wardrobeItems
+      .map((item) => {
+        const uri = item.imageUrl || item.originalImageUrl;
+        if (!uri) return null;
+        return {
+          id: item.id || uri,
+          uri,
+          isSelected: selectedImages.includes(uri),
+        };
+      })
+      .filter((x): x is SelectionItem => x !== null);
+  }, [wardrobeItems, selectedImages]);
+
+  const renderTile = useCallback(
+    ({ item }: { item: SelectionItem }) => (
+      <SelectionTile
+        uri={item.uri}
+        isSelected={item.isSelected}
+        itemWidth={ITEM_WIDTH}
+        onToggle={toggleSelection}
+      />
+    ),
+    [toggleSelection],
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
@@ -91,9 +174,7 @@ export default function WardrobeSelectionScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
-      >
+      <View style={{ paddingHorizontal: 24, marginBottom: 24 }}>
         <TouchableOpacity
           onPress={openGallery}
           style={{
@@ -104,7 +185,6 @@ export default function WardrobeSelectionScreen() {
             padding: 20,
             borderRadius: 16,
             alignItems: "center",
-            marginBottom: 24,
             flexDirection: "row",
             justifyContent: "center",
           }}
@@ -114,59 +194,30 @@ export default function WardrobeSelectionScreen() {
             Choose from Gallery
           </Text>
         </TouchableOpacity>
+      </View>
 
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "600",
-            color: "#111827",
-            marginBottom: 16,
-          }}
-        >
-          Your Wardrobe
-        </Text>
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: "600",
+          color: "#111827",
+          marginBottom: 16,
+          paddingHorizontal: 24,
+        }}
+      >
+        Your Wardrobe
+      </Text>
 
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          {wardrobeItems.map((item, index) => {
-            const uri = item.imageUrl || item.originalImageUrl;
-            if (!uri) return null;
-
-            const isSelected = selectedImages.includes(uri);
-            return (
-              <TouchableOpacity
-                key={item.id || index}
-                onPress={() => toggleSelection(uri)}
-                style={{ position: "relative" }}
-              >
-                <Image
-                  source={{ uri }}
-                  style={{
-                    width: itemWidth,
-                    height: itemWidth,
-                    borderRadius: 12,
-                    borderWidth: isSelected ? 3 : 0,
-                    borderColor: "#111827",
-                  }}
-                />
-                {isSelected && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      backgroundColor: "#111827",
-                      borderRadius: 12,
-                      padding: 4,
-                    }}
-                  >
-                    <IconCheck size={14} color="#FFFFFF" />
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </ScrollView>
+      <View style={{ flex: 1, paddingHorizontal: H_PADDING }}>
+        <FlashList
+          data={items}
+          keyExtractor={(item) => item.id}
+          renderItem={renderTile}
+          numColumns={NUM_COLUMNS}
+          contentContainerStyle={{ paddingBottom: 140 }}
+          ItemSeparatorComponent={undefined}
+        />
+      </View>
 
       {selectedImages.length > 0 && (
         <View style={{ position: "absolute", bottom: 40, left: 24, right: 24 }}>

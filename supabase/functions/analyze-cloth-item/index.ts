@@ -7,9 +7,35 @@ import {
   readJsonBody,
 } from "../_shared/validate.ts";
 import { loadPrompt, renderPrompt } from "../_shared/prompt-loader.ts";
+import { fetchWithTimeout } from "../_shared/fetch-with-timeout.ts";
 
 // @ts-ignore: Declare Deno globally to satisfy TS compiler in IDE
 declare const Deno: any;
+
+// ── Hoisted env + parsed Cloudinary config (don't re-parse on every req) ──
+const CLOUDINARY_URL = Deno.env.get("CLOUDINARY_URL") || "";
+const CLOUDINARY_API_SECRET =
+  Deno.env.get("CLOUDINARY_API_SECRET") ||
+  (CLOUDINARY_URL ? CLOUDINARY_URL.split(":")[2]?.split("@")[0] : "");
+const CLOUDINARY_API_KEY =
+  Deno.env.get("EXPO_PUBLIC_CLOUDINARY_API_KEY") ||
+  (CLOUDINARY_URL ? CLOUDINARY_URL.split("://")[1]?.split(":")[0] : "");
+const CLOUDINARY_CLOUD_NAME =
+  Deno.env.get("EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME") ||
+  (CLOUDINARY_URL ? CLOUDINARY_URL.split("@")[1] : "");
+const REMOVE_BG_KEYS = (
+  Deno.env.get("REMOVEBG_API_KEYS") ||
+  Deno.env.get("EXPO_PUBLIC_REMOVE_BG_API_KEYS") ||
+  Deno.env.get("REMOVEBG_API_KEY") ||
+  ""
+)
+  .split(",")
+  .map((k: string) => k.trim())
+  .filter((k: string) => k.length > 0);
+const OPENAI_API_KEY =
+  Deno.env.get("OPENAI_API_KEY") ||
+  Deno.env.get("EXPO_PUBLIC_OPENAI_API_KEY") ||
+  "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,30 +80,11 @@ serve(async (req) => {
     if (base64Image.startsWith("data:image/png")) mimeType = "image/png";
     else if (base64Image.startsWith("data:image/webp")) mimeType = "image/webp";
 
-    const cloudinaryUrl = Deno.env.get("CLOUDINARY_URL") || "";
-    const apiSecret =
-      Deno.env.get("CLOUDINARY_API_SECRET") ||
-      (cloudinaryUrl ? cloudinaryUrl.split(":")[2]?.split("@")[0] : "");
-    const apiKey =
-      Deno.env.get("EXPO_PUBLIC_CLOUDINARY_API_KEY") ||
-      (cloudinaryUrl ? cloudinaryUrl.split("://")[1]?.split(":")[0] : "");
-    const cloudName =
-      Deno.env.get("EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME") ||
-      (cloudinaryUrl ? cloudinaryUrl.split("@")[1] : "");
-
-    const keysEnv =
-      Deno.env.get("REMOVEBG_API_KEYS") ||
-      Deno.env.get("EXPO_PUBLIC_REMOVE_BG_API_KEYS") ||
-      Deno.env.get("REMOVEBG_API_KEY") ||
-      "";
-    const removeBgKeys = keysEnv
-      .split(",")
-      .map((k: string) => k.trim())
-      .filter((k: string) => k.length > 0);
-
-    const openaiKey =
-      Deno.env.get("OPENAI_API_KEY") ||
-      Deno.env.get("EXPO_PUBLIC_OPENAI_API_KEY");
+    const cloudName = CLOUDINARY_CLOUD_NAME;
+    const apiKey = CLOUDINARY_API_KEY;
+    const apiSecret = CLOUDINARY_API_SECRET;
+    const removeBgKeys = REMOVE_BG_KEYS;
+    const openaiKey = OPENAI_API_KEY;
 
     if (!openaiKey) {
       throw new Error("Missing OPENAI_API_KEY environment variable");
@@ -106,9 +113,10 @@ serve(async (req) => {
         if (apiKey) formData.append("api_key", apiKey);
         if (originalSignature) formData.append("signature", originalSignature);
 
-        const cloudinaryOriginalRes = await fetch(
+        const cloudinaryOriginalRes = await fetchWithTimeout(
           `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
           { method: "POST", body: formData },
+          { timeoutMs: 30_000, retries: 1, backoffMs: 500 },
         );
         const originalData = (await cloudinaryOriginalRes.json()) as any;
         if (originalData?.secure_url) {
@@ -132,14 +140,18 @@ serve(async (req) => {
         removeBgFormData.append("format", "png");
         removeBgFormData.append("response_type", "base64");
 
-        const removebgRes = await fetch("https://api.remove.bg/v1.0/removebg", {
-          method: "POST",
-          headers: {
-            "X-Api-Key": key,
-            Accept: "application/json",
+        const removebgRes = await fetchWithTimeout(
+          "https://api.remove.bg/v1.0/removebg",
+          {
+            method: "POST",
+            headers: {
+              "X-Api-Key": key,
+              Accept: "application/json",
+            },
+            body: removeBgFormData,
           },
-          body: removeBgFormData,
-        });
+          { timeoutMs: 15_000, retries: 0 },
+        );
 
         if (removebgRes.ok) {
           const bgData = await removebgRes.json();
@@ -177,9 +189,10 @@ serve(async (req) => {
         if (apiKey) bgFormData.append("api_key", apiKey);
         if (bgSignature) bgFormData.append("signature", bgSignature);
 
-        const cloudinaryBgRes = await fetch(
+        const cloudinaryBgRes = await fetchWithTimeout(
           `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
           { method: "POST", body: bgFormData },
+          { timeoutMs: 30_000, retries: 1, backoffMs: 500 },
         );
         const bgCloudData = (await cloudinaryBgRes.json()) as any;
         if (bgCloudData?.secure_url) {
@@ -206,34 +219,38 @@ serve(async (req) => {
       const configuredMaxTokens = (promptConfig.maxTokens as number) ?? 250;
       const aiImageMimeType = removedBgB64 ? "image/png" : mimeType;
       
-      const openaiVisionRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${openaiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          temperature: configuredTemp,
-          max_tokens: configuredMaxTokens,
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: visionPrompt },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:${aiImageMimeType};base64,${bgBase64}`,
-                    detail: "low",
+      const openaiVisionRes = await fetchWithTimeout(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${openaiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            temperature: configuredTemp,
+            max_tokens: configuredMaxTokens,
+            response_format: { type: "json_object" },
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: visionPrompt },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${aiImageMimeType};base64,${bgBase64}`,
+                      detail: "low",
+                    },
                   },
-                },
-              ],
-            },
-          ],
-        }),
-      });
+                ],
+              },
+            ],
+          }),
+        },
+        { timeoutMs: 30_000, retries: 1, backoffMs: 500 },
+      );
 
       const visionJson = (await openaiVisionRes.json()) as any;
       const rawVisionText = visionJson?.choices?.[0]?.message?.content || "";

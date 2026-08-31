@@ -161,7 +161,12 @@ export async function uploadToCloudinaryWithBgRemoval(
   // 2. Upload to Cloudinary
   try {
     const timestamp = Math.round(new Date().getTime() / 1000).toString();
-    const paramsToSign = `timestamp=${timestamp}`;
+    // Pre-generate the thumbnail + card sizes server-side at upload time so
+    // the next wardrobe/scan-history page load hits Cloudinary's CDN cache
+    // instead of paying a per-request transform cost. Must be part of the
+    // signed payload (alphabetical, comma-separated) — Cloudinary requires.
+    const eagerTransforms = "w_160,h_160,c_fill,q_auto,f_auto|w_512,c_limit,q_auto,f_auto";
+    const paramsToSign = `eager=${eagerTransforms}&timestamp=${timestamp}`;
 
     let signature = "";
     if (API_SECRET) {
@@ -203,6 +208,7 @@ export async function uploadToCloudinaryWithBgRemoval(
     formData.append("api_key", API_KEY);
     formData.append("timestamp", timestamp);
     formData.append("signature", signature);
+    formData.append("eager", eagerTransforms);
 
     const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
     const response = await fetch(url, {

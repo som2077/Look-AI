@@ -18,7 +18,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -36,7 +36,17 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import ImageViewer from "react-native-image-zoom-viewer";
+// Defer the image-zoom-viewer library until the user actually opens the
+// full-screen viewer. The library is a few hundred KB and only matters
+// for the rare "tap post to zoom" path — keep it out of the initial bundle.
+// Typed as ComponentType<any> because the library's Props type is
+// incompatible with React.lazy's IntrinsicAttributes constraint — the
+// runtime is fine, only the TS narrowing is too strict.
+const LazyImageViewer = React.lazy(() =>
+  import("react-native-image-zoom-viewer").then((m) => ({
+    default: (m as any).default ?? m,
+  })),
+) as unknown as React.ComponentType<any>;
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Text = (props: any) => {
@@ -679,27 +689,31 @@ const TimelinePostCard = React.memo(function TimelinePostCard({
               animationType="fade"
               onRequestClose={() => setShowFullImage(false)}
             >
-              <ImageViewer
-                imageUrls={[{ url: post.image_url }]}
-                enableSwipeDown={true}
-                onSwipeDown={() => setShowFullImage(false)}
-                onCancel={() => setShowFullImage(false)}
-                renderIndicator={() => <View />}
-                renderHeader={() => (
-                  <TouchableOpacity
-                    style={{
-                      position: "absolute",
-                      top: 50,
-                      right: 20,
-                      zIndex: 9999,
-                      padding: 8,
-                    }}
-                    onPress={() => setShowFullImage(false)}
-                  >
-                    <IconX size={32} color="#FFFFFF" />
-                  </TouchableOpacity>
-                )}
-              />
+              <Suspense
+                fallback={<View style={{ flex: 1, backgroundColor: "#000" }} />}
+              >
+                <LazyImageViewer
+                  imageUrls={[{ url: post.image_url }]}
+                  enableSwipeDown={true}
+                  onSwipeDown={() => setShowFullImage(false)}
+                  onCancel={() => setShowFullImage(false)}
+                  renderIndicator={() => <View />}
+                  renderHeader={() => (
+                    <TouchableOpacity
+                      style={{
+                        position: "absolute",
+                        top: 50,
+                        right: 20,
+                        zIndex: 9999,
+                        padding: 8,
+                      }}
+                      onPress={() => setShowFullImage(false)}
+                    >
+                      <IconX size={32} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  )}
+                />
+              </Suspense>
             </Modal>
           </>
         ) : null}

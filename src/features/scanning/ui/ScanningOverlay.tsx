@@ -21,22 +21,26 @@ export function ScanningOverlay({ visible, onComplete }: ScanningOverlayProps) {
   notifyRef.current = notifyComplete;
 
   useEffect(() => {
-    if (visible) {
-      spin.value = withRepeat(
-        withTiming(1, { duration: 1500, easing: Easing.linear }),
-        -1,
-        false,
-      );
+    if (!visible) return;
+    spin.value = withRepeat(
+      withTiming(1, { duration: 1500, easing: Easing.linear }),
+      -1,
+      false,
+    );
 
-      const t = setTimeout(() => {
-        notifyRef.current();
-        const completionTimeout = setTimeout(() => {
-          onComplete();
-        }, 600);
-        return () => clearTimeout(completionTimeout);
-      }, 4000);
-      return () => clearTimeout(t);
-    }
+    // Two staged timeouts. Both must live in the effect's scope so the
+    // cleanup below can clear BOTH — otherwise the inner one outlives the
+    // component and calls onComplete() on an unmounted overlay.
+    const outer = setTimeout(() => {
+      notifyRef.current();
+    }, 4000);
+    const inner = setTimeout(() => {
+      onComplete();
+    }, 4600);
+    return () => {
+      clearTimeout(outer);
+      clearTimeout(inner);
+    };
   }, [visible, spin, onComplete]);
 
   const spinStyle = useAnimatedStyle(() => ({

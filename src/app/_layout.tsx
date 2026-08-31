@@ -34,9 +34,10 @@ import {
   useSegments,
 } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { memo, useCallback, useEffect, useState } from "react";
-import { AppState } from "react-native";
+import { AppState, InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../../global.css";
@@ -54,6 +55,14 @@ if (!publishableKey) {
 // Guard avatar + FCM bootstrap sync so the client-identity swap in useSupabase()
 // (which recreates the client after init) can't double-fire them per session.
 const bootstrapSyncDone = new Map<string, boolean>();
+
+// RevenueCat init is heavy (native module configure + offerings + customer
+// info fetch). Defer it to a child component that only mounts after the
+// first frame so it doesn't compete with the splash → first screen handoff.
+function RevenueCatBootstrap() {
+  useRevenueCat();
+  return null;
+}
 
 const RootNavigator = memo(function RootNavigator() {
   const { isSignedIn, isLoaded, userId } = useAuth();
@@ -82,8 +91,15 @@ const RootNavigator = memo(function RootNavigator() {
   const resetOnboardingState = useOnboardingState((s) => s.resetState);
   const { supabase, isInitializing: isSupabaseInitializing } = useSupabase();
 
-  // Initialize RevenueCat
-  useRevenueCat();
+  // Defer RevenueCat init until after the first frame so the splash → first
+  // screen handoff doesn't compete with Purchases.configure() + offerings.
+  const [billingReady, setBillingReady] = useState(false);
+  useEffect(() => {
+    const handle = InteractionManager.runAfterInteractions(() => {
+      setBillingReady(true);
+    });
+    return () => handle.cancel();
+  }, []);
 
   // Firebase & PostHog screen tracking
   useEffect(() => {
@@ -200,24 +216,30 @@ const RootNavigator = memo(function RootNavigator() {
     if (hasLocalData) return; // store already has data — don't clobber
 
     let cancelled = false;
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("user_profiles")
-          .select(
-            "age,height,gender,body_type,nickname,username,style_preferences",
-          )
-          .eq("user_id", userId)
-          .maybeSingle();
-        if (!cancelled && !error && data) {
-          useOnboardingState.getState().hydrateFromProfile(data);
+    // Defer the self-heal network call past the first paint — the home screen
+    // can render with whatever the local store has, and the rehydration fills
+    // in if needed. This avoids competing with the splash → first screen.
+    const handle = InteractionManager.runAfterInteractions(() => {
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from("user_profiles")
+            .select(
+              "age,height,gender,body_type,nickname,username,style_preferences",
+            )
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (!cancelled && !error && data) {
+            useOnboardingState.getState().hydrateFromProfile(data);
+          }
+        } catch (err) {
+          console.warn("Failed to hydrate onboarding store from profile", err);
         }
-      } catch (err) {
-        console.warn("Failed to hydrate onboarding store from profile", err);
-      }
-    })();
+      })();
+    });
     return () => {
       cancelled = true;
+      handle.cancel();
     };
   }, [isSignedIn, userId, isSupabaseInitializing, onboardingComplete, supabase]);
 
@@ -272,7 +294,9 @@ const RootNavigator = memo(function RootNavigator() {
     if (bootstrapSyncDone.get(`fcm:${userId}`)) return;
     bootstrapSyncDone.set(`fcm:${userId}`, true);
 
-    async function syncFCM() {
+    // Defer past first paint — three sequential awaits (profile, permission,
+    // FCM token) that don't block any UI we need ready for splash → home.
+    const handle = InteractionManager.runAfterInteractions(async () => {
       try {
         const { data } = await supabase
           .from("user_profiles")
@@ -295,8 +319,8 @@ const RootNavigator = memo(function RootNavigator() {
       } catch (err) {
         console.warn("Failed to sync FCM token", err);
       }
-    }
-    syncFCM();
+    });
+    return () => handle.cancel();
   }, [isSignedIn, userId, supabase, isSupabaseInitializing]);
 
 
@@ -346,7 +370,12 @@ const RootNavigator = memo(function RootNavigator() {
     navigationRef?.current,
   ]);
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false }} />
+      {billingReady ? <RevenueCatBootstrap /> : null}
+    </>
+  );
 });
 
 export default function RootLayout() {
@@ -362,6 +391,24 @@ export default function RootLayout() {
     }
   }, [fontError]);
 
+  // Hold the splash screen until fonts are ready, then hide explicitly. The
+  // expo-splash-screen plugin hides automatically on first render, but
+  // returning `null` for fonts-loaded meant the auto-hide could fire on an
+  // empty tree. Holding the splash and hiding it after fonts resolve keeps
+  // the first frame the user actually sees aligned with a real screen.
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync().catch(() => {
+      // already shown — ignore
+    });
+  }, []);
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync().catch(() => {
+        // already hidden — ignore
+      });
+    }
+  }, [fontsLoaded]);
+
   // Force navigation bar always black regardless of light/dark mode
   useEffect(() => {
     NavigationBar.setBackgroundColorAsync("#000000");
@@ -371,15 +418,23 @@ export default function RootLayout() {
   // Initialize Firebase Push Notifications
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
 
-    async function setupFirebaseNotifications() {
-      // Just set up listeners for background/foreground messages
-      // Permissions and token fetching are handled when user logs in or toggles settings
-      unsubscribe = setupNotificationListeners();
-    }
-    setupFirebaseNotifications();
+    // Defer listener setup past the first paint — messaging().onMessage
+    // touches native channels and would otherwise compete with the
+    // splash → first screen handoff.
+    const handle = InteractionManager.runAfterInteractions(() => {
+      if (cancelled) return;
+      try {
+        unsubscribe = setupNotificationListeners();
+      } catch (err) {
+        console.warn("Failed to set up notification listeners", err);
+      }
+    });
 
     return () => {
+      cancelled = true;
+      handle.cancel();
       if (unsubscribe) unsubscribe();
     };
   }, []);

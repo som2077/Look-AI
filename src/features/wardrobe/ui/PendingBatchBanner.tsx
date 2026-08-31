@@ -1,3 +1,4 @@
+import { cloudinaryUrl } from "@/shared/cloudinary/transform";
 import { formatTimeShort } from "@/shared/utils/date";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
@@ -64,7 +65,7 @@ export function PendingBatchBanner() {
         {avatars.map((item, index) => (
           <ExpoImage
             key={item.id}
-            source={{ uri: item.cloudinaryUrl || item.originalUri }}
+            source={{ uri: cloudinaryUrl(item.cloudinaryUrl || item.originalUri, "thumbnail") }}
             style={[
               styles.avatar,
               { left: index * avatarOverlap, zIndex: 4 - index },

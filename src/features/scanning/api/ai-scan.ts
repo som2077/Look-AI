@@ -3,6 +3,7 @@
  * Handles: Full Cloth Scan, Care Label OCR, Fit Check, Multi-Item Wardrobe Scan
  */
 
+import { cloudinaryUrl } from "@/shared/cloudinary/transform";
 import { supabase } from "@/shared/supabase/client";
 import { trackAiUsage } from "@/shared/telemetry/ai-usage";
 import { captureFeatureError } from "@/shared/telemetry/sentry";
@@ -113,11 +114,17 @@ async function uriToBase64(uri: string): Promise<string> {
 /**
  * Prepares image URL for OpenAI Vision API.
  * Uses direct Cloudinary / HTTP URLs with CDN optimization to eliminate Base64 overhead.
+ * For fitcheck we want the "vision" context (768 wide) so the model can see
+ * fine details (fabric, exact shades); for cloth scans "card" (512 wide) is
+ * enough since the task is just category + color detection.
  */
-async function prepareVisionImageUrl(imageUri: string): Promise<string> {
+async function prepareVisionImageUrl(
+  imageUri: string,
+  ctx: "card" | "vision" = "vision",
+): Promise<string> {
   if (imageUri.startsWith("http://") || imageUri.startsWith("https://")) {
-    if (imageUri.includes("cloudinary.com") && !imageUri.includes("w_768")) {
-      return imageUri.replace("/upload/", "/upload/w_768,c_limit,q_auto/");
+    if (imageUri.includes("cloudinary.com")) {
+      return cloudinaryUrl(imageUri, ctx);
     }
     return imageUri;
   }
@@ -134,7 +141,10 @@ async function callOpenAIVision(
 ): Promise<string | null> {
   let url: string;
   try {
-    url = await prepareVisionImageUrl(imageUri);
+    // Fitcheck needs fine detail (fabric, exact shades) → 768w.
+    // Cloth + label just need category/OCR → 512w halves the input tokens.
+    const imgCtx = mode === "fitcheck" ? "vision" : "card";
+    url = await prepareVisionImageUrl(imageUri, imgCtx);
   } catch (err) {
     console.error("[AI-Scan] Error preparing vision image URL:", err);
     return null;
@@ -383,7 +393,8 @@ export async function analyzeMultiClothingWardrobe(
   try {
     const imageItems = await Promise.all(
       urisToProcess.map(async (uri, index) => {
-        const url = await prepareVisionImageUrl(uri);
+        // Wardrobe multi-pick: just need category + color per item — 512w is plenty.
+        const url = await prepareVisionImageUrl(uri, "card");
         return [
           { type: "text", text: `Item #${index + 1}:` },
           { type: "image_url", image_url: { url, detail: "low" } }

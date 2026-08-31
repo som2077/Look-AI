@@ -3,6 +3,7 @@
  * Analyzes a clothing image and extracts structured metadata using low-token vision detail.
  */
 
+import { cloudinaryUrl } from "@/shared/cloudinary/transform";
 import { supabase } from "@/shared/supabase/client";
 import * as FileSystem from "expo-file-system";
 
@@ -87,8 +88,11 @@ async function uriToBase64(uri: string): Promise<string> {
 
 async function prepareVisionImageUrl(imageUri: string): Promise<string> {
   if (imageUri.startsWith("http://") || imageUri.startsWith("https://")) {
-    if (imageUri.includes("cloudinary.com") && !imageUri.includes("w_")) {
-      return imageUri.replace("/upload/", "/upload/w_512,c_limit,q_auto/");
+    // Downscale Cloudinary assets before sending to the vision model so we
+    // stay under OpenAI's recommended per-image budget. The "card" context
+    // (512 wide) is plenty for clothing-category detection.
+    if (imageUri.includes("cloudinary.com")) {
+      return cloudinaryUrl(imageUri, "card");
     }
     return imageUri;
   }

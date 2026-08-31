@@ -1,0 +1,34 @@
+-- Phase 7 — Database indexes (targeted)
+--
+-- Audit of the four indexes proposed in the optimization plan:
+--
+--   1. idx_community_posts_user_created   — NOT ADDED
+--      The community feed query (useCommunityPosts.ts:98-103) is a global
+--      `order by created_at DESC + range(...)` with no user_id filter.
+--      Existing `idx_community_posts_created (created_at DESC)` already
+--      covers it. The composite would be useful only if the explore tab
+--      filtered by multiple user_ids, which it doesn't today.
+--
+--   2. idx_follows_follower_following      — NOT ADDED
+--      The `follows` table doesn't exist in the schema (no migration ever
+--      created it). Adding the index without the table would error.
+--
+--   3. idx_try_on_user_status              — NOT ADDED
+--      The only query path against virtual_try_on_generations is the
+--      delete-account one-shot (useDeleteAccount.ts:92). No production
+--      query filters by `status`. Existing `idx_try_on_user
+--      (user_id, created_at DESC)` already covers the delete path.
+--
+--   4. idx_planned_events_user_date        — ALREADY EXISTS (20260808000000)
+--
+-- One genuine gap found while auditing: the wardrobe load hot path
+-- (user-wardrobe-store.ts syncWithDatabase, every wardrobe tab mount) runs
+-- `eq("user_id") + order("created_at", desc) + range(0, 499)`. EXPLAIN
+-- shows the planner picks idx_wardrobe_items_wear (user_id, wear_count
+-- DESC) for the user_id lookup, then re-sorts by created_at in memory.
+-- For users with hundreds of items that sort gets expensive. Adding the
+-- composite below lets the planner serve the rows already in created_at
+-- order with no sort step.
+
+CREATE INDEX IF NOT EXISTS idx_wardrobe_items_user_created
+  ON public.wardrobe_items (user_id, created_at DESC);

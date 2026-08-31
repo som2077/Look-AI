@@ -5,6 +5,7 @@ import {
   isRequiredString,
   readJsonBody,
 } from "../_shared/validate.ts";
+import { fetchWithTimeout } from "../_shared/fetch-with-timeout.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -81,14 +82,20 @@ serve(async (req) => {
       formData.append("response_type", "base64");
 
       try {
-        const response = await fetch("https://api.remove.bg/v1.0/removebg", {
-          method: "POST",
-          headers: {
-            "X-Api-Key": key,
-            Accept: "application/json",
+        // 15s per-key timeout — remove.bg usually responds in <5s, so a
+        // hung key shouldn't burn the whole 150s worker budget.
+        const response = await fetchWithTimeout(
+          "https://api.remove.bg/v1.0/removebg",
+          {
+            method: "POST",
+            headers: {
+              "X-Api-Key": key,
+              Accept: "application/json",
+            },
+            body: formData,
           },
-          body: formData,
-        });
+          { timeoutMs: 15_000, retries: 0 },
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -105,7 +112,7 @@ serve(async (req) => {
           lastError = new Error(`Key ${i} failed: ${errText}`);
         }
       } catch (e: any) {
-        console.warn(`[RemoveBG] Key ${i} network error:`, e);
+        console.warn(`[RemoveBG] Key ${i} error:`, e?.message ?? e);
         lastError = e;
       }
     }

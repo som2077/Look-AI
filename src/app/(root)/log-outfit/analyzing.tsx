@@ -75,14 +75,19 @@ export default function AnalyzingScreen() {
       false,
     );
 
-    const timer = setTimeout(() => {
+    // Two staged timeouts. Both declared in the effect scope so the cleanup
+    // can clear BOTH — without this, the inner one outlives the screen and
+    // calls router.replace() on an unmounted component.
+    const chimeTimer = setTimeout(() => {
       notifyRef.current();
-      // Small delay so the chime is audible before unmount
-      setTimeout(() => {
-        router.replace("/(root)/log-outfit/confirm" as never);
-      }, 600);
     }, 3200);
-    return () => clearTimeout(timer);
+    const navigateTimer = setTimeout(() => {
+      router.replace("/(root)/log-outfit/confirm" as never);
+    }, 3800);
+    return () => {
+      clearTimeout(chimeTimer);
+      clearTimeout(navigateTimer);
+    };
   }, [router, scan, progress, spin]);
 
   const scanStyle = useAnimatedStyle(() => ({

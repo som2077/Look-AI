@@ -35,12 +35,12 @@ import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { IconAlertTriangle } from "@tabler/icons-react-native";
+import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
-  FlatList,
   Pressable,
   Text,
   View,
@@ -222,15 +222,6 @@ export default function HomeScreen() {
     setActiveIndex(index);
   }, []);
 
-  const getItemLayout = useCallback(
-    (_data: any, index: number) => ({
-      length: SCREEN_WIDTH,
-      offset: SCREEN_WIDTH * index,
-      index,
-    }),
-    [],
-  );
-
   const renderCard = useCallback(
     ({ item }: { item: CardKey }) => (
       <HomeCard
@@ -303,8 +294,8 @@ export default function HomeScreen() {
 
             {/* Scrollable content — scrolls over the header */}
             <View style={{ zIndex: 1, position: "relative" }}>
-              {/* FlatList full-width — pagingEnabled snaps correctly */}
-              <FlatList
+              {/* FlashList full-width — pagingEnabled snaps correctly */}
+              <FlashList
                 data={CARDS}
                 keyExtractor={(item, index) => `${item}-${index}`}
                 renderItem={renderCard}
@@ -312,13 +303,8 @@ export default function HomeScreen() {
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
                 onMomentumScrollEnd={handleMomentumScrollEnd}
-                getItemLayout={getItemLayout}
                 style={{ flexGrow: 0 }}
                 scrollEnabled
-                initialNumToRender={1}
-                maxToRenderPerBatch={1}
-                windowSize={2}
-                removeClippedSubviews={true}
               />
 
               {/* Pagination dots */}

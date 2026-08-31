@@ -14,8 +14,10 @@
 // recap. If `saved_at` is in the future (the AI hallucinates) we hide it
 // rather than show nonsense.
 
+import { cloudinaryUrl } from "@/shared/cloudinary/transform";
+import { Image } from "expo-image";
 import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export interface LoggedOutfitItem {
   name: string;
@@ -68,7 +70,12 @@ export function LoggedOutfitConfirmCard({
             {items.map((it, i) => (
               <View key={i} style={styles.itemChip}>
                 {it.image_url ? (
-                  <Image source={{ uri: it.image_url }} style={styles.itemImg} />
+                  <Image
+                    source={{ uri: cloudinaryUrl(it.image_url, "thumbnail") }}
+                    style={styles.itemImg}
+                    cachePolicy="memory-disk"
+                    recyclingKey={`logged-item-${i}`}
+                  />
                 ) : (
                   <View style={[styles.itemImg, styles.itemImgFallback]}>
                     <Text style={styles.itemImgText}>👕</Text>

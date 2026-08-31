@@ -5,9 +5,10 @@ import {
   IconX,
   type IconProps,
 } from "@tabler/icons-react-native";
+import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
 import React, { useCallback, useEffect, useState } from "react";
-import { Image, Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   runOnJS,

@@ -97,19 +97,26 @@ export default function AddClothesScanningScreen() {
   useEffect(() => {
     if (!photoUri) return;
 
+    let cancelled = false;
+    let chimeTimer: ReturnType<typeof setTimeout> | null = null;
+    let navigateTimer: ReturnType<typeof setTimeout> | null = null;
+
     const run = async () => {
       setIsAnalyzing(true);
       const result = await analyzeClothingImage(photoUri);
+      if (cancelled) return;
       setIsAnalyzing(false);
 
-      // Minimum display time so the animation feels premium
+      // Minimum display time so the animation feels premium.
+      // Captured AFTER `await analyzeClothingImage` returns, so this is the
+      // delay between AI finishing and the chime — not the total time.
       const minDelay = 6000;
-      const elapsed = Date.now();
-
-      const remaining = Math.max(0, minDelay - (Date.now() - elapsed));
-      setTimeout(() => {
+      const remaining = minDelay;
+      chimeTimer = setTimeout(() => {
+        if (cancelled) return;
         notifyRef.current();
-        setTimeout(() => {
+        navigateTimer = setTimeout(() => {
+          if (cancelled) return;
           router.replace({
             pathname: "/(root)/add-clothes/form",
             params: {
@@ -132,7 +139,12 @@ export default function AddClothesScanningScreen() {
     };
 
     run();
-  }, [photoUri]);
+    return () => {
+      cancelled = true;
+      if (chimeTimer) clearTimeout(chimeTimer);
+      if (navigateTimer) clearTimeout(navigateTimer);
+    };
+  }, [photoUri, router]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>

@@ -8,6 +8,7 @@ import {
   readJsonBody,
   validationErrorResponse,
 } from "../_shared/validate.ts";
+import { fetchWithTimeout } from "../_shared/fetch-with-timeout.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -75,14 +76,14 @@ serve(async (req) => {
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-goog-api-key": geminiKey,
       },
       body: JSON.stringify(geminiBody),
-    });
+    }, { timeoutMs: 30_000, retries: 1, backoffMs: 500 });
 
     const data = await res.json();
 

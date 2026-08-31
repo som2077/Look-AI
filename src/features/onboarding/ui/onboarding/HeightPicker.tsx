@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { FlatList, Image, Text, View, ViewToken } from "react-native";
+import { Image } from "expo-image";
+import { FlatList, Text, View, ViewToken } from "react-native";
 import * as Haptics from "expo-haptics";
 
 const HEIGHT_MIN = 140;

@@ -8,6 +8,7 @@ import {
   readJsonBody,
   validationErrorResponse,
 } from "../_shared/validate.ts";
+import { fetchWithTimeout } from "../_shared/fetch-with-timeout.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
@@ -64,14 +65,14 @@ serve(async (req) => {
     }
 
     const url = \`https://api.openai.com/v1/chat/completions\`;
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": \`Bearer \${openAiKey}\`,
       },
       body: JSON.stringify(openAiBody),
-    });
+    }, { timeoutMs: 30_000, retries: 1, backoffMs: 500 });
 
     if (!res.ok) {
       console.error(\`[openai-proxy] OpenAI error response status: \${res.status}\`);

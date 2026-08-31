@@ -9,6 +9,7 @@ import {
   readJsonBody,
   validationErrorResponse,
 } from "../_shared/validate.ts";
+import { fetchWithTimeout } from "../_shared/fetch-with-timeout.ts";
 declare const Deno: any;
 
 // Whitelist the only planner steps the client is allowed to request. An
@@ -45,14 +46,19 @@ async function callOpenAI(
     };
     if (jsonMode) body.response_format = { type: "json_object" };
 
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${openaiKey}`,
+    const res = await fetchWithTimeout(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openaiKey}`,
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+      // planner-agent calls cap at 120 max_tokens; 20s is a safe upper bound.
+      { timeoutMs: 20_000, retries: 1, backoffMs: 500 },
+    );
 
     if (res.ok) {
       const data = await res.json();

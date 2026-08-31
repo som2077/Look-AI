@@ -10,7 +10,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -131,11 +131,15 @@ export default function PlannerChatScreen() {
     setMessages((prev) => [...prev, { id: Date.now().toString() + Math.random(), ...msg }]);
 
   useEffect(() => {
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150);
+    const t = setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 150);
+    return () => clearTimeout(t);
   }, [messages, isLoading]);
 
   // ── Boot ──
   useEffect(() => {
+    let bootTimer: ReturnType<typeof setTimeout> | null = null;
     if (params.date) {
       // Entry via "Plan Future Outfit" — date already known
       const preDate = new Date(params.date as string);
@@ -146,7 +150,7 @@ export default function PlannerChatScreen() {
         card: "date_picker",
       });
       // Auto-trigger weather step
-      setTimeout(() => runWeatherStep(preDate, preTime), 300);
+      bootTimer = setTimeout(() => runWeatherStep(preDate, preTime), 300);
     } else {
       // Entry via "+" — show date picker
       addMsg({
@@ -155,6 +159,9 @@ export default function PlannerChatScreen() {
       });
       addMsg({ role: "model", card: "date_picker" });
     }
+    return () => {
+      if (bootTimer) clearTimeout(bootTimer);
+    };
   }, []);
 
   // ── Step: Weather ──────────────────────────────────────────────────────────
@@ -348,6 +355,19 @@ export default function PlannerChatScreen() {
     runWeatherStep(date, time);
   };
 
+  const handleRegenerate = useCallback(() => {
+    const occ = contextRef.current.occasion ?? "Casual";
+    runWardrobeStep(occ);
+  }, []);
+
+  const handleScanMore = useCallback(() => {
+    router.push("/(root)/(tabs)/scan" as any);
+  }, [router]);
+
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -355,7 +375,7 @@ export default function PlannerChatScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
           <IconArrowLeft size={24} color="#1D1A27" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Plan Future Outfit</Text>
@@ -406,10 +426,7 @@ export default function PlannerChatScreen() {
                     items={msg.items ?? []}
                     reasoning={msg.outfitReasoning ?? ""}
                     onSave={handleSavePlan}
-                    onRegenerate={() => {
-                      const occ = contextRef.current.occasion ?? "Casual";
-                      runWardrobeStep(occ);
-                    }}
+                    onRegenerate={handleRegenerate}
                     saving={isSaving}
                   />
                 </View>
@@ -423,7 +440,7 @@ export default function PlannerChatScreen() {
                   <View style={styles.aiBubble}>
                     <Text style={styles.aiBubbleText}>{msg.text}</Text>
                   </View>
-                  <TouchableOpacity style={styles.scanBtn} onPress={() => router.push("/(root)/(tabs)/scan" as any)}>
+                  <TouchableOpacity style={styles.scanBtn} onPress={handleScanMore}>
                     <Text style={styles.scanBtnText}>+ Scan Clothes</Text>
                   </TouchableOpacity>
                 </View>

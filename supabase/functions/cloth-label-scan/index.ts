@@ -7,9 +7,16 @@ import {
   readJsonBody,
 } from "../_shared/validate.ts";
 import { loadPrompt, renderPrompt } from "../_shared/prompt-loader.ts";
+import { fetchWithTimeout } from "../_shared/fetch-with-timeout.ts";
 
 // @ts-ignore: Declare Deno globally
 declare const Deno: any;
+
+// Hoisted env — re-read on every request was a tiny waste per scan.
+const OPENAI_API_KEY =
+  Deno.env.get("OPENAI_API_KEY") ||
+  Deno.env.get("EXPO_PUBLIC_OPENAI_API_KEY") ||
+  "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,7 +65,7 @@ serve(async (req: Request) => {
       );
     }
 
-    const openaiKey = Deno.env.get("OPENAI_API_KEY") || Deno.env.get("EXPO_PUBLIC_OPENAI_API_KEY");
+    const openaiKey = OPENAI_API_KEY;
     if (!openaiKey) {
       throw new Error("Missing OPENAI_API_KEY");
     }
@@ -74,7 +81,9 @@ serve(async (req: Request) => {
     let data: any = null;
     let lastError = "";
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetchWithTimeout(
+      "https://api.openai.com/v1/chat/completions",
+      {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -101,7 +110,9 @@ serve(async (req: Request) => {
           },
         ],
       }),
-    });
+    },
+      { timeoutMs: 30_000, retries: 1, backoffMs: 500 },
+    );
 
     if (response.ok) {
       data = await response.json();

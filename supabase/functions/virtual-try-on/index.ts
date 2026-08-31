@@ -6,6 +6,7 @@ import {
   isRequiredString,
   readJsonBody,
 } from "../_shared/validate.ts";
+import { fetchWithTimeout, TimeoutError } from "../_shared/fetch-with-timeout.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,20 +79,43 @@ serve(async (req) => {
       );
     }
 
-    // Call fal.ai API
-    const falResponse = await fetch("https://fal.run/fal-ai/fashn/tryon/v1.6", {
-      method: "POST",
-      headers: {
-        Authorization: `Key ${falKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model_image: person_image_url,
-        garment_image: garment_image_url,
-        garment_photo_type: garment_photo_type || "model",
-        category: mappedCategory || "tops",
-      }),
-    });
+    // Call fal.ai API. Try-on generation can take 30-60s; abort after 45s
+    // and retry once on transient failure so a single slow request doesn't
+    // burn the full ~150s Supabase worker budget.
+    let falResponse: Response;
+    try {
+      falResponse = await fetchWithTimeout(
+        "https://fal.run/fal-ai/fashn/tryon/v1.6",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Key ${falKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model_image: person_image_url,
+            garment_image: garment_image_url,
+            garment_photo_type: garment_photo_type || "model",
+            category: mappedCategory || "tops",
+          }),
+        },
+        { timeoutMs: 45_000, retries: 1, backoffMs: 1000 },
+      );
+    } catch (err: any) {
+      const isTimeout = err instanceof TimeoutError;
+      console.error(`fal.ai ${isTimeout ? "timeout" : "error"}:`, err?.message);
+      return new Response(
+        JSON.stringify({
+          error: isTimeout
+            ? "Try-on took too long. Please try again with a clearer photo."
+            : `fal.ai request failed: ${err?.message ?? "unknown"}`,
+        }),
+        {
+          status: isTimeout ? 504 : 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
 
     if (!falResponse.ok) {
       const errorText = await falResponse.text();

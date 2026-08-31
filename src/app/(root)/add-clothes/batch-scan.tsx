@@ -5,16 +5,16 @@ import {
   IconSquare,
   IconSquareCheck,
 } from "@tabler/icons-react-native";
+import { FlashList } from "@shopify/flash-list";
 import { Image as ExpoImage } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
-  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -389,6 +389,160 @@ function DetailView({
   );
 }
 
+const SimpleViewSlide = React.memo(function SimpleViewSlide({
+  item,
+}: {
+  item: BatchItem;
+}) {
+  return (
+    <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.carouselImageContainer}>
+          <ExpoImage
+            source={{ uri: item.cloudinaryUrl || item.originalUri }}
+            style={styles.carouselImage}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+          />
+        </View>
+
+        {item.status === "loading" ? (
+          <View style={{ marginTop: 40, alignItems: "center" }}>
+            <ActivityIndicator size="large" color="#7C6AFF" />
+            <Text style={{ color: "#6B7280", marginTop: 16 }}>
+              Analyzing...
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.formContainer}>
+            {/* 1. Name */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Item Name</Text>
+              <View style={styles.formValueContainer}>
+                <Text
+                  style={styles.formValue}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.customName || item.data?.name || "—"}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+            {/* 2. Category */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Category</Text>
+              <View style={styles.formValueContainer}>
+                <Text
+                  style={styles.formValue}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.data?.category}{" "}
+                  {item.data?.subCategory ? `> ${item.data.subCategory}` : ""}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+            {/* 3. Brand */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Brand / Design</Text>
+              <View style={styles.formValueContainer}>
+                <Text style={styles.formValue} numberOfLines={1} ellipsizeMode="tail">
+                  {item.data?.brand || "—"}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+            {/* 3.5 Rating */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Rating</Text>
+              <View style={styles.formValueContainer}>
+                <Text style={styles.formValue}>
+                  {item.data?.rating ? "⭐".repeat(item.data.rating) : "⭐⭐⭐⭐⭐"}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+            {/* 4. Color */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Color</Text>
+              <View style={styles.formValueContainer}>
+                <View
+                  style={[
+                    styles.colorDot,
+                    { backgroundColor: item.data?.colorHex || "#FFFFFF" },
+                  ]}
+                />
+                <Text style={styles.formValue}>
+                  {item.data?.primaryColor || "Unknown"}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+            {/* 4. Season */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Season</Text>
+              <View style={styles.formValueContainer}>
+                <Text style={styles.formValue}>
+                  {item.data?.season?.join(", ") || "All Season"}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+            {/* 5. Occasion */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Occasion</Text>
+              <View style={styles.formValueContainer}>
+                <Text
+                  style={styles.formValue}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.data?.occasion?.join(", ") || "Casual"}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+            {/* 6. Care Instructions */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Care Instructions</Text>
+              <View style={styles.formValueContainer}>
+                <Text
+                  style={styles.formValue}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.data?.careInstructions || "—"}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+            {/* 7. Notes */}
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Notes</Text>
+              <View style={styles.formValueContainer}>
+                <Text
+                  style={styles.formValue}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.data?.notes || "—"}
+                </Text>
+                <IconChevronDown size={16} color="#9CA3AF" />
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    </View>
+  );
+});
+
 function SimpleView({
   items,
   currentIndex,
@@ -397,17 +551,17 @@ function SimpleView({
   isLast,
   onUpdateItem,
 }: any) {
-  const flatListRef = useRef<FlatList>(null);
+  const listRef = useRef<any>(null);
 
   useEffect(() => {
     if (
-      flatListRef.current &&
+      listRef.current &&
       items.length > 0 &&
       currentIndex >= 0 &&
       currentIndex < items.length
     ) {
       try {
-        flatListRef.current.scrollToIndex({
+        listRef.current.scrollToIndex({
           index: currentIndex,
           animated: true,
         });
@@ -417,169 +571,27 @@ function SimpleView({
     }
   }, [currentIndex]);
 
-  const handleScroll = (event: any) => {
-    const slideSize = event.nativeEvent.layoutMeasurement.width;
-    if (!slideSize) return;
-    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
-    if (index !== currentIndex && index >= 0 && index < items.length) {
-      onIndexChange(index);
-    }
-  };
+  const handleScroll = useCallback(
+    (event: any) => {
+      const slideSize = event.nativeEvent.layoutMeasurement.width;
+      if (!slideSize) return;
+      const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
+      if (index !== currentIndex && index >= 0 && index < items.length) {
+        onIndexChange(index);
+      }
+    },
+    [currentIndex, items.length, onIndexChange],
+  );
 
-  const renderItem = ({ item }: { item: BatchItem }) => {
-    return (
-      <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.carouselImageContainer}>
-            <ExpoImage
-              source={{ uri: item.cloudinaryUrl || item.originalUri }}
-              style={styles.carouselImage}
-              contentFit="contain"
-              cachePolicy="memory-disk"
-            />
-          </View>
-
-          {item.status === "loading" ? (
-            <View style={{ marginTop: 40, alignItems: "center" }}>
-              <ActivityIndicator size="large" color="#7C6AFF" />
-              <Text style={{ color: "#6B7280", marginTop: 16 }}>
-                Analyzing...
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.formContainer}>
-              {/* 1. Name */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Item Name</Text>
-                <View style={styles.formValueContainer}>
-                  <Text
-                    style={styles.formValue}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.customName || item.data?.name || "—"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              {/* 2. Category */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Category</Text>
-                <View style={styles.formValueContainer}>
-                  <Text
-                    style={styles.formValue}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.data?.category}{" "}
-                    {item.data?.subCategory ? `> ${item.data.subCategory}` : ""}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-                            {/* 3. Brand */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Brand / Design</Text>
-                <View style={styles.formValueContainer}>
-                  <Text style={styles.formValue} numberOfLines={1} ellipsizeMode="tail">
-                    {item.data?.brand || "—"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              {/* 3.5 Rating */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Rating</Text>
-                <View style={styles.formValueContainer}>
-                  <Text style={styles.formValue}>
-                    {item.data?.rating ? "⭐".repeat(item.data.rating) : "⭐⭐⭐⭐⭐"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              {/* 4. Color */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Color</Text>
-                <View style={styles.formValueContainer}>
-                  <View
-                    style={[
-                      styles.colorDot,
-                      { backgroundColor: item.data?.colorHex || "#FFFFFF" },
-                    ]}
-                  />
-                  <Text style={styles.formValue}>
-                    {item.data?.primaryColor || "Unknown"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              {/* 4. Season */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Season</Text>
-                <View style={styles.formValueContainer}>
-                  <Text style={styles.formValue}>
-                    {item.data?.season?.join(", ") || "All Season"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              {/* 5. Occasion */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Occasion</Text>
-                <View style={styles.formValueContainer}>
-                  <Text
-                    style={styles.formValue}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.data?.occasion?.join(", ") || "Casual"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              {/* 6. Care Instructions */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Care Instructions</Text>
-                <View style={styles.formValueContainer}>
-                  <Text
-                    style={styles.formValue}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.data?.careInstructions || "—"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-              {/* 7. Notes */}
-              <View style={styles.formRow}>
-                <Text style={styles.formLabel}>Notes</Text>
-                <View style={styles.formValueContainer}>
-                  <Text
-                    style={styles.formValue}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.data?.notes || "—"}
-                  </Text>
-                  <IconChevronDown size={16} color="#9CA3AF" />
-                </View>
-              </View>
-            </View>
-          )}
-        </ScrollView>
-      </View>
-    );
-  };
+  const renderItem = useCallback(
+    ({ item }: { item: BatchItem }) => <SimpleViewSlide item={item} />,
+    [],
+  );
 
   return (
     <View style={{ flex: 1 }}>
-      <FlatList
-        ref={flatListRef}
+      <FlashList
+        ref={listRef}
         data={items}
         keyExtractor={(i) => i.id}
         horizontal
@@ -587,19 +599,6 @@ function SimpleView({
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleScroll}
         renderItem={renderItem}
-        getItemLayout={(_, index) => ({
-          length: SCREEN_WIDTH,
-          offset: SCREEN_WIDTH * index,
-          index,
-        })}
-        onScrollToIndexFailed={(info) => {
-          setTimeout(() => {
-            flatListRef.current?.scrollToIndex({
-              index: info.index,
-              animated: false,
-            });
-          }, 50);
-        }}
         style={{ flex: 1 }}
       />
 

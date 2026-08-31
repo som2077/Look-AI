@@ -198,12 +198,28 @@ export default function ScanHistoryScreen() {
     [removeScan],
   );
 
+  const handleToggleFavorite = useCallback(
+    (id: string) => toggleFavorite(id),
+    [toggleFavorite],
+  );
+
   const handleClearAll = useCallback(() => {
     Alert.alert("Clear All", "Remove all scan history?", [
       { text: "Cancel", style: "cancel" },
       { text: "Clear All", style: "destructive", onPress: clearAll },
     ]);
   }, [clearAll]);
+
+  const renderHistoryItem = useCallback(
+    ({ item }: { item: ScanHistoryItem }) => (
+      <HistoryCard
+        item={item}
+        onDelete={handleDelete}
+        onToggleFavorite={handleToggleFavorite}
+      />
+    ),
+    [handleDelete, handleToggleFavorite],
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0F0E15" }}>
@@ -325,13 +341,7 @@ export default function ScanHistoryScreen() {
             <FlashList
               data={filtered}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <HistoryCard
-                  item={item}
-                  onDelete={handleDelete}
-                  onToggleFavorite={toggleFavorite}
-                />
-              )}
+              renderItem={renderHistoryItem}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
             />
