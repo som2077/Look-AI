@@ -102,8 +102,13 @@ export function PromptInput({
         />
 
         {/* Bottom Action Row with Black Send Button on Right */}
-        <View style={styles.bottomRow}>
+        <View style={styles.bottomRow}
+          //  className="bg-[#000000] flex-1 flex-row ">
+        
+        >
           <Pressable
+           className="bg-[#000000] p-2 mb-1 rounded-full"
+
             onPress={handleSubmitPress}
             disabled={!canSubmit && !isStreaming}
             hitSlop={10}
@@ -120,7 +125,7 @@ export function PromptInput({
             ) : (
               <IconArrowUp
                 size={20}
-                // color="#000000"
+                color="#ffffff"
                 strokeWidth={2.6}
               />
             )}
@@ -133,9 +138,10 @@ export function PromptInput({
 
 const styles = StyleSheet.create({
   outer: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 4,
+    paddingHorizontal: 10,
+    paddingTop: 14,
+    // paddingTop: Platform.OS === "ios" ? 20 : 20,
+    marginBottom: Platform.OS === "ios" ? 20 : 20,
     backgroundColor: colors.bg,
   },
   tools: {
@@ -183,13 +189,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 6,
     // color: "#7E776C",
-    // backgroundColor: "#000000",
+    // backgroundColor: "#e9e5e5",
   },
   sendBtn: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: "#c42626",
+    // borderRadius: 19,
+    // backgroundColor: "#c42626",
     alignItems: "center",
     justifyContent: "center",
   },

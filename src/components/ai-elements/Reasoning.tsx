@@ -7,17 +7,17 @@
  * component is wired to a side-store (or a future SSE reasoning
  * channel) — the parent controls `content` and `isStreaming`.
  */
-import React, { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
+  IconBrain,
   IconChevronDown,
   IconChevronRight,
-  IconBrain,
 } from "@tabler/icons-react-native";
+import React, { useEffect, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Markdown from "react-native-markdown-display";
-import { colors, font, FONT_FAMILY, radii, space } from "./theme";
-import { Spinner } from "./Spinner";
 import { Collapsible } from "./Collapsible";
+import { Spinner } from "./Spinner";
+import { colors, font, FONT_FAMILY, radii, space } from "./theme";
 
 const reasoningStyles = {
   body: { color: colors.textMuted, fontSize: font.small, lineHeight: 18 },

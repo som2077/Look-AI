@@ -11,7 +11,7 @@
 
 export const colors = {
   // Surfaces — warm paper, not pure white
-  bg: "#FAF7F2",
+  bg: "#FFFFFFF",
   surface: "#F2EDE4", // assistant panel / muted bubble
   surfaceMuted: "#F4EFE6", // hover / skeleton
   border: "#E2D9C8",
