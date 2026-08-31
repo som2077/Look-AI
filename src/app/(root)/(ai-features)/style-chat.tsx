@@ -29,27 +29,27 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import {
+  colors,
   Conversation,
+  font,
+  FONT_FAMILY,
   Loader,
   Message,
   MessageResponse,
   PromptInput,
-  Tool,
-  colors,
-  font,
-  FONT_FAMILY,
   space,
+  Tool,
   useStreamingCaret,
 } from '@/components/ai-elements';
 
 import { CalendarDateCard } from '@/components/chat/cards/CalendarDateCard';
+import { CompareCard } from '@/components/chat/cards/CompareCard';
 import { InlineDatePickerCard } from '@/components/chat/cards/InlineDatePickerCard';
 import { LoggedOutfitConfirmCard } from '@/components/chat/cards/LoggedOutfitConfirmCard';
-import { OutfitSuggestionCard } from '@/components/chat/cards/OutfitSuggestionCard';
 import type {
   OutfitSuggestionOutfit,
 } from '@/components/chat/cards/OutfitSuggestionCard';
-import { CompareCard } from '@/components/chat/cards/CompareCard';
+import { OutfitSuggestionCard } from '@/components/chat/cards/OutfitSuggestionCard';
 import { RecentOutfitsCard } from '@/components/chat/cards/RecentOutfitsCard';
 import { StreakCard } from '@/components/chat/cards/StreakCard';
 import { WeatherCard } from '@/components/chat/cards/WeatherCard';
@@ -57,13 +57,13 @@ import { WeatherCard } from '@/components/chat/cards/WeatherCard';
 import { CalendarSavingIndicator } from '@/components/chat/skeletons/CalendarSavingIndicator';
 import { OutfitLoadingSkeleton } from '@/components/chat/skeletons/OutfitLoadingSkeleton';
 
-import { makeStyleChatTransport } from '@/features/chat/model/chatTransport';
 import { useChatLocation } from '@/features/chat/hooks/useChatLocation';
+import { makeStyleChatTransport } from '@/features/chat/model/chatTransport';
 import { useStreakSync } from '@/features/streaks/api/useStreakSync';
+import { useWeatherStore } from '@/features/weather';
 import { useSupabase } from '@/shared/supabase/use-supabase';
 import { trackAiUsage } from '@/shared/telemetry/ai-usage';
 import { toLocalDateString } from '@/shared/utils/date';
-import { useWeatherStore } from '@/features/weather';
 
 // Tracks live keyboard height so we can push the input bar above it reliably.
 function useKeyboardHeight() {
@@ -90,12 +90,12 @@ function useKeyboardHeight() {
 }
 
 // Minimal client-side system prompt. The real prompt (with 24h user
-// state) is injected server-side; this just keeps the Hinglish personality
-// across all turns. `prepareMessages` drops system messages from the
-// request window so it does not bloat the token count.
+// state) is injected server-side; this just keeps the language-mirror
+// personality across all turns. `prepareMessages` drops system messages
+// from the request window so it does not bloat the token count.
 const CLIENT_SYSTEM_PROMPT = `You are StyleAI, the user's AI fashion assistant inside the Look AI app.
 
-LANGUAGE: Hinglish (Roman script) by default. Do NOT switch to English just because the user wrote "Hi" or "thanks" — those are routine greetings, not language switches. Only switch to English if the user clearly writes two consecutive messages in pure English. Be brief, warm, and concrete. Use the supplied tools whenever the response includes structured data — never inline JSON. Avoid filler openers.`;
+LANGUAGE: Mirror the user's language. Detect the language of the user's most recent message and reply in that same language (English, Hinglish, Hindi, etc.). Never default to Hinglish. If the user writes in English, reply in English. Be brief, warm, and concrete. Use the supplied tools whenever the response includes structured data — never inline JSON. Avoid filler openers.`;
 
 export default function StyleChatScreen() {
   const insets = useSafeAreaInsets();
@@ -113,7 +113,7 @@ export default function StyleChatScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <View style={[styles.screenBody, { paddingBottom: keyboardHeight }]}>
-        <TopBar title="StyleAI" onBack={handleBack} />
+        <TopBar title="Style Chat" onBack={handleBack} />
         <ChatBody />
       </View>
     </View>
@@ -288,7 +288,7 @@ function ChatBody() {
       tools: {
         show_weather: {
           description:
-            'Display the weather for a UI card. The user\'s current location is provided in <user_location>lat=… lon=… locality=…</user_location> in your system prompt — pass the locality (or "Your area" if missing) as the `city` arg. The client fills in real coordinates and fetches Open-Meteo; you only write the one-line ai_tip in Hinglish.',
+            'Display the weather for a UI card. The user\'s current location is provided in <user_location>lat=… lon=… locality=…</user_location> in your system prompt — pass the locality (or "Your area" if missing) as the `city` arg. The client fills in real coordinates and fetches Open-Meteo; you only write the one-line ai_tip in the user\'s language.',
           parameters: z.object({
             city: z
               .string()
@@ -301,7 +301,7 @@ function ChatBody() {
               .optional(),
             ai_tip: z
               .string()
-              .describe('One-line Hinglish styling tip based on the weather'),
+              .describe('One-line styling tip based on the weather, written in the user\'s language'),
           }),
           render: async function* (args: any) {
             // Prefer real GPS coordinates from `useChatLocation` when
@@ -385,7 +385,7 @@ function ChatBody() {
                         condition: 'clear',
                         ai_tip:
                           args.ai_tip ||
-                          'Weather abhi available nahi hai, but app suggest karta hu.',
+                          "Weather isn't available right now, but here's a styling tip anyway.",
                         loading: false,
                       }}
                     />
@@ -517,7 +517,7 @@ function ChatBody() {
                   data={args}
                   onConfirm={(date, time) => {
                     handleSubmit(
-                      `Maine ${date} at ${time} choose kiya. Occasion: ${
+                      `I picked ${date} at ${time}. Occasion: ${
                         args.occasion || 'event'
                       }`
                     );
