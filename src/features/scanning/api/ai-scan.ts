@@ -262,7 +262,7 @@ JSON FORMAT:
   "brand": "Detect brand text or leave blank",
   "category": "<MUST BE ONE OF THE EXACT CATEGORIES ABOVE>",
   "subCategory": "<MUST BE ONE OF THE EXACT SUBCATEGORIES FOR THE CATEGORY ABOVE>",
-  "color": "White, Black, Blue, Navy, Red, Green, Yellow, Gray, Brown, Beige, Pink, Purple, Orange, Khaki",
+  "color": "Pick ONE color name from this exact list: White, Ivory, Beige, Light-Gray, Dark-Gray, Black, Light-Yellow, Yellow, Turmeric, Orange, Coral, Red, Pink, Hot-Pink, Light-Green, Green, Olive, Dark-Olive, Teal, Khaki, Cyan, Sky-Blue, Blue, Navy, Lavender, Purple, Burgundy, Camel, Brown, Dark-Brown, Magenta, Gold, Silver, Colorful. If the item has no clear dominant color (busy print, multi-color pattern, very low light), use \"Unknown\".",
   "season": ["All Season", "Summer", "Winter", "Spring", "Fall"],
   "occasion": ["<MUST BE FROM OCCASIONS LIST ABOVE>", "<CAN HAVE MULTIPLE>"],
   "careInstructions": "Machine wash cold, tumble dry low etc",

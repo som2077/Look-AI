@@ -1,7 +1,9 @@
+import { formatTimeShort } from "@/shared/utils/date";
+import { Image as ExpoImage } from "expo-image";
+import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
-  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -9,34 +11,29 @@ import {
 } from "react-native";
 import { usePendingBatchStore } from "../model/usePendingBatchStore";
 
-import { useRouter } from "expo-router";
-
-import { formatTimeShort } from "@/shared/utils/date";
-
 export function PendingBatchBanner() {
   const items = usePendingBatchStore((s) => s.items);
   const router = useRouter();
 
-  const opacity = useRef(new Animated.Value(0.3)).current;
+  const opacity = useRef(new Animated.Value(0.4)).current;
 
-  const firstSuccess = items.find((i) => i.status === "success");
   const allDone = items.every(
     (i) => i.status === "success" || i.status === "error",
   );
 
-  // Pulse only while the skeleton (loading) branch is actually rendered.
+  // Subtle pulse on status text when analysis is in progress
   useEffect(() => {
-    if (items.length === 0 || firstSuccess) return;
+    if (items.length === 0 || allDone) return;
 
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
-          toValue: 0.7,
+          toValue: 1,
           duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(opacity, {
-          toValue: 0.3,
+          toValue: 0.4,
           duration: 800,
           useNativeDriver: true,
         }),
@@ -45,16 +42,17 @@ export function PendingBatchBanner() {
     loop.start();
 
     return () => loop.stop();
-  }, [items.length, firstSuccess, opacity]);
+  }, [items.length, allDone, opacity]);
 
   if (items.length === 0) return null;
 
   const avatars = items.slice(0, 4);
   const totalAvatars = avatars.length;
-  // Calculate container width based on number of avatars
-  // each avatar overlaps the previous one by a certain amount (e.g. left: index * 24)
-  // let's use 24 as the offset. Width = (totalAvatars - 1) * 24 + 64 (width of avatar)
-  const avatarsWidth = totalAvatars > 0 ? (totalAvatars - 1) * 17 + 64 : 64;
+  // Offset between overlapping circular avatars
+  const avatarSize = 64;
+  const avatarOverlap = 17;
+  const avatarsWidth =
+    totalAvatars > 0 ? (totalAvatars - 1) * avatarOverlap + avatarSize : avatarSize;
   const timeStr = formatTimeShort();
 
   return (
@@ -64,55 +62,39 @@ export function PendingBatchBanner() {
     >
       <View style={[styles.avatarsContainer, { width: avatarsWidth }]}>
         {avatars.map((item, index) => (
-          <Image
+          <ExpoImage
             key={item.id}
             source={{ uri: item.cloudinaryUrl || item.originalUri }}
-            style={[styles.avatar, { left: index * 17, zIndex: 4 - index }]}
+            style={[
+              styles.avatar,
+              { left: index * avatarOverlap, zIndex: 4 - index },
+            ]}
+            contentFit="cover"
+            cachePolicy="memory-disk"
           />
         ))}
       </View>
       <View style={styles.textContainer}>
-        {firstSuccess ? (
-          <View>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-              }}
-            >
-              <Text style={styles.title}>Batch Scan</Text>
-              <Text style={styles.timeText}>
-                {timeStr}
-              </Text>
-            </View>
-            <Text style={styles.subtitle}>
+        <View>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Batch Scan</Text>
+            <Text style={styles.timeText}>{timeStr}</Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
               {items.length} Item{items.length !== 1 ? "s" : ""}
             </Text>
           </View>
+        </View>
+        {allDone ? (
+          <Text style={styles.statusText}>
+            Analysis complete and ready to view.
+          </Text>
         ) : (
-          <Animated.View style={{ flex: 1, justifyContent: "center", opacity }}>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                marginBottom: 6,
-              }}
-            >
-              <View style={styles.skeletonLine1} />
-              <Text style={styles.timeText}>
-                {timeStr}
-              </Text>
-            </View>
-            <View style={styles.skeletonLine2} />
-          </Animated.View>
+          <Animated.Text style={[styles.statusText, { opacity }]}>
+            Analysis in progress...
+          </Animated.Text>
         )}
-        <Text style={styles.statusText}>
-          {allDone
-            ? "Analysis complete and ready to view."
-            : "Analysis in progress..."}
-        </Text>
       </View>
     </Pressable>
   );
@@ -134,56 +116,63 @@ const styles = StyleSheet.create({
     height: 64,
     position: "relative",
     marginRight: 16,
+    justifyContent: "center",
   },
   avatar: {
-    width: 70,
-    height: 70,
+    width: 64,
+    height: 64,
     borderRadius: 32,
     borderWidth: 3,
     borderColor: "#FFFFFF",
     position: "absolute",
     backgroundColor: "#E5E7EB",
+    overflow: "hidden",
   },
   textContainer: {
     flex: 1,
     justifyContent: "center",
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   title: {
     fontSize: 16,
+    fontFamily: "TikTokSans16pt-Bold",
     fontWeight: "700",
     color: "#111827",
   },
-  subtitle: {
-    fontSize: 13,
-    color: "#9CA3AF",
-    marginTop: 2,
-    fontWeight: "500",
+  badge: {
+    backgroundColor: "#000000",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    alignSelf: "flex-start",
+    marginTop: 4,
+  },
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontFamily: "TikTokSans16pt-Medium",
+    fontWeight: "600",
   },
   timeText: {
     fontSize: 11,
     color: "#00000090",
+    fontFamily: "TikTokSans16pt-Medium",
     fontWeight: "500",
     backgroundColor: "#FFFFFF",
     paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 40
+    borderRadius: 40,
+    overflow: "hidden",
   },
   statusText: {
     fontSize: 13,
+    fontFamily: "TikTokSans16pt-Bold",
     fontWeight: "700",
     color: "#111827",
-    marginTop: 12,
-  },
-  skeletonLine1: {
-    height: 18,
-    width: "50%",
-    backgroundColor: "#E5E7EB",
-    borderRadius: 8,
-  },
-  skeletonLine2: {
-    height: 14,
-    width: "30%",
-    backgroundColor: "#E5E7EB",
-    borderRadius: 8,
+    marginTop: 8,
   },
 });

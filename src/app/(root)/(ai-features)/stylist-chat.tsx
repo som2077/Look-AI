@@ -18,7 +18,7 @@ const WardrobeSearchTool = makeAssistantTool({
   execute: async (args) => {
     // Note: since this is executed out of band, we'll need to fetch store data directly
     const items = useUserWardrobeStore.getState().items;
-    
+
     const matches = items.filter((item: any) => {
       let match = true;
       if (args.category && !item.category?.toLowerCase().includes(args.category.toLowerCase())) match = false;

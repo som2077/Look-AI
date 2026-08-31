@@ -32,8 +32,8 @@ const SYSTEM_PROMPT = `Analyze clothing or wearable image. Return ONLY valid JSO
 {
   "name": "Item name",
   "category": "top|bottoms|footwear|outerwear|dress|ethnic|accessory|headwear",
-  "color": "Color",
-  "colorHex": "#RRGGBB",
+  "color": "Pick ONE color name from this exact list: White, Ivory, Beige, Light-Gray, Dark-Gray, Black, Light-Yellow, Yellow, Turmeric, Orange, Coral, Red, Pink, Hot-Pink, Light-Green, Green, Olive, Dark-Olive, Teal, Khaki, Cyan, Sky-Blue, Blue, Navy, Lavender, Purple, Burgundy, Camel, Brown, Dark-Brown, Magenta, Gold, Silver, Colorful. If the item has no clear dominant color (busy print, multi-color pattern, very low light), use \"Unknown\".",
+  "colorHex": "#RRGGBB hex code matching the chosen color name (use empty string \"\" if color is Unknown)",
   "occasion": "Casual|Office|Party|Wedding|Date|Gym",
   "season": "All|Summer|Winter|Monsoon|Spring",
   "matchingColors": [{"name": "White", "hex": "#ffffff"}],

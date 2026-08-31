@@ -263,11 +263,10 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>()(
                     });
                     if (_interval) clearInterval(_interval);
                     return;
-                  } else if (aiData?.rating === "Not an Outfit") {
+                  } else if (typeof aiData?.fit !== "number") {
                     set({
                       error:
-                        aiData.actionableFixes?.[0] ||
-                        "Please upload a valid outfit photo.",
+                        "Please upload a clear full-body outfit photo for Fit Check.",
                       isAnalyzing: false,
                     });
                     if (_interval) clearInterval(_interval);
@@ -336,10 +335,35 @@ export const useOutfitAnalysisStore = create<OutfitAnalysisState>()(
                 outfitTags = ["Care Label", "Scan"];
                 outfitScore = 100;
               } else if (currentMode === "fit-check") {
-                outfitName = "Fit Check";
-                outfitSubtitle = aiData.rating || "Good Look";
-                outfitTags = [aiData.occasionMatch || "Casual", "Fit Check"];
-                outfitScore = aiData.fitScore || 75;
+                // Real AI metrics from FitCheckAnalysis
+                const metrics = [
+                  aiData.colorHarmony,
+                  aiData.silhouette,
+                  aiData.cohesion,
+                  aiData.occasion,
+                  aiData.fit,
+                ].filter((n): n is number => typeof n === "number");
+                const avg =
+                  metrics.length > 0
+                    ? metrics.reduce((a, b) => a + b, 0) / metrics.length
+                    : 7.5;
+                const label =
+                  avg >= 8.5
+                    ? "Perfect"
+                    : avg >= 7.5
+                    ? "Fire"
+                    : avg >= 6
+                    ? "Decent"
+                    : "Needs Work";
+                outfitName = `${label} look`;
+                outfitSubtitle =
+                  aiData.strengths?.[0] || "Your AI stylist review";
+                outfitTags = [
+                  aiData.colorHarmony >= 8 ? "Color Harmony" : "Cohesion",
+                  "Fit Check",
+                  label,
+                ];
+                outfitScore = Math.round(avg * 10); // 0-100 scale
               }
             }
 
