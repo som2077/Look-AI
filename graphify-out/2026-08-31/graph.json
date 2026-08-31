@@ -946,6 +946,58 @@
       "source_location": "L29"
     },
     {
+      "id": "src_app_root_add_clothes_form_categoryid",
+      "label": "CategoryId",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "categoryid",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L58"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_formparams",
+      "label": "FormParams",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "formparams",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L229"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_occasion",
+      "label": "Occasion",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "occasion",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L115"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_season",
+      "label": "Season",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "season",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L137"
+    },
+    {
       "id": "src_app_root_add_clothes_label_result_labelresultparams",
       "label": "LabelResultParams",
       "_callable": true,
@@ -1323,6 +1375,45 @@
       "source_location": "L21"
     },
     {
+      "id": "src_shared_ui_toast_store_toastitem",
+      "label": "ToastItem",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "toastitem",
+      "source_file": "src/shared/ui/toast-store.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "src_shared_ui_toast_store_toaststore",
+      "label": "ToastStore",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "toaststore",
+      "source_file": "src/shared/ui/toast-store.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_shared_ui_toast_store_toasttype",
+      "label": "ToastType",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "toasttype",
+      "source_file": "src/shared/ui/toast-store.ts",
+      "source_location": "L7"
+    },
+    {
       "id": "src_app_root_ai_features_planner_chat_message",
       "label": "Message",
       "_callable": true,
@@ -1570,19 +1661,6 @@
       "source_location": "L33"
     },
     {
-      "id": "src_shared_ui_navigation_swipetabwrapper_swipetabwrapperprops",
-      "label": "SwipeTabWrapperProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "wardrobe.tsx",
-      "file_type": "code",
-      "norm_label": "swipetabwrapperprops",
-      "source_file": "src/shared/ui/navigation/SwipeTabWrapper.tsx",
-      "source_location": "L4"
-    },
-    {
       "id": "src_shared_ui_skeleton_skeletoncardprops",
       "label": "SkeletonCardProps",
       "_callable": true,
@@ -1815,6 +1893,19 @@
       "norm_label": "loadingscreenprops",
       "source_file": "src/shared/ui/LoadingScreen.tsx",
       "source_location": "L7"
+    },
+    {
+      "id": "src_shared_ui_navigation_swipetabwrapper_swipetabwrapperprops",
+      "label": "SwipeTabWrapperProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 40,
+      "community_name": "explore.tsx",
+      "file_type": "code",
+      "norm_label": "swipetabwrapperprops",
+      "source_file": "src/shared/ui/navigation/SwipeTabWrapper.tsx",
+      "source_location": "L4"
     },
     {
       "id": "src_shared_utils_timing_anyfn",
@@ -2077,45 +2168,6 @@
       "source_location": "L29"
     },
     {
-      "id": "src_shared_ui_toast_store_toastitem",
-      "label": "ToastItem",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "toastitem",
-      "source_file": "src/shared/ui/toast-store.ts",
-      "source_location": "L9"
-    },
-    {
-      "id": "src_shared_ui_toast_store_toaststore",
-      "label": "ToastStore",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "toaststore",
-      "source_file": "src/shared/ui/toast-store.ts",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_shared_ui_toast_store_toasttype",
-      "label": "ToastType",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "toasttype",
-      "source_file": "src/shared/ui/toast-store.ts",
-      "source_location": "L7"
-    },
-    {
       "id": "src_features_outfits_model_user_outfits_store_outfit",
       "label": "Outfit",
       "_callable": true,
@@ -2233,6 +2285,19 @@
       "source_location": "L132"
     },
     {
+      "id": "src_features_wardrobe_api_usewardrobesummary_wardrobesummary",
+      "label": "WardrobeSummary",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "wardrobesummary",
+      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
+      "source_location": "L5"
+    },
+    {
       "id": "src_components_chat_cards_outfitsuggestioncard_outfitsuggestioncardprops",
       "label": "OutfitSuggestionCardProps",
       "_callable": true,
@@ -2324,58 +2389,6 @@
       "source_location": "L20"
     },
     {
-      "id": "src_app_root_add_clothes_form_categoryid",
-      "label": "CategoryId",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "categoryid",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L58"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_formparams",
-      "label": "FormParams",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "formparams",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L229"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_occasion",
-      "label": "Occasion",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "occasion",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L115"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_season",
-      "label": "Season",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "season",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L137"
-    },
-    {
       "id": "src_app_root_log_outfit_details_occasion",
       "label": "Occasion",
       "_callable": true,
@@ -2400,19 +2413,6 @@
       "norm_label": "userprofile",
       "source_file": "src/features/profile/api/useProfile.ts",
       "source_location": "L9"
-    },
-    {
-      "id": "src_features_wardrobe_api_usewardrobesummary_wardrobesummary",
-      "label": "WardrobeSummary",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "wardrobesummary",
-      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
-      "source_location": "L5"
     },
     {
       "id": "src_features_wardrobe_model_user_wardrobe_store_userclothingitem",
@@ -3101,7 +3101,7 @@
       "file_type": "code",
       "norm_label": "promptinputprops",
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L22"
+      "source_location": "L23"
     },
     {
       "id": "src_features_chat_ui_blurheader_blurheaderprops",
@@ -3442,18 +3442,6 @@
       "source_location": "L26"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_accepteddomalreadyclean",
-      "label": "acceptedDomAlreadyClean()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "accepteddomalreadyclean()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L8581"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_applyglobalbarlabelstate",
       "label": "applyGlobalBarLabelState()",
       "_callable": true,
@@ -3464,30 +3452,6 @@
       "norm_label": "applyglobalbarlabelstate()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L9472"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_applyparamdefaults",
-      "label": "applyParamDefaults()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "applyparamdefaults()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L3192"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_applyparamvalue",
-      "label": "applyParamValue()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "applyparamvalue()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L3167"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_applyplaceholdersizingstyles",
@@ -3574,18 +3538,6 @@
       "source_location": "L12425"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_buildparamspanel",
-      "label": "buildParamsPanel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "buildparamspanel()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L3207"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_buildplaceholderresizehandles",
       "label": "buildPlaceholderResizeHandles()",
       "_callable": true,
@@ -3658,18 +3610,6 @@
       "source_location": "L7959"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_closedclippath",
-      "label": "closedClipPath()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "closedclippath()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L4783"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_collectfontcsstext",
       "label": "collectFontCssText()",
       "_callable": true,
@@ -3680,30 +3620,6 @@
       "norm_label": "collectfontcsstext()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L7787"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_collectmanualcontextpieces",
-      "label": "collectManualContextPieces()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "collectmanualcontextpieces()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L1035"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_collectmanualcontextpieces_walk",
-      "label": "walk()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "walk()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L1037"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_commitacceptedvarianttodom",
@@ -3862,18 +3778,6 @@
       "source_location": "L4584"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_ensureaccepteddomclean",
-      "label": "ensureAcceptedDomClean()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "ensureaccepteddomclean()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L8588"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_ensureinsertline",
       "label": "ensureInsertLine()",
       "_callable": true,
@@ -3896,18 +3800,6 @@
       "norm_label": "escapehtml()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L12457"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_findacceptedruntimewrappers",
-      "label": "findAcceptedRuntimeWrappers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "findacceptedruntimewrappers()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L8614"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_findbackdropancestor",
@@ -3970,18 +3862,6 @@
       "source_location": "L12081"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_formatrangevalue",
-      "label": "formatRangeValue()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "formatrangevalue()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L3200"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_globalbarmodetoggles",
       "label": "globalBarModeToggles()",
       "_callable": true,
@@ -4040,18 +3920,6 @@
       "norm_label": "hidehighlighttagtooltip()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L357"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_hideparamspanel",
-      "label": "hideParamsPanel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "hideparamspanel()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L4839"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_highlightbold",
@@ -4162,16 +4030,40 @@
       "source_location": "L1796"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_ismeaningfulmanualcontextpiece",
-      "label": "isMeaningfulManualContextPiece()",
+      "id": "agents_skills_impeccable_scripts_live_browser_isinlineeditactive",
+      "label": "isInlineEditActive()",
       "_callable": true,
       "_origin": "ast",
       "community": 0,
       "community_name": "live-browser.js",
       "file_type": "code",
-      "norm_label": "ismeaningfulmanualcontextpiece()",
+      "norm_label": "isinlineeditactive()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L1059"
+      "source_location": "L9625"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_ispageeditableactive",
+      "label": "isPageEditableActive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "live-browser.js",
+      "file_type": "code",
+      "norm_label": "ispageeditableactive()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L9629"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_ispageeditableelement",
+      "label": "isPageEditableElement()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "live-browser.js",
+      "file_type": "code",
+      "norm_label": "ispageeditableelement()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L9619"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_istransparentcolor",
@@ -4184,18 +4076,6 @@
       "norm_label": "istransparentcolor()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L7815"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_isusefulmanualeditcontext",
-      "label": "isUsefulManualEditContext()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "isusefulmanualeditcontext()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L1029"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_isvariantshown",
@@ -4282,18 +4162,6 @@
       "source_location": "L1858"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_mountedparametercount",
-      "label": "mountedParameterCount()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "mountedparametercount()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L4879"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_msgdiv",
       "label": "msgDiv()",
       "_callable": true,
@@ -4330,18 +4198,6 @@
       "source_location": "L6348"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_opentunepopover",
-      "label": "openTunePopover()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "opentunepopover()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L4918"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_paintsbackdrop",
       "label": "paintsBackdrop()",
       "_callable": true,
@@ -4364,30 +4220,6 @@
       "norm_label": "paintsshaderproxysurface()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L7905"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_parsesourceloc",
-      "label": "parseSourceLoc()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "parsesourceloc()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L3609"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_parsevariantparams",
-      "label": "parseVariantParams()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "parsevariantparams()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L3145"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_placeholdersizing",
@@ -4414,18 +4246,6 @@
       "source_location": "L1837"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_popoverdirection",
-      "label": "popoverDirection()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "popoverdirection()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L4767"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_positioneditbadge",
       "label": "positionEditBadge()",
       "_callable": true,
@@ -4436,18 +4256,6 @@
       "norm_label": "positioneditbadge()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4657"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_positionparamspanel",
-      "label": "positionParamsPanel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "positionparamspanel()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L4797"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_prefixcssselectors",
@@ -4484,18 +4292,6 @@
       "norm_label": "readvisiblevariantfromdom()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L6515"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_reloadaftermissingaccepteddom",
-      "label": "reloadAfterMissingAcceptedDom()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "reloadaftermissingaccepteddom()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L8644"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_rendercolortiles",
@@ -4702,18 +4498,6 @@
       "source_location": "L8192"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_restoreaccepteddomfromsnapshot",
-      "label": "restoreAcceptedDomFromSnapshot()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "restoreaccepteddomfromsnapshot()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L8622"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_samplesurroundingrgb",
       "label": "sampleSurroundingRgb()",
       "_callable": true,
@@ -4762,18 +4546,6 @@
       "source_location": "L9310"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_scheduleacceptcleanup",
-      "label": "scheduleAcceptCleanup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "scheduleacceptcleanup()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L8537"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_scopecssblock",
       "label": "scopeCssBlock()",
       "_callable": true,
@@ -4796,18 +4568,6 @@
       "norm_label": "selectorforacceptedroot()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8573"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_setclippath",
-      "label": "setClipPath()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "setclippath()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L4787"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_setimportantstyle",
@@ -4918,18 +4678,6 @@
       "source_location": "L6611"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_showparamspanel",
-      "label": "showParamsPanel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "showparamspanel()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L4829"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_snapshotacceptedvariantdom",
       "label": "snapshotAcceptedVariantDom()",
       "_callable": true,
@@ -4940,18 +4688,6 @@
       "norm_label": "snapshotacceptedvariantdom()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L8560"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_sourcehintforelement",
-      "label": "sourceHintForElement()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "sourcehintforelement()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L3593"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_splitcssselectorlist",
@@ -4988,30 +4724,6 @@
       "norm_label": "startplaceholderedgeresize()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2206"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_stripsvelteblockregions",
-      "label": "stripSvelteBlockRegions()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "stripsvelteblockregions()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5530"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_stripsveltekeydelimiters",
-      "label": "stripSvelteKeyDelimiters()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "stripsveltekeydelimiters()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5559"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_styleeditbadgeproxy",
@@ -5086,18 +4798,6 @@
       "source_location": "L5412"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_updatevariantstatestylesheet",
-      "label": "updateVariantStateStylesheet()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "updatevariantstatestylesheet()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L6585"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_usesshadowchromeroot",
       "label": "usesShadowChromeRoot()",
       "_callable": true,
@@ -5108,30 +4808,6 @@
       "norm_label": "usesshadowchromeroot()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4474"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_variantparamdecls",
-      "label": "variantParamDecls()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "variantparamdecls()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L6575"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_variantstateselector",
-      "label": "variantStateSelector()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "live-browser.js",
-      "file_type": "code",
-      "norm_label": "variantstateselector()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L6564"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_bordercolorsfromstyle",
@@ -5170,16 +4846,16 @@
       "source_location": "L2288"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_buildhtmlpatterncorpora",
-      "label": "buildHtmlPatternCorpora()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkborders",
+      "label": "checkBorders()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "checks.mjs",
       "file_type": "code",
-      "norm_label": "buildhtmlpatterncorpora()",
+      "norm_label": "checkborders()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1471"
+      "source_location": "L36"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkclippedoverflow",
@@ -5216,6 +4892,30 @@
       "norm_label": "checkelementblinkingcursordom()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L4833"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementborders",
+      "label": "checkElementBorders()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "checkelementborders()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L3521"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementbordersdom",
+      "label": "checkElementBordersDOM()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "checkelementbordersdom()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L2031"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementclippedoverflow",
@@ -5362,6 +5062,18 @@
       "source_location": "L4413"
     },
     {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementpseudostripedom",
+      "label": "checkElementPseudoStripeDOM()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "checkelementpseudostripedom()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L2061"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementquality",
       "label": "checkElementQuality()",
       "_callable": true,
@@ -5494,18 +5206,6 @@
       "source_location": "L442"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkhtmlpatterns",
-      "label": "checkHtmlPatterns()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "checkhtmlpatterns()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1499"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkitalicserif",
       "label": "checkItalicSerif()",
       "_callable": true,
@@ -5624,6 +5324,18 @@
       "norm_label": "checkoversizedh1()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L4388"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkpagelayout",
+      "label": "checkPageLayout()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "checkpagelayout()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L4136"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkquality",
@@ -5758,18 +5470,6 @@
       "source_location": "L4560"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectcsscustomprops",
-      "label": "collectCssCustomProps()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "collectcsscustomprops()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L632"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectkickercandidates",
       "label": "collectKickerCandidates()",
       "_callable": true,
@@ -5782,18 +5482,6 @@
       "source_location": "L2443"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectmarqueekeyframes",
-      "label": "collectMarqueeKeyframes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "collectmarqueekeyframes()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1080"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectnumberedsectionlabelcandidates",
       "label": "collectNumberedSectionLabelCandidates()",
       "_callable": true,
@@ -5804,18 +5492,6 @@
       "norm_label": "collectnumberedsectionlabelcandidates()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2556"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectpulsekeyframes",
-      "label": "collectPulseKeyframes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "collectpulsekeyframes()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1147"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectrepeatedcontainertextfindings",
@@ -5866,30 +5542,6 @@
       "source_location": "L2957"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_csslengthtopx",
-      "label": "cssLengthToPx()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "csslengthtopx()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L863"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_csstexthasdarkrootbg",
-      "label": "cssTextHasDarkRootBg()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "csstexthasdarkrootbg()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L654"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_domaccentdashpseudo",
       "label": "domAccentDashPseudo()",
       "_callable": true,
@@ -5938,18 +5590,6 @@
       "source_location": "L4569"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_enclosingcssselector",
-      "label": "enclosingCssSelector()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "enclosingcssselector()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L681"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_expandboxshorthand",
       "label": "expandBoxShorthand()",
       "_callable": true,
@@ -5960,30 +5600,6 @@
       "norm_label": "expandboxshorthand()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L4666"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_extractshadowlengths",
-      "label": "extractShadowLengths()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "extractshadowlengths()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L576"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_findshadowcolor",
-      "label": "findShadowColor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "findshadowcolor()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L558"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_firstmetriclengthpx",
@@ -6034,30 +5650,6 @@
       "source_location": "L2989"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_indexinsourceranges",
-      "label": "indexInSourceRanges()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "indexinsourceranges()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1256"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_infiniteanimationnames",
-      "label": "infiniteAnimationNames()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "infiniteanimationnames()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1179"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_isaccentcolor",
       "label": "isAccentColor()",
       "_callable": true,
@@ -6068,6 +5660,18 @@
       "norm_label": "isaccentcolor()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L363"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_iscardlike",
+      "label": "isCardLike()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "iscardlike()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L4116"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_iscardlikedom",
@@ -6202,18 +5806,6 @@
       "source_location": "L4215"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_isrounddotradius",
-      "label": "isRoundDotRadius()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "isrounddotradius()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1200"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_isscreenreaderonlytextstyle",
       "label": "isScreenReaderOnlyTextStyle()",
       "_callable": true,
@@ -6226,6 +5818,30 @@
       "source_location": "L4695"
     },
     {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_isstatuscontextelement",
+      "label": "isStatusContextElement()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "isstatuscontextelement()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L2023"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_istabcontextelement",
+      "label": "isTabContextElement()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "istabcontextelement()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L2002"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_isvisuallyhidden",
       "label": "isVisuallyHidden()",
       "_callable": true,
@@ -6236,18 +5852,6 @@
       "norm_label": "isvisuallyhidden()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L3041"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_iszerooffset",
-      "label": "isZeroOffset()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "iszerooffset()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L870"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_keyframestogglevisibilitydom",
@@ -6272,18 +5876,6 @@
       "norm_label": "kickerheadinglevel()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2433"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_landmarksourceranges",
-      "label": "landmarkSourceRanges()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "landmarksourceranges()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1238"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_measurehiddentextdom",
@@ -6322,18 +5914,6 @@
       "source_location": "L4652"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_parsecssdeclblock",
-      "label": "parseCssDeclBlock()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "parsecssdeclblock()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L851"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_parsenumberedlabeltext",
       "label": "parseNumberedLabelText()",
       "_callable": true,
@@ -6344,6 +5924,18 @@
       "norm_label": "parsenumberedlabeltext()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2517"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_parseradiustopx",
+      "label": "parseRadiusToPx()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "parseradiustopx()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1970"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_positionedchildescapesclip",
@@ -6394,6 +5986,18 @@
       "source_location": "L4583"
     },
     {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_resolveborderradiuspx",
+      "label": "resolveBorderRadiusPx()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "checks.mjs",
+      "file_type": "code",
+      "norm_label": "resolveborderradiuspx()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1984"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_resolvefontsizepx",
       "label": "resolveFontSizePx()",
       "_callable": true,
@@ -6442,126 +6046,6 @@
       "source_location": "L331"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_resolvevarrefs",
-      "label": "resolveVarRefs()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "resolvevarrefs()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L2323"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforglow",
-      "label": "scanCssTextForGlow()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "scancsstextforglow()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L695"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforgridbackground",
-      "label": "scanCssTextForGridBackground()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "scancsstextforgridbackground()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L732"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforinsetstripe",
-      "label": "scanCssTextForInsetStripe()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "scancsstextforinsetstripe()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1015"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextformarquee",
-      "label": "scanCssTextForMarquee()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "scancsstextformarquee()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1120"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforpseudostripe",
-      "label": "scanCssTextForPseudoStripe()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "scancsstextforpseudostripe()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L880"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforpulsingdot",
-      "label": "scanCssTextForPulsingDot()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "scancsstextforpulsingdot()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1305"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforradialhalo",
-      "label": "scanCssTextForRadialHalo()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "scancsstextforradialhalo()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L776"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scanhtmlforshapeassembledillustration",
-      "label": "scanHtmlForShapeAssembledIllustration()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "scanhtmlforshapeassembledillustration()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1402"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_selectorhitslandmark",
-      "label": "selectorHitsLandmark()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "selectorhitslandmark()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1265"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_shadowlayeralpha",
       "label": "shadowLayerAlpha()",
       "_callable": true,
@@ -6596,18 +6080,6 @@
       "norm_label": "spotlightlabel()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2880"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_stripreducedmotionblocks",
-      "label": "stripReducedMotionBlocks()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "checks.mjs",
-      "file_type": "code",
-      "norm_label": "stripreducedmotionblocks()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1214"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_textdescendantsflushsides",
@@ -7414,76 +6886,232 @@
       "source_location": "L273"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_clippedbyinset",
-      "label": "clippedByInset()",
+      "id": "agents_skills_impeccable_scripts_live_browser_buildsvelteexpressiontextmap",
+      "label": "buildSvelteExpressionTextMap()",
       "_callable": true,
       "_origin": "ast",
       "community": 101,
-      "community_name": "isScreenReaderOnlyTextStyle",
+      "community_name": "resolveLiveInjectionAnchor",
       "file_type": "code",
-      "norm_label": "clippedbyinset()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5915"
+      "norm_label": "buildsvelteexpressiontextmap()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L6386"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_clippedbyrect",
-      "label": "clippedByRect()",
+      "id": "agents_skills_impeccable_scripts_live_browser_buildsveltepropvaluesfromliveelement",
+      "label": "buildSveltePropValuesFromLiveElement()",
       "_callable": true,
       "_origin": "ast",
       "community": 101,
-      "community_name": "isScreenReaderOnlyTextStyle",
+      "community_name": "resolveLiveInjectionAnchor",
       "file_type": "code",
-      "norm_label": "clippedbyrect()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5927"
+      "norm_label": "buildsveltepropvaluesfromliveelement()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5416"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_expandboxshorthand",
-      "label": "expandBoxShorthand()",
+      "id": "agents_skills_impeccable_scripts_live_browser_buildsveltepropvaluesv2",
+      "label": "buildSveltePropValuesV2()",
       "_callable": true,
       "_origin": "ast",
       "community": 101,
-      "community_name": "isScreenReaderOnlyTextStyle",
+      "community_name": "resolveLiveInjectionAnchor",
       "file_type": "code",
-      "norm_label": "expandboxshorthand()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5908"
+      "norm_label": "buildsveltepropvaluesv2()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5440"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_firstmetriclengthpx",
-      "label": "firstMetricLengthPx()",
+      "id": "agents_skills_impeccable_scripts_live_browser_clonewithoutelements",
+      "label": "cloneWithoutElements()",
       "_callable": true,
       "_origin": "ast",
       "community": 101,
-      "community_name": "isScreenReaderOnlyTextStyle",
+      "community_name": "resolveLiveInjectionAnchor",
       "file_type": "code",
-      "norm_label": "firstmetriclengthpx()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5900"
+      "norm_label": "clonewithoutelements()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5583"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_isscreenreaderonlytextstyle",
-      "label": "isScreenReaderOnlyTextStyle()",
+      "id": "agents_skills_impeccable_scripts_live_browser_collecttextnodes",
+      "label": "collectTextNodes()",
       "_callable": true,
       "_origin": "ast",
       "community": 101,
-      "community_name": "isScreenReaderOnlyTextStyle",
+      "community_name": "resolveLiveInjectionAnchor",
       "file_type": "code",
-      "norm_label": "isscreenreaderonlytextstyle()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5937"
+      "norm_label": "collecttextnodes()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L6443"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_metriclengthpx",
-      "label": "metricLengthPx()",
+      "id": "agents_skills_impeccable_scripts_live_browser_collectvisibletexts",
+      "label": "collectVisibleTexts()",
       "_callable": true,
       "_origin": "ast",
       "community": 101,
-      "community_name": "isScreenReaderOnlyTextStyle",
+      "community_name": "resolveLiveInjectionAnchor",
       "file_type": "code",
-      "norm_label": "metriclengthpx()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5894"
+      "norm_label": "collectvisibletexts()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5514"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_cssescapeident",
+      "label": "cssEscapeIdent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "cssescapeident()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5510"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_elementmatchesoriginalmarkup",
+      "label": "elementMatchesOriginalMarkup()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "elementmatchesoriginalmarkup()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5042"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_escaperegexp",
+      "label": "escapeRegExp()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "escaperegexp()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L6459"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_expressiontextmatcher",
+      "label": "expressionTextMatcher()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "expressiontextmatcher()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L6429"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_findliveelementfororiginalmarkup",
+      "label": "findLiveElementForOriginalMarkup()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "findliveelementfororiginalmarkup()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5086"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_findliveelementfromanchorsnapshot",
+      "label": "findLiveElementFromAnchorSnapshot()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "findliveelementfromanchorsnapshot()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5063"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_isusableinjectionanchor",
+      "label": "isUsableInjectionAnchor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "isusableinjectionanchor()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5034"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_normalizeelementclassname",
+      "label": "normalizeElementClassName()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "normalizeelementclassname()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5012"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_normalizepreviewtext",
+      "label": "normalizePreviewText()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "normalizepreviewtext()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L6455"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_parseoriginalmarkupelement",
+      "label": "parseOriginalMarkupElement()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "parseoriginalmarkupelement()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5006"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_resolveliveinjectionanchor",
+      "label": "resolveLiveInjectionAnchor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "resolveliveinjectionanchor()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5126"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_stripsvelteblockregions",
+      "label": "stripSvelteBlockRegions()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "stripsvelteblockregions()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5530"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_stripsveltekeydelimiters",
+      "label": "stripSvelteKeyDelimiters()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "resolveLiveInjectionAnchor",
+      "file_type": "code",
+      "norm_label": "stripsveltekeydelimiters()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L5559"
     },
     {
       "id": "scripts_generate_chime_generatesamples",
@@ -9814,18 +9442,6 @@
       "source_location": "L2612"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_dismisstoast",
-      "label": "dismissToast()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "el",
-      "file_type": "code",
-      "norm_label": "dismisstoast()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L9060"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_el",
       "label": "el()",
       "_callable": true,
@@ -10016,18 +9632,6 @@
       "norm_label": "selectiontaglabel()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1439"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_showbar",
-      "label": "showBar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "el",
-      "file_type": "code",
-      "norm_label": "showbar()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L1153"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_showconfigurebartooltip",
@@ -11806,6 +11410,18 @@
       "source_location": "L505"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_server_broadcast",
+      "label": "broadcast()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "live-server.mjs",
+      "file_type": "code",
+      "norm_label": "broadcast()",
+      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
+      "source_location": "L596"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_server_chatagentlikelyactive",
       "label": "chatAgentLikelyActive()",
       "_callable": true,
@@ -11986,6 +11602,30 @@
       "source_location": "L324"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_server_recordagentphase",
+      "label": "recordAgentPhase()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "live-server.mjs",
+      "file_type": "code",
+      "norm_label": "recordagentphase()",
+      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
+      "source_location": "L271"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_server_recordgeneratedelivery",
+      "label": "recordGenerateDelivery()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "live-server.mjs",
+      "file_type": "code",
+      "norm_label": "recordgeneratedelivery()",
+      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
+      "source_location": "L239"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_server_recordgenerationcheckpoint",
       "label": "recordGenerationCheckpoint()",
       "_callable": true,
@@ -11996,6 +11636,18 @@
       "norm_label": "recordgenerationcheckpoint()",
       "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
       "source_location": "L343"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_server_recordmanualeditactivity",
+      "label": "recordManualEditActivity()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "live-server.mjs",
+      "file_type": "code",
+      "norm_label": "recordmanualeditactivity()",
+      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
+      "source_location": "L603"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_server_resolveprojectcontext",
@@ -12860,6 +12512,102 @@
       "norm_label": "chatheader()",
       "source_file": "src/features/chat/ui/ChatHeader.tsx",
       "source_location": "L37"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_bordercolorsfromstyle",
+      "label": "borderColorsFromStyle()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 195,
+      "community_name": "checkElementGptBorderShadowDOM",
+      "file_type": "code",
+      "norm_label": "bordercolorsfromstyle()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5723"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_borderwidthsfromstyle",
+      "label": "borderWidthsFromStyle()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 195,
+      "community_name": "checkElementGptBorderShadowDOM",
+      "file_type": "code",
+      "norm_label": "borderwidthsfromstyle()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5714"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkelementgptbordershadow",
+      "label": "checkElementGptBorderShadow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 195,
+      "community_name": "checkElementGptBorderShadowDOM",
+      "file_type": "code",
+      "norm_label": "checkelementgptbordershadow()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5732"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkelementgptbordershadowdom",
+      "label": "checkElementGptBorderShadowDOM()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 195,
+      "community_name": "checkElementGptBorderShadowDOM",
+      "file_type": "code",
+      "norm_label": "checkelementgptbordershadowdom()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5736"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkgptthinborderwideshadow",
+      "label": "checkGptThinBorderWideShadow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 195,
+      "community_name": "checkElementGptBorderShadowDOM",
+      "file_type": "code",
+      "norm_label": "checkgptthinborderwideshadow()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5702"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_csscoloralpha",
+      "label": "cssColorAlpha()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 195,
+      "community_name": "checkElementGptBorderShadowDOM",
+      "file_type": "code",
+      "norm_label": "csscoloralpha()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5696"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_shadowlayeralpha",
+      "label": "shadowLayerAlpha()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 195,
+      "community_name": "checkElementGptBorderShadowDOM",
+      "file_type": "code",
+      "norm_label": "shadowlayeralpha()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5670"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_shadowmaxblurpx",
+      "label": "shadowMaxBlurPx()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 195,
+      "community_name": "checkElementGptBorderShadowDOM",
+      "file_type": "code",
+      "norm_label": "shadowmaxblurpx()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5679"
     },
     {
       "id": "src_features_chat_model_chattransport_preparedopenai_constructor",
@@ -14446,12 +14194,24 @@
       "source_location": "L187"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_agenthasworkinflight",
+      "label": "agentHasWorkInFlight()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "syncPageChatFocus",
+      "file_type": "code",
+      "norm_label": "agenthasworkinflight()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L10536"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_armpagechatfortyping",
       "label": "armPageChatForTyping()",
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "armpagechatfortyping()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14463,7 +14223,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "attachsteerfocusdebug()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14475,7 +14235,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "attachsteerfocusguard()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14487,7 +14247,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "buildsteerprocessingdots()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14499,7 +14259,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "buildsteerqueuehint()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14511,7 +14271,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "clearsteerawaittimer()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14523,7 +14283,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "clearsteerfocusrecovertimer()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14535,7 +14295,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "collapsepagechat()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14547,7 +14307,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "expandpagechat()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14559,7 +14319,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "finishvoicesession()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14571,7 +14331,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "focusconfigureinput()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14583,7 +14343,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "focuspagechatinput()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14595,7 +14355,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "focussteerchat()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14607,7 +14367,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "initpagechat()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14619,47 +14379,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "isembeddedpreviewbrowser()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L10047"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_isinlineeditactive",
-      "label": "isInlineEditActive()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "initPageChat",
-      "file_type": "code",
-      "norm_label": "isinlineeditactive()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L9625"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_ispageeditableactive",
-      "label": "isPageEditableActive()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "initPageChat",
-      "file_type": "code",
-      "norm_label": "ispageeditableactive()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L9629"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_ispageeditableelement",
-      "label": "isPageEditableElement()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "initPageChat",
-      "file_type": "code",
-      "norm_label": "ispageeditableelement()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L9619"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_keepsteerpointerinside",
@@ -14667,7 +14391,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "keepsteerpointerinside()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14679,7 +14403,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "locksteerchat()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14691,7 +14415,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "notepagepointerdown()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14703,7 +14427,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "pagechatcollapsedwidthpx()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14715,7 +14439,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "pagechatexpandedwidth()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14727,7 +14451,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "pagechatpalette()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14739,7 +14463,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "pagehashosttextselection()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14751,7 +14475,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "preparepagechatinputfortyping()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14763,7 +14487,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "releasevoiceengine()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14775,7 +14499,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "schedulesteerawaittimeout()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14787,7 +14511,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "schedulesteerfocusrecover()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14799,7 +14523,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "sendsteercheckpoint()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14811,7 +14535,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "shouldfocussteerchat()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14823,7 +14547,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "shouldsteerautofocus()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14835,7 +14559,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "startvoice()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14847,7 +14571,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "steerfocusdebugenabled()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14859,7 +14583,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "steerfocuslog()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14871,11 +14595,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "steerfocustargetlabel()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L9726"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_steerqueuedbehindgeneration",
+      "label": "steerQueuedBehindGeneration()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "syncPageChatFocus",
+      "file_type": "code",
+      "norm_label": "steerqueuedbehindgeneration()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L9569"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_steerspeechrecognitionctor",
@@ -14883,11 +14619,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "steerspeechrecognitionctor()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L10043"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_steertimeoutmessage",
+      "label": "steerTimeoutMessage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "syncPageChatFocus",
+      "file_type": "code",
+      "norm_label": "steertimeoutmessage()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L9947"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_steervoicecontext",
@@ -14895,7 +14643,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "steervoicecontext()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14907,7 +14655,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "steervoiceerrormessage()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14919,7 +14667,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "steervoiceunavailablemessage()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14931,7 +14679,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "stopvoice()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14943,7 +14691,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "submitsteermessage()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14955,7 +14703,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "syncconfigureinputchrome()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14967,7 +14715,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "syncpagechatchrome()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -14979,11 +14727,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "syncpagechatexpandedwidth()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L9504"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_syncpagechatfocus",
+      "label": "syncPageChatFocus()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "syncPageChatFocus",
+      "file_type": "code",
+      "norm_label": "syncpagechatfocus()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L9850"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_syncpagechatfocusring",
@@ -14991,7 +14751,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "syncpagechatfocusring()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -15003,7 +14763,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "syncpagechatsendbutton()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -15015,7 +14775,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "syncpagechatvisual()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -15027,7 +14787,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "syncsteerqueuehint()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -15039,7 +14799,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "syncvoiceui()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -15051,7 +14811,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "togglesteervoice()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -15063,7 +14823,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "initPageChat",
+      "community_name": "syncPageChatFocus",
       "file_type": "code",
       "norm_label": "unlocksteerchat()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
@@ -15152,6 +14912,30 @@
       "norm_label": "metricbar()",
       "source_file": "src/app/(root)/add-clothes/fitcheck-result.tsx",
       "source_location": "L64"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_addclothesformscreen",
+      "label": "AddClothesFormScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "addclothesformscreen()",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L248"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_text",
+      "label": "Text()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "text()",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L39"
     },
     {
       "id": "src_app_root_add_clothes_label_result_labelresultscreen",
@@ -19426,18 +19210,6 @@
       "source_location": "L6909"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_syncpagechatfocus",
-      "label": "syncPageChatFocus()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "setLiveState",
-      "file_type": "code",
-      "norm_label": "syncpagechatfocus()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L9850"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_browser_syncplaceholderresizehandles",
       "label": "syncPlaceholderResizeHandles()",
       "_callable": true,
@@ -19520,18 +19292,6 @@
       "norm_label": "truncatemiddle()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5967"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_agenthasworkinflight",
-      "label": "agentHasWorkInFlight()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "initGlobalBar",
-      "file_type": "code",
-      "norm_label": "agenthasworkinflight()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L10536"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_agentstatustext",
@@ -19904,30 +19664,6 @@
       "norm_label": "startagentstatuspoll()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L10646"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_steerqueuedbehindgeneration",
-      "label": "steerQueuedBehindGeneration()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "initGlobalBar",
-      "file_type": "code",
-      "norm_label": "steerqueuedbehindgeneration()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L9569"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_steertimeoutmessage",
-      "label": "steerTimeoutMessage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "initGlobalBar",
-      "file_type": "code",
-      "norm_label": "steertimeoutmessage()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L9947"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_stopagentstatuspoll",
@@ -21802,6 +21538,30 @@
       "source_location": "L52"
     },
     {
+      "id": "src_shared_ui_toast_toastcard",
+      "label": "ToastCard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "toastcard()",
+      "source_file": "src/shared/ui/Toast.tsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "src_shared_ui_toast_toastprovider",
+      "label": "ToastProvider()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "toastprovider()",
+      "source_file": "src/shared/ui/Toast.tsx",
+      "source_location": "L53"
+    },
+    {
       "id": "src_app_root_ai_features_planner_chat_callplanner",
       "label": "callPlanner()",
       "_callable": true,
@@ -23050,6 +22810,30 @@
       "source_location": "L3347"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_collectmanualcontextpieces",
+      "label": "collectManualContextPieces()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "applyEditing",
+      "file_type": "code",
+      "norm_label": "collectmanualcontextpieces()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L1035"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_collectmanualcontextpieces_walk",
+      "label": "walk()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "applyEditing",
+      "file_type": "code",
+      "norm_label": "walk()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L1037"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_contextelementformanualedit",
       "label": "contextElementForManualEdit()",
       "_callable": true,
@@ -23218,6 +23002,30 @@
       "source_location": "L3658"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_ismeaningfulmanualcontextpiece",
+      "label": "isMeaningfulManualContextPiece()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "applyEditing",
+      "file_type": "code",
+      "norm_label": "ismeaningfulmanualcontextpiece()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L1059"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_isusefulmanualeditcontext",
+      "label": "isUsefulManualEditContext()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "applyEditing",
+      "file_type": "code",
+      "norm_label": "isusefulmanualeditcontext()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L1029"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_maybeshowfirstsavetoast",
       "label": "maybeShowFirstSaveToast()",
       "_callable": true,
@@ -23314,6 +23122,18 @@
       "source_location": "L4432"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_parsesourceloc",
+      "label": "parseSourceLoc()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "applyEditing",
+      "file_type": "code",
+      "norm_label": "parsesourceloc()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L3609"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_querymanualeditref",
       "label": "queryManualEditRef()",
       "_callable": true,
@@ -23360,6 +23180,18 @@
       "norm_label": "sanitizedcontextouterhtml()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L953"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_sourcehintforelement",
+      "label": "sourceHintForElement()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "applyEditing",
+      "file_type": "code",
+      "norm_label": "sourcehintforelement()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L3593"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_stripmanualeditruntimestate",
@@ -23806,18 +23638,6 @@
       "source_location": "L26"
     },
     {
-      "id": "src_shared_ui_navigation_swipetabwrapper_swipetabwrapper",
-      "label": "SwipeTabWrapper()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "wardrobe.tsx",
-      "file_type": "code",
-      "norm_label": "swipetabwrapper()",
-      "source_file": "src/shared/ui/navigation/SwipeTabWrapper.tsx",
-      "source_location": "L9"
-    },
-    {
       "id": "src_shared_ui_skeleton_skeleton",
       "label": "Skeleton()",
       "_callable": true,
@@ -23948,6 +23768,18 @@
       "norm_label": "targetsignature()",
       "source_file": ".agents/skills/impeccable/scripts/live/generation-preflight.mjs",
       "source_location": "L20"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_server_preparegenerateeventforlease",
+      "label": "prepareGenerateEventForLease()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 380,
+      "community_name": "generation-preflight.mjs",
+      "file_type": "code",
+      "norm_label": "preparegenerateeventforlease()",
+      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
+      "source_location": "L248"
     },
     {
       "id": "agents_skills_impeccable_scripts_context_appendstalenessdirective",
@@ -24142,18 +23974,6 @@
       "source_location": "L4349"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkpagelayout",
-      "label": "checkPageLayout()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 383,
-      "community_name": "detect-html.mjs",
-      "file_type": "code",
-      "norm_label": "checkpagelayout()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L4136"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkpagequalitydom",
       "label": "checkPageQualityDOM()",
       "_callable": true,
@@ -24190,18 +24010,6 @@
       "source_location": "L4337"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_iscardlike",
-      "label": "isCardLike()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 383,
-      "community_name": "detect-html.mjs",
-      "file_type": "code",
-      "norm_label": "iscardlike()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L4116"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_iscreamcolor",
       "label": "isCreamColor()",
       "_callable": true,
@@ -24212,30 +24020,6 @@
       "norm_label": "iscreamcolor()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L4315"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_parseradiustopx",
-      "label": "parseRadiusToPx()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 383,
-      "community_name": "detect-html.mjs",
-      "file_type": "code",
-      "norm_label": "parseradiustopx()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1970"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_resolveborderradiuspx",
-      "label": "resolveBorderRadiusPx()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 383,
-      "community_name": "detect-html.mjs",
-      "file_type": "code",
-      "norm_label": "resolveborderradiuspx()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L1984"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_scopedignoreactive",
@@ -25318,6 +25102,30 @@
       "source_location": "L6107"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_applyparamdefaults",
+      "label": "applyParamDefaults()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "applyparamdefaults()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L3192"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_applyparamvalue",
+      "label": "applyParamValue()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "applyparamvalue()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L3167"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_applyplaceholderdimensions",
       "label": "applyPlaceholderDimensions()",
       "_callable": true,
@@ -25352,6 +25160,18 @@
       "norm_label": "buildinsertplaceholdersnapshotfromdom()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2082"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_buildparamspanel",
+      "label": "buildParamsPanel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "buildparamspanel()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L3207"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_buildpickedanchorsnapshot",
@@ -25414,6 +25234,18 @@
       "source_location": "L8994"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_closedclippath",
+      "label": "closedClipPath()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "closedclippath()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L4783"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_compileshader",
       "label": "compileShader()",
       "_callable": true,
@@ -25448,6 +25280,18 @@
       "norm_label": "completeparameterpublication()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4890"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_dismisstoast",
+      "label": "dismissToast()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "dismisstoast()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L9060"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_ensureinsertplaceholder",
@@ -25534,6 +25378,18 @@
       "source_location": "L5154"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_formatrangevalue",
+      "label": "formatRangeValue()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "formatrangevalue()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L3200"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_getmountedsveltecomponentanchor",
       "label": "getMountedSvelteComponentAnchor()",
       "_callable": true,
@@ -25580,6 +25436,18 @@
       "norm_label": "handleinsertcreate()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L7656"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_hideparamspanel",
+      "label": "hideParamsPanel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "hideparamspanel()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L4839"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_hideshaderoverlay",
@@ -25714,6 +25582,18 @@
       "source_location": "L5276"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_mountedparametercount",
+      "label": "mountedParameterCount()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "mountedparametercount()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L4879"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_normalizepagepath",
       "label": "normalizePagePath()",
       "_callable": true,
@@ -25738,6 +25618,18 @@
       "source_location": "L8710"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_opentunepopover",
+      "label": "openTunePopover()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "opentunepopover()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L4918"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_pagematchescurrent",
       "label": "pageMatchesCurrent()",
       "_callable": true,
@@ -25750,6 +25642,18 @@
       "source_location": "L8768"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_parsevariantparams",
+      "label": "parseVariantParams()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "parsevariantparams()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L3145"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_pickvariantcontent",
       "label": "pickVariantContent()",
       "_callable": true,
@@ -25760,6 +25664,18 @@
       "norm_label": "pickvariantcontent()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L6536"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_popoverdirection",
+      "label": "popoverDirection()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "popoverdirection()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L4767"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_positionannotoverlay",
@@ -25784,6 +25700,18 @@
       "norm_label": "positionbar()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1108"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_positionparamspanel",
+      "label": "positionParamsPanel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "positionparamspanel()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L4797"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_positionshaderoverlay",
@@ -26002,6 +25930,30 @@
       "source_location": "L8827"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_setclippath",
+      "label": "setClipPath()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "setclippath()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L4787"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_showbar",
+      "label": "showBar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "showbar()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L1153"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_showmounterrorcard",
       "label": "showMountErrorCard()",
       "_callable": true,
@@ -26024,6 +25976,18 @@
       "norm_label": "showorupdatecyclingbar()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2160"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_showparamspanel",
+      "label": "showParamsPanel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "showparamspanel()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L4829"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_showshaderbitmapfallback",
@@ -26132,6 +26096,42 @@
       "norm_label": "updateselectedelement()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L6502"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_updatevariantstatestylesheet",
+      "label": "updateVariantStateStylesheet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "updatevariantstatestylesheet()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L6585"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_variantparamdecls",
+      "label": "variantParamDecls()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "variantparamdecls()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L6575"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_variantstateselector",
+      "label": "variantStateSelector()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "resumeSession",
+      "file_type": "code",
+      "norm_label": "variantstateselector()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L6564"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_waitforsveltecomponenttargetandretry",
@@ -26350,6 +26350,18 @@
       "source_location": "L13"
     },
     {
+      "id": "src_shared_ui_navigation_swipetabwrapper_swipetabwrapper",
+      "label": "SwipeTabWrapper()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 40,
+      "community_name": "explore.tsx",
+      "file_type": "code",
+      "norm_label": "swipetabwrapper()",
+      "source_file": "src/shared/ui/navigation/SwipeTabWrapper.tsx",
+      "source_location": "L9"
+    },
+    {
       "id": "src_shared_utils_timing_debounce",
       "label": "debounce()",
       "_callable": true,
@@ -26470,6 +26482,30 @@
       "source_location": "L14"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_poll_lanes_eventpriority",
+      "label": "eventPriority()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 403,
+      "community_name": "handlePollPost",
+      "file_type": "code",
+      "norm_label": "eventpriority()",
+      "source_file": ".agents/skills/impeccable/scripts/live/poll-lanes.mjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_poll_lanes_selectavailablependingevent",
+      "label": "selectAvailablePendingEvent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 403,
+      "community_name": "handlePollPost",
+      "file_type": "code",
+      "norm_label": "selectavailablependingevent()",
+      "source_file": ".agents/skills/impeccable/scripts/live/poll-lanes.mjs",
+      "source_location": "L8"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_server_acknowledgependingevent",
       "label": "acknowledgePendingEvent()",
       "_callable": true,
@@ -26492,18 +26528,6 @@
       "norm_label": "agentpollingconnected()",
       "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
       "source_location": "L581"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_server_broadcast",
-      "label": "broadcast()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 403,
-      "community_name": "handlePollPost",
-      "file_type": "code",
-      "norm_label": "broadcast()",
-      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
-      "source_location": "L596"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_server_broadcastagentpollingifchanged",
@@ -26614,54 +26638,6 @@
       "source_location": "L1142"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_server_preparegenerateeventforlease",
-      "label": "prepareGenerateEventForLease()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 403,
-      "community_name": "handlePollPost",
-      "file_type": "code",
-      "norm_label": "preparegenerateeventforlease()",
-      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
-      "source_location": "L248"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_server_recordagentphase",
-      "label": "recordAgentPhase()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 403,
-      "community_name": "handlePollPost",
-      "file_type": "code",
-      "norm_label": "recordagentphase()",
-      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
-      "source_location": "L271"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_server_recordgeneratedelivery",
-      "label": "recordGenerateDelivery()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 403,
-      "community_name": "handlePollPost",
-      "file_type": "code",
-      "norm_label": "recordgeneratedelivery()",
-      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
-      "source_location": "L239"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_server_recordmanualeditactivity",
-      "label": "recordManualEditActivity()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 403,
-      "community_name": "handlePollPost",
-      "file_type": "code",
-      "norm_label": "recordmanualeditactivity()",
-      "source_file": ".agents/skills/impeccable/scripts/live-server.mjs",
-      "source_location": "L603"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_live_server_releasependingevent",
       "label": "releasePendingEvent()",
       "_callable": true,
@@ -26756,42 +26732,6 @@
       "norm_label": "quickchiprow()",
       "source_file": "src/components/chat/QuickChipRow.tsx",
       "source_location": "L11"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkcreampalette",
-      "label": "checkCreamPalette()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 407,
-      "community_name": "checkCreamPalette",
-      "file_type": "code",
-      "norm_label": "checkcreampalette()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5591"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_creamfromclasslist",
-      "label": "creamFromClassList()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 407,
-      "community_name": "checkCreamPalette",
-      "file_type": "code",
-      "norm_label": "creamfromclasslist()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5579"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_iscreamcolor",
-      "label": "isCreamColor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 407,
-      "community_name": "checkCreamPalette",
-      "file_type": "code",
-      "norm_label": "iscreamcolor()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5557"
     },
     {
       "id": "src_components_chat_aibubble_aibubble",
@@ -26890,232 +26830,112 @@
       "source_location": "L4"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_poll_lanes_eventpriority",
-      "label": "eventPriority()",
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_clippedbyinset",
+      "label": "clippedByInset()",
       "_callable": true,
       "_origin": "ast",
       "community": 413,
-      "community_name": "selectAvailablePendingEvent",
+      "community_name": "isScreenReaderOnlyTextStyle",
       "file_type": "code",
-      "norm_label": "eventpriority()",
-      "source_file": ".agents/skills/impeccable/scripts/live/poll-lanes.mjs",
-      "source_location": "L1"
+      "norm_label": "clippedbyinset()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5915"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_poll_lanes_selectavailablependingevent",
-      "label": "selectAvailablePendingEvent()",
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_clippedbyrect",
+      "label": "clippedByRect()",
       "_callable": true,
       "_origin": "ast",
       "community": 413,
-      "community_name": "selectAvailablePendingEvent",
+      "community_name": "isScreenReaderOnlyTextStyle",
       "file_type": "code",
-      "norm_label": "selectavailablependingevent()",
-      "source_file": ".agents/skills/impeccable/scripts/live/poll-lanes.mjs",
-      "source_location": "L8"
+      "norm_label": "clippedbyrect()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5927"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_buildsvelteexpressiontextmap",
-      "label": "buildSvelteExpressionTextMap()",
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_expandboxshorthand",
+      "label": "expandBoxShorthand()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 413,
+      "community_name": "isScreenReaderOnlyTextStyle",
+      "file_type": "code",
+      "norm_label": "expandboxshorthand()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5908"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_firstmetriclengthpx",
+      "label": "firstMetricLengthPx()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 413,
+      "community_name": "isScreenReaderOnlyTextStyle",
+      "file_type": "code",
+      "norm_label": "firstmetriclengthpx()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5900"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_isscreenreaderonlytextstyle",
+      "label": "isScreenReaderOnlyTextStyle()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 413,
+      "community_name": "isScreenReaderOnlyTextStyle",
+      "file_type": "code",
+      "norm_label": "isscreenreaderonlytextstyle()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5937"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_metriclengthpx",
+      "label": "metricLengthPx()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 413,
+      "community_name": "isScreenReaderOnlyTextStyle",
+      "file_type": "code",
+      "norm_label": "metriclengthpx()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5894"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkcreampalette",
+      "label": "checkCreamPalette()",
       "_callable": true,
       "_origin": "ast",
       "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
+      "community_name": "checkCreamPalette",
       "file_type": "code",
-      "norm_label": "buildsvelteexpressiontextmap()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L6386"
+      "norm_label": "checkcreampalette()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5591"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_buildsveltepropvaluesfromliveelement",
-      "label": "buildSveltePropValuesFromLiveElement()",
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_creamfromclasslist",
+      "label": "creamFromClassList()",
       "_callable": true,
       "_origin": "ast",
       "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
+      "community_name": "checkCreamPalette",
       "file_type": "code",
-      "norm_label": "buildsveltepropvaluesfromliveelement()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5416"
+      "norm_label": "creamfromclasslist()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5579"
     },
     {
-      "id": "agents_skills_impeccable_scripts_live_browser_buildsveltepropvaluesv2",
-      "label": "buildSveltePropValuesV2()",
+      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_iscreamcolor",
+      "label": "isCreamColor()",
       "_callable": true,
       "_origin": "ast",
       "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
+      "community_name": "checkCreamPalette",
       "file_type": "code",
-      "norm_label": "buildsveltepropvaluesv2()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5440"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_clonewithoutelements",
-      "label": "cloneWithoutElements()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "clonewithoutelements()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5583"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_collecttextnodes",
-      "label": "collectTextNodes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "collecttextnodes()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L6443"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_collectvisibletexts",
-      "label": "collectVisibleTexts()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "collectvisibletexts()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5514"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_cssescapeident",
-      "label": "cssEscapeIdent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "cssescapeident()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5510"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_elementmatchesoriginalmarkup",
-      "label": "elementMatchesOriginalMarkup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "elementmatchesoriginalmarkup()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5042"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_escaperegexp",
-      "label": "escapeRegExp()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "escaperegexp()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L6459"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_expressiontextmatcher",
-      "label": "expressionTextMatcher()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "expressiontextmatcher()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L6429"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_findliveelementfororiginalmarkup",
-      "label": "findLiveElementForOriginalMarkup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "findliveelementfororiginalmarkup()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5086"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_findliveelementfromanchorsnapshot",
-      "label": "findLiveElementFromAnchorSnapshot()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "findliveelementfromanchorsnapshot()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5063"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_isusableinjectionanchor",
-      "label": "isUsableInjectionAnchor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "isusableinjectionanchor()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5034"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_normalizeelementclassname",
-      "label": "normalizeElementClassName()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "normalizeelementclassname()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5012"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_normalizepreviewtext",
-      "label": "normalizePreviewText()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "normalizepreviewtext()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L6455"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_parseoriginalmarkupelement",
-      "label": "parseOriginalMarkupElement()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "parseoriginalmarkupelement()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5006"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_browser_resolveliveinjectionanchor",
-      "label": "resolveLiveInjectionAnchor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 415,
-      "community_name": "resolveLiveInjectionAnchor",
-      "file_type": "code",
-      "norm_label": "resolveliveinjectionanchor()",
-      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
-      "source_location": "L5126"
+      "norm_label": "iscreamcolor()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "source_location": "L5557"
     },
     {
       "id": "debug_proxy_run",
@@ -27514,100 +27334,328 @@
       "source_location": "L258"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_bordercolorsfromstyle",
-      "label": "borderColorsFromStyle()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_buildhtmlpatterncorpora",
+      "label": "buildHtmlPatternCorpora()",
       "_callable": true,
       "_origin": "ast",
-      "community": 430,
-      "community_name": "checkElementGptBorderShadowDOM",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
       "file_type": "code",
-      "norm_label": "bordercolorsfromstyle()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5723"
+      "norm_label": "buildhtmlpatterncorpora()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1471"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_borderwidthsfromstyle",
-      "label": "borderWidthsFromStyle()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkhtmlpatterns",
+      "label": "checkHtmlPatterns()",
       "_callable": true,
       "_origin": "ast",
-      "community": 430,
-      "community_name": "checkElementGptBorderShadowDOM",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
       "file_type": "code",
-      "norm_label": "borderwidthsfromstyle()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5714"
+      "norm_label": "checkhtmlpatterns()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1499"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkelementgptbordershadow",
-      "label": "checkElementGptBorderShadow()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectcsscustomprops",
+      "label": "collectCssCustomProps()",
       "_callable": true,
       "_origin": "ast",
-      "community": 430,
-      "community_name": "checkElementGptBorderShadowDOM",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
       "file_type": "code",
-      "norm_label": "checkelementgptbordershadow()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5732"
+      "norm_label": "collectcsscustomprops()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L632"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkelementgptbordershadowdom",
-      "label": "checkElementGptBorderShadowDOM()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectmarqueekeyframes",
+      "label": "collectMarqueeKeyframes()",
       "_callable": true,
       "_origin": "ast",
-      "community": 430,
-      "community_name": "checkElementGptBorderShadowDOM",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
       "file_type": "code",
-      "norm_label": "checkelementgptbordershadowdom()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5736"
+      "norm_label": "collectmarqueekeyframes()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1080"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkgptthinborderwideshadow",
-      "label": "checkGptThinBorderWideShadow()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_collectpulsekeyframes",
+      "label": "collectPulseKeyframes()",
       "_callable": true,
       "_origin": "ast",
-      "community": 430,
-      "community_name": "checkElementGptBorderShadowDOM",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
       "file_type": "code",
-      "norm_label": "checkgptthinborderwideshadow()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5702"
+      "norm_label": "collectpulsekeyframes()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1147"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_csscoloralpha",
-      "label": "cssColorAlpha()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_csslengthtopx",
+      "label": "cssLengthToPx()",
       "_callable": true,
       "_origin": "ast",
-      "community": 430,
-      "community_name": "checkElementGptBorderShadowDOM",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
       "file_type": "code",
-      "norm_label": "csscoloralpha()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5696"
+      "norm_label": "csslengthtopx()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L863"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_shadowlayeralpha",
-      "label": "shadowLayerAlpha()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_csstexthasdarkrootbg",
+      "label": "cssTextHasDarkRootBg()",
       "_callable": true,
       "_origin": "ast",
-      "community": 430,
-      "community_name": "checkElementGptBorderShadowDOM",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
       "file_type": "code",
-      "norm_label": "shadowlayeralpha()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5670"
+      "norm_label": "csstexthasdarkrootbg()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L654"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_shadowmaxblurpx",
-      "label": "shadowMaxBlurPx()",
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_enclosingcssselector",
+      "label": "enclosingCssSelector()",
       "_callable": true,
       "_origin": "ast",
-      "community": 430,
-      "community_name": "checkElementGptBorderShadowDOM",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
       "file_type": "code",
-      "norm_label": "shadowmaxblurpx()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
-      "source_location": "L5679"
+      "norm_label": "enclosingcssselector()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L681"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_extractshadowlengths",
+      "label": "extractShadowLengths()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "extractshadowlengths()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L576"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_findshadowcolor",
+      "label": "findShadowColor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "findshadowcolor()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L558"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_indexinsourceranges",
+      "label": "indexInSourceRanges()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "indexinsourceranges()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1256"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_infiniteanimationnames",
+      "label": "infiniteAnimationNames()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "infiniteanimationnames()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1179"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_isrounddotradius",
+      "label": "isRoundDotRadius()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "isrounddotradius()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1200"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_iszerooffset",
+      "label": "isZeroOffset()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "iszerooffset()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L870"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_landmarksourceranges",
+      "label": "landmarkSourceRanges()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "landmarksourceranges()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1238"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_parsecssdeclblock",
+      "label": "parseCssDeclBlock()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "parsecssdeclblock()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L851"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_resolvevarrefs",
+      "label": "resolveVarRefs()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "resolvevarrefs()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L2323"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforglow",
+      "label": "scanCssTextForGlow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "scancsstextforglow()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L695"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforgridbackground",
+      "label": "scanCssTextForGridBackground()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "scancsstextforgridbackground()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L732"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforinsetstripe",
+      "label": "scanCssTextForInsetStripe()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "scancsstextforinsetstripe()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1015"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextformarquee",
+      "label": "scanCssTextForMarquee()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "scancsstextformarquee()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1120"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforpseudostripe",
+      "label": "scanCssTextForPseudoStripe()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "scancsstextforpseudostripe()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L880"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforpulsingdot",
+      "label": "scanCssTextForPulsingDot()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "scancsstextforpulsingdot()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1305"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scancsstextforradialhalo",
+      "label": "scanCssTextForRadialHalo()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "scancsstextforradialhalo()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L776"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_scanhtmlforshapeassembledillustration",
+      "label": "scanHtmlForShapeAssembledIllustration()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "scanhtmlforshapeassembledillustration()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1402"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_selectorhitslandmark",
+      "label": "selectorHitsLandmark()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "selectorhitslandmark()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1265"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_rules_checks_stripreducedmotionblocks",
+      "label": "stripReducedMotionBlocks()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 432,
+      "community_name": "checkHtmlPatterns",
+      "file_type": "code",
+      "norm_label": "stripreducedmotionblocks()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
+      "source_location": "L1214"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_detect_antipatterns_browser_checkelementaipalettedom",
@@ -29746,18 +29794,6 @@
       "source_location": "L688"
     },
     {
-      "id": "src_app_root_plan_outfit_planoutfitscreen",
-      "label": "PlanOutfitScreen()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "planoutfitscreen()",
-      "source_file": "src/app/(root)/plan-outfit.tsx",
-      "source_location": "L36"
-    },
-    {
       "id": "src_app_root_post_id_postdetailscreen",
       "label": "PostDetailScreen()",
       "_callable": true,
@@ -29830,66 +29866,6 @@
       "source_location": "L8"
     },
     {
-      "id": "src_shared_ui_plannedoutfitbanner_plannedoutfitbanner",
-      "label": "PlannedOutfitBanner()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "plannedoutfitbanner()",
-      "source_file": "src/shared/ui/PlannedOutfitBanner.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_shared_ui_toast_store_showtoast",
-      "label": "showToast()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "showtoast()",
-      "source_file": "src/shared/ui/toast-store.ts",
-      "source_location": "L43"
-    },
-    {
-      "id": "src_shared_ui_toast_toastcard",
-      "label": "ToastCard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "toastcard()",
-      "source_file": "src/shared/ui/Toast.tsx",
-      "source_location": "L18"
-    },
-    {
-      "id": "src_shared_ui_toast_toastprovider",
-      "label": "ToastProvider()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "toastprovider()",
-      "source_file": "src/shared/ui/Toast.tsx",
-      "source_location": "L53"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkborders",
-      "label": "checkBorders()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "parseAnyColor",
-      "file_type": "code",
-      "norm_label": "checkborders()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L36"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkcolors",
       "label": "checkColors()",
       "_callable": true,
@@ -29912,30 +29888,6 @@
       "norm_label": "checkelementaipalettedom()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L2729"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementborders",
-      "label": "checkElementBorders()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "parseAnyColor",
-      "file_type": "code",
-      "norm_label": "checkelementborders()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L3521"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementbordersdom",
-      "label": "checkElementBordersDOM()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "parseAnyColor",
-      "file_type": "code",
-      "norm_label": "checkelementbordersdom()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L2031"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementcolors",
@@ -30022,18 +29974,6 @@
       "source_location": "L2194"
     },
     {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkelementpseudostripedom",
-      "label": "checkElementPseudoStripeDOM()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "parseAnyColor",
-      "file_type": "code",
-      "norm_label": "checkelementpseudostripedom()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L2061"
-    },
-    {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_checkglow",
       "label": "checkGlow()",
       "_callable": true,
@@ -30104,30 +30044,6 @@
       "norm_label": "isemojionlytext()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L114"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_isstatuscontextelement",
-      "label": "isStatusContextElement()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "parseAnyColor",
-      "file_type": "code",
-      "norm_label": "isstatuscontextelement()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L2023"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_rules_checks_istabcontextelement",
-      "label": "isTabContextElement()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "parseAnyColor",
-      "file_type": "code",
-      "norm_label": "istabcontextelement()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
-      "source_location": "L2002"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_rules_checks_parsecolorresolved",
@@ -30368,18 +30284,6 @@
       "norm_label": "hwbtorgb()",
       "source_file": ".agents/skills/impeccable/scripts/detector/shared/color.mjs",
       "source_location": "L268"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_detector_shared_color_isneutralcolor",
-      "label": "isNeutralColor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 52,
-      "community_name": "parseAnyColor",
-      "file_type": "code",
-      "norm_label": "isneutralcolor()",
-      "source_file": ".agents/skills/impeccable/scripts/detector/shared/color.mjs",
-      "source_location": "L3"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_shared_color_isnopaintcolorvalue",
@@ -30766,6 +30670,18 @@
       "source_location": "L50"
     },
     {
+      "id": "src_app_root_plan_outfit_planoutfitscreen",
+      "label": "PlanOutfitScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "planoutfitscreen()",
+      "source_file": "src/app/(root)/plan-outfit.tsx",
+      "source_location": "L36"
+    },
+    {
       "id": "src_features_profile_api_usedeleteaccount_usedeleteaccount",
       "label": "useDeleteAccount()",
       "_callable": true,
@@ -30838,6 +30754,30 @@
       "source_location": "L28"
     },
     {
+      "id": "src_features_wardrobe_api_usewardrobesummary_formatperiodlabel",
+      "label": "formatPeriodLabel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "formatperiodlabel()",
+      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
+      "source_location": "L104"
+    },
+    {
+      "id": "src_features_wardrobe_api_usewardrobesummary_usewardrobesummary",
+      "label": "useWardrobeSummary()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "usewardrobesummary()",
+      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
+      "source_location": "L21"
+    },
+    {
       "id": "src_shared_storage_namespacedstorage_registerstorerehydration",
       "label": "registerStoreRehydration()",
       "_callable": true,
@@ -30908,6 +30848,30 @@
       "norm_label": "syncstoreswithuser()",
       "source_file": "src/shared/storage/namespacedStorage.ts",
       "source_location": "L29"
+    },
+    {
+      "id": "src_shared_ui_plannedoutfitbanner_plannedoutfitbanner",
+      "label": "PlannedOutfitBanner()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "plannedoutfitbanner()",
+      "source_file": "src/shared/ui/PlannedOutfitBanner.tsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_shared_ui_toast_store_showtoast",
+      "label": "showToast()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "showtoast()",
+      "source_file": "src/shared/ui/toast-store.ts",
+      "source_location": "L43"
     },
     {
       "id": "agents_skills_impeccable_scripts_context_resolveprojectroot",
@@ -32062,30 +32026,6 @@
       "source_location": "L556"
     },
     {
-      "id": "src_app_root_add_clothes_form_addclothesformscreen",
-      "label": "AddClothesFormScreen()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "addclothesformscreen()",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L248"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_text",
-      "label": "Text()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "text()",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L39"
-    },
-    {
       "id": "src_app_root_add_clothes_wardrobe_select_wardrobeselectscreen",
       "label": "WardrobeSelectScreen()",
       "_callable": true,
@@ -32144,30 +32084,6 @@
       "norm_label": "uselogwears()",
       "source_file": "src/features/wardrobe/api/useLogWears.ts",
       "source_location": "L7"
-    },
-    {
-      "id": "src_features_wardrobe_api_usewardrobesummary_formatperiodlabel",
-      "label": "formatPeriodLabel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "formatperiodlabel()",
-      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
-      "source_location": "L104"
-    },
-    {
-      "id": "src_features_wardrobe_api_usewardrobesummary_usewardrobesummary",
-      "label": "useWardrobeSummary()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "usewardrobesummary()",
-      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
-      "source_location": "L21"
     },
     {
       "id": "src_features_wardrobe_model_user_wardrobe_store_generateuuid",
@@ -35182,6 +35098,18 @@
       "source_location": "L147"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_accepteddomalreadyclean",
+      "label": "acceptedDomAlreadyClean()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "mountSvelteComponentVariant",
+      "file_type": "code",
+      "norm_label": "accepteddomalreadyclean()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L8581"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_applyoriginalattrstosvelteanchor",
       "label": "applyOriginalAttrsToSvelteAnchor()",
       "_callable": true,
@@ -35240,6 +35168,30 @@
       "norm_label": "detectdevserverbase()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5206"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_ensureaccepteddomclean",
+      "label": "ensureAcceptedDomClean()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "mountSvelteComponentVariant",
+      "file_type": "code",
+      "norm_label": "ensureaccepteddomclean()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L8588"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_findacceptedruntimewrappers",
+      "label": "findAcceptedRuntimeWrappers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "mountSvelteComponentVariant",
+      "file_type": "code",
+      "norm_label": "findacceptedruntimewrappers()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L8614"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_importfirstreachable",
@@ -35302,6 +35254,18 @@
       "source_location": "L5252"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_browser_reloadaftermissingaccepteddom",
+      "label": "reloadAfterMissingAcceptedDom()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "mountSvelteComponentVariant",
+      "file_type": "code",
+      "norm_label": "reloadaftermissingaccepteddom()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L8644"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_live_browser_removesveltecomponentvariantstyle",
       "label": "removeSvelteComponentVariantStyle()",
       "_callable": true,
@@ -35336,6 +35300,30 @@
       "norm_label": "reportvariantmountfailed()",
       "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
       "source_location": "L5951"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_restoreaccepteddomfromsnapshot",
+      "label": "restoreAcceptedDomFromSnapshot()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "mountSvelteComponentVariant",
+      "file_type": "code",
+      "norm_label": "restoreaccepteddomfromsnapshot()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L8622"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_live_browser_scheduleacceptcleanup",
+      "label": "scheduleAcceptCleanup()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "mountSvelteComponentVariant",
+      "file_type": "code",
+      "norm_label": "scheduleacceptcleanup()",
+      "source_file": ".agents/skills/impeccable/scripts/live-browser.js",
+      "source_location": "L8537"
     },
     {
       "id": "agents_skills_impeccable_scripts_live_browser_sendevent",
@@ -37963,7 +37951,7 @@
       "file_type": "code",
       "norm_label": "promptinput()",
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L35"
+      "source_location": "L36"
     },
     {
       "id": "src_features_chat_ui_blurheader_blurheader",
@@ -39800,6 +39788,18 @@
       "norm_label": "checkpagetypography()",
       "source_file": ".agents/skills/impeccable/scripts/detector/rules/checks.mjs",
       "source_location": "L4051"
+    },
+    {
+      "id": "agents_skills_impeccable_scripts_detector_shared_color_isneutralcolor",
+      "label": "isNeutralColor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "detect-text.mjs",
+      "file_type": "code",
+      "norm_label": "isneutralcolor()",
+      "source_file": ".agents/skills/impeccable/scripts/detector/shared/color.mjs",
+      "source_location": "L3"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_shared_fonts_extractgooglefontfamilies",
@@ -44965,28 +44965,6 @@
       "source_location": "L42"
     },
     {
-      "id": "package_dependencies_expo_auth_session",
-      "label": "expo-auth-session",
-      "_origin": "ast",
-      "community": 195,
-      "community_name": "expo-auth-session",
-      "file_type": "code",
-      "norm_label": "expo-auth-session",
-      "source_file": "package.json",
-      "source_location": "L43"
-    },
-    {
-      "id": "expo_auth_session",
-      "label": "expo-auth-session",
-      "_origin": "ast",
-      "community": 195,
-      "community_name": "expo-auth-session",
-      "file_type": "concept",
-      "norm_label": "expo-auth-session",
-      "source_file": "package.json",
-      "source_location": "L43"
-    },
-    {
       "id": "src_features_chat_model_chattransport",
       "label": "chatTransport.ts",
       "_origin": "ast",
@@ -45777,6 +45755,72 @@
       "norm_label": "fitcheck-result.tsx",
       "source_file": "src/app/(root)/add-clothes/fitcheck-result.tsx",
       "source_location": "L1"
+    },
+    {
+      "id": "src_app_root_add_clothes_form",
+      "label": "form.tsx",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "form.tsx",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_categories",
+      "label": "CATEGORIES",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "categories",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L140"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_color_options",
+      "label": "COLOR_OPTIONS",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "color_options",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L192"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_occasions",
+      "label": "OCCASIONS",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "occasions",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L161"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_seasons",
+      "label": "SEASONS",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "seasons",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L183"
+    },
+    {
+      "id": "src_app_root_add_clothes_form_subcategory_map",
+      "label": "SUBCATEGORY_MAP",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "outfit-analysis-store.ts",
+      "file_type": "code",
+      "norm_label": "subcategory_map",
+      "source_file": "src/app/(root)/add-clothes/form.tsx",
+      "source_location": "L150"
     },
     {
       "id": "src_app_root_add_clothes_label_result",
@@ -48694,6 +48738,61 @@
       "source_location": "L32"
     },
     {
+      "id": "src_shared_ui_toast",
+      "label": "Toast.tsx",
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "toast.tsx",
+      "source_file": "src/shared/ui/Toast.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_shared_ui_toast_store",
+      "label": "toast-store.ts",
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "toast-store.ts",
+      "source_file": "src/shared/ui/toast-store.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_shared_ui_toast_store_usetoaststore",
+      "label": "useToastStore",
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "usetoaststore",
+      "source_file": "src/shared/ui/toast-store.ts",
+      "source_location": "L25"
+    },
+    {
+      "id": "src_shared_ui_toast_styles",
+      "label": "styles",
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "styles",
+      "source_file": "src/shared/ui/Toast.tsx",
+      "source_location": "L65"
+    },
+    {
+      "id": "src_shared_ui_toast_toast_colors",
+      "label": "TOAST_COLORS",
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "app/_layout.tsx",
+      "file_type": "code",
+      "norm_label": "toast_colors",
+      "source_file": "src/shared/ui/Toast.tsx",
+      "source_location": "L12"
+    },
+    {
       "id": "src_app_root_ai_features_planner_chat",
       "label": "planner-chat.tsx",
       "_origin": "ast",
@@ -50185,17 +50284,6 @@
       "source_location": "L40"
     },
     {
-      "id": "src_shared_ui_navigation_swipetabwrapper",
-      "label": "SwipeTabWrapper.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "wardrobe.tsx",
-      "file_type": "code",
-      "norm_label": "swipetabwrapper.tsx",
-      "source_file": "src/shared/ui/navigation/SwipeTabWrapper.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "src_shared_ui_skeleton",
       "label": "Skeleton.tsx",
       "_origin": "ast",
@@ -51577,6 +51665,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_shared_ui_navigation_swipetabwrapper",
+      "label": "SwipeTabWrapper.tsx",
+      "_origin": "ast",
+      "community": 40,
+      "community_name": "explore.tsx",
+      "file_type": "code",
+      "norm_label": "swipetabwrapper.tsx",
+      "source_file": "src/shared/ui/navigation/SwipeTabWrapper.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_shared_utils_timing",
       "label": "timing.ts",
       "_origin": "ast",
@@ -51726,6 +51825,17 @@
       "source_location": "L1"
     },
     {
+      "id": "agents_skills_impeccable_scripts_live_poll_lanes",
+      "label": "poll-lanes.mjs",
+      "_origin": "ast",
+      "community": 403,
+      "community_name": "handlePollPost",
+      "file_type": "code",
+      "norm_label": "poll-lanes.mjs",
+      "source_file": ".agents/skills/impeccable/scripts/live/poll-lanes.mjs",
+      "source_location": "L1"
+    },
+    {
       "id": "agents_skills_impeccable_scripts_hook",
       "label": "hook.mjs",
       "_origin": "ast",
@@ -51812,6 +51922,28 @@
       "norm_label": "task",
       "source_file": "update_plan.js",
       "source_location": "L26"
+    },
+    {
+      "id": "package_dependencies_expo_auth_session",
+      "label": "expo-auth-session",
+      "_origin": "ast",
+      "community": 407,
+      "community_name": "expo-auth-session",
+      "file_type": "code",
+      "norm_label": "expo-auth-session",
+      "source_file": "package.json",
+      "source_location": "L43"
+    },
+    {
+      "id": "expo_auth_session",
+      "label": "expo-auth-session",
+      "_origin": "ast",
+      "community": 407,
+      "community_name": "expo-auth-session",
+      "file_type": "concept",
+      "norm_label": "expo-auth-session",
+      "source_file": "package.json",
+      "source_location": "L43"
     },
     {
       "id": "src_components_chat_aibubble",
@@ -51978,17 +52110,6 @@
       "node_kind": "heading",
       "norm_label": "no-argument routing: the context-aware menu",
       "source_file": ".agents/skills/impeccable/reference/routing.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "agents_skills_impeccable_scripts_live_poll_lanes",
-      "label": "poll-lanes.mjs",
-      "_origin": "ast",
-      "community": 413,
-      "community_name": "selectAvailablePendingEvent",
-      "file_type": "code",
-      "norm_label": "poll-lanes.mjs",
-      "source_file": ".agents/skills/impeccable/scripts/live/poll-lanes.mjs",
       "source_location": "L1"
     },
     {
@@ -52468,7 +52589,7 @@
       "id": "package_dependencies_babel_preset_expo",
       "label": "babel-preset-expo",
       "_origin": "ast",
-      "community": 431,
+      "community": 430,
       "community_name": "babel-preset-expo",
       "file_type": "code",
       "norm_label": "babel-preset-expo",
@@ -52479,7 +52600,7 @@
       "id": "babel_preset_expo",
       "label": "babel-preset-expo",
       "_origin": "ast",
-      "community": 431,
+      "community": 430,
       "community_name": "babel-preset-expo",
       "file_type": "concept",
       "norm_label": "babel-preset-expo",
@@ -53114,28 +53235,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_app_root_plan_outfit",
-      "label": "plan-outfit.tsx",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "plan-outfit.tsx",
-      "source_file": "src/app/(root)/plan-outfit.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_app_root_plan_outfit_styles",
-      "label": "styles",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "styles",
-      "source_file": "src/app/(root)/plan-outfit.tsx",
-      "source_location": "L537"
-    },
-    {
       "id": "src_app_root_post_id",
       "label": "post/[id].tsx",
       "_origin": "ast",
@@ -53156,17 +53255,6 @@
       "norm_label": "user/[id].tsx",
       "source_file": "src/app/(root)/user/[id].tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "src_features_outfits_model_user_outfits_store_useuseroutfitsstore",
-      "label": "useUserOutfitsStore",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "useuseroutfitsstore",
-      "source_file": "src/features/outfits/model/user-outfits-store.ts",
-      "source_location": "L27"
     },
     {
       "id": "src_features_social_api_usecommunityposts",
@@ -53233,83 +53321,6 @@
       "norm_label": "cloudinary/client.ts",
       "source_file": "src/shared/cloudinary/client.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_shared_ui_plannedoutfitbanner",
-      "label": "PlannedOutfitBanner.tsx",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "plannedoutfitbanner.tsx",
-      "source_file": "src/shared/ui/PlannedOutfitBanner.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_shared_ui_plannedoutfitbanner_styles",
-      "label": "styles",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "styles",
-      "source_file": "src/shared/ui/PlannedOutfitBanner.tsx",
-      "source_location": "L55"
-    },
-    {
-      "id": "src_shared_ui_toast",
-      "label": "Toast.tsx",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "toast.tsx",
-      "source_file": "src/shared/ui/Toast.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_shared_ui_toast_store",
-      "label": "toast-store.ts",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "toast-store.ts",
-      "source_file": "src/shared/ui/toast-store.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_shared_ui_toast_store_usetoaststore",
-      "label": "useToastStore",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "usetoaststore",
-      "source_file": "src/shared/ui/toast-store.ts",
-      "source_location": "L25"
-    },
-    {
-      "id": "src_shared_ui_toast_styles",
-      "label": "styles",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "styles",
-      "source_file": "src/shared/ui/Toast.tsx",
-      "source_location": "L65"
-    },
-    {
-      "id": "src_shared_ui_toast_toast_colors",
-      "label": "TOAST_COLORS",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "useCommunityPosts.ts",
-      "file_type": "code",
-      "norm_label": "toast_colors",
-      "source_file": "src/shared/ui/Toast.tsx",
-      "source_location": "L12"
     },
     {
       "id": "agents_skills_impeccable_scripts_detector_shared_color",
@@ -53422,6 +53433,28 @@
       "source_location": "L1"
     },
     {
+      "id": "src_app_root_plan_outfit",
+      "label": "plan-outfit.tsx",
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "plan-outfit.tsx",
+      "source_file": "src/app/(root)/plan-outfit.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_app_root_plan_outfit_styles",
+      "label": "styles",
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "styles",
+      "source_file": "src/app/(root)/plan-outfit.tsx",
+      "source_location": "L537"
+    },
+    {
       "id": "src_features_outfits_model_user_outfits_store",
       "label": "user-outfits-store.ts",
       "_origin": "ast",
@@ -53431,6 +53464,17 @@
       "norm_label": "user-outfits-store.ts",
       "source_file": "src/features/outfits/model/user-outfits-store.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "src_features_outfits_model_user_outfits_store_useuseroutfitsstore",
+      "label": "useUserOutfitsStore",
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "useuseroutfitsstore",
+      "source_file": "src/features/outfits/model/user-outfits-store.ts",
+      "source_location": "L27"
     },
     {
       "id": "src_features_profile_api_usedeleteaccount",
@@ -53543,6 +53587,28 @@
       "source_location": "L148"
     },
     {
+      "id": "src_features_wardrobe_api_usewardrobesummary",
+      "label": "useWardrobeSummary.ts",
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "usewardrobesummary.ts",
+      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_features_wardrobe_api_usewardrobesummary_default_wardrobe_summary",
+      "label": "DEFAULT_WARDROBE_SUMMARY",
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "default_wardrobe_summary",
+      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
+      "source_location": "L13"
+    },
+    {
       "id": "src_shared_storage_namespacedstorage",
       "label": "storage/namespacedStorage.ts",
       "_origin": "ast",
@@ -53607,6 +53673,28 @@
       "norm_label": "supabase",
       "source_file": "src/shared/supabase/client.ts",
       "source_location": "L69"
+    },
+    {
+      "id": "src_shared_ui_plannedoutfitbanner",
+      "label": "PlannedOutfitBanner.tsx",
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "plannedoutfitbanner.tsx",
+      "source_file": "src/shared/ui/PlannedOutfitBanner.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_shared_ui_plannedoutfitbanner_styles",
+      "label": "styles",
+      "_origin": "ast",
+      "community": 54,
+      "community_name": "storage/namespacedStorage.ts",
+      "file_type": "code",
+      "norm_label": "styles",
+      "source_file": "src/shared/ui/PlannedOutfitBanner.tsx",
+      "source_location": "L55"
     },
     {
       "id": "agents_skills_impeccable_scripts_lib_impeccable_paths",
@@ -53972,72 +54060,6 @@
       "source_file": "@supabase/supabase-js"
     },
     {
-      "id": "src_app_root_add_clothes_form",
-      "label": "form.tsx",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "form.tsx",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_categories",
-      "label": "CATEGORIES",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "categories",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L140"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_color_options",
-      "label": "COLOR_OPTIONS",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "color_options",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L192"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_occasions",
-      "label": "OCCASIONS",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "occasions",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L161"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_seasons",
-      "label": "SEASONS",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "seasons",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L183"
-    },
-    {
-      "id": "src_app_root_add_clothes_form_subcategory_map",
-      "label": "SUBCATEGORY_MAP",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "subcategory_map",
-      "source_file": "src/app/(root)/add-clothes/form.tsx",
-      "source_location": "L150"
-    },
-    {
       "id": "src_app_root_add_clothes_wardrobe_select",
       "label": "wardrobe-select.tsx",
       "_origin": "ast",
@@ -54113,28 +54135,6 @@
       "norm_label": "uselogwears.ts",
       "source_file": "src/features/wardrobe/api/useLogWears.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_features_wardrobe_api_usewardrobesummary",
-      "label": "useWardrobeSummary.ts",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "usewardrobesummary.ts",
-      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_features_wardrobe_api_usewardrobesummary_default_wardrobe_summary",
-      "label": "DEFAULT_WARDROBE_SUMMARY",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "user-wardrobe-store.ts",
-      "file_type": "code",
-      "norm_label": "default_wardrobe_summary",
-      "source_file": "src/features/wardrobe/api/useWardrobeSummary.ts",
-      "source_location": "L13"
     },
     {
       "id": "src_features_wardrobe_model_user_wardrobe_store",
@@ -56422,7 +56422,7 @@
       "file_type": "code",
       "norm_label": "styles",
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L135"
+      "source_location": "L134"
     },
     {
       "id": "src_components_ai_elements_theme_font_family",
@@ -127388,7 +127388,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -127400,7 +127400,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -127412,7 +127412,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -136352,7 +136352,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -177955,7 +177955,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L135",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -177966,7 +177966,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -177977,7 +177977,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/ai-elements/PromptInput.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -189289,5 +189289,5 @@
       "source_file": "assets/images/full-lenght.png"
     }
   ],
-  "built_at_commit": "1f5668493dcea9edbbcb9dbe216caf31f6ac32c6"
+  "built_at_commit": "e9961421c008f6e03ad238e0863f81894a311073"
 }

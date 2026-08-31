@@ -44,7 +44,8 @@ const useNotificationsStore = create<NotificationsStore>((set) => ({
 }));
 
 export function useNotifications() {
-  const { notifications, unreadCount, setNotifications, setUnreadCount } = useNotificationsStore();
+  const notifications = useNotificationsStore((s) => s.notifications);
+  const unreadCount = useNotificationsStore((s) => s.unreadCount);
   const [loading, setLoading] = useState(true);
   const { userId } = useAuth();
   const { supabase, isInitializing } = useSupabase();
@@ -77,8 +78,8 @@ export function useNotifications() {
             .limit(50),
       });
 
-      setNotifications(items);
-      setUnreadCount(items.filter((item) => !item.is_read).length);
+      useNotificationsStore.getState().setNotifications(items);
+      useNotificationsStore.getState().setUnreadCount(items.filter((item) => !item.is_read).length);
     } catch (err) {
       console.error("Error fetching notifications:", err);
     } finally {
@@ -122,9 +123,9 @@ export function useNotifications() {
     if (!supabase || !userId || unreadCount === 0) return;
     
     // Optimistic UI update
-    setUnreadCount(0);
-    setNotifications(
-      notifications.map(n => ({ ...n, is_read: true }))
+    useNotificationsStore.getState().setUnreadCount(0);
+    useNotificationsStore.getState().setNotifications(
+      useNotificationsStore.getState().notifications.map(n => ({ ...n, is_read: true }))
     );
 
     try {

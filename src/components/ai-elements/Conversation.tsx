@@ -66,6 +66,8 @@ export function Conversation<T>({
         scrollEventThrottle={32}
         ListFooterComponent={ListFooterComponent}
         ListEmptyComponent={ListEmptyComponent}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
         contentContainerStyle={[
           styles.content,
           contentContainerStyle,

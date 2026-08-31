@@ -227,6 +227,8 @@ export default function AiUsageDetailScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <HistoryRow item={item} />}
         ListEmptyComponent={loading ? null : <EmptyState />}
+        removeClippedSubviews={true}
+        initialNumToRender={15}
         contentContainerStyle={
           data.length === 0 ? { flexGrow: 1 } : { paddingBottom: 24 }
         }

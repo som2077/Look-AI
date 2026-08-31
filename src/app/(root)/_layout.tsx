@@ -3,7 +3,7 @@ import { useSupabase } from "@/shared/supabase/use-supabase";
 import { useUser } from "@clerk/clerk-expo";
 import { Stack } from "expo-router";
 import { useEffect, useRef } from "react";
-import { AppState } from "react-native";
+import { AppState, InteractionManager } from "react-native";
 
 const getTodayString = () => new Date().toISOString().split("T")[0];
 
@@ -41,9 +41,12 @@ export default function RootLayout() {
   const logAppOpen = useLogAppOpen();
 
   useEffect(() => {
-    // Initial check on mount
-    checkStreakValidity();
-    logAppOpen();
+    // Defer streak check and app_open DB write past the first paint — the
+    // tab layout render should not compete with a network upsert.
+    const handle = InteractionManager.runAfterInteractions(() => {
+      checkStreakValidity();
+      logAppOpen();
+    });
 
     // Check when returning to foreground
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -54,6 +57,7 @@ export default function RootLayout() {
     });
 
     return () => {
+      handle.cancel();
       subscription.remove();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps

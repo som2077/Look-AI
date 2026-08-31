@@ -4,7 +4,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors, motion } from "./theme";
+import { colors } from "./theme";
 import type { IconButtonProps } from "./types";
 
 export function IconButton({

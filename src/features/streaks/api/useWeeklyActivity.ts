@@ -27,6 +27,7 @@ export function useWeeklyActivity() {
       return;
     }
 
+    let cancelled = false;
     const fetchWeekActivity = async () => {
       setIsLoading(true);
       try {
@@ -51,17 +52,20 @@ export function useWeeklyActivity() {
               .lte("activity_date", sundayStr),
         });
 
+        if (cancelled) return;
         const dateSet = new Set<string>(data.map((row) => row.activity_date));
         setActiveDates(dateSet);
       } catch (err) {
+        if (cancelled) return;
         console.warn("[useWeeklyActivity] fetch failed:", err);
         // Leave activeDates as empty — WeeklyCalendarStrip will fallback to local state
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchWeekActivity();
+    return () => { cancelled = true; };
   }, [supabase, user?.id]);
 
   return { activeDates, isLoading };

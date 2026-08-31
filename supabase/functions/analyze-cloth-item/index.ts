@@ -1,6 +1,5 @@
 // @ts-ignore: Deno import is not recognized by standard TS
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import CryptoJS from "npm:crypto-js";
 import { checkRateLimit, getUserIdFromJwt, rateLimitBody } from "../_shared/rate-limit.ts";
 import {
   isRequiredString,
@@ -11,6 +10,15 @@ import { fetchWithTimeout } from "../_shared/fetch-with-timeout.ts";
 
 // @ts-ignore: Declare Deno globally to satisfy TS compiler in IDE
 declare const Deno: any;
+
+/** SHA-1 via Deno native crypto — replaces npm:crypto-js for zero cold-start overhead. */
+async function sha1Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const hash = await crypto.subtle.digest("SHA-1", data);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 // ── Hoisted env + parsed Cloudinary config (don't re-parse on every req) ──
 const CLOUDINARY_URL = Deno.env.get("CLOUDINARY_URL") || "";
@@ -103,7 +111,7 @@ serve(async (req) => {
 
         if (apiSecret) {
           const paramsToSign = `folder=${originalFolder}&timestamp=${timestamp}`;
-          originalSignature = CryptoJS.SHA1(paramsToSign + apiSecret).toString();
+          originalSignature = await sha1Hex(paramsToSign + apiSecret);
         }
 
         const formData = new FormData();
@@ -179,7 +187,7 @@ serve(async (req) => {
 
         if (apiSecret) {
           const bgParams = `folder=${bgFolder}&timestamp=${bgTimestamp}`;
-          bgSignature = CryptoJS.SHA1(bgParams + apiSecret).toString();
+          bgSignature = await sha1Hex(bgParams + apiSecret);
         }
 
         const bgFormData = new FormData();

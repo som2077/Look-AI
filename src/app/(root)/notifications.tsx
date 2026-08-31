@@ -179,6 +179,7 @@ export default function NotificationsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
         />
       )}
     </SafeAreaView>

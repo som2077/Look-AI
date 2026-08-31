@@ -15,7 +15,7 @@ export const colors = {
   surface: "#F2EDE4", // assistant panel / muted bubble
   surfaceMuted: "#F4EFE6", // hover / skeleton
   border: "#E2D9C8",
-  borderSubtle: "#ECE4D4",
+  borderSubtle: "#5d4a25",
 
   // Text — soft black, warmer than #1D1A27
   text: "#1F1B16",

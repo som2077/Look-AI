@@ -59,7 +59,7 @@ const removeOptimisticPosts = () => {
 };
 
 export function useCommunityPosts() {
-  const { posts, setPosts, addPost, appendPosts } = usePostsStore();
+  const posts = usePostsStore((s) => s.posts);
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -77,7 +77,7 @@ export function useCommunityPosts() {
           supabase,
           table: "community_posts",
           select: `
-          *,
+          id, user_id, image_url, caption, likes_count, created_at,
           user_profiles (
             nickname,
             username,
@@ -110,9 +110,9 @@ export function useCommunityPosts() {
           if (localMockPosts.length > 0 && backendPosts.length > 0) {
             removeOptimisticPosts();
           }
-          setPosts(backendPosts.length > 0 ? backendPosts : DUMMY_POSTS);
+          usePostsStore.getState().setPosts(backendPosts.length > 0 ? backendPosts : DUMMY_POSTS);
         } else {
-          appendPosts(backendPosts);
+          usePostsStore.getState().appendPosts(backendPosts);
         }
 
         // A short page (< PAGE_SIZE) means we've hit the end of the feed.
@@ -136,7 +136,7 @@ export function useCommunityPosts() {
         setLoadingMore(false);
       }
     },
-    [supabase, isInitializing, userId, setPosts, appendPosts],
+    [supabase, isInitializing, userId],
   );
 
   const loadMore = useCallback(() => {
@@ -335,7 +335,7 @@ export function useCommunityPosts() {
     };
 
     try {
-      addPost(newPost);
+      usePostsStore.getState().addPost(newPost);
 
       if (!userId || !supabase) {
         console.warn("Missing auth or supabase, skipping backend upload");

@@ -21,7 +21,7 @@
  * returned untouched. The helper is pure — safe to call inside render.
  */
 
-export type CloudinaryContext = "thumbnail" | "card" | "full" | "vision";
+export type CloudinaryContext = "micro" | "thumbnail" | "card" | "vision" | "full" | "share";
 
 interface Transform {
   width: number;
@@ -30,10 +30,12 @@ interface Transform {
 }
 
 const TRANSFORMS: Record<CloudinaryContext, Transform> = {
+  micro: { width: 80, height: 80, crop: "fill" },
   thumbnail: { width: 160, height: 160, crop: "fill" },
   card: { width: 512, crop: "limit" },
-  full: { width: 1024, crop: "limit" },
   vision: { width: 768, crop: "limit" },
+  full: { width: 1024, crop: "limit" },
+  share: { width: 1200, crop: "limit" },
 };
 
 function buildTransformString(t: Transform): string {
@@ -87,9 +89,11 @@ export function cloudinaryUrlSet(
   url: string | null | undefined,
 ): Record<CloudinaryContext, string> {
   return {
+    micro: cloudinaryUrl(url, "micro"),
     thumbnail: cloudinaryUrl(url, "thumbnail"),
     card: cloudinaryUrl(url, "card"),
-    full: cloudinaryUrl(url, "full"),
     vision: cloudinaryUrl(url, "vision"),
+    full: cloudinaryUrl(url, "full"),
+    share: cloudinaryUrl(url, "share"),
   };
 }

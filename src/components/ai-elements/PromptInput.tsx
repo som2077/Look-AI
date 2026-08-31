@@ -1,22 +1,15 @@
 /**
- * PromptInput — Modern AI prompt card matching ChatGPT/Quantum 3 interface:
- * Multi-line text input on top, plus attach (+), model selector (Quantum 3 ⌵),
- * microphone, and voice waveform / send / stop button on the bottom.
+ * PromptInput — Clean modern AI card matching Screenshot:
+ * White rounded card, multiline input with "Ask’s everything" placeholder,
+ * and solid black circular Send button on the bottom-right.
  */
-import {
-  ArrowUp,
-  ChevronDown,
-  Mic,
-  Plus,
-  Square,
-} from "lucide-react-native";
+import { IconArrowUp, IconPlayerStopFilled } from "@tabler/icons-react-native";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Keyboard,
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
   ViewStyle,
@@ -38,16 +31,6 @@ export interface PromptInputProps {
   style?: ViewStyle;
   /** Max characters; default 2000. */
   maxLength?: number;
-  /** Fires when the user taps the `+` (attach) button. */
-  onAttachPress?: () => void;
-  /** Fires when the user taps the microphone button. */
-  onMicPress?: () => void;
-  /** Fires when the user taps the voice mode / waveform button. */
-  onVoicePress?: () => void;
-  /** Fires when the user taps the model selector. */
-  onModelPress?: () => void;
-  /** Model name displayed in the center pill. Defaults to "Quantum 3". */
-  modelName?: string;
 }
 
 export function PromptInput({
@@ -56,14 +39,9 @@ export function PromptInput({
   onSubmit,
   isStreaming = false,
   tools,
-  placeholder = "How can I help you today?",
+  placeholder = "Ask’s everything",
   style,
   maxLength = 2000,
-  onAttachPress,
-  onMicPress,
-  onVoicePress,
-  onModelPress,
-  modelName = "Quantum 3",
 }: PromptInputProps) {
   const [contentHeight, setContentHeight] = useState(MIN_INPUT_HEIGHT);
   const inputRef = useRef<TextInput>(null);
@@ -89,16 +67,14 @@ export function PromptInput({
     if (canSubmit) {
       Keyboard.dismiss();
       onSubmit();
-    } else if (onVoicePress) {
-      onVoicePress();
     }
-  }, [isStreaming, canSubmit, onSubmit, onVoicePress]);
+  }, [isStreaming, canSubmit, onSubmit]);
 
   return (
     <View style={[styles.outer, style]}>
       {tools ? <View style={styles.tools}>{tools}</View> : null}
       <View style={styles.card}>
-        {/* Top Text Input */}
+        {/* Multiline Text Input */}
         <TextInput
           ref={inputRef}
           value={value}
@@ -121,88 +97,34 @@ export function PromptInput({
           textAlignVertical="top"
           style={[
             styles.input,
-            { height: contentHeight },
+            { height: Math.max(MIN_INPUT_HEIGHT, contentHeight) },
           ]}
         />
 
-        {/* Bottom Action Row */}
-        <View style={styles.actionRow}>
-          {/* Left: Attach (+) Button */}
+        {/* Bottom Action Row with Black Send Button on Right */}
+        <View style={styles.bottomRow}>
           <Pressable
-            onPress={onAttachPress}
-            hitSlop={6}
+            onPress={handleSubmitPress}
+            disabled={!canSubmit && !isStreaming}
+            hitSlop={10}
             style={({ pressed }) => [
-              styles.attachBtn,
+              styles.sendBtn,
+              isStreaming && styles.sendBtnStop,
               pressed && styles.pressed,
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Attach"
+            accessibilityLabel={isStreaming ? "Stop generating" : "Send message"}
           >
-            <Plus size={18} color="#221E19" strokeWidth={2.4} />
+            {isStreaming ? (
+              <IconPlayerStopFilled size={14} />
+            ) : (
+              <IconArrowUp
+                size={20}
+                // color="#000000"
+                strokeWidth={2.6}
+              />
+            )}
           </Pressable>
-
-          {/* Center: Model Selector Pill */}
-          <Pressable
-            onPress={onModelPress}
-            hitSlop={6}
-            style={({ pressed }) => [
-              styles.modelSelector,
-              pressed && styles.pressed,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={`Model: ${modelName}`}
-          >
-            <Text style={styles.modelText}>{modelName}</Text>
-            <ChevronDown size={15} color="#3E382E" strokeWidth={2.2} />
-          </Pressable>
-
-          {/* Right: Mic + Voice/Send Button */}
-          <View style={styles.rightActions}>
-            <Pressable
-              onPress={onMicPress}
-              hitSlop={6}
-              style={({ pressed }) => [
-                styles.micBtn,
-                pressed && styles.pressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Voice input"
-            >
-              <Mic size={22} color="#221E19" strokeWidth={2} />
-            </Pressable>
-
-            <Pressable
-              onPress={handleSubmitPress}
-              hitSlop={6}
-              style={({ pressed }) => [
-                styles.voiceSendBtn,
-                isStreaming && styles.voiceSendBtnStop,
-                pressed && styles.pressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={
-                isStreaming
-                  ? "Stop generating"
-                  : canSubmit
-                    ? "Send message"
-                    : "Voice mode"
-              }
-            >
-              {isStreaming ? (
-                <Square size={14} color="#FAF7F2" fill="#FAF7F2" />
-              ) : canSubmit ? (
-                <ArrowUp size={20} color="#FAF7F2" strokeWidth={2.6} />
-              ) : (
-                <View style={styles.waveform}>
-                  <View style={[styles.waveBar, { height: 7 }]} />
-                  <View style={[styles.waveBar, { height: 13 }]} />
-                  <View style={[styles.waveBar, { height: 19 }]} />
-                  <View style={[styles.waveBar, { height: 13 }]} />
-                  <View style={[styles.waveBar, { height: 7 }]} />
-                </View>
-              )}
-            </Pressable>
-          </View>
         </View>
       </View>
     </View>
@@ -211,9 +133,9 @@ export function PromptInput({
 
 const styles = StyleSheet.create({
   outer: {
-    paddingHorizontal: 12,
-    paddingTop: 6,
-    paddingBottom: 6,
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 4,
     backgroundColor: colors.bg,
   },
   tools: {
@@ -223,13 +145,15 @@ const styles = StyleSheet.create({
     marginBottom: space.xs,
   },
   card: {
-    backgroundColor: "#FBF9F5",
+    backgroundColor: "#ffffff",
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#E6E0D6",
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 10,
+    borderColor: "#EAE6DF",
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+    minHeight: 104,
+    justifyContent: "space-between",
     ...Platform.select({
       ios: {
         shadowColor: "#000000",
@@ -247,73 +171,33 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#1F1B16",
     fontFamily: FONT_FAMILY["400"],
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     paddingTop: 0,
     paddingBottom: 6,
     minHeight: MIN_INPUT_HEIGHT,
     maxHeight: MAX_LINES * LINE_HEIGHT + 10,
   },
-  actionRow: {
+  bottomRow: {
     flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 4,
-    paddingBottom: 2,
+    paddingTop: 6,
+    // color: "#7E776C",
+    // backgroundColor: "#000000",
   },
-  attachBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#ECE7DE",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modelSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-  },
-  modelText: {
-    fontSize: 14,
-    color: "#3E382E",
-    fontFamily: FONT_FAMILY["500"],
-  },
-  rightActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 10,
-  },
-  micBtn: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  voiceSendBtn: {
+  sendBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#1F1B16",
+    backgroundColor: "#c42626",
     alignItems: "center",
     justifyContent: "center",
   },
-  voiceSendBtnStop: {
+  sendBtnStop: {
     backgroundColor: colors.error,
   },
-  waveform: {
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 2.5,
-  },
-  waveBar: {
-    width: 2.2,
-    borderRadius: 1.5,
-    backgroundColor: "#FAF7F2",
-  },
   pressed: {
-    opacity: 0.75,
+    opacity: 0.7,
     transform: [{ scale: 0.94 }],
   },
 });

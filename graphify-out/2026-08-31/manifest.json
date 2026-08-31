@@ -3456,9 +3456,9 @@
     "semantic_hash": ""
   },
   "src/app/(root)/(ai-features)/style-chat.tsx": {
-    "mtime": 1788194437.4763806,
-    "seen": 1788194495.8864672,
-    "ast_hash": "c012c22092841d7f336cc8a130999f56",
+    "mtime": 1788195900.228802,
+    "seen": 1788195961.8173127,
+    "ast_hash": "9f8335828aa7c02c88a1ae324360c180",
     "semantic_hash": ""
   },
   "src/app/(root)/(ai-features)/stylist-chat.tsx": {
@@ -3534,9 +3534,9 @@
     "semantic_hash": ""
   },
   "src/components/ai-elements/PromptInput.tsx": {
-    "mtime": 1788194420.992049,
-    "seen": 1788194495.8895473,
-    "ast_hash": "3ece76db3ac27f9782bf4d5ea7c77a17",
+    "mtime": 1788195882.187439,
+    "seen": 1788195961.821048,
+    "ast_hash": "a16ba833d3df59086863f3188f8c74ff",
     "semantic_hash": ""
   },
   "src/components/ai-elements/Reasoning.tsx": {

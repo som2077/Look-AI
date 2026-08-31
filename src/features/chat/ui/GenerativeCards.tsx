@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 
 export const OutfitCard = ({ items }: { items: any[] }) => {
   if (!items || items.length === 0) return null;
@@ -10,7 +11,7 @@ export const OutfitCard = ({ items }: { items: any[] }) => {
         {items.map((item: any, idx: number) => (
           <View key={idx} style={styles.itemBox}>
             {(item.imageUrl || item.originalImageUrl) ? (
-              <Image source={{ uri: item.imageUrl || item.originalImageUrl }} style={styles.itemImg} />
+              <Image source={{ uri: item.imageUrl || item.originalImageUrl }} style={styles.itemImg} cachePolicy="memory-disk" contentFit="cover" />
             ) : (
               <View style={[styles.itemImg, { backgroundColor: item.primaryColor || item.colorHex || '#E5E7EB' }]} />
             )}

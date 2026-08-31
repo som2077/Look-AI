@@ -366,7 +366,7 @@ export const useUserWardrobeStore = create<UserWardrobeState>()(
           const data = await fetchSupabaseRows<Record<string, unknown>>({
             supabase,
             table: "wardrobe_items",
-            select: "*",
+            select: "id, user_id, custom_name, brand, category, sub_category, primary_color, color_hex, secondary_colors, pattern, fabric_guess, fit, sleeve_type, neck_type, care_instructions, notes, style, season, occasion, formality_score, versatility_tags, image_url, original_image_url, confidence, source, is_favorite, wear_count, last_worn_date, rating, annotations, created_at",
             userId: uid,
             apply: (q) =>
               q

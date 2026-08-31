@@ -380,7 +380,6 @@ const RootNavigator = memo(function RootNavigator() {
 });
 
 export default function RootLayout() {
-  const { setOffline, setServerError } = useErrorStore();
 
   // Load fonts globally
   const [fontsLoaded, fontError] = useFonts(FONT_ASSETS);
@@ -456,11 +455,11 @@ export default function RootLayout() {
       clearTimeout(timeoutId);
 
       if (response.type !== "opaque" && response.status >= 500) {
-        setServerError(true);
-        setOffline(false);
+        useErrorStore.getState().setServerError(true);
+        useErrorStore.getState().setOffline(false);
       } else {
-        setOffline(false);
-        setServerError(false);
+        useErrorStore.getState().setOffline(false);
+        useErrorStore.getState().setServerError(false);
       }
     } catch (err: any) {
       if (err.name === "AbortError") {
@@ -468,13 +467,16 @@ export default function RootLayout() {
       } else {
         console.warn("Connectivity check failed:", err);
       }
-      setOffline(true);
+      useErrorStore.getState().setOffline(true);
     }
-  }, [setOffline, setServerError]);
+  }, []);
 
   useEffect(() => {
-    // Initial check on mount
-    checkConnectivity();
+    // Defer initial connectivity check past the first paint — on slow networks
+    // this HEAD request would otherwise compete with splash → home handoff.
+    const handle = InteractionManager.runAfterInteractions(() => {
+      checkConnectivity();
+    });
 
     // Check on foreground return only, with a 60s minimum interval (replaces the
     // old 60s setInterval, which produced ~167 req/s to Supabase at 10k users).
@@ -488,6 +490,7 @@ export default function RootLayout() {
     });
 
     return () => {
+      handle.cancel();
       subscription.remove();
     };
   }, [checkConnectivity]);

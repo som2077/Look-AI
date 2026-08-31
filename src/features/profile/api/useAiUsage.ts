@@ -73,11 +73,13 @@ export function useAiUsage(): UseAiUsageResult {
 
       setLoading(true);
       setError(null);
+      let cancelled = false;
       try {
         const { data: rows, error: rpcError } = await supabase.rpc(
           "get_ai_usage_summary",
         );
         if (rpcError) throw rpcError;
+        if (cancelled) return;
         const safeRows = (rows ?? []) as AiUsageSummary[];
         summaryCache.set(cacheKey, {
           data: safeRows,
@@ -88,6 +90,7 @@ export function useAiUsage(): UseAiUsageResult {
           setData(safeRows);
         }
       } catch (err) {
+        if (cancelled) return;
         if (isMounted.current) {
           setError(
             err instanceof Error
@@ -96,7 +99,7 @@ export function useAiUsage(): UseAiUsageResult {
           );
         }
       } finally {
-        if (isMounted.current) {
+        if (!cancelled && isMounted.current) {
           setLoading(false);
         }
       }
