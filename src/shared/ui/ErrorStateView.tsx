@@ -307,7 +307,7 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
                 fontWeight: "500",
               }}
             >
-              We're sorry, an unexpected error occurred. Our team has been notified.
+              We&apos;re sorry, an unexpected error occurred. Our team has been notified.
             </Text>
 
             {/* Error Message Trace Box (Only visible in DEV) */}

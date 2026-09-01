@@ -1,6 +1,5 @@
 import { useDeleteAccount } from "@/features/profile/api/useDeleteAccount";
 import { useUserProfile } from "@/features/profile/api/useProfile";
-import { AiUsageSection } from "@/features/profile/ui/AiUsageSection";
 import {
   CardContainer,
   ListItem,
@@ -12,6 +11,7 @@ import {
   requestUserPermission,
 } from "@/shared/notifications/firebase-service";
 import { useSupabase } from "@/shared/supabase/use-supabase";
+import { posthogAnalytics } from "@/shared/telemetry/posthog";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
@@ -39,13 +39,11 @@ import {
   Linking,
   Modal,
   Pressable,
-  ScrollView,
-  StyleSheet,
   Text as RNText,
-  View,
+  ScrollView,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { posthogAnalytics } from "@/shared/telemetry/posthog";
 
 // ─── Shared Components ───────────────────────────────────────────────────────
 
@@ -461,10 +459,6 @@ const ProfileScreenUI = ({
             }
           />
         </CardContainer>
-
-        {/* AI Usage Section */}
-        <SectionTitle title="AI Usage" />
-        <AiUsageSection />
 
         {/* Support & Legal Section */}
         <SectionTitle title="Support & Legal" />

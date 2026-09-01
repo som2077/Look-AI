@@ -191,16 +191,7 @@ export const StylistThread = () => {
   // directly via the thread runtime if available — otherwise we
   // simply copy the prompt to the OS clipboard and surface a hint.
   const handleSelectPrompt = useCallback((message: string) => {
-    // Append as a user message via the thread runtime. This avoids
-    // the surprise of a "prefill" that the user has to delete.
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { useThread } = require("@assistant-ui/react-native");
-      const t = useThread?.();
-      t?.append?.({ role: "user", content: [{ type: "text", text: message }] });
-    } catch {
-      /* runtime API not available in this build */
-    }
+    // Handled in ChatEmptyState now.
   }, []);
 
   // We can't read the composer's internal value without the right

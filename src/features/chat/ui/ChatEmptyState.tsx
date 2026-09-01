@@ -18,6 +18,7 @@ import {
   IconSparkles,
   IconSun,
 } from "@tabler/icons-react-native";
+import { useThread } from "@assistant-ui/react-native";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, FONT_FAMILY, radii, space } from "@/components/ai-elements/theme";
@@ -60,7 +61,8 @@ export interface ChatEmptyStateProps {
   onSelectPrompt: (message: string) => void;
 }
 
-export function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
+export function ChatEmptyState({  onSelectPrompt  }: ChatEmptyStateProps) {
+  const thread = useThread();
   return (
     <View style={styles.wrap}>
       <View style={styles.hero}>
@@ -74,7 +76,7 @@ export function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
           What are you{`\n`}wearing today?
         </Text>
         <Text style={styles.body}>
-          Tell me the weather, an event, or what's already in your closet — I'll
+          Tell me the weather, an event, or what&apos;s already in your closet — I&apos;ll
           put it together.
         </Text>
       </View>
@@ -89,7 +91,7 @@ export function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
           {PROMPTS.map(({ id, label, message, Icon }) => (
             <Pressable
               key={id}
-              onPress={() => onSelectPrompt(message)}
+              onPress={() => thread.append({ role: "user", content: [{ type: "text", text: message }] })}
               accessibilityRole="button"
               accessibilityLabel={`Send prompt: ${label}`}
               style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
