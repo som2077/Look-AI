@@ -58,6 +58,7 @@ import { OutfitSuggestionCard } from '@/components/chat/cards/OutfitSuggestionCa
 import { RecentOutfitsCard } from '@/components/chat/cards/RecentOutfitsCard';
 import { StreakCard } from '@/components/chat/cards/StreakCard';
 import { WeatherCard } from '@/components/chat/cards/WeatherCard';
+import { useStyleChatHistory } from '@/features/ai-styling/model/useStyleChatHistory';
 
 import { CalendarSavingIndicator } from '@/components/chat/skeletons/CalendarSavingIndicator';
 import { OutfitLoadingSkeleton } from '@/components/chat/skeletons/OutfitLoadingSkeleton';
@@ -246,7 +247,10 @@ function ChatBody({
   const { input, onInputChange, messages, isStreaming, error, handleSubmit } =
     useChat({
       openAi,
-      initialMessages: [{ role: 'system', content: CLIENT_SYSTEM_PROMPT }],
+      initialMessages: [
+        { role: 'system', content: CLIENT_SYSTEM_PROMPT },
+        ...(useStyleChatHistory.getState().getValidMessages() as any[]),
+      ],
       onSuccess: () => {
         void trackAiUsage("style_chat", { model: "gpt-4o-mini" });
       },
@@ -740,12 +744,73 @@ function ChatBody({
   // on every keystroke in the input.
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
-      // Tool output (already wrapped in a <Tool> shell by the renderer).
+      // Tool output (live running stream, wrapped in a <Tool> shell by the renderer).
       if (isReactElement(item)) {
         return <View key={index}>{item}</View>;
       }
 
       const text = (item.content ?? '').toString();
+
+      // Tool output (persisted history, stored as JSON string in 'function' role)
+      if (item.role === 'function') {
+        try {
+          const data = JSON.parse(text);
+          let card = null;
+          switch (item.name) {
+            case 'show_weather':
+              card = <WeatherCard data={data} />;
+              break;
+            case 'suggest_outfit':
+              card = (
+                <OutfitSuggestionCard
+                  data={data}
+                  onSave={(outfit) => handleSaveOutfit(outfit, data.occasion)}
+                />
+              );
+              break;
+            case 'show_calendar_date':
+            case 'save_outfit_to_calendar':
+              card = <CalendarDateCard data={data} />;
+              break;
+            case 'show_streak':
+              card = <StreakCard data={data} />;
+              break;
+            case 'quick_log_outfit':
+              card = <LoggedOutfitConfirmCard data={data} />;
+              break;
+            case 'compare_outfits':
+              card = <CompareCard data={data} />;
+              break;
+            case 'show_recent_outfits':
+              card = <RecentOutfitsCard data={data} />;
+              break;
+            case 'show_date_picker':
+              card = (
+                <InlineDatePickerCard
+                  data={data}
+                  onConfirm={(date, time) => {
+                    handleSubmit(
+                      `I picked ${date} at ${time}. Occasion: ${data.occasion || 'event'}`
+                    );
+                  }}
+                />
+              );
+              break;
+          }
+          if (card) {
+            return (
+              <View key={index}>
+                <Tool name={item.name} status="completed" defaultOpen input={data}>
+                  {card}
+                </Tool>
+              </View>
+            );
+          }
+        } catch (err) {
+          // parse error or unknown tool, ignore
+        }
+      }
+
       if (item.role === 'user') {
         return (
           <Message key={index} from="user">
@@ -765,7 +830,7 @@ function ChatBody({
       }
       return null;
     },
-    [isLastAssistantStreaming],
+    [isLastAssistantStreaming, handleSaveOutfit],
   );
 
   const keyExtractor = useCallback(
@@ -791,6 +856,11 @@ function ChatBody({
     () => messages.filter((m) => isReactElement(m) || m.role !== 'system'),
     [messages],
   );
+
+  // Sync messages to local storage for 24h retention
+  useEffect(() => {
+    useStyleChatHistory.getState().saveMessages(messages);
+  }, [messages]);
 
   // Bubble the streaming state up to the header so the clay dot can pulse.
   useEffect(() => {
