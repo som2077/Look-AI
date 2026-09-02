@@ -3,14 +3,14 @@ import { useUserProfile } from "@/features/profile/api/useProfile";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import {
   IconArrowLeft,
-  IconBleach,
+  IconShirtFilled as IconBleach,
   IconBodyScan,
-  IconCalendarMonth,
-  IconCameraPlus,
-  IconFilter2Edit,
+  IconCalendarMonthFilled as IconCalendarMonth,
+  IconCameraFilled as IconCameraPlus,
+  IconEditFilled as IconFilter2Edit,
   IconGenderBigender,
   IconRulerMeasure2,
-  IconUserCheck,
+  IconUserFilled as IconUserCheck,
 } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";

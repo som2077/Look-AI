@@ -17,14 +17,14 @@ import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import {
-  IconBell,
+  IconBellFilled as IconBell,
   IconLogout,
-  IconMail,
-  IconNotes,
-  IconShield,
-  IconSpeakerphone,
-  IconUser,
-  IconUserMinus,
+  IconMailFilled as IconMail,
+  IconFileTextFilled as IconNotes,
+  IconShieldFilled as IconShield,
+  IconMessageFilled as IconSpeakerphone,
+  IconUserFilled as IconUser,
+  IconTrashFilled as IconUserMinus,
 } from "@tabler/icons-react-native";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
@@ -439,7 +439,7 @@ const ProfileScreenUI = ({
 
       <View>
         {/* Account Section */}
-        <SectionTitle title="Account" />
+        <SectionTitle title="Account Details" />
         <CardContainer>
           <ListItem
             icon={<IconUser size={18} color="#00000090" />}
@@ -480,18 +480,18 @@ const ProfileScreenUI = ({
           <ListItem
             icon={<IconNotes size={18} color="#00000090" />}
             title="Terms and Conditions"
-            onPress={() => router.push("/(root)/terms" as never)}
+            onPress={() => Linking.openURL("https://www.look-ai.app/tos")}
           />
           <ListItem
             icon={<IconShield size={18} color="#00000090" />}
-            title="Privacy policy"
-            onPress={() => router.push("/(root)/privacy" as never)}
+            title="Privacy Policy"
+            onPress={() => Linking.openURL("https://www.look-ai.app/privacy")}
             hasBorder={false}
           />
         </CardContainer>
 
         {/* Account Action Section */}
-        <SectionTitle title="Account Action" />
+        <SectionTitle title="Account Actions" />
         <CardContainer>
           <ListItem
             icon={

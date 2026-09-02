@@ -10,7 +10,6 @@
  *   - Body text 14px, primary text near-black (#1D1D1D / #1D1A27).
  *   - Section titles 18px extra-bold, 24px top margin.
  */
-import { IconChevronRight } from "@tabler/icons-react-native";
 import React from "react";
 import { Pressable, StyleSheet, Text as RNText, TextProps, View } from "react-native";
 
@@ -41,9 +40,10 @@ export const Text = (props: TextProps & { children?: React.ReactNode }) => {
 export const SectionTitle = ({ title }: { title: string }) => (
   <Text
     style={{
-      fontSize: 18,
+      fontSize: 15,
       fontFamily: "BricolageGrotesque_800ExtraBold",
       color: "#1D1D1D",
+      fontWeight: "600",
       marginBottom: 9,
       marginTop: 24,
       marginLeft: 10,
@@ -130,7 +130,7 @@ export const ListItem = ({
           </Text>
         ) : null}
       </View>
-      {rightElement ?? <IconChevronRight size={18} color="#1D1D1D" />}
+      {rightElement}
     </Pressable>
     {hasBorder && (
       <View
