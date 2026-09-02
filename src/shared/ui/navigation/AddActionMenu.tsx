@@ -162,26 +162,26 @@ export function AddActionMenu({
                       {card.id === "log-outfit" ? (
                         <Image
                           source={require("@/assets/action-menu/one.png")}
-                          className="w-full h-full"
-                          resizeMode="contain"
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="contain"
                         />
                       ) : card.id === "add-cloths" ? (
                         <Image
                           source={require("@/assets/action-menu/two.png")}
-                          className="w-full h-full"
-                          resizeMode="contain"
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="contain"
                         />
                       ) : card.id === "ai-outfit" ? (
                         <Image
                           source={require("@/assets/action-menu/three.png")}
-                          className="w-full h-full"
-                          resizeMode="contain"
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="contain"
                         />
                       ) : card.id === "style-score" ? (
                         <Image
                           source={require("@/assets/action-menu/four.png")}
-                          className="w-full h-full"
-                          resizeMode="contain"
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="contain"
                         />
                       ) : (
                         <IconComponent

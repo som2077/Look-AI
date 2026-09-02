@@ -3,26 +3,26 @@ import { useUserProfile } from "@/features/profile/api/useProfile";
 import { AppGradientBackground } from "@/shared/ui/AppGradientBackground";
 import {
   IconArrowLeft,
-  IconShirtFilled as IconBleach,
+  IconBleach,
   IconBodyScan,
-  IconCalendarMonthFilled as IconCalendarMonth,
-  IconCameraFilled as IconCameraPlus,
-  IconEditFilled as IconFilter2Edit,
+  IconCalendarMonth,
+  IconCameraPlus,
+  IconPencil as IconFilter2Edit,
   IconGenderBigender,
   IconRulerMeasure2,
-  IconUserFilled as IconUserCheck,
+  IconUserCheck,
 } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text as RNText, View } from "react-native";
+import { Pressable, Text as RNText, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Text = (props: any) => {
   const { style, ...rest } = props;
   const flatStyle = StyleSheet.flatten(style || {});
   let fontFamily = flatStyle.fontFamily || "BricolageGrotesque_400Regular";
-  
+
   if (flatStyle.fontWeight === "500") fontFamily = "BricolageGrotesque_500Medium";
   else if (flatStyle.fontWeight === "600") fontFamily = "BricolageGrotesque_600SemiBold";
   else if (flatStyle.fontWeight === "700" || flatStyle.fontWeight === "bold") fontFamily = "BricolageGrotesque_700Bold";
@@ -58,7 +58,7 @@ const FieldRow = ({
     style={{
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 16,
+      paddingVertical: 10,
       paddingHorizontal: 20,
       borderBottomWidth: 0.5,
       borderBottomColor: "#F3F4F6",
@@ -77,22 +77,20 @@ const FieldRow = ({
     >
       {field.icon}
     </View>
-    <View style={{ flex: 1 }}>
-      <Text
-        style={{
-          fontSize: 12,
-          color: "#9CA3AF",
-          fontWeight: "500",
-          marginBottom: 2,
-        }}
-      >
+    <View style={{ flex: 1, justifyContent: "center", paddingRight: 12 }}>
+      <Text style={{ fontSize: 15, color: "#1D1A27", fontWeight: "600" }}>
         {field.label}
       </Text>
-      <Text style={{ fontSize: 15, color: "#1D1A27", fontWeight: "600" }}>
+    </View>
+    <View style={{ flexDirection: "row", alignItems: "center", flexShrink: 1, maxWidth: "55%" }}>
+      <Text
+        style={{ fontSize: 14, color: "#9CA3AF", fontWeight: "500", marginRight: field.editable ? 8 : 0, textAlign: "right", flexShrink: 1 }}
+        numberOfLines={1}
+      >
         {field.value || "—"}
       </Text>
+      {field.editable && <IconFilter2Edit size={18} color="#00000080" />}
     </View>
-    {field.editable && <IconFilter2Edit size={18} color="#00000080" />}
   </Pressable>
 );
 
@@ -120,7 +118,7 @@ export default function PersonalDetailsScreen() {
       key: "name",
       label: "Nickname",
       value: nickname,
-      icon: <IconUserCheck size={24} color="#00000090" strokeWidth={1.5} />,
+      icon: <IconUserCheck size={24} color="#000000" strokeWidth={2} />,
       editable: true,
       type: "text",
     },
@@ -128,7 +126,7 @@ export default function PersonalDetailsScreen() {
       key: "dob",
       label: "Age",
       value: age ? age.toString() : "",
-      icon: <IconCalendarMonth size={24} color="#00000090" strokeWidth={1.5} />,
+      icon: <IconCalendarMonth size={24} color="#000000" strokeWidth={2} />,
       editable: true,
       type: "text",
     },
@@ -136,7 +134,7 @@ export default function PersonalDetailsScreen() {
       key: "height",
       label: "Height",
       value: height ? `${height} cm` : "",
-      icon: <IconRulerMeasure2 size={24} color="#00000090" strokeWidth={1.5} />,
+      icon: <IconRulerMeasure2 size={24} color="#000000" strokeWidth={2} />,
       editable: true,
       type: "select",
     },
@@ -145,7 +143,7 @@ export default function PersonalDetailsScreen() {
       label: "Gender",
       value: gender,
       icon: (
-        <IconGenderBigender size={24} color="#00000080" strokeWidth={1.5} />
+        <IconGenderBigender size={24} color="#000000" strokeWidth={2} />
       ),
       editable: true,
       type: "select",
@@ -156,17 +154,17 @@ export default function PersonalDetailsScreen() {
       value: bodyType
         ? bodyType.charAt(0).toUpperCase() + bodyType.slice(1)
         : "Tap to add...",
-      icon: <IconBodyScan size={24} color="#00000080" strokeWidth={1.5} />,
+      icon: <IconBodyScan size={24} color="#000000" strokeWidth={2} />,
       editable: true,
       type: "select",
     },
     {
       key: "style",
-      label: "Choose your style",
+      label: "Your style",
       value: stylePreferences?.length
         ? stylePreferences.join(", ")
         : "Tap to choose...",
-      icon: <IconBleach size={24} color="#00000080" strokeWidth={1.5} />,
+      icon: <IconBleach size={24} color="#000000" strokeWidth={2} />,
       editable: true,
       type: "select",
     },
@@ -174,7 +172,7 @@ export default function PersonalDetailsScreen() {
       key: "fullLengthPic",
       label: "Full Length Pic",
       value: "Tap to view/upload...",
-      icon: <IconCameraPlus size={24} color="#00000080" strokeWidth={1.5} />,
+      icon: <IconCameraPlus size={24} color="#000000" strokeWidth={2} />,
       editable: true,
       type: "select",
     },
@@ -229,8 +227,23 @@ export default function PersonalDetailsScreen() {
               backgroundColor: "transparent",
             }}
           >
-            <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
-              <IconArrowLeft size={24} color="#1D1A27" />
+            <Pressable
+              onPress={() => router.back()}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: "#FFFFFF",
+                alignItems: "center",
+                justifyContent: "center",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <IconArrowLeft size={20} color="#1D1A27" />
             </Pressable>
             <Text
               style={{
@@ -239,7 +252,7 @@ export default function PersonalDetailsScreen() {
                 fontSize: 18,
                 fontWeight: "700",
                 color: "#1D1A27",
-                marginRight: 28,
+                marginRight: 40,
               }}
             >
               Personal Details
@@ -252,7 +265,7 @@ export default function PersonalDetailsScreen() {
             {/* Fields Card */}
             <View
               style={{
-                marginHorizontal: 16,
+                marginHorizontal: 18,
                 backgroundColor: "#FFFFFF",
                 borderRadius: 25,
                 overflow: "hidden",

@@ -291,7 +291,7 @@ const ProfileScreenUI = ({
   const { data: userProfile } = useUserProfile();
 
   const displayName = userProfile?.nickname || user?.fullName || "Your Name";
-  const displayUsername = userProfile?.username || user?.username || "";
+  const displayAge = userProfile?.age;
   const displayAvatar = userProfile?.avatar_url || user?.imageUrl;
   const displayInitial = displayName.charAt(0).toUpperCase();
 
@@ -353,9 +353,9 @@ const ProfileScreenUI = ({
           <RNText style={{ fontSize: 18, fontWeight: "700", color: "#1D1A27" }}>
             {displayName}
           </RNText>
-          {displayUsername ? (
+          {displayAge ? (
             <RNText style={{ fontSize: 14, color: "#6B7280", marginTop: 2 }}>
-              @{displayUsername}
+              {displayAge} years old
             </RNText>
           ) : null}
         </View>
@@ -442,13 +442,13 @@ const ProfileScreenUI = ({
         <SectionTitle title="Account Details" />
         <CardContainer>
           <ListItem
-            icon={<IconUser size={18} color="#00000090" />}
+            icon={<IconUser size={18} color="#000000" />}
             title="Personal details"
             onPress={() => router.push("/(root)/personal-details" as never)}
           />
 
           <ListItem
-            icon={<IconBell size={18} color="#00000090" />}
+            icon={<IconBell size={18} color="#000000" />}
             title="Notification"
             hasBorder={false}
             rightElement={
@@ -464,12 +464,12 @@ const ProfileScreenUI = ({
         <SectionTitle title="Support & Legal" />
         <CardContainer>
           <ListItem
-            icon={<IconSpeakerphone size={18} color="#00000090" />}
+            icon={<IconSpeakerphone size={18} color="#000000" />}
             title="Request a feature"
             onPress={() => Linking.openURL("https://tally.so/r/9qx7e1")}
           />
           <ListItem
-            icon={<IconMail size={18} color="#00000090" />}
+            icon={<IconMail size={18} color="#000000" />}
             title="Support Email"
             onPress={() =>
               Linking.openURL(
@@ -478,12 +478,12 @@ const ProfileScreenUI = ({
             }
           />
           <ListItem
-            icon={<IconNotes size={18} color="#00000090" />}
+            icon={<IconNotes size={18} color="#000000" />}
             title="Terms and Conditions"
             onPress={() => Linking.openURL("https://www.look-ai.app/tos")}
           />
           <ListItem
-            icon={<IconShield size={18} color="#00000090" />}
+            icon={<IconShield size={18} color="#000000" />}
             title="Privacy Policy"
             onPress={() => Linking.openURL("https://www.look-ai.app/privacy")}
             hasBorder={false}
@@ -498,7 +498,7 @@ const ProfileScreenUI = ({
               isDeletingAccount ? (
                 <ActivityIndicator size="small" color="#1D1D1D" />
               ) : (
-                <IconUserMinus size={18} color="#00000090" />
+                <IconUserMinus size={18} color="#000000" />
               )
             }
             title="Delete account"
@@ -509,7 +509,7 @@ const ProfileScreenUI = ({
               isLoggingOut ? (
                 <ActivityIndicator size="small" color="#1D1D1D" />
               ) : (
-                <IconLogout size={18} color="#00000090" />
+                <IconLogout size={18} color="#000000" />
               )
             }
             title="Logout"

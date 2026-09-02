@@ -11,7 +11,7 @@
  *   - Section titles 18px extra-bold, 24px top margin.
  */
 import React from "react";
-import { Pressable, StyleSheet, Text as RNText, TextProps, View } from "react-native";
+import { Pressable, Text as RNText, StyleSheet, TextProps, View } from "react-native";
 
 // ─── Text wrapper that maps fontWeight to the Bricolage Grotesque family ────
 // Mirrors the local wrapper at the top of profile.tsx so the font
@@ -42,7 +42,7 @@ export const SectionTitle = ({ title }: { title: string }) => (
     style={{
       fontSize: 15,
       fontFamily: "BricolageGrotesque_800ExtraBold",
-      color: "#1D1D1D",
+      color: "#00000098",
       fontWeight: "600",
       marginBottom: 9,
       marginTop: 24,
@@ -113,7 +113,7 @@ export const ListItem = ({
       {icon ? <View style={{ marginRight: 12 }}>{icon}</View> : null}
       <View style={{ flex: 1 }}>
         <Text
-          style={{ fontSize: 14, color: "#1D1D1D", fontWeight: "400" }}
+          style={{ fontSize: 14, color: "#000000", fontWeight: "500" }}
         >
           {title}
         </Text>

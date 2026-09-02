@@ -17,9 +17,14 @@ import {
   IconShare,
   IconSparklesFilled,
   IconUser,
+  IconCamera,
+  IconPhoto,
+  IconX,
+  IconHelp,
+  IconCloudUpload,
 } from "@tabler/icons-react-native";
 
-
+import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
@@ -37,7 +42,7 @@ import {
   View,
 } from "react-native";
 import PagerView from "react-native-pager-view";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -52,6 +57,7 @@ const LOADING_PHRASES = [
 
 export default function OutfitScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handleDownload = async () => {
     try {
@@ -142,6 +148,16 @@ export default function OutfitScreen() {
     "tops" | "bottoms" | "footwear"
   >("tops");
 
+  const [shouldGenerate, setShouldGenerate] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef<CameraView>(null);
+  const [cameraReady, setCameraReady] = useState(false);
+
+  useEffect(() => {
+    if (!permission?.granted) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
   const pickImage = async (setImage: (uri: string) => void) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -151,8 +167,36 @@ export default function OutfitScreen() {
     });
     if (!result.canceled) {
       setImage(result.assets[0].uri);
+      if (setImage === setPersonImage) {
+        pagerRef.current?.setPage(1);
+      } else {
+        setShouldGenerate(true);
+      }
     }
   };
+
+  const takePhotoLive = async (setImage: (uri: string) => void) => {
+    if (cameraRef.current && cameraReady) {
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.8,
+      });
+      if (photo?.uri) {
+        setImage(photo.uri);
+        if (setImage === setPersonImage) {
+          pagerRef.current?.setPage(1);
+        } else {
+          setShouldGenerate(true);
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (personImage && outfitImage && shouldGenerate && !loading && !resultImageUrl) {
+      setShouldGenerate(false);
+      handleGenerate();
+    }
+  }, [personImage, outfitImage, shouldGenerate, loading, resultImageUrl, handleGenerate]);
 
   // Loading Phrase cycle
   useEffect(() => {
@@ -271,31 +315,59 @@ export default function OutfitScreen() {
   ]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9F9F9" }}>
-      <StatusBar style="dark" />
-      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
-        {/* Header */}
+    <View style={{ flex: 1, backgroundColor: "#151515" }}>
+      <StatusBar style="light" />
+      <View style={{ flex: 1 }}>
         <View
           style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
             paddingHorizontal: 24,
-            paddingTop: 10,
+            paddingTop: insets.top + 10,
             paddingBottom: 16,
+            zIndex: 10,
           }}
         >
           {resultImageUrl || loading ? (
-            <View style={{ width: 24 }} />
+            <View style={{ width: 44 }} />
           ) : (
-            <Pressable onPress={() => router.replace("/")}>
-              <IconArrowLeft size={24} color="#1D1A27" />
+            <Pressable 
+              onPress={() => router.back()}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: "#FFFFFF",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconX size={20} color="#000000" />
             </Pressable>
           )}
-          <Text style={{ fontSize: 16, fontWeight: "600", color: "#1D1A27" }}>
-            Virtual Try-On
-          </Text>
-          <View style={{ width: 24 }} />
+          
+          {!(resultImageUrl || loading) ? (
+            <Pressable 
+              onPress={() => {}}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: "#FFFFFF",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconHelp size={20} color="#000000" />
+            </Pressable>
+          ) : (
+            <View style={{ width: 44 }} />
+          )}
         </View>
 
         {loading ? (
@@ -306,6 +378,7 @@ export default function OutfitScreen() {
               alignItems: "center",
               justifyContent: "center",
               paddingHorizontal: 32,
+              paddingTop: insets.top + 60,
             }}
           >
             <ActivityIndicator size="large" color="#4C36F5" />
@@ -313,7 +386,7 @@ export default function OutfitScreen() {
               style={{
                 fontSize: 18,
                 fontWeight: "700",
-                color: "#1D1A27",
+                color: "#FFFFFF",
                 marginTop: 24,
               }}
             >
@@ -322,7 +395,7 @@ export default function OutfitScreen() {
             <Text
               style={{
                 fontSize: 13,
-                color: "#9B9BAF",
+                color: "#9CA3AF",
                 marginTop: 8,
                 textAlign: "center",
               }}
@@ -332,11 +405,11 @@ export default function OutfitScreen() {
           </View>
         ) : resultImageUrl ? (
           /* Final Result State */
-          <View style={{ flex: 1, paddingHorizontal: 24, marginBottom: 10 }}>
+          <View style={{ flex: 1, paddingHorizontal: 24, marginBottom: 10, paddingTop: insets.top + 40 }}>
             <Text
               style={{
                 fontSize: 15,
-                color: "#666666",
+                color: "#9CA3AF",
                 textAlign: "center",
                 lineHeight: 22,
                 fontWeight: "400",
@@ -432,86 +505,7 @@ export default function OutfitScreen() {
           </View>
         ) : (
           /* Input Steps */
-          <View style={{ flex: 1 }}>
-            <View style={{ paddingHorizontal: 24 }}>
-              <Text
-                style={{
-                  fontSize: 15,
-                  color: "#666666",
-                  textAlign: "center",
-                  lineHeight: 22,
-                  marginTop: 10,
-                  marginBottom: 30,
-                  fontWeight: "400",
-                }}
-              >
-                Elevate your personal style through AI-powered vision. Visualize
-                our high-fashion pieces tailored specifically to your
-                silhouette.
-              </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 20,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "500",
-                    color: "#1C1C1C",
-                    flex: 1,
-                  }}
-                >
-                  Swipe left or right to select your person and clothing images.
-                </Text>
-                <View style={{ flexDirection: "row", gap: 8, marginLeft: 16 }}>
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
-                      backgroundColor: activeStep === 0 ? "#000000" : "#999999",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "#FFFFFF",
-                        fontSize: 14,
-                        fontWeight: "600",
-                      }}
-                    >
-                      1
-                    </Text>
-                  </View>
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
-                      backgroundColor: activeStep === 1 ? "#000000" : "#999999",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "#FFFFFF",
-                        fontSize: 14,
-                        fontWeight: "600",
-                      }}
-                    >
-                      2
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
+          <View style={{ flex: 1, paddingBottom: 20 }}>
 
             <PagerView
               style={{ flex: 1 }}
@@ -520,13 +514,12 @@ export default function OutfitScreen() {
               onPageSelected={(e) => setActiveStep(e.nativeEvent.position)}
             >
               {/* Step 1: Person Image */}
-              <View key="0" style={{ flex: 1, paddingHorizontal: 24 }}>
+              <View key="0" style={{ flex: 1 }}>
                 <View
                   style={{
                     flex: 1,
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 32,
-                    overflow: "hidden",
+                    backgroundColor: "#151515",
+                    position: "relative",
                   }}
                 >
                   {personImage ? (
@@ -535,61 +528,103 @@ export default function OutfitScreen() {
                       style={{ width: "100%", height: "100%" }}
                       resizeMode="cover"
                     />
+                  ) : permission?.granted ? (
+                    <CameraView
+                      ref={cameraRef}
+                      style={{
+                        flex: 1,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      facing="back"
+                      onCameraReady={() => setCameraReady(true)}
+                    >
+                      {/* Viewfinder brackets */}
+                      <View style={{ width: 280, height: 400, position: "relative" }}>
+                        <View style={{ position: "absolute", top: 0, left: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 80 }} />
+                        <View style={{ position: "absolute", top: 0, right: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 80 }} />
+                        <View style={{ position: "absolute", bottom: 0, left: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 80 }} />
+                        <View style={{ position: "absolute", bottom: 0, right: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 80 }} />
+                      </View>
+                    </CameraView>
                   ) : (
                     <View
                       style={{
                         flex: 1,
-                        backgroundColor: "#FFFFFF",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      <IconUser size={64} color="#000000" />
-                      <Text
-                        style={{
-                          marginTop: 16,
-                          fontSize: 18,
-                          fontWeight: "700",
-                          color: "#000000",
-                        }}
-                      >
-                        Select Your Photo
-                      </Text>
-                      <Text
-                        style={{ marginTop: 8, fontSize: 14, color: "#9CA3AF" }}
-                      >
-                        Tap to choose from gallery
-                      </Text>
+                      {/* Viewfinder brackets */}
+                      <View style={{ width: 280, height: 400, position: "relative" }}>
+                        <View style={{ position: "absolute", top: 0, left: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 80 }} />
+                        <View style={{ position: "absolute", top: 0, right: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 80 }} />
+                        <View style={{ position: "absolute", bottom: 0, left: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 80 }} />
+                        <View style={{ position: "absolute", bottom: 0, right: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 80 }} />
+                      </View>
                     </View>
                   )}
 
-                  <Pressable
-                    onPress={() => pickImage(setPersonImage)}
+                  {/* Buttons at the bottom */}
+                  <View
                     style={{
                       position: "absolute",
-                      bottom: 20,
-                      right: 20,
-                      width: 40,
-                      height: 40,
-                      borderRadius: 24,
-                      backgroundColor: "#000000",
-                      alignItems: "center",
+                      bottom: insets.bottom + 24,
+                      left: 0,
+                      right: 0,
+                      flexDirection: "row",
                       justifyContent: "center",
+                      gap: 16,
+                      paddingHorizontal: 20,
                     }}
                   >
-                    <IconPencil size={20} color="#FFFFFF" />
-                  </Pressable>
+                    <Pressable
+                      onPress={() => takePhotoLive(setPersonImage)}
+                      style={{
+                        flex: 1,
+                        backgroundColor: "#FFFFFF",
+                        paddingVertical: 18,
+                        borderRadius: 50,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <IconCamera size={20} color="#000000" />
+                      <Text style={{ color: "#000000", fontWeight: "500", fontSize: 14 }}>
+                        Click
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => pickImage(setPersonImage)}
+                      style={{
+                        flex: 1.2,
+                        backgroundColor: "#FFFFFF",
+                        paddingVertical: 18,
+                        borderRadius: 50,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <IconCloudUpload size={20} color="#000000" />
+                      <Text style={{ color: "#000000", fontWeight: "500", fontSize: 14 }}>
+                        Upload Image
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
 
               {/* Step 2: Garment Image */}
-              <View key="1" style={{ flex: 1, paddingHorizontal: 24 }}>
+              <View key="1" style={{ flex: 1 }}>
                 <View
                   style={{
                     flex: 1,
-                    backgroundColor: "#E5E5E5",
-                    borderRadius: 32,
-                    overflow: "hidden",
+                    backgroundColor: "#151515",
+                    position: "relative",
                   }}
                 >
                   {outfitImage ? (
@@ -602,88 +637,56 @@ export default function OutfitScreen() {
                     <View
                       style={{
                         flex: 1,
-                        backgroundColor: "#FFFFFF",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      <IconHanger size={64} color="#000000" />
-                      <Text
-                        style={{
-                          marginTop: 16,
-                          fontSize: 18,
-                          fontWeight: "700",
-                          color: "#000000",
-                        }}
-                      >
-                        Select Outfit
-                      </Text>
-                      <Text
-                        style={{ marginTop: 8, fontSize: 14, color: "#9CA3AF" }}
-                      >
-                        Tap to choose from gallery
-                      </Text>
+                      {/* Viewfinder brackets */}
+                      <View style={{ width: 280, height: 400, position: "relative" }}>
+                        <View style={{ position: "absolute", top: 0, left: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 80 }} />
+                        <View style={{ position: "absolute", top: 0, right: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 80 }} />
+                        <View style={{ position: "absolute", bottom: 0, left: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 80 }} />
+                        <View style={{ position: "absolute", bottom: 0, right: 0, width: 80, height: 80, borderColor: "#FFFFFF", borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 80 }} />
+                      </View>
                     </View>
                   )}
 
-                  <Pressable
-                    onPress={() => pickImage(setOutfitImage)}
+                  <View
                     style={{
                       position: "absolute",
-                      bottom: 20,
-                      right: 20,
-                      width: 40,
-                      height: 40,
-                      borderRadius: 24,
-                      backgroundColor: "#000000",
-                      alignItems: "center",
+                      bottom: insets.bottom + 24,
+                      left: 0,
+                      right: 0,
+                      flexDirection: "row",
                       justifyContent: "center",
+                      gap: 16,
+                      paddingHorizontal: 20,
                     }}
                   >
-                    <IconPencil size={20} color="#FFFFFF" />
-                  </Pressable>
+                    <Pressable
+                      onPress={() => pickImage(setOutfitImage)}
+                      style={{
+                        flex: 1,
+                        backgroundColor: "#FFFFFF",
+                        paddingVertical: 18,
+                        borderRadius: 50,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <IconCloudUpload size={20} color="#000000" />
+                      <Text style={{ color: "#000000", fontWeight: "500", fontSize: 14 }}>
+                        Upload Outfit
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
             </PagerView>
 
-            {/* Bottom Actions */}
-            <View
-              style={{
-                flexDirection: "row",
-                paddingHorizontal: 24,
-                paddingVertical: 30,
-                gap: 12,
-              }}
-            >
-              <Pressable
-                disabled={!personImage || !outfitImage}
-                onPress={handleGenerate}
-                style={{
-                  flex: 1,
-                  backgroundColor:
-                    !personImage || !outfitImage ? "#4A4A4A" : "#1C1C1C",
-                  borderRadius: 50,
-                  paddingVertical: 18,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
-              >
-                <IconSparklesFilled size={20} color="#FFFFFF" />
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Generate Try-On
-                </Text>
-              </Pressable>
 
-
-            </View>
           </View>
         )}
 
@@ -775,7 +778,7 @@ export default function OutfitScreen() {
           </View>
         </Modal>
 
-      </SafeAreaView>
+      </View>
       <StreakPopup
         visible={hasIncrementedToday}
         onClose={dismissIncrement}

@@ -306,7 +306,7 @@ export default function CalendarScreen() {
         const { data, error } = await supabase
           .from("logged_outfits")
           .select(
-            "date, title, worn_time, items_worn, item_count, score, description, weather_condition, weather_temp, image_url, is_planned, occasion",
+            "date, title, worn_time, item_count, score, description, weather_condition, weather_temp, image_url, is_planned, occasion",
           )
           .eq("user_id", userId)
           .gte("date", startDate)
