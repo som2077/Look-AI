@@ -60,7 +60,7 @@ export default function StylistChatScreen() {
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <StatusBar style="dark" />
-      <StylistThread />
+      <StylistThread runtime={runtime} />
       <WardrobeSearchTool />
       <ScheduleEventTool />
     </AssistantRuntimeProvider>

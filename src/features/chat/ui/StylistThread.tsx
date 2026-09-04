@@ -169,7 +169,7 @@ function HeaderOverflow() {
   );
 }
 
-export const StylistThread = () => {
+export const StylistThread = ({ runtime }: { runtime?: any }) => {
   const insets = useSafeAreaInsets();
 
   // Single shared value drives the entire header animation. The list
@@ -191,8 +191,10 @@ export const StylistThread = () => {
   // directly via the thread runtime if available — otherwise we
   // simply copy the prompt to the OS clipboard and surface a hint.
   const handleSelectPrompt = useCallback((message: string) => {
-    // Handled in ChatEmptyState now.
-  }, []);
+    if (runtime) {
+      runtime.thread.append({ role: "user", content: [{ type: "text", text: message }] });
+    }
+  }, [runtime]);
 
   // We can't read the composer's internal value without the right
   // hook, so the send button uses a generic "always enabled" look.

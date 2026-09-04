@@ -36,6 +36,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 // Defer the image-zoom-viewer library until the user actually opens the
 // full-screen viewer. The library is a few hundred KB and only matters
 // for the rare "tap post to zoom" path — keep it out of the initial bundle.
@@ -47,7 +48,6 @@ const LazyImageViewer = React.lazy(() =>
     default: (m as any).default ?? m,
   })),
 ) as unknown as React.ComponentType<any>;
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Text = (props: any) => {
   const { style, ...rest } = props;
@@ -1304,7 +1304,7 @@ export default function ExploreScreen() {
       <StatusBar style="dark" />
       <View style={{ flex: 1 }}>
         <LinearGradient
-          colors={["#DDDCEA", "#FFFFFF"]}
+          colors={["#DDDCEA", "#FFFFFF99"]}
           locations={[0, 0.2]}
           style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         />

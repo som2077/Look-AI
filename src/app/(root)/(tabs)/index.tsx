@@ -34,8 +34,8 @@ import { StreakPopup } from "@/shared/ui/StreakPopup";
 import { WeeklyCalendarStrip } from "@/shared/ui/WeeklyCalendarStrip";
 import { SwipeTabWrapper } from "@/shared/ui/navigation/SwipeTabWrapper";
 import { useScrollToHideTabBar } from "@/shared/ui/useScrollToHideTabBar";
-import { IconAlertTriangle } from "@tabler/icons-react-native";
 import { FlashList } from "@shopify/flash-list";
+import { IconAlertTriangle } from "@tabler/icons-react-native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {

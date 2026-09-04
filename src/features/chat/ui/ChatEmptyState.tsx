@@ -18,7 +18,6 @@ import {
   IconSparkles,
   IconSun,
 } from "@tabler/icons-react-native";
-import { useThread } from "@assistant-ui/react-native";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, FONT_FAMILY, radii, space } from "@/components/ai-elements/theme";
@@ -62,7 +61,6 @@ export interface ChatEmptyStateProps {
 }
 
 export function ChatEmptyState({  onSelectPrompt  }: ChatEmptyStateProps) {
-  const thread = useThread();
   return (
     <View style={styles.wrap}>
       <View style={styles.hero}>
@@ -91,7 +89,7 @@ export function ChatEmptyState({  onSelectPrompt  }: ChatEmptyStateProps) {
           {PROMPTS.map(({ id, label, message, Icon }) => (
             <Pressable
               key={id}
-              onPress={() => thread.append({ role: "user", content: [{ type: "text", text: message }] })}
+              onPress={() => onSelectPrompt(message)}
               accessibilityRole="button"
               accessibilityLabel={`Send prompt: ${label}`}
               style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
